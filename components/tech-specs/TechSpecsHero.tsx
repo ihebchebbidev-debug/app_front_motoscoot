@@ -67,7 +67,7 @@ export const TechSpecsHero = memo(({
                   {onBack && (
                     <button
                       onClick={onBack}
-                      className="p-2.5 md:p-2 bg-card md:bg-white/10 border border-gray-100 md:border-white/20 md:backdrop-blur-sm rounded-2xl md:rounded-xl text-gray-700 md:text-white hover:bg-gray-50 md:hover:bg-white/20 hover:border-gray-200 md:hover:border-white/30 shadow-sm transition-all active:scale-95"
+                      className="p-2.5 md:p-2 [@media(pointer:coarse)]:min-w-11 [@media(pointer:coarse)]:min-h-11 flex items-center justify-center bg-card md:bg-white/10 border border-gray-100 md:border-white/20 md:backdrop-blur-sm rounded-2xl md:rounded-xl text-gray-700 md:text-white hover:bg-gray-50 md:hover:bg-white/20 hover:border-gray-200 md:hover:border-white/30 shadow-sm transition-all active:scale-95"
                       aria-label="Retour"
                     >
                       <ArrowLeft size={18} className="md:w-5 md:h-5" />
