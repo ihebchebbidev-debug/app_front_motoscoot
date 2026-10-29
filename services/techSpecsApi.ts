@@ -4,8 +4,12 @@
 import { apiClient } from './apiClient';
 import { TechSpec } from '../types';
 import { registerSpecSlug } from '../utils/publicIds';
+import { PLACEHOLDER_LISTING } from '../utils/urlUtils';
 
-const FALLBACK_IMAGE = 'https://www.moto-scoot.tn/content-fallbacks/spec-default.jpg';
+// Default moto image shown when a fiche technique has no uploaded photo yet.
+// Uses the bundled placeholder (always available) — the old remote
+// spec-default.jpg URL 404s.
+const FALLBACK_IMAGE = PLACEHOLDER_LISTING;
 
 type TechSpecsVisibilityOptions = {
   availableInTunisia?: boolean;

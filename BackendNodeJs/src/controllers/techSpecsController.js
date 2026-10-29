@@ -72,7 +72,7 @@ async function getModels(req, res, next) {
     // JOIN is intentionally LEFT so models without an assigned importer
     // still appear in the listing.
     const { rows } = await query(
-      `SELECT t.id, t.slug, t.brand, t.model, t.year, t.category, t.price_new, t.image,
+      `SELECT t.id, t.slug, t.brand, t.model, t.year, t.category, t.price_new, t.image, t.gallery,
               t.engine, t.chassis, t.electronics, t.dimensions,
               t.consumption, t.top_speed, t.norm_logo, t.importer_id,
               t.available_in_tunisia,

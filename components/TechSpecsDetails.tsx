@@ -201,10 +201,13 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     }
   }, [spec?.slug]);
 
-  // Cover first, then gallery extras, without duplicates.
+  // Gallery extras only: the admin "image principale" (spec.image) is for
+  // listing cards and is hidden on the details page. Fall back to it when
+  // there is no gallery at all so the page never shows an empty viewer.
   const images = useMemo(() => {
     if (!spec) return [];
-    const all = [spec.image, ...(spec.gallery || [])].filter(Boolean) as string[];
+    const extras = (spec.gallery || []).filter(Boolean) as string[];
+    const all = extras.length > 0 ? extras : [spec.image].filter(Boolean) as string[];
     return Array.from(new Set(all));
   }, [spec]);
 

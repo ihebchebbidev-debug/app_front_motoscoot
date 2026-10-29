@@ -39,8 +39,8 @@ const S = {
   ModelBrand: "text-[11px] font-black text-primary-600 uppercase tracking-widest leading-none",
   ModelPrice: "text-[12px] md:text-[14px] font-bold text-gray-500",
   SectionCard: "bg-card border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden mb-8 md:mb-12",
-  EmptySlot: "flex flex-col items-center justify-center gap-3 cursor-pointer group h-full w-full min-h-[140px] py-6 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl hover:border-primary-600/40 hover:bg-primary-50 transition-all",
-  AddIcon: "w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-card text-gray-400 flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all shadow-sm border border-gray-100",
+  EmptySlot: "flex flex-col items-center justify-center gap-3 cursor-pointer group h-full w-full min-h-[140px] py-8 bg-card border border-dashed border-gray-200 rounded-2xl hover:border-primary-600/40 hover:bg-primary-50 transition-all",
+  AddIcon: "w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all shadow-sm border border-gray-100",
   Switcher: "flex bg-gray-100 p-1.5 rounded-xl",
   SwitcherBtn: (active: boolean) => `px-4 py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${active ? 'bg-card text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`,
 };
@@ -181,8 +181,8 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
                     </div>
                   ) : (
                     <button type="button" className={S.EmptySlot} onClick={() => { setActiveSlot(i); setVisibleCount(30); }} aria-label="Ajouter un modèle pour comparer">
-                      <div className={S.AddIcon}><Plus size={18} strokeWidth={3} /></div>
-                      <span className="text-[11px] font-black text-gray-700 uppercase tracking-widest group-hover:text-primary-600 transition-colors">Choisir un modèle</span>
+                      <div className={S.AddIcon}><Plus size={12} strokeWidth={4} /></div>
+                      <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Choisir</span>
                     </button>
                   )}
                 </div>
