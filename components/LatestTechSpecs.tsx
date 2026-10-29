@@ -18,7 +18,7 @@ const LatestTechSpecs: React.FC<LatestTechSpecsProps> = ({ onNavigate }) => {
     id: s.id,
     name: `${s.brand} ${s.model}`.trim() || 'Fiche technique',
     brand: s.brand,
-    image: s.image,
+    image: s.cardImage || s.image,
     price: s.priceNew || `${s.year}`,
   }));
 
