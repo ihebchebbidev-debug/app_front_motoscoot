@@ -37,7 +37,7 @@ const S = {
   ModelName: "font-sans font-[900] text-[12px] md:text-[15px] leading-tight text-gray-900 tracking-tight whitespace-nowrap",
   ModelBrand: "text-[9px] md:text-[11px] font-black text-primary-600 uppercase tracking-widest leading-none",
   SectionCard: "bg-card border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden mb-8 md:mb-12",
-  EmptySlot: "flex flex-col items-center justify-center gap-3 cursor-pointer group h-full w-full py-6 bg-[#F9FAFB] border-2 border-dashed border-gray-200 rounded-2xl hover:border-primary-600/40 hover:bg-orange-50/50 transition-all",
+  EmptySlot: "flex flex-col items-center justify-center gap-3 cursor-pointer group h-full w-full py-8 bg-card border border-dashed border-gray-200 rounded-2xl hover:border-primary-600/40 hover:bg-orange-50/50 transition-all",
   AddIcon: "w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all shadow-sm border border-gray-100",
   Switcher: "flex bg-gray-100 p-1.5 rounded-xl",
   SwitcherBtn: (active: boolean) => `px-4 py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${active ? 'bg-card text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`,
@@ -151,10 +151,10 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
                       </div>
                     </div>
                   ) : (
-                    <Button className={S.EmptySlot} onClick={() => { setActiveSlot(i); setVisibleCount(30); }} aria-label="Ajouter un modèle pour comparer">
+                    <button type="button" className={S.EmptySlot} onClick={() => { setActiveSlot(i); setVisibleCount(30); }} aria-label="Ajouter un modèle pour comparer">
                       <div className={S.AddIcon}><Plus size={12} strokeWidth={4} /></div>
-                      <span className="text-[11px] font-black text-[#161A22] uppercase tracking-widest">Choisir</span>
-                    </Button>
+                      <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Choisir</span>
+                    </button>
                   )}
                 </div>
               ))}
