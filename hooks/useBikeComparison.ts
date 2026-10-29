@@ -131,7 +131,8 @@ export const useBikeComparison = ({
   }, [maxSlots, syncWithUrl]);
 
   const getWinnerId = useCallback((row: ComparisonRow): SpecId | null => {
-    if (activeBikes.length < 2) return null;
+    // Only rows that declare a direction can have a winner (a bigger engine is not "better").
+    if (activeBikes.length < 2 || !row.better) return null;
 
     let bestVal = row.better === 'lower' ? Infinity : -Infinity;
     let winnerId: SpecId | null = null;
