@@ -1,0 +1,19 @@
+# MotoScoot.tn
+
+> Marketplace tunisienne de motos et scooters : annonces neuves et d'occasion, fiches techniques, comparateur, garages, actualités et conseils.
+
+## Pages principales
+
+- [Annonces motos et scooters](https://www.moto-scoot.tn/annonces): toutes les annonces publiées, avec prix, année, kilométrage et ville.
+- [Fiches techniques](https://www.moto-scoot.tn/fiches-techniques): caractéristiques des modèles vendus en Tunisie.
+- [Comparateur](https://www.moto-scoot.tn/comparateur): comparer deux modèles côte à côte.
+- [Garages](https://www.moto-scoot.tn/garages): garages et ateliers moto.
+- [Actualités](https://www.moto-scoot.tn/actualites): nouveautés du marché.
+- [Conseils](https://www.moto-scoot.tn/conseils): guides d'entretien et d'achat.
+
+## Informations
+
+- [FAQ](https://www.moto-scoot.tn/faq)
+- [À propos](https://www.moto-scoot.tn/a-propos)
+- [Contact](https://www.moto-scoot.tn/contact)
+- [Plan du site](https://www.moto-scoot.tn/sitemap.xml)

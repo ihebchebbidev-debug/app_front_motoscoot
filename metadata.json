@@ -1,0 +1,7 @@
+{
+  "name": "moto-scoot.tn_Avancé",
+  "description": "La référence en Tunisie pour l'achat et la vente de motos d'occasion et neuves. Trouvez votre liberté sur deux roues.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

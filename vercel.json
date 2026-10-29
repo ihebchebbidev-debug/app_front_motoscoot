@@ -1,0 +1,233 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/sitemap-dynamic.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap.xml"
+    },
+    {
+      "source": "/annonce/:slugid",
+      "destination": "/api/og-listing?slugid=:slugid"
+    },
+    {
+      "source": "/article/:slugid",
+      "destination": "/api/og-prerender?kind=article&slugid=:slugid"
+    },
+    {
+      "source": "/guide/:slugid",
+      "destination": "/api/og-prerender?kind=guide&slugid=:slugid"
+    },
+    {
+      "source": "/garage/:slugid",
+      "destination": "/api/og-prerender?kind=garage&slugid=:slugid"
+    },
+    {
+      "source": "/fiche-technique/:slugid",
+      "destination": "/api/og-prerender?kind=fiche-technique&slugid=:slugid"
+    },
+    {
+      "source": "/m/:slug/t/:filename",
+      "destination": "https://motoscoot.ihebchebbi.pro/uploads/thumbnails/:filename"
+    },
+    {
+      "source": "/m/:slug/:filename",
+      "destination": "https://motoscoot.ihebchebbi.pro/uploads/:filename"
+    },
+    {
+      "source": "/uploads/thumbnails/:filename",
+      "destination": "https://motoscoot.ihebchebbi.pro/uploads/thumbnails/:filename"
+    },
+    {
+      "source": "/uploads/:filename",
+      "destination": "https://motoscoot.ihebchebbi.pro/uploads/:filename"
+    },
+    {
+      "source": "/site-logo/:filename",
+      "destination": "https://www.magma-studio.tn/portfolio2/moto/Logo/:filename"
+    },
+    {
+      "source": "/brand-logos/:filename",
+      "destination": "https://www.magma-studio.tn/portfolio2/moto/Logo/brand%20logo/:filename"
+    },
+    {
+      "source": "/hero-assets/:filename",
+      "destination": "https://www.magma-studio.tn/portfolio2/:filename"
+    },
+    {
+      "source": "/content-fallbacks/:filename",
+      "destination": "https://www.magma-studio.tn/portfolio2/moto/:filename"
+    },
+    {
+      "source": "/annonces",
+      "destination": "/annonces/index.html"
+    },
+    {
+      "source": "/actualites",
+      "destination": "/actualites/index.html"
+    },
+    {
+      "source": "/garages",
+      "destination": "/garages/index.html"
+    },
+    {
+      "source": "/conseils",
+      "destination": "/conseils/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/faq",
+      "destination": "/faq/index.html"
+    },
+    {
+      "source": "/a-propos",
+      "destination": "/a-propos/index.html"
+    },
+    {
+      "source": "/fiches-techniques",
+      "destination": "/fiches-techniques/index.html"
+    },
+    {
+      "source": "/comparateur",
+      "destination": "/comparateur/index.html"
+    },
+    {
+      "source": "/mentions-legales",
+      "destination": "/mentions-legales/index.html"
+    },
+    {
+      "source": "/securite",
+      "destination": "/securite/index.html"
+    },
+    {
+      "source": "/conditions",
+      "destination": "/conditions/index.html"
+    },
+    {
+      "source": "/cookies",
+      "destination": "/cookies/index.html"
+    },
+    {
+      "source": "/plan-du-site",
+      "destination": "/plan-du-site/index.html"
+    },
+    {
+      "source": "/fiches-techniques/:brand",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/mes-favoris",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/deposer-une-annonce",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/mon-compte",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/mon-compte/:path*",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/espace-pro",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/espace-pro/:path*",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/test",
+      "destination": "/spa.html"
+    },
+    {
+      "source": "/reinitialiser-mot-de-passe",
+      "destination": "/spa.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sitemap-dynamic.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/spa.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/version.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}

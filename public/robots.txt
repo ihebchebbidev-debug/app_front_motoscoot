@@ -1,0 +1,104 @@
+# MotoScoot.tn — robots.txt
+# Updated: 2026-05
+# Canonical host: https://www.moto-scoot.tn
+
+# ---- Default policy: allow everything indexable ----
+User-agent: *
+Allow: /
+# Private / authenticated areas: never index.
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api-test
+Disallow: /test
+Disallow: /dashboard
+Disallow: /mon-compte
+Disallow: /espace-pro
+Disallow: /mes-favoris
+Disallow: /reinitialiser-mot-de-passe
+Disallow: /deposer-une-annonce
+# Internal API surface — never crawl.
+Disallow: /api/
+# Pagination & filter permutations: ALLOW crawl. Page>1 and filtered views
+# return `noindex, follow` via <meta name="robots">, so Googlebot follows
+# links into individual listings (avoiding orphaned content) but never
+# indexes the duplicate listing pages themselves. Self-canonical + rel=prev/next
+# disambiguate the series.
+# Only strip pure tracking-parameter URLs from the crawl frontier.
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
+Disallow: /*?*mc_cid=
+Disallow: /*?*ref=
+Crawl-delay: 1
+
+# ---- LLM / AI training crawlers (explicit allow) ----
+# We want our content to be discoverable by ChatGPT, Claude, Perplexity,
+# Gemini, Bing Copilot, etc. Adjust if licensing strategy changes.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: ImagesiftBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+# ---- Sitemaps ----
+# Static fallback shipped with the SPA build.
+Sitemap: https://www.moto-scoot.tn/sitemap.xml
+# Dynamic sitemap from the API (listings, articles, tips, garages, tech-specs).
+Sitemap: https://www.moto-scoot.tn/sitemap-dynamic.xml
+
+# Host hint for search engines (preferred canonical host).
+Host: https://www.moto-scoot.tn
