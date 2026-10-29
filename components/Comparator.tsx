@@ -145,12 +145,12 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
                 <div className="flex bg-primary-700/30 p-1 md:p-1.5 rounded-xl" role="group" aria-label="Filtres d'affichage">
                   <button
                     onClick={() => setShowOnlyDiff(false)}
-                    className={`min-h-[44px] md:min-h-0 px-3 md:px-4 py-1.5 md:py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${!showOnlyDiff ? 'bg-card text-primary-600 shadow-sm' : 'text-white/80 hover:text-white'}`}
+                    className={`min-h-[44px] md:[@media(pointer:fine)]:min-h-0 px-3 md:px-4 py-1.5 md:py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${!showOnlyDiff ? 'bg-card text-primary-600 shadow-sm' : 'text-white/80 hover:text-white'}`}
                     aria-pressed={!showOnlyDiff}
                   >Tout</button>
                   <button
                     onClick={() => setShowOnlyDiff(true)}
-                    className={`min-h-[44px] md:min-h-0 px-3 md:px-4 py-1.5 md:py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${showOnlyDiff ? 'bg-card text-primary-600 shadow-sm' : 'text-white/80 hover:text-white'}`}
+                    className={`min-h-[44px] md:[@media(pointer:fine)]:min-h-0 px-3 md:px-4 py-1.5 md:py-2 text-[13px] font-[800] tracking-tight rounded-lg transition-all ${showOnlyDiff ? 'bg-card text-primary-600 shadow-sm' : 'text-white/80 hover:text-white'}`}
                     aria-pressed={showOnlyDiff}
                   ><span className="md:hidden">Diffs</span><span className="hidden md:inline">Différences</span></button>
                 </div>
@@ -251,7 +251,7 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
               </div>
               <button 
                 onClick={() => onNavigate?.('tech-specs-brands')}
-                className="hidden md:flex items-center gap-2 text-[13px] font-black uppercase tracking-widest text-gray-400 hover:text-primary-600 transition-colors"
+                className="hidden md:flex items-center gap-2 [@media(pointer:coarse)]:min-h-11 text-[13px] font-black uppercase tracking-widest text-gray-400 hover:text-primary-600 transition-colors"
               >
                 Tout voir <ChevronRight size={16} />
               </button>
@@ -274,28 +274,31 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
       {activeSlot !== null && (
         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-xl overscroll-contain flex items-end md:items-center justify-center p-0 md:p-4 animate-fade-in" onClick={() => setActiveSlot(null)}>
           <div role="dialog" aria-modal="true" aria-label="Sélectionner un modèle" className="bg-card w-full max-w-xl rounded-t-[32px] md:rounded-[40px] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh]" onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key === 'Escape') setActiveSlot(null); }}>
-            <div className="px-5 py-4 md:p-8 border-b border-slate-50 flex items-center justify-between gap-4 shrink-0">
+            <div className="px-5 py-4 md:p-8 [@media(max-height:500px)]:py-2 border-b border-slate-50 flex items-center justify-between gap-4 shrink-0">
                <div>
                  <h2 className="text-xl md:text-2xl font-[900] text-slate-900 tracking-[0] italic leading-none">Sélectionner</h2>
-                 <p className="text-slate-400 font-bold uppercase text-[12px] tracking-[0] mt-2">Choisissez votre combattant</p>
+                 <p className="text-slate-400 font-bold uppercase text-[12px] tracking-[0] mt-2 [@media(max-height:500px)]:hidden">Choisissez votre combattant</p>
                </div>
-               <button onClick={() => setActiveSlot(null)} className="p-3 md:p-4 shrink-0 bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all active:scale-90" aria-label="Fermer"><X size={24} strokeWidth={2.5}/></button>
+               <button onClick={() => setActiveSlot(null)} className="p-3 md:p-4 [@media(max-height:500px)]:p-2.5 shrink-0 bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all active:scale-90" aria-label="Fermer"><X size={24} strokeWidth={2.5}/></button>
             </div>
-            <div className="px-4 pt-4 md:p-8 overflow-y-auto overscroll-contain no-scrollbar pb-[max(1rem,env(safe-area-inset-bottom))]">
-               <div className="relative mb-6 sticky top-0 bg-card z-10 pb-2">
-                  <input 
+            {/* Search stays outside the scroll area so the list never slides above or under it. */}
+            <div className="px-4 pt-4 pb-3 md:px-8 md:pt-6 md:pb-4 [@media(max-height:500px)]:py-2 shrink-0 border-b border-slate-50">
+               <div className="relative">
+                  <input
                     autoFocus
                     type="text" 
                     placeholder="Chercher par marque ou modèle..." 
                     aria-label="Chercher par marque ou modèle"
-                    className="w-full p-4 md:p-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-card focus:border-primary-600 transition-all pr-14 text-lg placeholder:text-slate-300 shadow-none tracking-[0]"
+                    className="w-full p-4 md:p-5 [@media(max-height:500px)]:py-2.5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-card focus:border-primary-600 transition-all pr-14 text-lg [@media(max-height:500px)]:text-base placeholder:text-slate-300 shadow-none tracking-[0]"
                     value={search}
                     onChange={e => { setSearch(e.target.value); setVisibleCount(30); }}
                   />
-                  <div className="absolute right-4 md:right-5 top-[18px] md:top-[22px] text-primary-600 pointer-events-none">
+                  <div className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 text-primary-600 pointer-events-none">
                     <Search size={24} strokeWidth={3} />
                   </div>
                </div>
+            </div>
+            <div className="px-4 pt-3 md:px-8 md:pt-4 [@media(max-height:500px)]:pt-2 overflow-y-auto overscroll-contain no-scrollbar pb-[max(1rem,env(safe-area-inset-bottom))]">
                <div className="grid grid-cols-1 gap-2 pb-10">
                   {catalogLoading && <p role="status">Chargement du catalogue…</p>}
                   {catalogError && <div role="alert"><p>Le catalogue est indisponible.</p><Button onClick={() => reloadCatalog()}>Réessayer</Button></div>}
