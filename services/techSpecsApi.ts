@@ -169,10 +169,6 @@ export function mapBackendTechSpec(b: BackendTechSpec): TechSpec {
     category: normalizeCategory(b.category),
     priceNew: fmtPrice(b.price_new),
     image: b.cover_image || b.image || FALLBACK_IMAGE,
-    // Listing cards show the LAST photo of the gallery (the details page
-    // renders [image, ...gallery], so its last photo is the gallery's last
-    // item) instead of the cover/first photo.
-    cardImage: (b.gallery || []).filter(Boolean).slice(-1)[0] || b.cover_image || b.image || FALLBACK_IMAGE,
     gallery: b.gallery,
     engine,
     chassis,

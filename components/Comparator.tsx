@@ -57,7 +57,7 @@ const Comparator: React.FC<BasePageProps> = ({ ids, onNavigate }) => {
         id: s.id,
         name: s.model,
         brand: s.brand,
-        image: s.cardImage || s.image,
+        image: s.image,
         price: s.priceNew,
       })),
     [allSpecs],

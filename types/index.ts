@@ -226,10 +226,6 @@ export interface TechSpec {
   category: 'Roadster' | 'Sportive' | 'Trail' | 'Scooter' | 'Custom' | 'Off-road';
   priceNew: string;
   image: string;
-  /** Thumbnail for listing cards: the LAST photo of the fiche technique
-   *  gallery (details pages render [image, ...gallery], so their last photo
-   *  is the gallery's last item). Falls back to `image` when no gallery. */
-  cardImage?: string;
   gallery?: string[];
   engine: {
     type: string;

@@ -319,7 +319,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                     aria-label={`Voir la fiche ${spec.brand} ${spec.model}`}
                   >
                     <img
-                      src={getOptimizedImageUrl(spec.cardImage || spec.image, 120, 90, 80, undefined, `${spec.brand} ${spec.model}`)}
+                      src={getOptimizedImageUrl(spec.image, 120, 90, 80, undefined, `${spec.brand} ${spec.model}`)}
                       alt={`${spec.brand} ${spec.model}`}
                       className="w-16 h-16 rounded-lg object-cover bg-slate-50 shrink-0"
                       loading="lazy"

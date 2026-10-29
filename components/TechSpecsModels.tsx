@@ -59,7 +59,7 @@ const ModelCard = memo(({ spec, onClick, highlightTerms }: { spec: any; onClick:
   >
     <div className={S.ImageArea}>
       <img 
-        src={getOptimizedImageUrl(spec.cardImage || spec.image, 600, 400, 80, undefined, `${spec.brand} ${spec.model} ${spec.year}`)} 
+        src={getOptimizedImageUrl(spec.image, 600, 400, 80, undefined, `${spec.brand} ${spec.model} ${spec.year}`)} 
         className="w-full h-full object-cover transition-transform duration-700" 
         alt={spec.model} 
         loading="lazy"
