@@ -1,3 +1,5 @@
+import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../../config/features';
+
 /**
  * Static SEO snapshots for build-time prerender.
  *
@@ -37,6 +39,8 @@ export interface SeoSnapshot {
   ogImage?: string;
   /** Optional extra schema.org JSON-LD blocks for this page. */
   schemas?: Record<string, unknown>[];
+  /** Optional robots directive replacing the site-wide "index, follow". */
+  robots?: string;
 }
 
 const SITE = 'https://www.moto-scoot.tn';
@@ -80,6 +84,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/garages',
+    robots: GARAGES_PUBLIC ? undefined : GARAGES_ROBOTS,
     title: "Garages Moto en Tunisie — Réparation & Entretien | MotoScoot",
     description:
       "Annuaire des meilleurs garages moto en Tunisie. Réparation, entretien, diagnostic, accessoires. Avis vérifiés, contacts, horaires et géolocalisation.",

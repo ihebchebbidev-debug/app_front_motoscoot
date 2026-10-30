@@ -20,6 +20,7 @@
 
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
+import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -325,6 +326,7 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
     };
   }
   if (kind === 'garage') {
+    if (!GARAGES_PUBLIC) return null;
     return {
       '@context': 'https://schema.org',
       '@type': 'AutoRepair',
@@ -412,13 +414,14 @@ export default async function handler(req: any, res: any) {
     const price = kind === 'fiche-technique' ? parsePrice(doc?.price_new) : null;
 
 
+    const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS : 'index, follow, max-image-preview:large, max-snippet:-1';
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(description)}" />
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="robots" content="${robots}" />
 <link rel="canonical" href="${canonical}" />
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
@@ -460,6 +463,7 @@ ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    if (kind === 'garage' && !GARAGES_PUBLIC) res.setHeader('X-Robots-Tag', GARAGES_ROBOTS);
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
     res.status(200).send(await renderWithApp(req, html));
   } catch {

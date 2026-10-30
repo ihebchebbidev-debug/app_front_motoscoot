@@ -24,6 +24,7 @@ import { useListings } from '../hooks/useListings';
 import { useSubmitSiteReview } from '../hooks/useSiteReviews';
 import { useToast } from '../context/ToastContext';
 import SEO from './common/SEO';
+import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features';
 import AdBanner from './common/AdBanner';
 import AuthLockOverlay from './common/AuthLockOverlay';
 import { useNativeShare } from '../hooks/useNativeShare';
@@ -167,7 +168,8 @@ const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTrig
         title={`${garage.name} - Expert Moto`}
         description={(garage as any).description || `${garage.name} - Garage moto expert en Tunisie. Services, tarifs, avis clients et coordonnées.`}
         image={garage.image}
-        schema={{
+        robots={GARAGES_PUBLIC ? undefined : GARAGES_ROBOTS}
+        schema={GARAGES_PUBLIC ? {
           "@context": "https://schema.org",
           "@type": "AutoRepair",
           name: garage.name,
@@ -187,7 +189,7 @@ const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTrig
           } : undefined,
           ...verifiedReviewMarkup(backendReviews),
           areaServed: { "@type": "Country", name: "Tunisia" },
-        }}
+        } : undefined}
       />
       
       <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-6">
