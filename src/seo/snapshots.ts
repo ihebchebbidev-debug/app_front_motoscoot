@@ -61,13 +61,13 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
       "Trouvez, vendez et comparez des motos et scooters en Tunisie : annonces neuves et d'occasion, prix, fiches techniques et nouveautés du marché.",
     h1: "MotoScoot — Motos & Scooters d'Occasion en Tunisie",
     intro:
-      "moto-scoot.tn est la 1ʳᵉ plateforme tunisienne dédiée à l'achat et la vente de motos et scooters d'occasion. Découvrez plus de 500 annonces vérifiées par nos modérateurs, des fiches techniques détaillées et un réseau de garages partenaires partout en Tunisie.",
+      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne pour acheter et vendre des motos et scooters d'occasion. Chaque annonce indique le prix en dinars (DT), l'année, le kilométrage et la ville, et la publication est gratuite pour les particuliers. Le site propose aussi les fiches techniques et les prix du neuf des modèles vendus en Tunisie, un comparateur et des conseils d'entretien.",
   },
   {
     path: '/annonces',
     title: "Annonces Moto & Scooter d'Occasion en Tunisie | MotoScoot",
     description:
-      "Parcourez plus de 500 annonces de motos et scooters d'occasion en Tunisie. Filtrez par marque, modèle, prix, kilométrage et ville. Mises à jour quotidiennes.",
+      "Motos et scooters d'occasion en Tunisie : prix en DT, année et kilométrage sur chaque annonce. Filtrez par marque, modèle, budget, cylindrée et ville.",
     h1: "Annonces de Motos et Scooters d'Occasion",
     intro:
       "Découvrez toutes les annonces de motos et scooters d'occasion en Tunisie — Yamaha, Honda, Suzuki, Kawasaki, BMW, KTM, Piaggio, Vespa et plus. Filtrez par prix, marque, modèle, cylindrée et localisation.",
@@ -151,7 +151,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/a-propos',
     title: "À Propos — MotoScoot | MotoScoot.tn",
     description:
-      "moto-scoot.tn est la première plateforme tunisienne pensée par des motards, pour des motards. Découvrez notre mission, nos valeurs et notre équipe.",
+      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne de motos et scooters, créée par des motards pour des motards. Mission, valeurs et équipe.",
     h1: "À Propos de moto-scoot.tn",
     intro:
       "moto-scoot.tn est née de la passion d'une équipe de motards tunisiens. Notre mission : rendre l'achat et la vente de motos fluides, sûrs et passionnants partout en Tunisie.",

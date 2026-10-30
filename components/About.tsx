@@ -11,7 +11,7 @@ const About: React.FC<AboutProps> = ({ onGoHome, onNavigate }) => {
   return (
     <div className="min-h-screen bg-card font-sans overflow-x-hidden">
       <SEO
-        title="À propos de moto-scoot.tn — La 1ʳᵉ Marketplace Moto en Tunisie"
+        title="À propos : marketplace moto et scooter en Tunisie"
         description="Découvrez moto-scoot.tn : la plateforme tunisienne pensée par des motards pour l'achat et la vente sécurisés de motos et scooters d'occasion."
         url="/a-propos"
         keywords={['à propos MotoScoot', 'marketplace moto Tunisie', 'plateforme motards']}
@@ -27,7 +27,7 @@ const About: React.FC<AboutProps> = ({ onGoHome, onNavigate }) => {
         </div>
         <div className="relative z-10 text-center px-6">
           <h1 className="text-4xl md:text-7xl font-black text-white mb-6 animate-fade-in-up">MotoScoot</h1>
-          <p className="text-white text-lg md:text-2xl font-medium max-w-3xl mx-auto animate-fade-in-up opacity-90">La première plateforme tunisienne pensée par des motards, pour des motards.</p>
+          <p className="text-white text-lg md:text-2xl font-medium max-w-3xl mx-auto animate-fade-in-up opacity-90">Une marketplace tunisienne de motos et scooters, pensée par des motards pour des motards.</p>
         </div>
       </div>
 

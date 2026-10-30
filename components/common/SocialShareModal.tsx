@@ -84,7 +84,7 @@ const buildCaption = (content: ShareContent, platform: Platform, url: string): s
       return `${head}${sub}${sum}\n\n👉 Lire / voir sur ${SITE}\n${url}\n\n${tags}`;
 
     case 'linkedin':
-      return `${head}${sub}${sum}\n\nDécouvrez cette ${fr} sur ${SITE} — la 1ʳᵉ marketplace tunisienne dédiée aux motos & scooters.\n\n${url}\n\n${tags}`;
+      return `${head}${sub}${sum}\n\nDécouvrez cette ${fr} sur ${SITE}, la marketplace tunisienne des motos et scooters.\n\n${url}\n\n${tags}`;
 
     case 'instagram':
       return `${head}${sub}${sum}\n\n👉 Lien dans la bio · ${SITE}\n\n.\n.\n.\n${tags} #motoTunisie #scootertunisie #ridetunisia`;

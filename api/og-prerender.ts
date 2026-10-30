@@ -202,7 +202,7 @@ function pickDescription(kind: Kind, d: Doc | null): string {
   if (kind === 'garage') {
     return clip(`Découvrez le garage moto ${d.name || ''}${d.city ? ` à ${d.city}` : ''} sur MotoScoot.tn : services, avis et contact.`, 160);
   }
-  return clip(`${d.title || ''} — à lire sur MotoScoot.tn, la première plateforme moto et scooter en Tunisie.`, 160);
+  return clip(`${d.title || ''}. À lire sur MotoScoot (moto-scoot.tn), la marketplace tunisienne des motos et scooters.`, 160);
 }
 
 async function fetchDoc(kind: Kind, id: string): Promise<Doc | null> {
