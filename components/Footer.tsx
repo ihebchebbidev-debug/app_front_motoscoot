@@ -113,7 +113,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-colors">
                   <Phone size={18} aria-hidden="true" />
                 </div>
-                <a href="tel:+21629249512" className="font-bold text-gray-400 hover:text-white transition-colors">29 249 512</a>
+                <a href="tel:+21621719109" className="font-bold text-gray-400 hover:text-white transition-colors">21 719 109</a>
               </li>
               <li className="flex items-center gap-4 group">
                 <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-colors">

@@ -171,7 +171,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/contact',
     title: "Contact — Nous Joindre | MotoScoot",
     description:
-      "Contactez l'équipe moto-scoot.tn : support utilisateur, partenariats, signalements. Téléphone +216 29 249 512 ou via le formulaire de contact.",
+      "Contactez l'équipe moto-scoot.tn : support utilisateur, partenariats, signalements. Téléphone +216 21 719 109 ou via le formulaire de contact.",
     h1: "Contactez moto-scoot.tn",
     intro:
       "Une question, une suggestion, un problème ? L'équipe MotoScoot est joignable par téléphone, email ou via notre formulaire de contact. Nous répondons sous 24h ouvrées.",
