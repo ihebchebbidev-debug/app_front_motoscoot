@@ -341,10 +341,122 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
   return null;
 }
 
+// Brand pages (/fiches-techniques/<marque>): title, factual intro and the
+// brand's models as plain links, for crawlers that do not run JavaScript.
+async function renderBrand(req: any, res: any, brandSlug: string) {
+  const brandsRes = await fetch(`${API_BASE}/tech-specs/brands`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+  if (!brandsRes.ok) throw new Error('Content service unavailable');
+  const brandsData = await brandsRes.json();
+  const brands: any[] = Array.isArray(brandsData) ? brandsData : brandsData.brands || [];
+  const brand = brands.map((b) => String(b.brand || b.name || '')).find((name) => name && slugify(name) === brandSlug);
+  if (!brand) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('X-Robots-Tag', 'noindex');
+    res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/fiches-techniques">Voir toutes les fiches techniques</a></p></body></html>`);
+    return;
+  }
+
+  const modelsRes = await fetch(`${API_BASE}/tech-specs/brands/${encodeURIComponent(brand)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+  if (!modelsRes.ok) throw new Error('Content service unavailable');
+  const modelsData = await modelsRes.json();
+  const models: Doc[] = Array.isArray(modelsData) ? modelsData : modelsData.models || [];
+
+  const canonical = `${SITE}/fiches-techniques/${brandSlug}`;
+  const pageTitle = `${brand} : fiches techniques et prix en Tunisie`;
+  const title = `${pageTitle} | Moto-Scoot.tn`;
+  const description = `Fiches techniques des modèles ${brand} vendus en Tunisie : prix du neuf en DT, cylindrée, puissance, couple, poids et consommation.`;
+  const modelUrl = (m: Doc) => `${SITE}/fiche-technique/${(m as any).slug || `${slugify([m.brand, m.model, m.year].filter(Boolean).join(' '))}-${m.id}`}`;
+  const modelName = (m: Doc) => [brand, m.model].filter(Boolean).join(' ');
+  const firstImage = models.find((m) => m.image)?.image;
+  const image = firstImage ? rewriteImageHost(firstImage, brand) : DEFAULT_OG;
+
+  // Factual intro built from the data (counts and ranges only, no claims).
+  const ccs = models.map((m) => Math.round(parseFloat((String(m.engine?.cc || '').match(/\d+(?:[.,]\d+)?/) || ['0'])[0].replace(',', '.')))).filter((n) => n > 0);
+  const prices = models.map((m) => parsePrice(m.price_new)).filter((n): n is number => n !== null);
+  const categories = Array.from(new Set(models.map((m) => m.category).filter(Boolean)));
+  const fmt = (n: number) => n.toLocaleString('fr-FR');
+  const intro = [
+    `${brand} : ${models.length} modèle${models.length > 1 ? 's' : ''} référencé${models.length > 1 ? 's' : ''} sur Moto-Scoot.tn`
+      + (ccs.length ? (Math.min(...ccs) === Math.max(...ccs) ? `, en ${Math.min(...ccs)} cm³` : `, de ${Math.min(...ccs)} à ${Math.max(...ccs)} cm³`) : '') + '.',
+    prices.length ? (Math.min(...prices) === Math.max(...prices) ? `Prix du neuf : ${fmt(prices[0])} DT.` : `Prix du neuf de ${fmt(Math.min(...prices))} à ${fmt(Math.max(...prices))} DT.`) : '',
+    categories.length ? `Catégories : ${categories.join(', ')}.` : '',
+  ].filter(Boolean).join(' ');
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Fiches techniques', item: `${SITE}/fiches-techniques` },
+      { '@type': 'ListItem', position: 3, name: brand, item: canonical },
+    ],
+  };
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Fiches techniques ${brand}`,
+    numberOfItems: models.length,
+    itemListElement: models.map((m, i) => ({ '@type': 'ListItem', position: i + 1, url: modelUrl(m), name: modelName(m) })),
+  };
+
+  const items = models.map((m) => {
+    const price = parsePrice(m.price_new);
+    const facts = [m.year, m.engine?.cc, m.engine?.power, price ? `${fmt(price)} DT` : ''].filter(Boolean).join(' · ');
+    return `<li><a href="${modelUrl(m)}">${escapeHtml(modelName(m))}</a>${facts ? ` : ${escapeHtml(String(facts))}` : ''}</li>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(description)}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<link rel="canonical" href="${canonical}" />
+<link rel="alternate" href="${canonical}" hreflang="fr-TN" />
+<link rel="alternate" href="${canonical}" hreflang="x-default" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
+<meta property="og:locale" content="fr_TN" />
+<meta property="og:title" content="${escapeHtml(title)}" />
+<meta property="og:description" content="${escapeHtml(description)}" />
+<meta property="og:url" content="${canonical}" />
+<meta property="og:image" content="${image}" />
+<meta property="og:image:secure_url" content="${image}" />
+<meta property="og:image:alt" content="${escapeHtml(title)}" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${escapeHtml(title)}" />
+<meta name="twitter:description" content="${escapeHtml(description)}" />
+<meta name="twitter:image" content="${image}" />
+
+<script type="application/ld+json">${scriptSafeJson(breadcrumbLd)}</script>
+<script type="application/ld+json">${scriptSafeJson(itemListLd)}</script>
+</head>
+<body>
+<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a> › ${escapeHtml(brand)}</nav>
+<h1>Fiches techniques ${escapeHtml(brand)}</h1>
+<p>${escapeHtml(intro)}</p>
+<ul>
+${items}
+</ul>
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.status(200).send(await renderWithApp(req, html));
+}
+
 export default async function handler(req: any, res: any) {
   try {
     const kind = String(req.query?.kind || '').toLowerCase() as Kind;
     const slugid = String(req.query?.slugid || '');
+    if ((kind as string) === 'marque' && /^[a-z0-9-]+$/.test(slugid.replace(/\/$/, ''))) {
+      await renderBrand(req, res, slugid.replace(/\/$/, ''));
+      return;
+    }
     if (!KIND_CONFIG[kind] || !slugid) {
       res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8').send('<!doctype html><title>Not found</title>');
       return;
