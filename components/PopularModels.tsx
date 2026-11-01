@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ArrowRight, Plus } from 'lucide-react';
 import { useAllTechSpecs } from '../hooks/useTechSpecs';
 import { ModelCard } from './home/ModelCard';
+import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
 import { SkeletonCard } from './ui/Skeleton';
 
@@ -59,11 +60,10 @@ const PopularModels: React.FC<PopularModelsProps> = ({ onNavigate }) => {
                 <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 60}ms` }}>
                   <ModelCard
                     model={item as any}
-                    onClick={() => {
+                    href={(() => {
                       const s: any = specs[idx];
-                      const slug = `${s.brand}-${s.model}-${s.year}`;
-                      onNavigate?.('tech-specs-details', { id: item.id, specId: item.id, slug });
-                    }}
+                      return getUrlFromState('tech-specs-details', { id: item.id, specSlug: s.slug, slug: `${s.brand}-${s.model}-${s.year}` });
+                    })()}
                   />
                 </div>
               ))}

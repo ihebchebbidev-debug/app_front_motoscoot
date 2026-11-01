@@ -4,10 +4,13 @@ import { ArrowRight, Heart } from 'lucide-react';
 import { BikeModel } from '../../types';
 import { Badge } from '../ui/Badge';
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
+import { Link } from 'react-router-dom';
 
 interface ModelCardProps {
   model: BikeModel;
-  onClick: () => void;
+  onClick?: () => void;
+  /** When set (and there is no favorite button), the card is a real link to this URL. */
+  href?: string;
   /** When provided, displays a favorite (heart) button on the image. */
   favorited?: boolean;
   onFavoriteToggle?: () => void;
@@ -15,7 +18,7 @@ interface ModelCardProps {
   badgeLabel?: string;
 }
 
-export const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, favorited, onFavoriteToggle, badgeLabel = 'Populaire' }) => {
+export const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, href, favorited, onFavoriteToggle, badgeLabel = 'Populaire' }) => {
   const [imgError, setImgError] = useState(false);
   
   // Image optimisée pour les cartes de la home
@@ -24,10 +27,14 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, favorited,
     : getOptimizedImageUrl(model.image, 500, 375, 75, PLACEHOLDER_LISTING, `${model.brand || ''} ${model.name || ''}`.trim());
 
   const showFav = typeof onFavoriteToggle === 'function';
+  // A link cannot contain the favorite <button>, so cards with one stay a div.
+  const asLink = Boolean(href) && !showFav;
+  const Outer: any = asLink ? Link : 'div';
 
   return (
-    <div 
-      className="group relative bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 cursor-pointer h-full"
+    <Outer 
+      {...(asLink ? { to: href } : {})}
+      className={`group relative ${asLink ? 'block ' : ''}bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 cursor-pointer h-full`}
       onClick={onClick}
     >
       <div className="aspect-[4/3] overflow-hidden relative bg-card">
@@ -87,6 +94,6 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, onClick, favorited,
           </span>
         </div>
       </div>
-    </div>
+    </Outer>
   );
 };
