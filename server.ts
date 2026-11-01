@@ -293,13 +293,13 @@ async function startServer() {
   });
   app.use(async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-    const match = req.path.match(/^\/(annonce|article|guide|garage|fiche-technique)\/([^/]+)\/?$/);
+    const match = req.path.match(/^\/(annonce|article|guide|garage|fiche-technique|fiches-techniques)\/([^/]+)\/?$/);
     if (match) {
       try {
         const shellPath = process.env.NODE_ENV === 'production' ? path.join(process.cwd(), 'dist', 'spa.html') : path.join(process.cwd(), 'index.html');
         let shell = fs.readFileSync(shellPath, 'utf8');
         if (vite) shell = await vite.transformIndexHtml(req.originalUrl, shell);
-        const input = { query: { kind: match[1], slugid: match[2] }, appShell: shell };
+        const input = { query: { kind: match[1] === 'fiches-techniques' ? 'marque' : match[1], slugid: match[2] }, appShell: shell };
         return await (match[1] === 'annonce' ? listingHtmlHandler : detailHtmlHandler)(input, res);
       } catch { return res.status(503).setHeader('Cache-Control', 'no-store').send('Page temporairement indisponible'); }
     }
