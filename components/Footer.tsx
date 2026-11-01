@@ -17,6 +17,8 @@ function useSocialItems() {
     .map(({ key, label }) => ({ key, label, href: data![key] as string, Icon: SOCIAL_ICONS[key] }));
 }
 import { SectionLabel } from './ui/Typography';
+import { Link } from 'react-router-dom';
+import { getUrlFromState } from '../utils/urlUtils';
 import Newsletter from './Newsletter';
 
 interface FooterProps {
@@ -27,20 +29,20 @@ const FooterHeading = ({ children }: React.PropsWithChildren<{}>) => (
   <h3 className="font-black text-lg mb-6 text-white tracking-tight uppercase">{children}</h3>
 );
 
-const FooterLink = ({ onClick, children, isPrimary = false, icon, className }: React.PropsWithChildren<{ onClick?: () => void, isPrimary?: boolean, icon?: React.ReactNode, className?: string }>) => (
+const FooterLink = ({ view, children, isPrimary = false, icon, className }: React.PropsWithChildren<{ view: string, isPrimary?: boolean, icon?: React.ReactNode, className?: string }>) => (
   <li className={className}>
-    <button 
-      onClick={onClick} 
+    <Link 
+      to={getUrlFromState(view)} 
       className={`transition-colors flex items-center gap-2 focus:outline-none hover:underline text-left ${isPrimary ? 'text-primary-600 font-black' : 'text-gray-400 hover:text-white font-medium'}`}
     >
       {!isPrimary && !icon && <span className="w-1 h-1 rounded-full bg-gray-600"></span>}
       {icon}
       {children}
-    </button>
+    </Link>
   </li>
 );
 
-const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+const Footer: React.FC<FooterProps> = () => {
   const socialItems = useSocialItems();
   const LOGO_WHITE = "https://www.moto-scoot.tn/site-logo/logo-white.svg";
 
@@ -50,9 +52,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand Column */}
           <div className="space-y-8">
-            <button 
+            <Link 
+              to="/"
               className="flex flex-col items-start gap-4 cursor-pointer group focus:outline-none text-left" 
-              onClick={() => onNavigate?.('home')}
               aria-label="Retour à l'accueil"
             >
                <img 
@@ -61,7 +63,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                  className="h-6 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                />
                <SectionLabel className="text-primary-600">La référence moto</SectionLabel>
-            </button>
+            </Link>
             <p className="text-gray-500 text-sm leading-relaxed font-medium max-w-xs">
               La référence en Tunisie pour l'achat et la vente de motos d'occasion et neuves. Trouvez votre liberté sur deux roues.
             </p>
@@ -78,10 +80,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div>
             <FooterHeading>Navigation</FooterHeading>
             <ul className="space-y-4 text-sm">
-              <FooterLink onClick={() => onNavigate?.('home')}>Accueil</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('search')}>Annonces</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('news')}>Actualités</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('contact')}>Contact</FooterLink>
+              <FooterLink view="home">Accueil</FooterLink>
+              <FooterLink view="search">Annonces</FooterLink>
+              <FooterLink view="news">Actualités</FooterLink>
+              <FooterLink view="contact">Contact</FooterLink>
             </ul>
           </div>
 
@@ -89,11 +91,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div>
             <FooterHeading>Informations</FooterHeading>
             <ul className="space-y-4 text-sm">
-              <FooterLink onClick={() => onNavigate?.('about')}>À propos de nous</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('terms')}>Conditions Générales</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('legal')}>Confidentialité</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('cookies')}>Cookies</FooterLink>
-              <FooterLink onClick={() => onNavigate?.('faq')}>FAQ</FooterLink>
+              <FooterLink view="about">À propos de nous</FooterLink>
+              <FooterLink view="terms">Conditions Générales</FooterLink>
+              <FooterLink view="legal">Confidentialité</FooterLink>
+              <FooterLink view="cookies">Cookies</FooterLink>
+              <FooterLink view="faq">FAQ</FooterLink>
             </ul>
           </div>
 
