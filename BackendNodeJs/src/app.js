@@ -38,7 +38,9 @@ app.use(helmet({
 const corsOptions = {
   origin: (origin, cb) => cb(null, origin || true),
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: '*',
+  // No allowedHeaders: cors() then echoes Access-Control-Request-Headers.
+  // A literal '*' is ignored by browsers on credentialed requests, which made
+  // them reject Content-Type (e.g. POST /api/analytics/page-view).
   exposedHeaders: ['X-Request-Id', 'Content-Length', 'Content-Type'],
   credentials: true,
   maxAge: 86400,

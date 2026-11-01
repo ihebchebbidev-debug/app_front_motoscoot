@@ -37,6 +37,9 @@ const SITE_ORIGIN = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = 'https://www.moto-scoot.tn/og-banner.webp';
 const SITE_NAME = 'MotoScoot.tn';
 const BRAND_NAME = 'MotoScoot';
+// Path the visitor landed on. The JSON-LD the server stamped into the HTML
+// (script[data-ssr-ld]) describes this path only.
+const LANDING_PATH = typeof window !== 'undefined' ? window.location.pathname : '';
 
 // Strip noisy tracking params from canonical URLs so Google doesn't see
 // dozens of "duplicate" pages (utm_*, fbclid, gclid, ref, etc.).
@@ -215,10 +218,17 @@ const SEO: React.FC<SEOProps> = ({
     upsertOrRemoveLink('next', nextUrl);
 
     // ----- JSON-LD -----
+    // On the landing page the server blocks are the single source of truth:
+    // adding ours on top gave Google two conflicting entities per URL. After
+    // client-side navigation they describe the previous page, so drop them.
+    const ssrBlocks = document.querySelectorAll('script[data-ssr-ld]');
+    const keepServerLd = ssrBlocks.length > 0 && window.location.pathname === LANDING_PATH;
+    if (!keepServerLd) ssrBlocks.forEach((el) => el.remove());
+
     // Page-specific block (Product, Article, FAQPage, etc.)
     const SCRIPT_ID = 'schema-jsonld-page';
     document.getElementById(SCRIPT_ID)?.remove();
-    if (schema) {
+    if (schema && !keepServerLd) {
       const script = document.createElement('script');
       script.id = SCRIPT_ID;
       script.type = 'application/ld+json';
@@ -229,7 +239,7 @@ const SEO: React.FC<SEOProps> = ({
     // Breadcrumbs block (managed independently so pages can omit it)
     const CRUMB_ID = 'schema-jsonld-breadcrumbs';
     document.getElementById(CRUMB_ID)?.remove();
-    if (breadcrumbs && breadcrumbs.length > 0) {
+    if (breadcrumbs && breadcrumbs.length > 0 && !keepServerLd) {
       const crumbScript = document.createElement('script');
       crumbScript.id = CRUMB_ID;
       crumbScript.type = 'application/ld+json';

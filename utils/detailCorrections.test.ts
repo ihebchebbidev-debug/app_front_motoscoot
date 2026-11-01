@@ -67,4 +67,46 @@ test('short sheet ending 500 fetches its full slug and renders original price wi
     assert.ok(result.body.includes('48 000 DT'));
     assert.equal(result.body.includes(',000 DT'), false);
   } finally { globalThis.fetch = original; }
+});test('sheet engine size keeps its decimal point (124.7 cc, not 1247 cc)', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, category: 'Scooter', price_new: '9000', updated_at: '2026-11-01T19:54:01Z', engine: { cc: '124.7 cc', power: '12.6 ch' }, dimensions: { weight: '136 kg' } });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'sym-jet-14-evo-125' }, appShell: '<html><head></head><body><div id="root"></div><script src="app.js"></script></body></html>' }, result);
+    assert.equal(result.code, 200);
+    assert.equal(result.body.includes('1247'), false);
+    assert.ok(result.body.includes('124,7'));
+    assert.ok(result.body.includes('"value":124.7'));
+  } finally { globalThis.fetch = original; }
+});
+test('sheet body gives crawlers one h1 with the brand, a dated price, a spec table and the brand link', async () => {
+  const { renderFicheBody } = await import('../api/og-prerender');
+  const html = renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', price_new: '9000', updated_at: '2026-11-01T19:54:01Z', engine: { cc: '124.7 cc' }, dimensions: { weight: '136 kg' } });
+  assert.equal(html.match(/<h1>/g)?.length, 1);
+  assert.ok(html.includes('<h1>SYM Jet 14 EVO 125</h1>'));
+  assert.ok(html.includes('prix relevé en novembre 2026'));
+  assert.ok(html.includes('<th scope="row">Poids</th><td>136 kg</td>'));
+  assert.ok(html.includes('/fiches-techniques/sym"'));
+});
+test('sheet price is a catalogue price, not a MotoScoot offer in stock', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'honda-cb-500', brand: 'Honda', model: 'CB 500', price_new: 48000 });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'honda-cb-500' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.equal(result.body.includes('InStock'), false);
+    assert.equal(result.body.includes('"seller"'), false);
+  } finally { globalThis.fetch = original; }
+});
+test('listing emits one Product + Vehicle node, not two competing entities', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ listing: { id: 'x', listing_number: 3, title: 'Kymco DINK-R 2026', brand: 'Kymco', model: 'DINK-R', year: 2026, price: 10000, mileage: 11000, images: ['https://motoscoot.ihebchebbi.pro/uploads/a.webp'] } });
+    const result = responseCapture();
+    await listingHandler({ query: { slugid: 'kymco-dink-r-2026-3' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.equal(result.code, 200);
+    assert.equal(result.body.match(/"@type":\["Product","Vehicle"\]/g)?.length, 1);
+    assert.equal(result.body.includes('"@type":"Vehicle"'), false);
+    assert.ok(result.body.includes('"value":11000'));
+  } finally { globalThis.fetch = original; }
 });

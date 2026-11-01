@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTechSpecsBrands, useTechSpecsSearch } from '../hooks/useTechSpecs';
-import { getOptimizedImageUrl, slugify } from '../utils/urlUtils';
+import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
+import { Link } from 'react-router-dom';
 import { useBrands } from '../hooks/useReferenceData';
 import { Section } from './ui/Section';
 import { Reveal } from './ui/Reveal';
@@ -63,8 +64,8 @@ const COUNTRIES: Record<string, string[]> = {
   "France": ["Peugeot Motorcycles"]
 };
 
-const BrandCard = memo(({ brand, onClick, logoMap }: { brand: string; onClick: (brand: string) => void; logoMap: Record<string, string> }) => (
-  <button onClick={() => onClick(brand)} className={S.Card} aria-label={`Voir les modèles ${brand}`}>
+const BrandCard = memo(({ brand, href, onClick, logoMap }: { brand: string; href: string; onClick: (brand: string) => void; logoMap: Record<string, string> }) => (
+  <Link to={href} onClick={() => onClick(brand)} className={S.Card} aria-label={`Voir les modèles ${brand}`}>
     <div className={S.LogoWrapper}>
       {logoMap[brand] ? (
         <img src={logoMap[brand]} alt={brand} className={S.LogoImage} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
@@ -73,7 +74,7 @@ const BrandCard = memo(({ brand, onClick, logoMap }: { brand: string; onClick: (
       )}
     </div>
     <span className={S.BrandName}>{brand}</span>
-  </button>
+  </Link>
 ));
 
 const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunisia = false }) => {
@@ -228,10 +229,14 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
     }
   ], [activeImporter, activeCountry, importersMap]);
 
+  // Cards are real links (crawlable); the click only records the brand visit.
   const handleBrandClick = useCallback((brand: string) => {
     trackBrandVisit(brand);
-    onNavigate?.('tech-specs-models', { brand, available_in_tunisia: availableInTunisia || undefined });
-  }, [onNavigate, availableInTunisia]);
+  }, []);
+  const brandHref = useCallback(
+    (brand: string) => getUrlFromState('tech-specs-models', { brand, available_in_tunisia: availableInTunisia || undefined }),
+    [availableInTunisia],
+  );
 
   // Open a spec directly from the cross-search results card.
   const handleSpecClick = useCallback((spec: any) => {
@@ -274,7 +279,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
       
       <TechSpecsHero 
         title="Fiches Techniques"
-        subtitle="Caractéristiques officielles, performances et prix du neuf de plus de 250 modèles."
+        subtitle="Caractéristiques officielles et prix du neuf des modèles vendus en Tunisie."
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent="Fiches Techniques"
         onBack={() => onNavigate?.('home')}
@@ -387,6 +392,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                     <Reveal key={brand} animation="fade-in-up" delay={idx * 40}>
                       <BrandCard
                         brand={brand}
+                        href={brandHref(brand)}
                         onClick={handleBrandClick}
                         logoMap={logoMap}
                       />
@@ -415,6 +421,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                 <Reveal key={brand} animation="fade-in-up" delay={idx % 10 * 20}>
                   <BrandCard
                     brand={brand}
+                    href={brandHref(brand)}
                     onClick={handleBrandClick}
                     logoMap={logoMap}
                   />

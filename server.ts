@@ -282,9 +282,12 @@ async function startServer() {
 
   // Vite middleware for development
   const vite = process.env.NODE_ENV !== 'production' ? await createViteServer({ server: { middlewareMode: true }, appType: 'spa' }) : null;
-  app.get('/sitemap-dynamic.xml', async (_req, res) => {
+  // Mirrors the vercel.json sitemap rewrites: /sitemap-dynamic.xml -> /api/sitemap.xml,
+  // /sitemap-<type>.xml -> /api/sitemap-<type>.xml.
+  app.get(/^\/sitemap-(dynamic|pages|annonces|articles|guides|marques|fiches|garages)\.xml$/, async (req, res) => {
     try {
-      const response = await fetch(`${API_ORIGIN}/sitemap.xml`, { signal: AbortSignal.timeout(10000) });
+      const type = req.path.slice('/sitemap-'.length, -'.xml'.length);
+      const response = await fetch(`${API_ORIGIN}/${type === 'dynamic' ? 'sitemap.xml' : `sitemap-${type}.xml`}`, { signal: AbortSignal.timeout(10000) });
       if (!response.ok) return res.status(503).send('Sitemap unavailable');
       const xml = await response.text();
       if (!xml.includes('<urlset') && !xml.includes('<sitemapindex')) return res.status(503).send('Invalid sitemap response');
