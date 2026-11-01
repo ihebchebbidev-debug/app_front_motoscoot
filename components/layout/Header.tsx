@@ -26,6 +26,8 @@ import {
 import { useFavorites } from '../../context/FavoritesContext';
 import { throttle } from '../../utils/perfUtils';
 import { useAppNavigation } from '../../context/NavigationContext';
+import { Link } from 'react-router-dom';
+import { getUrlFromState } from '../../utils/urlUtils';
 import { useUser } from '../../context/UserContext';
 import { useUnreadConversationsCount, useConversationsRealtime } from '../../hooks/useConversations';
 
@@ -169,13 +171,17 @@ const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleNavClick = useCallback((view: any, params?: any) => {
+  const closeMenus = useCallback(() => {
     setIsMobileSheetOpen(false);
     setIsNewsMenuOpen(false);
     setIsTechMenuOpen(false);
     setIsUserMenuOpen(false);
+  }, []);
+
+  const handleNavClick = useCallback((view: any, params?: any) => {
+    closeMenus();
     navigateTo(view, params);
-  }, [navigateTo]);
+  }, [navigateTo, closeMenus]);
 
   // On mobile, every route except the home hero gets a solid header by
   // default so the logo/CTA stay legible without requiring scroll.
@@ -193,12 +199,13 @@ const Header: React.FC<HeaderProps> = ({
   const LOGO_COLOR = "https://www.moto-scoot.tn/site-logo/logo-color.svg";
   const LOGO_WHITE = "https://www.moto-scoot.tn/site-logo/logo-white.svg";
 
-  const MenuLink = ({ icon: Icon, image, label, subLabel, onClick, badge, variant = 'default', tag }: any) => {
+  const MenuLink = ({ icon: Icon, image, label, subLabel, onClick, to, badge, variant = 'default', tag }: any) => {
     const isPrimary = variant === 'primary';
+    const Tag: any = to ? Link : 'button';
     return (
       <div className="px-5">
-        <button
-          onClick={onClick}
+        <Tag
+          {...(to ? { to, onClick: closeMenus } : { onClick })}
           className={`w-full flex items-center justify-between px-4 py-3.5 my-1.5 rounded-2xl border transition-all active:scale-[0.99] ${
             isPrimary
               ? 'bg-orange-50 border-orange-100'
@@ -234,7 +241,7 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
           <ChevronRight size={16} className="shrink-0 text-gray-300" />
-        </button>
+        </Tag>
       </div>
     );
   };
@@ -268,9 +275,10 @@ const Header: React.FC<HeaderProps> = ({
       >
         <div className="w-full max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 flex justify-between items-center h-full">
           
-          <button 
+          <Link 
+            to="/"
             className="flex items-center cursor-pointer group transition-transform active:scale-95" 
-            onClick={() => handleNavClick('home')}
+            onClick={closeMenus}
             aria-label="Retour à l'accueil"
           >
             <img 
@@ -278,22 +286,22 @@ const Header: React.FC<HeaderProps> = ({
               alt="moto-scoot.tn" width={373} height={48} 
               className="h-[23px] max-[360px]:h-[21px] md:h-7 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105"
             />
-          </button>
+          </Link>
 
           {/* Navigation Desktop */}
           <nav className="hidden lg:flex items-center gap-8 h-full lg:ml-12 flex-1 justify-end">
             {!isAdminUser && (
               <>
                 <div className="flex items-center gap-8 h-full">
-                  <button onClick={() => handleNavClick('search')} className={linkBaseClasses}>Annonces</button>
+                  <Link to={getUrlFromState('search')} onClick={closeMenus} className={linkBaseClasses}>Annonces</Link>
                   <div className="relative h-full flex items-center" ref={techMenuRef}>
                       <button onClick={() => setIsTechMenuOpen(!isTechMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
                           Fiches Techniques <ChevronDown size={14} className={`transition-transform duration-300 ${isTechMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
                       </button>
                       {isTechMenuOpen && (
                           <div className="absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]">
-                              <button onClick={() => handleNavClick('tech-specs-brands')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</button>
-                              <button onClick={() => handleNavClick('comparator')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</button>
+                              <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
+                              <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
                           </div>
                       )}
                   </div>
@@ -303,8 +311,8 @@ const Header: React.FC<HeaderProps> = ({
                       </button>
                       {isNewsMenuOpen && (
                           <div className="absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]">
-                              <button onClick={() => handleNavClick('news')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</button>
-                              <button onClick={() => handleNavClick('tips')} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</button>
+                              <Link to={getUrlFromState('news')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</Link>
+                              <Link to={getUrlFromState('tips')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</Link>
                           </div>
                       )}
                   </div>
@@ -481,9 +489,9 @@ const Header: React.FC<HeaderProps> = ({
           aria-modal="true"
         >
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
-             <button onClick={() => handleNavClick('home')} className="group">
+             <Link to="/" onClick={closeMenus} className="group">
                <img src={LOGO_COLOR} alt="moto-scoot.tn" width={373} height={48} className="h-6 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105" />
-             </button>
+             </Link>
              <button 
                onClick={() => setIsMobileSheetOpen(false)}
                className="p-2 text-gray-500 hover:text-gray-900 bg-gray-50 rounded-full transition-colors active:scale-90"
@@ -546,18 +554,18 @@ const Header: React.FC<HeaderProps> = ({
             {/* Section: Marché */}
             <div className="mt-4">
               <span className="px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest block mb-1">Marché</span>
-              <MenuLink image={iconSearch} label="Acheter" onClick={() => handleNavClick('search')} />
+              <MenuLink image={iconSearch} label="Acheter" to={getUrlFromState('search')} />
               <MenuLink image={iconSell} label="Vendre" tag="Gratuit" variant="primary" onClick={() => isLoggedIn ? handleNavClick('deposit') : triggerLogin()} />
-              <MenuLink image={iconSpecs} label="Fiches techniques" onClick={() => handleNavClick('tech-specs-brands')} />
-              <MenuLink image={iconCompare} label="Comparateur" onClick={() => handleNavClick('comparator')} />
+              <MenuLink image={iconSpecs} label="Fiches techniques" to={getUrlFromState('tech-specs-brands')} />
+              <MenuLink image={iconCompare} label="Comparateur" to={getUrlFromState('comparator')} />
             </div>
 
             {/* Section: Services */}
             <div className="mt-4">
               <span className="px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest block mb-1">Services</span>
               {/* Garages — temporarily hidden until launch */}
-              <MenuLink image={iconTips} label="Conseils et guides" onClick={() => handleNavClick('tips')} />
-              <MenuLink image={iconNews} label="Actualités et essais" onClick={() => handleNavClick('news')} />
+              <MenuLink image={iconTips} label="Conseils et guides" to={getUrlFromState('tips')} />
+              <MenuLink image={iconNews} label="Actualités et essais" to={getUrlFromState('news')} />
               {isAdminUser && <MenuLink image={iconAdmin} label="Administration" onClick={() => handleNavClick('admin')} />}
             </div>
 
