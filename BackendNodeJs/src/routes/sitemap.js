@@ -3,7 +3,9 @@ const { query } = require('../config/database');
 const logger = require('../utils/logger');
 
 /**
- * GET /api/sitemap.xml
+ * GET /api/sitemap.xml          every URL in one file
+ * GET /api/sitemap-<type>.xml   one content type: pages, annonces, articles,
+ *                               guides, marques, fiches, garages
  *
  * Dynamic sitemap aggregating every public, indexable URL from the database:
  * static routes + active listings + published articles + tips + tech-spec
@@ -21,7 +23,11 @@ const logger = require('../utils/logger');
 const SITE_ORIGIN = process.env.PUBLIC_SITE_ORIGIN || 'https://www.moto-scoot.tn';
 const SITEMAP_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-let _cache = { xml: null, at: 0 };
+let _cache = { groups: null, at: 0 };
+
+// One sitemap per content type (/api/sitemap-<type>.xml) so Search Console
+// reports indexing per type; /api/sitemap.xml keeps every URL in one file.
+const SITEMAP_TYPES = ['pages', 'annonces', 'articles', 'guides', 'marques', 'fiches', 'garages'];
 
 function slugify(text) {
   if (!text) return 'details';
@@ -67,9 +73,9 @@ function urlEntry({ loc, lastmod, changefreq = 'weekly', priority = 0.5 }) {
   ].filter(Boolean).join('\n');
 }
 
-async function buildSitemap() {
+async function buildGroups() {
   const now = Date.now();
-  if (_cache.xml && now - _cache.at < SITEMAP_TTL_MS) return _cache.xml;
+  if (_cache.groups && now - _cache.at < SITEMAP_TTL_MS) return _cache.groups;
 
   const safe = (sql, params, fallback = []) =>
     query(sql, params).then(r => r.rows).catch((err) => {
@@ -122,7 +128,7 @@ async function buildSitemap() {
     ),
   ]);
 
-  const entries = [];
+  const groups = Object.fromEntries(SITEMAP_TYPES.map(type => [type, []]));
 
   // Static / marketing
   const staticRoutes = [
@@ -143,13 +149,13 @@ async function buildSitemap() {
   // Garages are noindex while the directory only holds demo data (audit C3);
   // set SITEMAP_INCLUDE_GARAGES=1 once real garages are listed.
   const includeGarages = process.env.SITEMAP_INCLUDE_GARAGES === '1';
-  if (includeGarages) staticRoutes.splice(2, 0, { path: '/garages', changefreq: 'daily', priority: 0.9 });
+  if (includeGarages) groups.garages.push(urlEntry({ loc: `${SITE_ORIGIN}/garages`, lastmod: latest(garages), changefreq: 'daily', priority: 0.9 }));
   for (const r of staticRoutes) {
-    entries.push(urlEntry({ loc: `${SITE_ORIGIN}${r.path}`, lastmod: r.lastmod, changefreq: r.changefreq, priority: r.priority }));
+    groups.pages.push(urlEntry({ loc: `${SITE_ORIGIN}${r.path}`, lastmod: r.lastmod, changefreq: r.changefreq, priority: r.priority }));
   }
 
   for (const l of listings) {
-    entries.push(urlEntry({
+    groups.annonces.push(urlEntry({
       loc: `${SITE_ORIGIN}/annonce/${slugify(l.title)}-${l.listing_number ?? l.id}`,
       lastmod: l.lastmod,
       changefreq: 'daily',
@@ -157,7 +163,7 @@ async function buildSitemap() {
     }));
   }
   for (const a of articles) {
-    entries.push(urlEntry({
+    groups.articles.push(urlEntry({
       loc: `${SITE_ORIGIN}/article/${canonicalSlug(a.title)}-${a.id}`,
       lastmod: a.lastmod,
       changefreq: 'monthly',
@@ -167,7 +173,7 @@ async function buildSitemap() {
   // Guides are included now that every guide page loads for crawlers (SEO
   // audit E1, 2026-11); SITEMAP_INCLUDE_GUIDES=0 excludes them again.
   if (process.env.SITEMAP_INCLUDE_GUIDES !== '0') for (const t of tips) {
-    entries.push(urlEntry({
+    groups.guides.push(urlEntry({
       loc: `${SITE_ORIGIN}/guide/${canonicalSlug(t.title)}-${t.id}`,
       lastmod: t.lastmod,
       changefreq: 'monthly',
@@ -175,7 +181,7 @@ async function buildSitemap() {
     }));
   }
   if (includeGarages) for (const g of garages) {
-    entries.push(urlEntry({
+    groups.garages.push(urlEntry({
       loc: `${SITE_ORIGIN}/garage/${slugify(g.name)}-${g.id}`,
       lastmod: g.lastmod,
       changefreq: 'weekly',
@@ -191,7 +197,7 @@ async function buildSitemap() {
     if (slug) brands.set(slug, [...(brands.get(slug) || []), ts]);
   }
   for (const [slug, specs] of brands) {
-    entries.push(urlEntry({
+    groups.marques.push(urlEntry({
       loc: `${SITE_ORIGIN}/fiches-techniques/${slug}`,
       lastmod: latest(specs),
       changefreq: 'weekly',
@@ -199,7 +205,7 @@ async function buildSitemap() {
     }));
   }
   for (const ts of techSpecs) {
-    entries.push(urlEntry({
+    groups.fiches.push(urlEntry({
       loc: `${SITE_ORIGIN}/fiche-technique/${ts.slug || `${slugify(ts.title)}-${ts.id}`}`,
       lastmod: ts.lastmod,
       changefreq: 'monthly',
@@ -207,23 +213,31 @@ async function buildSitemap() {
     }));
   }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  _cache = { groups, at: now };
+  return groups;
+}
+
+// `type` = one of SITEMAP_TYPES, or undefined for every URL.
+async function buildSitemap(type) {
+  const groups = await buildGroups();
+  const entries = type ? groups[type] : SITEMAP_TYPES.flatMap(t => groups[t]);
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries.join('\n')}
 </urlset>
 `;
-
-  _cache = { xml, at: now };
-  return xml;
 }
 
-router.get('/sitemap.xml', async (_req, res, next) => {
+const sendSitemap = (type) => async (_req, res, next) => {
   try {
-    const xml = await buildSitemap();
+    const xml = await buildSitemap(type);
     res.set('Content-Type', 'application/xml; charset=utf-8');
     res.set('Cache-Control', 'public, max-age=3600, s-maxage=3600');
     res.send(xml);
   } catch (err) { next(err); }
-});
+};
+
+router.get('/sitemap.xml', sendSitemap());
+for (const type of SITEMAP_TYPES) router.get(`/sitemap-${type}.xml`, sendSitemap(type));
 
 module.exports = router;
