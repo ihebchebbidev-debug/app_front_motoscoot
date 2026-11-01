@@ -91,7 +91,7 @@ const Contact: React.FC<BasePageProps> = ({ onNavigate }) => {
                   </div>
                   <div className="flex gap-4">
                     <Phone className="text-primary-600 shrink-0" size={20} /> 
-                    <p className="text-sm font-bold text-gray-700">29 249 512</p>
+                    <p className="text-sm font-bold text-gray-700">21 719 109</p>
                   </div>
                   <div className="flex gap-4">
                     <Mail className="text-primary-600 shrink-0" size={20} /> 

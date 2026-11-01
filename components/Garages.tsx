@@ -33,6 +33,7 @@ import { Reveal } from './ui/Reveal';
 import { SortDropdown } from './ui/SortDropdown';
 import AdBanner from './common/AdBanner';
 import SEO from './common/SEO';
+import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features';
 
 const S = {
   Page: "min-h-screen bg-muted font-sans pb-20",
@@ -205,6 +206,7 @@ const Garages: React.FC<BasePageProps> = ({ onNavigate }) => {
         title="Garages & Mécaniciens Moto en Tunisie — Annuaire des Experts"
         description="Trouvez le meilleur garage moto près de chez vous en Tunisie. Avis vérifiés, spécialités, services et coordonnées de tous les garages moto à Tunis, Sousse, Sfax."
         url="/garages"
+        robots={GARAGES_PUBLIC ? undefined : GARAGES_ROBOTS}
         keywords={['garage moto Tunisie', 'mécanicien moto Tunis', 'réparation moto Sousse', 'entretien scooter Sfax']}
         breadcrumbs={[
           { name: 'Accueil', url: '/' },

@@ -19,6 +19,8 @@ interface SEOProps {
   keywords?: string[];
   /** Set false on private/duplicate-y pages (search filters, dashboards). */
   noIndex?: boolean;
+  /** Explicit robots directive (e.g. "noindex, follow"); overrides the index/noIndex default. */
+  robots?: string;
   /** Renders a BreadcrumbList JSON-LD automatically. */
   breadcrumbs?: BreadcrumbItem[];
   /** For type="article": ISO publish date — used by article:published_time. */
@@ -80,6 +82,7 @@ const SEO: React.FC<SEOProps> = ({
   schema,
   keywords,
   noIndex = false,
+  robots,
   breadcrumbs,
   publishedTime,
   modifiedTime,
@@ -128,9 +131,9 @@ const SEO: React.FC<SEOProps> = ({
       'name',
       'robots',
       'content',
-      noIndex
+      robots || (noIndex
         ? 'noindex, nofollow'
-        : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+        : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')
     );
 
     // Keywords (page-specific). Kept short — Google ignores it but Bing/others still read it.
@@ -271,7 +274,7 @@ const SEO: React.FC<SEOProps> = ({
       orgScript.text = JSON.stringify(org);
       document.head.appendChild(orgScript);
     }
-  }, [fullTitle, finalDescription, finalImage, type, finalUrl, schema, keywords, noIndex, breadcrumbs, publishedTime, modifiedTime, prevUrl, nextUrl, twitterHandle, seo?.gsc_verification_code, seo?.organization_name, seo?.organization_logo, seo?.organization_email, seo?.organization_phone, seo?.organization_address, seo?.enable_organization_jsonld]);
+  }, [fullTitle, finalDescription, finalImage, type, finalUrl, schema, keywords, noIndex, robots, breadcrumbs, publishedTime, modifiedTime, prevUrl, nextUrl, twitterHandle, seo?.gsc_verification_code, seo?.organization_name, seo?.organization_logo, seo?.organization_email, seo?.organization_phone, seo?.organization_address, seo?.enable_organization_jsonld]);
 
   return null;
 };

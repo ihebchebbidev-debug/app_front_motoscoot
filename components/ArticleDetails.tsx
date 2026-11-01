@@ -27,6 +27,7 @@ import Header from './layout/Header';
 import { useArticles, useArticle, useRelatedArticles } from '../hooks/useArticles';
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
+import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
@@ -122,7 +123,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         title={article.title} 
         description={article.summary} 
         image={article.image} 
-        url={`/article/${(article as any).slug || article.id}`}
+        url={getUrlFromState('article-details', { id: article.id, title: article.title })}
         type="article"
         publishedTime={(article as any).publishedAt || (article as any).published_at || (article as any).createdAt}
         modifiedTime={(article as any).updatedAt || (article as any).updated_at}

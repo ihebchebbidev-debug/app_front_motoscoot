@@ -106,7 +106,6 @@ async function buildSitemap() {
   const staticRoutes = [
     { path: '/',                    changefreq: 'daily',   priority: 1.0 },
     { path: '/annonces',            changefreq: 'hourly',  priority: 0.95 },
-    { path: '/garages',             changefreq: 'daily',   priority: 0.9 },
     { path: '/actualites',          changefreq: 'daily',   priority: 0.85 },
     { path: '/conseils',            changefreq: 'weekly',  priority: 0.8 },
     { path: '/fiches-techniques',   changefreq: 'weekly',  priority: 0.8 },
@@ -119,6 +118,10 @@ async function buildSitemap() {
     { path: '/conditions',          changefreq: 'yearly',  priority: 0.3 },
     { path: '/cookies',             changefreq: 'yearly',  priority: 0.3 },
   ];
+  // Garages are noindex while the directory only holds demo data (audit C3);
+  // set SITEMAP_INCLUDE_GARAGES=1 once real garages are listed.
+  const includeGarages = process.env.SITEMAP_INCLUDE_GARAGES === '1';
+  if (includeGarages) staticRoutes.splice(2, 0, { path: '/garages', changefreq: 'daily', priority: 0.9 });
   for (const r of staticRoutes) {
     entries.push(urlEntry({ loc: `${SITE_ORIGIN}${r.path}`, changefreq: r.changefreq, priority: r.priority }));
   }
@@ -149,7 +152,7 @@ async function buildSitemap() {
       priority: 0.6,
     }));
   }
-  for (const g of garages) {
+  if (includeGarages) for (const g of garages) {
     entries.push(urlEntry({
       loc: `${SITE_ORIGIN}/garage/${slugify(g.name)}-${g.id}`,
       lastmod: g.lastmod,

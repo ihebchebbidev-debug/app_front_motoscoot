@@ -103,6 +103,12 @@ function injectIntoIndex(indexHtml: string, snap: SeoSnapshot): string {
   html = html.replace(/\sdata-pre-hydrate/g, '');
   if (snap.path !== '/') html = html.replace(/<link[^>]+rel="preload"[^>]+as="image"[^>]*>/gi, '');
 
+  if (snap.robots) {
+    const robots = escapeHtml(snap.robots);
+    html = html.replace(/<meta\s+name="robots"[^>]*>/gi, `<meta name="robots" content="${robots}" />`);
+    html = html.replace(/<meta\s+name="googlebot"[^>]*>/gi, `<meta name="googlebot" content="${robots}" />`);
+  }
+
   // Inject our route-specific head right before </head>.
   html = html.replace('</head>', `${renderHead(snap)}\n  </head>`);
 

@@ -1,3 +1,5 @@
+import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../../config/features';
+
 /**
  * Static SEO snapshots for build-time prerender.
  *
@@ -37,6 +39,8 @@ export interface SeoSnapshot {
   ogImage?: string;
   /** Optional extra schema.org JSON-LD blocks for this page. */
   schemas?: Record<string, unknown>[];
+  /** Optional robots directive replacing the site-wide "index, follow". */
+  robots?: string;
 }
 
 const SITE = 'https://www.moto-scoot.tn';
@@ -61,13 +65,13 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
       "Trouvez, vendez et comparez des motos et scooters en Tunisie : annonces neuves et d'occasion, prix, fiches techniques et nouveautés du marché.",
     h1: "MotoScoot — Motos & Scooters d'Occasion en Tunisie",
     intro:
-      "moto-scoot.tn est la 1ʳᵉ plateforme tunisienne dédiée à l'achat et la vente de motos et scooters d'occasion. Découvrez plus de 500 annonces vérifiées par nos modérateurs, des fiches techniques détaillées et un réseau de garages partenaires partout en Tunisie.",
+      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne pour acheter et vendre des motos et scooters d'occasion. Chaque annonce indique le prix en dinars (DT), l'année, le kilométrage et la ville, et la publication est gratuite pour les particuliers. Le site propose aussi les fiches techniques et les prix du neuf des modèles vendus en Tunisie, un comparateur et des conseils d'entretien.",
   },
   {
     path: '/annonces',
     title: "Annonces Moto & Scooter d'Occasion en Tunisie | MotoScoot",
     description:
-      "Parcourez plus de 500 annonces de motos et scooters d'occasion en Tunisie. Filtrez par marque, modèle, prix, kilométrage et ville. Mises à jour quotidiennes.",
+      "Motos et scooters d'occasion en Tunisie : prix en DT, année et kilométrage sur chaque annonce. Filtrez par marque, modèle, budget, cylindrée et ville.",
     h1: "Annonces de Motos et Scooters d'Occasion",
     intro:
       "Découvrez toutes les annonces de motos et scooters d'occasion en Tunisie — Yamaha, Honda, Suzuki, Kawasaki, BMW, KTM, Piaggio, Vespa et plus. Filtrez par prix, marque, modèle, cylindrée et localisation.",
@@ -80,6 +84,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/garages',
+    robots: GARAGES_PUBLIC ? undefined : GARAGES_ROBOTS,
     title: "Garages Moto en Tunisie — Réparation & Entretien | MotoScoot",
     description:
       "Annuaire des meilleurs garages moto en Tunisie. Réparation, entretien, diagnostic, accessoires. Avis vérifiés, contacts, horaires et géolocalisation.",
@@ -151,7 +156,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/a-propos',
     title: "À Propos — MotoScoot | MotoScoot.tn",
     description:
-      "moto-scoot.tn est la première plateforme tunisienne pensée par des motards, pour des motards. Découvrez notre mission, nos valeurs et notre équipe.",
+      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne de motos et scooters, créée par des motards pour des motards. Mission, valeurs et équipe.",
     h1: "À Propos de moto-scoot.tn",
     intro:
       "moto-scoot.tn est née de la passion d'une équipe de motards tunisiens. Notre mission : rendre l'achat et la vente de motos fluides, sûrs et passionnants partout en Tunisie.",
@@ -166,7 +171,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/contact',
     title: "Contact — Nous Joindre | MotoScoot",
     description:
-      "Contactez l'équipe moto-scoot.tn : support utilisateur, partenariats, signalements. Téléphone +216 29 249 512 ou via le formulaire de contact.",
+      "Contactez l'équipe moto-scoot.tn : support utilisateur, partenariats, signalements. Téléphone +216 21 719 109 ou via le formulaire de contact.",
     h1: "Contactez moto-scoot.tn",
     intro:
       "Une question, une suggestion, un problème ? L'équipe MotoScoot est joignable par téléphone, email ou via notre formulaire de contact. Nous répondons sous 24h ouvrées.",
