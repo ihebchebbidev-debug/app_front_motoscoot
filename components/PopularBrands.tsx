@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
 import { brandsApi, PopularBrand } from '../services/miscApi';
 import { Button } from './ui/Button';
+import { Link } from 'react-router-dom';
+import { getUrlFromState } from '../utils/urlUtils';
 
 interface PopularBrandsProps {
   onNavigate?: (view: any, params?: any) => void;
@@ -89,10 +91,9 @@ const PopularBrands: React.FC<PopularBrandsProps> = ({ onNavigate }) => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-6">
             {visible.map((b) => (
-              <button
+              <Link
                 key={b.id ?? b.name}
-                type="button"
-                onClick={() => onNavigate?.('tech-specs-models', { brand: b.name })}
+                to={getUrlFromState('tech-specs-models', { brand: b.name })}
                 title={b.name}
                 aria-label={b.name}
                 className="group relative flex flex-col items-center justify-center w-full max-w-[211px] h-[155px] mx-auto bg-transparent cursor-pointer gap-3"
@@ -116,7 +117,7 @@ const PopularBrands: React.FC<PopularBrandsProps> = ({ onNavigate }) => {
                 <span className="text-[13px] font-black text-slate-900 uppercase tracking-wider group-hover:text-orange-600 transition-colors text-center w-full truncate px-2">
                   {b.name}
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
         )}
