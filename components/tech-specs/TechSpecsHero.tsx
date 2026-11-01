@@ -13,6 +13,8 @@ interface TechSpecsHeroProps {
   backText?: string;
   onNavigateHome?: () => void;
   breadcrumbCurrent?: string;
+  /** Show the H1 on mobile too (it is desktop-only by default). */
+  titleOnMobile?: boolean;
 }
 
 // Clean, image-free header used across Tech Specs, News and Tips listing
@@ -40,6 +42,7 @@ export const TechSpecsHero = memo(({
   onBack,
   onNavigateHome,
   breadcrumbCurrent,
+  titleOnMobile = false,
 }: TechSpecsHeroProps) => {
   const { desktopUrl, backgroundColor } = useHeroImages();
   return (
@@ -101,7 +104,7 @@ export const TechSpecsHero = memo(({
             </Reveal>
           )}
           <Reveal animation="fade-in-up" delay={100}>
-            <h1 className={`hidden md:block ${S.MainTitle}`}>{title}</h1>
+            <h1 className={`${titleOnMobile ? 'block' : 'hidden md:block'} ${S.MainTitle}`}>{title}</h1>
           </Reveal>
           {subtitle && (
             <Reveal animation="fade-in-up" delay={200}>

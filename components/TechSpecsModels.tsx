@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect, memo, useDeferredValue, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useEffect, memo, useDeferredValue } from 'react';
 import { 
   Layers, 
   ArrowRight, 
@@ -22,7 +22,8 @@ import { TechSpecsErrorRetry } from './tech-specs/TechSpecsErrorRetry';
 import { FilterBar, FilterOption } from './ui/FilterBar';
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
-import { getOptimizedImageUrl, slugify } from '../utils/urlUtils';
+import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
+import { Link } from 'react-router-dom';
 import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
 
 const S = {
@@ -52,9 +53,9 @@ const S = {
   DetailsButton: "mt-auto w-full py-2.5 bg-primary-600 text-white text-[11px] md:text-[10px] lg:text-[13px] font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary-700 transition-all duration-300 shadow-md shadow-primary-600/20 active:scale-[0.98]"
 };
 
-const ModelCard = memo(({ spec, onClick, highlightTerms }: { spec: any; onClick: (id: string | number) => void; highlightTerms: string[] }) => (
-  <article 
-    onClick={() => onClick(spec.id)} 
+const ModelCard = memo(({ spec, highlightTerms }: { spec: any; highlightTerms: string[] }) => (
+  <Link
+    to={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand}-${spec.model}-${spec.year}` })}
     className={S.ModelCard}
   >
     <div className={S.ImageArea}>
@@ -95,7 +96,7 @@ const ModelCard = memo(({ spec, onClick, highlightTerms }: { spec: any; onClick:
         Fiche technique <ArrowRight size={16} />
       </div>
     </div>
-  </article>
+  </Link>
 ));
 
 const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNavigate, availableInTunisia = false }) => {
@@ -225,16 +226,6 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
     }
   ];
 
-  const handleModelClick = useCallback((id: string | number) => {
-    // Step 3 of the fiche-technique flow: open the detailed spec sheet for
-    // this model. The page is rendered by TechSpecsDetails and routed at
-    // /fiche-technique/<slug>-<id>. We pass `slug` so the URL builder can
-    // produce a clean SEO-friendly path.
-    const spec = brandModels.find((m: any) => String(m.id) === String(id));
-    const slug = spec ? `${spec.brand}-${spec.model}-${spec.year}` : String(id);
-    onNavigate?.('tech-specs-details', { id, specId: id, slug });
-  }, [onNavigate, brandModels]);
-
   const breadcrumbSchema = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -243,19 +234,19 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         "@type": "ListItem",
         "position": 1,
         "name": "Accueil",
-        "item": "https://moto-scoot.tn"
+        "item": "https://www.moto-scoot.tn/"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Fiches Techniques",
-        "item": "https://moto-scoot.tn/tech-specs"
+        "item": "https://www.moto-scoot.tn/fiches-techniques"
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": brandName,
-        "item": `https://moto-scoot.tn/tech-specs/${slugify(brandName)}`
+        "item": `https://www.moto-scoot.tn/fiches-techniques/${slugify(brandName)}`
       }
     ]
   }), [brandName]);
@@ -263,14 +254,15 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
   return (
     <main className={S.Wrapper}>
       <SEO 
-        title={`Gamme ${brandName} - Fiches Techniques & Prix Neuf en Tunisie`} 
-        description={`Découvrez tous les modèles de la gamme ${brandName}. Caractéristiques complètes, motorisations, performances et prix officiels du neuf en Tunisie.`} 
-        url={`/tech-specs/${slugify(brandName)}`}
+        title={`${brandName} : fiches techniques et prix en Tunisie`}
+        description={`Fiches techniques des modèles ${brandName} vendus en Tunisie : prix du neuf en DT, cylindrée, puissance, couple, poids et consommation.`}
+        url={`/fiches-techniques/${slugify(brandName)}`}
         schema={breadcrumbSchema}
       />
       
       <TechSpecsHero 
-        title={`Gamme ${brandName}`}
+        title={`Fiches techniques ${brandName}`}
+        titleOnMobile
         subtitle={`Retrouvez la fiche technique de toute la gamme ${brandName}.`}
         onBack={() => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined })}
         backText="Retour au catalogue"
@@ -312,7 +304,6 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
                 <Reveal key={spec.id} animation="fade-in-up" delay={idx % 6 * 50}>
                   <ModelCard 
                     spec={spec} 
-                    onClick={handleModelClick} 
                     highlightTerms={highlightTerms}
                   />
                 </Reveal>
