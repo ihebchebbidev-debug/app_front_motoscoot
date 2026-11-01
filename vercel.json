@@ -10,6 +10,34 @@
       "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap.xml"
     },
     {
+      "source": "/sitemap-pages.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-pages.xml"
+    },
+    {
+      "source": "/sitemap-annonces.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-annonces.xml"
+    },
+    {
+      "source": "/sitemap-articles.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-articles.xml"
+    },
+    {
+      "source": "/sitemap-guides.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-guides.xml"
+    },
+    {
+      "source": "/sitemap-marques.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-marques.xml"
+    },
+    {
+      "source": "/sitemap-fiches.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-fiches.xml"
+    },
+    {
+      "source": "/sitemap-garages.xml",
+      "destination": "https://motoscoot.ihebchebbi.pro/api/sitemap-garages.xml"
+    },
+    {
       "source": "/annonce/:slugid",
       "destination": "/api/og-listing?slugid=:slugid"
     },

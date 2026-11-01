@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Sitemap index (the URL declared in robots.txt and Search Console).
-  Every URL, fixed pages included, comes from the dynamic sitemap built by the
-  API (BackendNodeJs/src/routes/sitemap.js) with lastmod dates read from the
-  database; vercel.json proxies /sitemap-dynamic.xml to it. When the site
-  grows, add one <sitemap> per content type here.
+  One sitemap per content type, built by the API with lastmod dates read from
+  the database (BackendNodeJs/src/routes/sitemap.js) and proxied by vercel.json.
+  /sitemap-garages.xml exists but stays out of this index while garages are
+  noindex (config/features.ts GARAGES_PUBLIC, API SITEMAP_INCLUDE_GARAGES).
 -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://www.moto-scoot.tn/sitemap-dynamic.xml</loc>
+    <loc>https://www.moto-scoot.tn/sitemap-pages.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.moto-scoot.tn/sitemap-annonces.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.moto-scoot.tn/sitemap-articles.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.moto-scoot.tn/sitemap-guides.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.moto-scoot.tn/sitemap-marques.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.moto-scoot.tn/sitemap-fiches.xml</loc>
   </sitemap>
 </sitemapindex>
