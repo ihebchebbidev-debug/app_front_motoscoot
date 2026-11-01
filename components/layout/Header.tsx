@@ -298,23 +298,21 @@ const Header: React.FC<HeaderProps> = ({
                       <button onClick={() => setIsTechMenuOpen(!isTechMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
                           Fiches Techniques <ChevronDown size={14} className={`transition-transform duration-300 ${isTechMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
                       </button>
-                      {isTechMenuOpen && (
-                          <div className="absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]">
-                              <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
-                              <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
-                          </div>
-                      )}
+                      {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
+                      <div className={`${isTechMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
+                          <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
+                          <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
+                      </div>
                   </div>
                   <div className="relative h-full flex items-center" ref={newsMenuRef}>
                       <button onClick={() => setIsNewsMenuOpen(!isNewsMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
                           Actualités <ChevronDown size={14} className={`transition-transform duration-300 ${isNewsMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
                       </button>
-                      {isNewsMenuOpen && (
-                          <div className="absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]">
-                              <Link to={getUrlFromState('news')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</Link>
-                              <Link to={getUrlFromState('tips')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</Link>
-                          </div>
-                      )}
+                      {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
+                      <div className={`${isNewsMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
+                          <Link to={getUrlFromState('news')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</Link>
+                          <Link to={getUrlFromState('tips')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</Link>
+                      </div>
                   </div>
                   {/* Garages — temporarily hidden until launch */}
                 </div>
