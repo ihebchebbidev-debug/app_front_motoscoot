@@ -401,7 +401,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   return (
     <main className={S.Wrapper}>
       <SEO 
-        title={`${spec.brand} ${spec.model} (${spec.year}) - Fiche Technique & Prix`}
+        title={`${spec.brand} ${spec.model} Prix en Tunisie - Fiche Technique & Prix`}
         description={`Découvrez la fiche technique complète de la ${spec.brand} ${spec.model} (${spec.year}). Caractéristiques, moteur ${spec.engine?.cc || 'N/A'}, puissance ${spec.engine?.power || 'N/A'}, et prix neuf en Tunisie.`}
         image={spec.image}
         type="product"

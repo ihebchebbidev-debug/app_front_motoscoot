@@ -171,9 +171,9 @@ function parsePrice(v: any): number | null {
 function pickTitle(kind: Kind, d: Doc | null): string {
   if (!d) return `${KIND_CONFIG[kind].label} | MotoScoot`;
   if (kind === 'fiche-technique') {
-    const t = [d.brand, d.model, d.year].filter(Boolean).join(' ').trim();
-    // Match competitor SERP pattern: "<Brand> <Model> Prix en Tunisie"
-    return `${t || 'Fiche technique'} Prix en Tunisie | MotoScoot.tn`;
+    const t = [d.brand, d.model].filter(Boolean).join(' ').trim();
+    // Same title as the React page (TechSpecsDetails + admin template "%s | Moto-Scoot.tn").
+    return `${t || 'Fiche technique'} Prix en Tunisie - Fiche Technique & Prix | Moto-Scoot.tn`;
   }
   if (kind === 'garage') {
     return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | MotoScoot`;

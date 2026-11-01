@@ -110,3 +110,12 @@ test('listing emits one Product + Vehicle node, not two competing entities', asy
     assert.ok(result.body.includes('"value":11000'));
   } finally { globalThis.fetch = original; }
 });
+test('sheet title is "<Marque> <Modèle> Prix en Tunisie - Fiche Technique & Prix", without the year', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'kymco-people-s-125', brand: 'Kymco', model: 'People S 125', year: 2025, price_new: 8500 });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'kymco-people-s-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes('<title>Kymco People S 125 Prix en Tunisie - Fiche Technique &amp; Prix | Moto-Scoot.tn</title>'));
+  } finally { globalThis.fetch = original; }
+});
