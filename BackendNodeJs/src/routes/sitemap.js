@@ -6,8 +6,9 @@ const logger = require('../utils/logger');
  * GET /api/sitemap.xml
  *
  * Dynamic sitemap aggregating every public, indexable URL from the database:
- * static routes + active listings + published articles + tips + garages +
- * tech-specs. Cached in-memory for SITEMAP_TTL_MS so we don't hammer the DB
+ * static routes + active listings + published articles + tips + tech-spec
+ * brand pages + tech-specs (garages only with SITEMAP_INCLUDE_GARAGES=1).
+ * Cached in-memory for SITEMAP_TTL_MS so we don't hammer the DB
  * on every crawler hit (Googlebot can request this many times per day).
  *
  * The frontend's static `public/sitemap.xml` covers the marketing routes as
@@ -32,6 +33,27 @@ function slugify(text) {
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-');
+}
+
+// Same normalisation as the prerender (api/og-prerender.ts), which owns the
+// canonical URL of articles, guides and brand pages: no leading/trailing dash,
+// ASCII letters and digits only. Anything else would 301 to the canonical.
+function canonicalSlug(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Most recent date of a collection, for the lastmod of its listing page.
+function latest(rows) {
+  const times = rows.map(r => new Date(r.lastmod).getTime()).filter(Number.isFinite);
+  return times.length ? new Date(Math.max(...times)) : undefined;
 }
 
 function urlEntry({ loc, lastmod, changefreq = 'weekly', priority = 0.5 }) {
@@ -104,12 +126,12 @@ async function buildSitemap() {
 
   // Static / marketing
   const staticRoutes = [
-    { path: '/',                    changefreq: 'daily',   priority: 1.0 },
-    { path: '/annonces',            changefreq: 'hourly',  priority: 0.95 },
-    { path: '/actualites',          changefreq: 'daily',   priority: 0.85 },
-    { path: '/conseils',            changefreq: 'weekly',  priority: 0.8 },
-    { path: '/fiches-techniques',   changefreq: 'weekly',  priority: 0.8 },
-    { path: '/comparateur',         changefreq: 'weekly',  priority: 0.7 },
+    { path: '/',                    changefreq: 'daily',   priority: 1.0,  lastmod: latest([...listings, ...articles, ...tips, ...techSpecs]) },
+    { path: '/annonces',            changefreq: 'hourly',  priority: 0.95, lastmod: latest(listings) },
+    { path: '/actualites',          changefreq: 'daily',   priority: 0.85, lastmod: latest(articles) },
+    { path: '/conseils',            changefreq: 'weekly',  priority: 0.8,  lastmod: latest(tips) },
+    { path: '/fiches-techniques',   changefreq: 'weekly',  priority: 0.8,  lastmod: latest(techSpecs) },
+    { path: '/comparateur',         changefreq: 'weekly',  priority: 0.7,  lastmod: latest(techSpecs) },
     { path: '/a-propos',            changefreq: 'monthly', priority: 0.6 },
     { path: '/contact',             changefreq: 'monthly', priority: 0.6 },
     { path: '/faq',                 changefreq: 'monthly', priority: 0.6 },
@@ -123,7 +145,7 @@ async function buildSitemap() {
   const includeGarages = process.env.SITEMAP_INCLUDE_GARAGES === '1';
   if (includeGarages) staticRoutes.splice(2, 0, { path: '/garages', changefreq: 'daily', priority: 0.9 });
   for (const r of staticRoutes) {
-    entries.push(urlEntry({ loc: `${SITE_ORIGIN}${r.path}`, changefreq: r.changefreq, priority: r.priority }));
+    entries.push(urlEntry({ loc: `${SITE_ORIGIN}${r.path}`, lastmod: r.lastmod, changefreq: r.changefreq, priority: r.priority }));
   }
 
   for (const l of listings) {
@@ -136,17 +158,17 @@ async function buildSitemap() {
   }
   for (const a of articles) {
     entries.push(urlEntry({
-      loc: `${SITE_ORIGIN}/article/${slugify(a.title)}-${a.id}`,
+      loc: `${SITE_ORIGIN}/article/${canonicalSlug(a.title)}-${a.id}`,
       lastmod: a.lastmod,
       changefreq: 'monthly',
       priority: 0.7,
     }));
   }
-  // Guides are temporarily excluded (customer request, audit item 05) until
-  // every guide detail page is confirmed to load for crawlers.
-  if (process.env.SITEMAP_INCLUDE_GUIDES === '1') for (const t of tips) {
+  // Guides are included now that every guide page loads for crawlers (SEO
+  // audit E1, 2026-11); SITEMAP_INCLUDE_GUIDES=0 excludes them again.
+  if (process.env.SITEMAP_INCLUDE_GUIDES !== '0') for (const t of tips) {
     entries.push(urlEntry({
-      loc: `${SITE_ORIGIN}/guide/${slugify(t.title)}-${t.id}`,
+      loc: `${SITE_ORIGIN}/guide/${canonicalSlug(t.title)}-${t.id}`,
       lastmod: t.lastmod,
       changefreq: 'monthly',
       priority: 0.6,
@@ -158,6 +180,22 @@ async function buildSitemap() {
       lastmod: g.lastmod,
       changefreq: 'weekly',
       priority: 0.7,
+    }));
+  }
+  // Brand pages (/fiches-techniques/<marque>): one per brand that has specs,
+  // dated by its most recently updated spec.
+  const brands = new Map();
+  for (const ts of techSpecs) {
+    if (!ts.brand) continue;
+    const slug = canonicalSlug(ts.brand);
+    if (slug) brands.set(slug, [...(brands.get(slug) || []), ts]);
+  }
+  for (const [slug, specs] of brands) {
+    entries.push(urlEntry({
+      loc: `${SITE_ORIGIN}/fiches-techniques/${slug}`,
+      lastmod: latest(specs),
+      changefreq: 'weekly',
+      priority: 0.75,
     }));
   }
   for (const ts of techSpecs) {
