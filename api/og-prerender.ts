@@ -73,6 +73,15 @@ const rewriteImageHost = (url: string, slug?: string | null): string => {
 const stripHtml = (s: string) => (s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 
+// "124.7 cc" → 124.7. Keeping only digits turned it into 1247 cc.
+export const parseCc = (v: unknown): number | null => {
+  const m = String(v ?? '').match(/\d+(?:[.,]\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[0].replace(',', '.'));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+const fmtNum = (n: number) => n.toLocaleString('fr-FR');
+
 type Kind = 'article' | 'guide' | 'garage' | 'fiche-technique';
 
 const KIND_CONFIG: Record<Kind, { api: (id: string) => string; ogType: string; label: string }> = {
@@ -109,8 +118,12 @@ interface Doc {
   created_at?: string;
   updated_at?: string;
   price_new?: number | string;
+  slug?: string;
   engine?: any;
+  chassis?: any;
+  electronics?: any;
   dimensions?: any;
+  importer?: { name?: string; city?: string } | null;
   consumption?: string;
   top_speed?: string;
   available_in_tunisia?: boolean;
@@ -176,8 +189,9 @@ function buildSpecSnippet(d: Doc): string {
   if (head) parts.push(head);
   if (d.year) parts.push(`Année ${d.year}`);
   parts.push('Énergie Essence');
-  const cc = d.engine?.cc ? String(d.engine.cc).replace(/[^\d]/g, '') : '';
-  if (cc) parts.push(`Moteur ${cc} cc${d.engine?.fuel_system ? `, ${d.engine.fuel_system}` : ''}`);
+  const cc = parseCc(d.engine?.cc);
+  const fuelSystem = d.engine?.fuelSystem || d.engine?.fuel_system;
+  if (cc) parts.push(`Moteur ${fmtNum(cc)} cc${fuelSystem ? `, ${fuelSystem}` : ''}`);
   if (d.engine?.power) parts.push(`Puissance ${d.engine.power}`);
   if (d.top_speed) parts.push(`Vitesse maximale ${d.top_speed}`);
   if (d.engine?.acceleration) parts.push(`0-100 km/h ${d.engine.acceleration}`);
@@ -263,13 +277,13 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
     const brandNode = d.brand
       ? { '@type': 'Brand', name: d.brand, ...(brandLogo ? { logo: brandLogo } : {}) }
       : undefined;
-    const engineCC = d.engine?.cc ? String(d.engine.cc).replace(/[^\d]/g, '') : '';
-    const engineDisplacement = engineCC ? parseInt(engineCC, 10) : null;
-    const validUntil = new Date(Date.now() + 180 * 86400_000).toISOString().slice(0, 10);
+    const engineDisplacement = parseCc(d.engine?.cc);
 
     // Google requires Product to expose offers/review/aggregateRating.
     // When we know the price we emit a valid Offer; otherwise we fall back
     // to a Vehicle entity (no such requirement) to avoid validator errors.
+    // The Offer is the catalogue price of the new model: MotoScoot does not
+    // sell it, so no seller, stock status or invented validity date.
     if (price) {
       return {
         '@context': 'https://schema.org',
@@ -286,17 +300,12 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
           '@type': 'Offer',
           priceCurrency: 'TND',
           price,
-          availability: d.available_in_tunisia === false
-            ? 'https://schema.org/OutOfStock'
-            : 'https://schema.org/InStock',
           itemCondition: 'https://schema.org/NewCondition',
           url: canonical,
-          priceValidUntil: validUntil,
-          seller: { '@type': 'Organization', name: 'MotoScoot.tn', url: SITE },
         },
         ...(engineDisplacement ? {
           additionalProperty: [
-            { '@type': 'PropertyValue', name: 'Cylindrée', value: `${engineDisplacement} cc` },
+            { '@type': 'PropertyValue', name: 'Cylindrée', value: engineDisplacement, unitCode: 'CMQ' },
             ...(d.engine?.power ? [{ '@type': 'PropertyValue', name: 'Puissance', value: String(d.engine.power) }] : []),
             ...(d.top_speed ? [{ '@type': 'PropertyValue', name: 'Vitesse max', value: String(d.top_speed) }] : []),
             ...(d.consumption ? [{ '@type': 'PropertyValue', name: 'Consommation', value: String(d.consumption) }] : []),
@@ -341,6 +350,63 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
   return null;
 }
 
+const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
+  ['Cylindrée', (d) => d.engine?.cc],
+  ['Moteur', (d) => d.engine?.type],
+  ['Puissance', (d) => d.engine?.power],
+  ['Couple', (d) => d.engine?.torque],
+  ['Refroidissement', (d) => d.engine?.cooling],
+  ['Alimentation', (d) => d.engine?.fuelSystem || d.engine?.fuel_system],
+  ['Transmission', (d) => d.engine?.transmission],
+  ['Vitesse maximale', (d) => d.top_speed],
+  ['Consommation', (d) => d.consumption],
+  ['Réservoir', (d) => d.dimensions?.tank],
+  ['Poids', (d) => d.dimensions?.weight],
+  ['Hauteur de selle', (d) => d.dimensions?.seatHeight],
+  ['Longueur', (d) => d.dimensions?.length],
+  ['Empattement', (d) => d.dimensions?.wheelbase],
+  ['Cadre', (d) => d.chassis?.frame],
+  ['Frein avant', (d) => d.chassis?.brakesFront],
+  ['Frein arrière', (d) => d.chassis?.brakesRear],
+  ['Pneu avant', (d) => d.chassis?.tireFront],
+  ['Pneu arrière', (d) => d.chassis?.tireRear],
+  ['ABS', (d) => d.electronics?.abs],
+  ['Antipatinage', (d) => d.electronics?.tcs],
+];
+
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+// Fiche technique body for crawlers that do not run JavaScript: an
+// answer-first summary (price with the date it was checked), the full spec
+// table and links to the brand, the catalogue and the comparator.
+export function renderFicheBody(d: Doc): string {
+  const name = [d.brand, d.model].filter(Boolean).join(' ');
+  const cc = parseCc(d.engine?.cc);
+  const price = parsePrice(d.price_new);
+  const checked = d.updated_at ? new Date(d.updated_at) : null;
+  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
+  const summary = [
+    `${name}${d.year ? ` (${d.year})` : ''}${d.category ? ` : ${String(d.category).toLowerCase()}` : ''}${cc ? ` de ${fmtNum(cc)} cm³` : ''}${d.engine?.power ? `, ${d.engine.power}` : ''}.`,
+    price ? `Prix du neuf en Tunisie : ${fmtNum(price)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
+    d.importer?.name ? `Importateur : ${d.importer.name}${d.importer.city ? ` (${d.importer.city})` : ''}.` : '',
+  ].filter(Boolean).join(' ');
+  const rows = SPEC_ROWS
+    .map(([label, get]) => [label, String(get(d) ?? '').trim()] as const)
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
+    .join('\n');
+  const brandSlug = d.brand ? slugify(d.brand) : '';
+  return `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="${SITE}/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
+<h1>${escapeHtml(name)}</h1>
+<p>${escapeHtml(summary)}</p>
+${rows ? `<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
+<ul>
+${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
+<li><a href="${SITE}/comparateur">Comparer avec un autre modèle</a></li>
+<li><a href="${SITE}/annonces">Motos et scooters d'occasion en Tunisie</a></li>
+</ul>`;
+}
+
 // Brand pages (/fiches-techniques/<marque>): title, factual intro and the
 // brand's models as plain links, for crawlers that do not run JavaScript.
 async function renderBrand(req: any, res: any, brandSlug: string) {
@@ -371,7 +437,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
   const image = firstImage ? rewriteImageHost(firstImage, brand) : DEFAULT_OG;
 
   // Factual intro built from the data (counts and ranges only, no claims).
-  const ccs = models.map((m) => Math.round(parseFloat((String(m.engine?.cc || '').match(/\d+(?:[.,]\d+)?/) || ['0'])[0].replace(',', '.')))).filter((n) => n > 0);
+  const ccs = models.map((m) => Math.round(parseCc(m.engine?.cc) || 0)).filter((n) => n > 0);
   const prices = models.map((m) => parsePrice(m.price_new)).filter((n): n is number => n !== null);
   const categories = Array.from(new Set(models.map((m) => m.category).filter(Boolean)));
   const fmt = (n: number) => n.toLocaleString('fr-FR');
@@ -431,8 +497,8 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 <meta name="twitter:description" content="${escapeHtml(description)}" />
 <meta name="twitter:image" content="${image}" />
 
-<script type="application/ld+json">${scriptSafeJson(breadcrumbLd)}</script>
-<script type="application/ld+json">${scriptSafeJson(itemListLd)}</script>
+<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
+<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(itemListLd)}</script>
 </head>
 <body>
 <nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a> › ${escapeHtml(brand)}</nav>
@@ -508,7 +574,7 @@ export default async function handler(req: any, res: any) {
     ];
     if (kind === 'fiche-technique') {
       breadcrumbs.push({ '@type': 'ListItem', position: 2, name: 'Fiches techniques', item: `${SITE}/fiches-techniques` });
-      if (doc?.brand) breadcrumbs.push({ '@type': 'ListItem', position: 3, name: doc.brand, item: `${SITE}/fiches-techniques/${encodeURIComponent(String(doc.brand).toLowerCase())}` });
+      if (doc?.brand) breadcrumbs.push({ '@type': 'ListItem', position: 3, name: doc.brand, item: `${SITE}/fiches-techniques/${slugify(String(doc.brand))}` });
     } else if (kind === 'article') {
       breadcrumbs.push({ '@type': 'ListItem', position: 2, name: 'Actualités', item: `${SITE}/actualites` });
     } else if (kind === 'guide') {
@@ -516,7 +582,10 @@ export default async function handler(req: any, res: any) {
     } else if (kind === 'garage') {
       breadcrumbs.push({ '@type': 'ListItem', position: 2, name: 'Garages', item: `${SITE}/garages` });
     }
-    breadcrumbs.push({ '@type': 'ListItem', position: breadcrumbs.length + 1, name: title, item: canonical });
+    const heading = kind === 'fiche-technique'
+      ? [doc.brand, doc.model].filter(Boolean).join(' ') || title
+      : doc.title || doc.name || title;
+    breadcrumbs.push({ '@type': 'ListItem', position: breadcrumbs.length + 1, name: heading, item: canonical });
     const breadcrumbLd = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -557,17 +626,16 @@ ${price ? `<meta property="product:price:amount" content="${price}" />\n<meta pr
 <meta name="twitter:description" content="${escapeHtml(description)}" />
 <meta name="twitter:image" content="${image}" />
 
-${ld ? `<script type="application/ld+json">${scriptSafeJson(ld)}</script>` : ''}
-<script type="application/ld+json">${scriptSafeJson(breadcrumbLd)}</script>
+${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</script>` : ''}
+<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
 </head>
 <body>
-<h1>${escapeHtml(title)}</h1>
+${kind === 'fiche-technique' ? renderFicheBody(doc) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
-${kind === 'fiche-technique' && price ? `<p><strong>${price.toLocaleString('fr-FR')} DT</strong></p>` : ''}
-${doc ? (() => {
+${(() => {
   const fullBody = stripHtml(String(doc.content || doc.body || doc.description || ''));
   return fullBody ? `<article>${escapeHtml(fullBody).slice(0, 4000)}</article>` : '';
-})() : ''}
+})()}`}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
 ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
 <p><a href="${canonical}">Voir sur MotoScoot.tn</a></p>

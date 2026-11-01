@@ -305,14 +305,11 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
                             {listing.price}
                           </span>
                         </div>
-                        <h1 className="font-sans text-[24px] font-extrabold text-foreground leading-tight tracking-[0px]">
-                          {listing.model}
-                        </h1>
                       </div>
 
-                      {/* Titre Desktop */}
-                      <h1 className="hidden md:block font-sans text-[24px] md:text-[28px] font-extrabold text-foreground leading-[30px] md:leading-[40px] tracking-normal uppercase text-left">
-                        {listing.brand} {listing.model}
+                      {/* Titre unique : modèle sur mobile, marque + modèle sur ordinateur */}
+                      <h1 className="font-sans text-[24px] md:text-[28px] font-extrabold text-foreground leading-tight md:leading-[40px] tracking-[0px] md:tracking-normal md:uppercase text-left">
+                        <span className="sr-only md:not-sr-only">{listing.brand} </span>{listing.model}
                       </h1>
                       
                       <div className="flex items-center gap-2 text-gray-400 text-[12px] md:text-[12px] font-bold tracking-widest mt-1">

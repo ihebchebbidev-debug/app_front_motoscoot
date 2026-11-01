@@ -173,12 +173,17 @@ export default async function handler(req: any, res: any) {
     const brandLogo = listing?.brand_logo ? rewriteImageHost(listing.brand_logo, listing.brand ? `${slugify(listing.brand)}-logo` : '') : '';
     const brandNode = listing?.brand ? { '@type': 'Brand', name: listing.brand, ...(brandLogo ? { logo: brandLogo } : {}) } : undefined;
 
-    // ---- JSON-LD: Product + Vehicle + Breadcrumbs ----
-    const productLd = listing ? {
+    // ---- JSON-LD: one Product + Vehicle node + Breadcrumbs ----
+    // Product requires offers/review/aggregateRating. Without a price the
+    // node is a plain Vehicle (no such requirement) instead of an invalid
+    // Product. One node per listing: two entities for the same bike
+    // contradicted each other.
+    const itemCondition = listing?.condition === 'new'
+      ? 'https://schema.org/NewCondition'
+      : 'https://schema.org/UsedCondition';
+    const listingLd = listing ? {
       '@context': 'https://schema.org',
-      // Product requires offers/review/aggregateRating. Without a price we
-      // emit a Vehicle (no such requirement) instead of an invalid Product.
-      '@type': listing.price ? 'Product' : 'Vehicle',
+      '@type': listing.price ? ['Product', 'Vehicle'] : 'Vehicle',
       name: listing.title,
       description: description,
       image: allImages.length ? allImages : [image],
@@ -186,25 +191,15 @@ export default async function handler(req: any, res: any) {
       model: listing.model || undefined,
       url: canonical,
       sku: listing.id,
+      itemCondition,
       offers: listing.price ? {
         '@type': 'Offer',
         priceCurrency: 'TND',
         price: listing.price,
         availability: 'https://schema.org/InStock',
         url: canonical,
-        priceValidUntil: new Date(Date.now() + 90 * 86400_000).toISOString().slice(0, 10),
-        itemCondition: listing.condition === 'new'
-          ? 'https://schema.org/NewCondition'
-          : 'https://schema.org/UsedCondition',
+        itemCondition,
       } : undefined,
-    } : null;
-
-    const vehicleLd = listing ? {
-      '@context': 'https://schema.org',
-      '@type': 'Vehicle',
-      name: listing.title,
-      brand: listing.brand,
-      model: listing.model,
       vehicleModelDate: listing.year,
       mileageFromOdometer: listing.mileage != null
         ? { '@type': 'QuantitativeValue', value: listing.mileage, unitCode: 'KMT' }
@@ -215,8 +210,6 @@ export default async function handler(req: any, res: any) {
       fuelType: listing.fuel || 'Petrol',
       vehicleTransmission: listing.transmission || undefined,
       color: listing.color || undefined,
-      image: allImages.length ? allImages : [image],
-      url: canonical,
     } : null;
 
     const breadcrumbLd = {
@@ -225,14 +218,11 @@ export default async function handler(req: any, res: any) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE}/` },
         { '@type': 'ListItem', position: 2, name: 'Annonces', item: `${SITE}/annonces` },
-        listing?.brand
-          ? { '@type': 'ListItem', position: 3, name: listing.brand, item: `${SITE}/annonces` }
-          : null,
-        { '@type': 'ListItem', position: listing?.brand ? 4 : 3, name: listing?.title || 'Annonce', item: canonical },
-      ].filter(Boolean),
+        { '@type': 'ListItem', position: 3, name: listing?.title || 'Annonce', item: canonical },
+      ],
     };
 
-    const allLd = [productLd, vehicleLd, breadcrumbLd].filter(Boolean);
+    const allLd = [listingLd, breadcrumbLd].filter(Boolean);
 
     // ---- Body content (visible to non-JS crawlers + LLMs) ----
     const specRow = (label: string, value?: string | number | null) =>
@@ -253,7 +243,7 @@ ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.p
   ${specRow('Ville', listing.city)}
 </dl>
 ${listing.description ? `<h2>Description</h2><p>${escapeHtml(listing.description.slice(0, 1500))}</p>` : ''}
-${allImages.length ? `<h2>Photos</h2>${allImages.map(src => `<img src="${src}" alt="${escapeHtml(listing.title)}" loading="lazy" />`).join('')}` : ''}
+${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${src}" alt="${escapeHtml(`${listing.title} – photo ${i + 1}`)}" loading="lazy" />`).join('')}` : ''}
 <p><a href="${canonical}">Voir l'annonce complète sur MotoScoot.tn</a></p>
 ` : `
 <h1>Annonce non disponible</h1>
@@ -292,7 +282,7 @@ ${listing?.condition ? `<meta property="product:condition" content="${listing.co
 <meta name="twitter:description" content="${escapeHtml(description)}" />
 <meta name="twitter:image" content="${image}" />
 
-${allLd.map(ld => `<script type="application/ld+json">${scriptSafeJson(ld)}</script>`).join('\n')}
+${allLd.map(ld => `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</script>`).join('\n')}
 </head>
 <body>
 ${bodyHtml}

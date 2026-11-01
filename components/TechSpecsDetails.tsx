@@ -456,7 +456,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 </span>
               </div>
               <h1 className="font-sans text-[24px] font-extrabold text-foreground leading-tight tracking-[0px] mb-2">
-                {spec.model}
+                <span className="sr-only">{spec.brand} </span>{spec.model}
               </h1>
               <p className="text-gray-500 font-medium mb-6 text-sm">
                 {spec.engine.cc || 'N/A'} · {beforeComma(spec.engine.type)} · {spec.engine.power || 'N/A'}
@@ -563,7 +563,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                     <span className="font-sans text-[14px] font-bold text-primary-600 tracking-[0px]">{spec.brand}</span>
                   </div>
                   
-                  <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight mb-2 leading-tight">{spec.model}</h1>
+                  {/* Le <h1> unique est dans l'en-tête mobile (indexation mobile). */}
+                  <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight mb-2 leading-tight">{spec.model}</p>
                   <p className="text-gray-500 font-medium mb-8 text-sm md:text-base">
                     {spec.engine.cc || 'N/A'} · {beforeComma(spec.engine.type)} · {spec.engine.power || 'N/A'}
                   </p>
