@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { techSpecsApi, mapBackendTechSpec } from '../services/techSpecsApi';
+import { techSpecsApi } from '../services/techSpecsApi';
 import { TechSpec } from '../types';
 
 const retryStrategy = (failureCount: number, error: any) => {
@@ -85,24 +85,10 @@ export const useTechSpecsByBrand = (brand?: string, options: TechSpecsVisibility
       return techSpecsApi.getModels(brand, { availableInTunisia, signal });
     },
     enabled: !!brand,
-    initialData: () => (availableInTunisia ? undefined : prerenderedBrandModels(brand)),
-    initialDataUpdatedAt: 0,
     staleTime: 1000 * 60 * 30,
     retry: retryStrategy,
   });
 };
-
-/** Brand name and raw models embedded by the brand prerender (window.__TECH_SPEC_BRAND__). */
-export function prerenderedBrand(): { name: string; models: any[] } | undefined {
-  const data = typeof window !== 'undefined' ? (window as any).__TECH_SPEC_BRAND__ : undefined;
-  return data && typeof data.name === 'string' && Array.isArray(data.models) ? data : undefined;
-}
-
-function prerenderedBrandModels(brand?: string): TechSpec[] | undefined {
-  const data = prerenderedBrand();
-  if (!data || !brand || data.name !== brand) return undefined;
-  try { return data.models.map(mapBackendTechSpec); } catch { return undefined; }
-}
 
 /**
  * Cross-field public search hook. Disabled when the term is shorter than
@@ -139,21 +125,10 @@ export const useTechSpec = (id?: number | string) => {
       return techSpecsApi.getById(normalizedId, signal);
     },
     enabled: normalizedId !== undefined,
-    // The fiche prerender embeds the API document (window.__TECH_SPEC__) so the
-    // header paints without waiting for the API round trip (mobile LCP).
-    initialData: () => prerenderedTechSpec(normalizedId),
-    initialDataUpdatedAt: 0,
     staleTime: 1000 * 60 * 10,
     retry: retryStrategy,
   });
 };
-
-function prerenderedTechSpec(id?: number | string): TechSpec | undefined {
-  const doc = typeof window !== 'undefined' ? (window as any).__TECH_SPEC__ : undefined;
-  if (!doc || id === undefined) return undefined;
-  if (String(id) !== String(doc.slug) && String(id) !== String(doc.id)) return undefined;
-  try { return mapBackendTechSpec(doc); } catch { return undefined; }
-}
 
 export const useCompareTechSpecs = (ids?: number[]) => {
   return useQuery<TechSpec[]>({

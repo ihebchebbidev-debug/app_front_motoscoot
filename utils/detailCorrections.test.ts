@@ -296,34 +296,3 @@ test('fiche spec table starts with the dated new price (crawler HTML), and has n
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
   assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
 });
-
-test('brand page preloads the first card image and embeds the models', async () => {
-  const original = globalThis.fetch;
-  try {
-    globalThis.fetch = async (input: any) => String(input).includes('/tech-specs/brands/')
-      ? Response.json([{ id: 'abc', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, image: 'https://motoscoot.ihebchebbi.pro/uploads/a.webp' }])
-      : Response.json([{ brand: 'SYM', models_count: 1 }]);
-    const result = responseCapture();
-    await detailHandler({ query: { kind: 'marque', slugid: 'sym' }, appShell: '<html><head><link rel="preload" as="image" href="/hero.webp"></head><body><div id="root"></div></body></html>' }, result);
-    assert.equal(result.code, 200);
-    assert.ok(result.body.includes('<link rel="preload" as="image" href="/m/sym-jet-14-evo-125-2026/a.webp" fetchpriority="high" />'));
-    assert.equal(result.body.includes('/hero.webp'), false);
-    const embedded = result.body.match(/<script>window\.__TECH_SPEC_BRAND__=(.*?)<\/script>/)?.[1];
-    assert.ok(embedded);
-    assert.equal(JSON.parse(embedded).name, 'SYM');
-    assert.equal(JSON.parse(embedded).models[0].slug, 'sym-jet-14-evo-125');
-  } finally { globalThis.fetch = original; }
-});
-
-test('sheet prerender embeds the API document and preloads the first gallery photo', async () => {
-  const original = globalThis.fetch;
-  try {
-    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, image: '/uploads/cover.webp', gallery: ['/uploads/g1.webp', '/uploads/g2.webp'], engine: { cc: '124.7 cc' } });
-    const result = responseCapture();
-    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'sym-jet-14-evo-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
-    const embedded = result.body.match(/<script>window\.__TECH_SPEC__=(.*?)<\/script>/)?.[1];
-    assert.ok(embedded);
-    assert.equal(JSON.parse(embedded).slug, 'sym-jet-14-evo-125');
-    assert.ok(result.body.includes('<link rel="preload" as="image" href="/m/sym-jet-14-evo-125-2026/g1.webp" fetchpriority="high" />'));
-  } finally { globalThis.fetch = original; }
-});
