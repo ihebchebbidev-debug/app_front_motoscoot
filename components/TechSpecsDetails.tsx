@@ -123,10 +123,12 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-32 md:pb-20",
-  Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-3 md:pt-8",
+  // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
+  Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   Header: "flex items-center justify-between mb-3 md:mb-6",
   Breadcrumb: "flex items-center gap-2 text-[12px] md:text-[13px] font-medium text-gray-400 md:text-muted-foreground",
-  BackBtn: "p-2.5 md:p-2 bg-card border border-gray-100 md:border-border rounded-2xl md:rounded-xl text-gray-700 md:text-foreground hover:bg-gray-50 hover:text-primary shadow-sm transition-all active:scale-95",
+  // Same size as the brand page button: 44px tap target on touch screens.
+  BackBtn: "p-2.5 md:p-2 [@media(pointer:coarse)]:min-w-11 [@media(pointer:coarse)]:min-h-11 flex items-center justify-center bg-card border border-gray-100 md:border-border rounded-2xl md:rounded-xl text-gray-700 md:text-foreground hover:bg-gray-50 hover:text-primary shadow-sm transition-all active:scale-95",
   ContentBlock: "bg-card rounded-2xl border border-border overflow-hidden shadow-sm",
   BlockBody: "px-6 md:px-8 pt-3 pb-6 md:pt-4 md:pb-8 animate-fade-in",
   SpecRow: "border-b border-border/50 last:border-0",
