@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceValue, TECH_SPEC_PRICE_LABEL, techSpecWebPageLd } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -259,8 +259,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     const description = `Fiche technique complète ${name}. Moteur ${spec.engine?.cc || 'N/A'}, puissance ${spec.engine?.power || 'N/A'}${price ? `, prix neuf ${price.toLocaleString('fr-FR')} DT en Tunisie` : ''}.`;
 
     // Emit Product + Offer when we have a valid price (Google requires
-    // offers / review / aggregateRating on Product). Otherwise downgrade
-    // to Vehicle to keep the structured-data check green.
+    // offers / review / aggregateRating on Product and its subtype Vehicle).
+    // Otherwise the sheet is a WebPage, as in api/og-prerender.ts.
     if (price > 0) {
       return {
         "@context": "https://schema.org/",
@@ -284,30 +284,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         },
       };
     }
-    return {
-      "@context": "https://schema.org/",
-      "@type": "Vehicle",
-      name,
-      description,
-      image: images,
-      url: canonical,
-      brand: { "@type": "Brand", "name": spec.brand },
-      manufacturer: { "@type": "Organization", "name": spec.brand },
-      model: spec.model,
-      vehicleModelDate: spec.year,
-      bodyType: (spec as any).category || 'Motorcycle',
-      fuelType: 'Petrol',
-      ...(spec.engine?.cc ? {
-        vehicleEngine: {
-          "@type": "EngineSpecification",
-          engineDisplacement: {
-            "@type": "QuantitativeValue",
-            value: parseInt(String(spec.engine.cc).replace(/[^\d]/g, ''), 10) || undefined,
-            unitCode: "CMQ",
-          },
-        },
-      } : {}),
-    };
+    return techSpecWebPageLd({ name, description, url: canonical, image: images[0], brand: spec.brand });
   }, [spec]);
 
 

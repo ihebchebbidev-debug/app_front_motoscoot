@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL, techSpecWebPageLd } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -261,9 +261,9 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
       : undefined;
     const engineDisplacement = parseCc(d.engine?.cc);
 
-    // Google requires Product to expose offers/review/aggregateRating.
-    // When we know the price we emit a valid Offer; otherwise we fall back
-    // to a Vehicle entity (no such requirement) to avoid validator errors.
+    // Google requires Product (and its subtype Vehicle) to expose
+    // offers/review/aggregateRating. When we know the price we emit a valid
+    // Offer; otherwise the sheet is a WebPage (techSpecWebPageLd).
     // The Offer is the catalogue price of the new model: Moto-Scoot.tn does not
     // sell it, so no seller, stock status or invented validity date.
     if (price) {
@@ -295,26 +295,7 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
         } : {}),
       };
     }
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'Vehicle',
-      name,
-      description,
-      image: gallery.length ? gallery : [image],
-      url: canonical,
-      brand: brandNode,
-      manufacturer: d.brand ? { '@type': 'Organization', name: d.brand } : undefined,
-      model: d.model || undefined,
-      vehicleModelDate: d.year || undefined,
-      bodyType: d.category || 'Motorcycle',
-      fuelType: 'Petrol',
-      ...(engineDisplacement ? {
-        vehicleEngine: {
-          '@type': 'EngineSpecification',
-          engineDisplacement: { '@type': 'QuantitativeValue', value: engineDisplacement, unitCode: 'CMQ' },
-        },
-      } : {}),
-    };
+    return techSpecWebPageLd({ name, description, url: canonical, image: gallery[0] || image, brand: d.brand });
   }
   if (kind === 'garage') {
     if (!GARAGES_PUBLIC) return null;

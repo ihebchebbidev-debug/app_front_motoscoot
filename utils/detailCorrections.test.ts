@@ -296,3 +296,17 @@ test('fiche spec table starts with the dated new price (crawler HTML), and has n
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
   assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
 });
+
+test('sheet without a price emits no Product or Vehicle (Google requires offers on both)', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'qj-motor-sq16-125', brand: 'QJ Motor', model: 'SQ16 125', year: 2026, category: 'Scooter', price_new: 'En arrivage', engine: { cc: '125 cc', power: '14,7 ch' }, image: '/uploads/a.webp' });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'qj-motor-sq16-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.equal(result.code, 200);
+    assert.equal(/"@type":\s*"(Product|Vehicle)"/.test(result.body), false);
+    assert.ok(result.body.includes('"@type":"WebPage"'));
+    assert.ok(result.body.includes('"about":{"@type":"Brand","name":"QJ Motor"}'));
+    assert.ok(result.body.includes('"@type":"BreadcrumbList"'));
+  } finally { globalThis.fetch = original; }
+});

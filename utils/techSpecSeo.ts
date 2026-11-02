@@ -129,3 +129,24 @@ export function techSpecDescription({ brand, model, category, price, cc, power, 
     `Comparez et choisissez votre ${scooter ? 'scooter' : 'moto'}.`,
   ].filter(Boolean).join(' ');
 }
+
+/**
+ * JSON-LD of a sheet without a published price ("En arrivage", "Pas encore
+ * dévoilé"). Google treats Product and its schema.org subtype Vehicle as
+ * products and requires offers, review or aggregateRating on them ("Product
+ * snippets" error in Search Console), so such a sheet is described as a page
+ * about the brand instead. Shared by the React page and the crawler prerender.
+ */
+export function techSpecWebPageLd({ name, description, url, image, brand }: {
+  name: string; description: string; url: string; image?: string; brand?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name,
+    description,
+    url,
+    ...(image ? { primaryImageOfPage: { '@type': 'ImageObject', url: image } } : {}),
+    ...(brand ? { about: { '@type': 'Brand', name: brand } } : {}),
+  };
+}
