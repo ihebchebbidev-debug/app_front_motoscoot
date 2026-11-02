@@ -282,8 +282,10 @@ const Header: React.FC<HeaderProps> = ({
             aria-label="Retour à l'accueil"
           >
             <img 
-              src={isSolid ? LOGO_COLOR : LOGO_WHITE} 
-              alt="moto-scoot.tn" width={373} height={48} 
+              src={isSolid ? LOGO_COLOR : LOGO_WHITE}
+              alt="moto-scoot.tn" width={373} height={48}
+              // LCP element on listing pages: fetch it before the gallery thumbnails.
+              fetchPriority="high"
               className="h-[23px] max-[360px]:h-[21px] md:h-7 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105"
             />
           </Link>

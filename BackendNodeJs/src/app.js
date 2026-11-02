@@ -7,6 +7,7 @@ const path = require('path');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
 const { requestId } = require('./middlewares/requestId');
+const { publicCache } = require('./middlewares/publicCache');
 
 const app = express();
 
@@ -85,7 +86,7 @@ app.use('/uploads', express.static(uploadsPath, {
 }));
 
 // --- Routes ---
-app.use('/api', routes);
+app.use('/api', publicCache, routes);
 
 // --- Error handling ---
 app.use(notFound);

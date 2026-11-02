@@ -20,6 +20,8 @@
  */
 
 import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
+import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
+import { seoImagePath } from '../utils/seoImagePath.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -94,6 +96,7 @@ interface Listing {
   transmission?: string;
   color?: string;
   condition?: string;
+  type?: string;
   images?: string[];
   brand_logo?: string;
   created_at?: string;
@@ -150,21 +153,12 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const title = listing
-      ? `${String(listing.title).replace(/\s+/g, " ").trim()}${listing.price ? ` — ${formatPrice(listing.price)}` : ''} | MotoScoot`
-      : "Annonce Moto & Scooter d'Occasion | MotoScoot";
-
-    const descBits: string[] = [];
-    if (listing) {
-      if (listing.year) descBits.push(`${listing.year}`);
-      if (listing.mileage != null) descBits.push(`${listing.mileage.toLocaleString('fr-FR')} km`);
-      if (listing.cc) descBits.push(`${listing.cc} cc`);
-      if (listing.city) descBits.push(listing.city);
-    }
-    const description = listing
-      ? `${listing.brand || ''} ${listing.model || ''} — ${descBits.join(' · ')}. ${
-          (listing.description || '').slice(0, 140).replace(/\s+/g, ' ').trim()
-        }`.trim().slice(0, 300)
+    const seoInput = listing
+      ? { brand: listing.brand, model: listing.model, year: listing.year, city: listing.city, price: listing.price, mileage: listing.mileage, cc: listing.cc, condition: listing.condition, type: listing.type }
+      : null;
+    const title = seoInput ? listingTitle(seoInput) : "Annonce Moto & Scooter d'Occasion | MotoScoot";
+    const description = seoInput
+      ? listingDescription(seoInput)
       : "Découvrez les annonces de motos et scooters d'occasion sur MotoScoot.tn.";
 
     const imgSlug = listing ? [listing.brand, listing.model, listing.year].filter(Boolean).join('-') || listing.title : '';
@@ -178,7 +172,7 @@ export default async function handler(req: any, res: any) {
     // node is a plain Vehicle (no such requirement) instead of an invalid
     // Product. One node per listing: two entities for the same bike
     // contradicted each other.
-    const itemCondition = listing?.condition === 'new'
+    const itemCondition = isNewCondition(listing?.condition)
       ? 'https://schema.org/NewCondition'
       : 'https://schema.org/UsedCondition';
     const listingLd = listing ? {
@@ -224,6 +218,11 @@ export default async function handler(req: any, res: any) {
 
     const allLd = [listingLd, breadcrumbLd].filter(Boolean);
 
+    // The gallery's first photo is the LCP element: start it with the HTML
+    // instead of after the JS bundle and the listing API call. Same URL as
+    // ListingGallery builds (buildSeoImageUrl with the listing title).
+    const lcpImage = listing?.images?.[0] ? seoImagePath(listing.images[0], listing.title) : null;
+
     // ---- Body content (visible to non-JS crawlers + LLMs) ----
     const specRow = (label: string, value?: string | number | null) =>
       value != null && value !== '' ? `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd>` : '';
@@ -258,6 +257,7 @@ ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${sr
 <meta name="description" content="${escapeHtml(description)}" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <link rel="canonical" href="${canonical}" />
+${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
@@ -274,7 +274,7 @@ ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${sr
 <meta property="og:image:alt" content="${escapeHtml(listing?.title || 'MotoScoot')}" />
 ${listing?.price ? `<meta property="product:price:amount" content="${listing.price}" />` : ''}
 ${listing?.price ? `<meta property="product:price:currency" content="TND" />` : ''}
-${listing?.condition ? `<meta property="product:condition" content="${listing.condition === 'new' ? 'new' : 'used'}" />` : ''}
+${listing?.condition ? `<meta property="product:condition" content="${isNewCondition(listing.condition) ? 'new' : 'used'}" />` : ''}
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@motoscoot_tn" />

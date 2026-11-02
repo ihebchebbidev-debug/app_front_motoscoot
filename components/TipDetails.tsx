@@ -9,6 +9,7 @@ import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
+import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -78,6 +79,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
       <SEO 
         title={tip.title} 
         description={tip.summary} 
+        robots={isThinContent(tip.content) ? THIN_CONTENT_ROBOTS : undefined}
         image={tip.image} 
         url={getUrlFromState('tip-details', { id: tip.id, title: tip.title })}
         type="article"

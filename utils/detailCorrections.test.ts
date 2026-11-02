@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { detailIdentifier, mergeDetailShell, scriptSafeJson } from './detailHtml';
 import { resolveEditorial } from './publicContent';
@@ -152,4 +153,72 @@ test('admin category variants map to Scooter / Trail instead of Roadster', async
   assert.equal(cat('MotoTrail adventure'), 'Trail');
   assert.equal(cat('Roadster'), 'Roadster');
   assert.equal(cat('Moto'), 'Roadster');
+});
+test('reading time comes from the text; articles and guides under 300 words are noindex, follow', async () => {
+  const { readingTime, isThinContent, wordCount } = await import('./editorial');
+  const long = '<p>' + 'mot '.repeat(2732) + '</p>';
+  assert.equal(readingTime(long, 1), '14 min');
+  assert.equal(readingTime('<p>Vingt-cinq mots seulement.</p>', 10), '1 min');
+  assert.equal(readingTime('', 5), '5 min');
+  assert.equal(wordCount('<p>Kit chaîne : l&#39;entretien</p>'), 4);
+  assert.equal(isThinContent('mot '.repeat(299)), true);
+  assert.equal(isThinContent('mot '.repeat(300)), false);
+  const original = globalThis.fetch;
+  try {
+    for (const [words, robots] of [[25, 'noindex, follow'], [400, 'index, follow']] as const) {
+      globalThis.fetch = async () => Response.json({ id: '7a760d0c-56de-4da6-8279-23e5f6d7030e', title: 'Permis A2', content: '<p>' + 'mot '.repeat(words) + '</p>' });
+      const result = responseCapture();
+      await detailHandler({ query: { kind: 'article', slugid: 'permis-a2-7a760d0c-56de-4da6-8279-23e5f6d7030e' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+      assert.equal(result.code, 200);
+      assert.ok(result.body.includes(`<meta name="robots" content="${robots}`), `${words} words`);
+    }
+  } finally { globalThis.fetch = original; }
+});
+test('listing title and description are built from the listing data, not the raw ad text', async () => {
+  const { listingTitle, listingDescription } = await import('./listingSeo');
+  const kymco = { brand: 'Kymco', model: 'DINK-R', year: 2026, city: 'Tunis', price: 10000, mileage: 11000, cc: 125, condition: 'État neuf', type: 'Scooter' };
+  const n = (x: number) => x.toLocaleString('fr-FR');
+  assert.equal(listingTitle(kymco), `Kymco DINK-R 2026 d'occasion à Tunis – ${n(10000)} DT`);
+  assert.equal(listingDescription(kymco), `Scooter Kymco DINK-R 2026 d'occasion à vendre à Tunis : ${n(10000)} DT, ${n(11000)} km, 125 cm³. Contactez directement le vendeur sur MotoScoot.`);
+  assert.equal(listingTitle({ brand: 'SYM', model: 'Jet 14', price: '9 000 DT', mileage: '0 km', condition: 'Neuf' }), `SYM Jet 14 neuf en Tunisie – ${n(9000)} DT`);
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ listing: { id: 'x', listing_number: 3, title: 'Kymco DINK-R 2026', ...kymco, description: 'À VENDRE ... Curieux s\'abstenir' } });
+    const result = responseCapture();
+    await listingHandler({ query: { slugid: 'kymco-dink-r-2026-3' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes(`<title>Kymco DINK-R 2026 d&#39;occasion à Tunis – ${n(10000)} DT</title>`));
+    assert.equal(/<meta name="description"[^>]*Curieux/.test(result.body), false);
+  } finally { globalThis.fetch = original; }
+});
+test('robots.txt: AI crawlers share the private-path rules and nothing re-allows them', () => {
+  const txt = readFileSync('public/robots.txt', 'utf8');
+  const groups = txt.split(/\n(?=User-agent:)/);
+  for (const bot of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'CCBot']) {
+    const group = groups.find((g) => new RegExp(`^User-agent: ${bot}$`, 'm').test(g));
+    assert.ok(group, bot);
+  }
+  const lines = txt.split('\n').filter((l) => /^(User-agent|Allow|Disallow):/.test(l));
+  assert.equal(lines.some((l) => l === 'Allow: /'), false);
+  const firstRule = lines.findIndex((l) => !l.startsWith('User-agent'));
+  assert.equal(lines.slice(firstRule).some((l) => l.startsWith('User-agent')), false, 'one group only');
+  assert.ok(lines.includes('Disallow: /admin') && lines.includes('Disallow: /api/'));
+});
+test('internal guide links use the canonical slug (no trailing dash before the id)', async () => {
+  const { slugify } = await import('./slugify');
+  assert.equal(slugify('Comment bien graisser son kit chaîne ?'), 'comment-bien-graisser-son-kit-chaine');
+  assert.equal(slugify('« Essai » Honda'), 'essai-honda');
+});
+test('listing HTML preloads the first gallery photo at the exact URL the gallery requests', async () => {
+  const { seoImagePath } = await import('./seoImagePath');
+  assert.equal(seoImagePath('https://motoscoot.ihebchebbi.pro/uploads/a.webp', 'Kymco DINK-R 2026'), '/m/kymco-dink-r-2026/a.webp');
+  assert.equal(seoImagePath('/uploads/thumbnails/a.webp', 'Kymco DINK-R 2026'), '/m/kymco-dink-r-2026/t/a.webp');
+  assert.equal(seoImagePath('https://cdn.example.com/a.webp', 'Kymco'), null);
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ listing: { id: 'x', listing_number: 3, title: 'Kymco DINK-R 2026', brand: 'Kymco', model: 'DINK-R', price: 10000, images: ['https://motoscoot.ihebchebbi.pro/uploads/first.webp', 'https://motoscoot.ihebchebbi.pro/uploads/second.webp'] } });
+    const result = responseCapture();
+    await listingHandler({ query: { slugid: 'kymco-dink-r-2026-3' }, appShell: '<html><head><link rel="preload" as="image" href="/hero.webp"></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes('<link rel="preload" as="image" href="/m/kymco-dink-r-2026/first.webp" fetchpriority="high" />'));
+    assert.equal(result.body.includes('/hero.webp'), false, 'home hero preload is dropped');
+  } finally { globalThis.fetch = original; }
 });

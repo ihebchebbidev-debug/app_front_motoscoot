@@ -118,6 +118,7 @@ export const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
           <input 
             type="number" 
             value={minVal} 
+            aria-label={`${label} minimum${unit ? ` (${unit})` : ''}`}
             onChange={e => setMinVal(e.target.value === '' ? min : Number(e.target.value))} 
             className={`w-full pl-2 pr-7 py-3 bg-muted border border-gray-200 rounded-xl text-[13px] font-bold text-gray-900 text-center outline-none focus:bg-card focus:border-primary-600 transition-all ${hideSpinnersClasses}`} 
           />
@@ -127,6 +128,7 @@ export const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
           <input 
             type="number" 
             value={maxVal} 
+            aria-label={`${label} maximum${unit ? ` (${unit})` : ''}`}
             onChange={e => setMaxVal(e.target.value === '' ? max : Number(e.target.value))} 
             className={`w-full pl-2 pr-7 py-3 bg-muted border border-gray-200 rounded-xl text-[13px] font-bold text-gray-900 text-center outline-none focus:bg-card focus:border-primary-600 transition-all ${hideSpinnersClasses}`} 
           />

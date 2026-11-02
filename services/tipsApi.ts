@@ -4,6 +4,7 @@
 import { apiClient } from './apiClient';
 import { Tip } from '../types';
 import { resolveEditorial } from '../utils/publicContent';
+import { readingTime } from '../utils/editorial';
 
 const FALLBACK_IMAGE = 'https://www.moto-scoot.tn/content-fallbacks/tip-default.jpg';
 
@@ -67,7 +68,7 @@ export function mapBackendTip(t: BackendTip): Tip {
     image: t.cover_image || t.image || FALLBACK_IMAGE,
     date: formatDate(t.published_at || t.created_at),
     author,
-    readTime: rt ? `${String(rt).replace(/\s*min\s*$/i, '')} min` : '5 min',
+    readTime: readingTime(t.content || t.body, rt),
     difficulty: normalizeDifficulty(t.difficulty),
   };
 }

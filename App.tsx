@@ -38,10 +38,12 @@ const queryClient = new QueryClient({
 });
 
 // Skeleton-based fallback (no spinner). Uses semantic tokens so it adapts to theme.
+// Full screen height: at 60vh the footer showed below it, its logo became the
+// LCP element and the footer jumped down when the page arrived (CLS ~0.2).
 import { Skeleton } from './components/ui/Skeleton';
 
 const LoadingSpinner = () => (
-  <div className="flex flex-col gap-4 p-6 max-w-3xl mx-auto min-h-[60vh] animate-fade-in">
+  <div className="flex flex-col gap-4 p-6 max-w-3xl mx-auto min-h-screen animate-fade-in">
     <Skeleton className="h-8 w-1/2" />
     <Skeleton className="h-4 w-3/4" />
     <Skeleton className="h-4 w-2/3" />

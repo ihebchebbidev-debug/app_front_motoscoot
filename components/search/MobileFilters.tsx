@@ -180,6 +180,7 @@ export const MobileFilters: React.FC<MobileFiltersProps> = ({
                 <label className="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 block ml-1">{sel.label}</label>
                 <div className="relative">
                   <select 
+                    aria-label={sel.label}
                     value={(filters[sel.key as keyof FilterState] as string) || sel.options[0]} 
                     disabled={modelDisabled}
                     onChange={(e) => {
