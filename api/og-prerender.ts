@@ -388,7 +388,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
   if (!brand) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('X-Robots-Tag', 'noindex');
-    res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/fiches-techniques">Voir toutes les fiches techniques</a></p></body></html>`);
+    res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | MotoScoot</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/fiches-techniques">Voir toutes les fiches techniques</a></p></body></html>`);
     return;
   }
 
@@ -399,7 +399,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 
   const canonical = `${SITE}/fiches-techniques/${brandSlug}`;
   const pageTitle = `${brand} : fiches techniques et prix en Tunisie`;
-  const title = `${pageTitle} | Moto-Scoot.tn`;
+  const title = `${pageTitle} | MotoScoot`;
   const description = `Fiches techniques des modèles ${brand} vendus en Tunisie : prix du neuf en DT, cylindrée, puissance, couple, poids et consommation.`;
   const modelUrl = (m: Doc) => `${SITE}/fiche-technique/${(m as any).slug || `${slugify([m.brand, m.model, m.year].filter(Boolean).join(' '))}-${m.id}`}`;
   const modelName = (m: Doc) => [brand, m.model].filter(Boolean).join(' ');
@@ -453,7 +453,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="Moto-Scoot.tn" />
+<meta property="og:site_name" content="MotoScoot" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
@@ -581,7 +581,7 @@ export default async function handler(req: any, res: any) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="${ogType}" />
-<meta property="og:site_name" content="MotoScoot.tn" />
+<meta property="og:site_name" content="MotoScoot" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />

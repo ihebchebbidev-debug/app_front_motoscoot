@@ -62,7 +62,9 @@ const Tips: React.FC<BasePageProps> = ({ onNavigate }) => {
     // as data arrives (useMemo re-runs on tips/activeCategory change).
     if (isLoading && count === 0) {
       return {
-        title: 'Conseils Moto & Entretien — Chargement des guides… | moto-scoot.tn',
+        // Stable title (the admin template adds the site name): a render captured
+        // before the guides load must not be indexed as "Chargement…".
+        title: 'Conseils Moto & Entretien en Tunisie',
         description: "Chargement des derniers conseils d'entretien, sécurité et pilotage moto en Tunisie. Guides pratiques mis à jour par notre équipe.",
         keywords: [
           'conseils moto',
