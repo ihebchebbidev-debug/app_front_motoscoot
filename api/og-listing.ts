@@ -21,6 +21,7 @@
 
 import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
+import { seoImagePath } from '../utils/seoImagePath.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -217,6 +218,11 @@ export default async function handler(req: any, res: any) {
 
     const allLd = [listingLd, breadcrumbLd].filter(Boolean);
 
+    // The gallery's first photo is the LCP element: start it with the HTML
+    // instead of after the JS bundle and the listing API call. Same URL as
+    // ListingGallery builds (buildSeoImageUrl with the listing title).
+    const lcpImage = listing?.images?.[0] ? seoImagePath(listing.images[0], listing.title) : null;
+
     // ---- Body content (visible to non-JS crawlers + LLMs) ----
     const specRow = (label: string, value?: string | number | null) =>
       value != null && value !== '' ? `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd>` : '';
@@ -251,6 +257,7 @@ ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${sr
 <meta name="description" content="${escapeHtml(description)}" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <link rel="canonical" href="${canonical}" />
+${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 

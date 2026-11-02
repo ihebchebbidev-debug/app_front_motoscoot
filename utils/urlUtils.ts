@@ -1,4 +1,5 @@
 import { slugify } from './slugify';
+import { seoImagePath } from './seoImagePath';
 export { slugify };
 
 // Branded fallback images (orange theme) generated for the marketplace.
@@ -62,25 +63,8 @@ export const resolveUploadUrl = (url: string): string => {
 export const buildSeoImageUrl = (url: string, slug?: string | null): string => {
   if (!url || typeof url !== 'string') return url;
   if (/^(data:|blob:)/i.test(url)) return url;
-  const cleanSlug = slug ? slugify(String(slug)).slice(0, 60) : '';
-  if (!cleanSlug) return resolveUploadUrl(url);
-
-  // Pull out the "/uploads/..." portion regardless of whether the stored URL
-  // is relative or absolute (different envs / legacy data).
-  let path: string | null = null;
-  if (url.startsWith('/uploads/')) {
-    path = url;
-  } else {
-    const m = url.match(/\/uploads\/([^?#]+)/i);
-    if (m) path = `/uploads/${m[1]}`;
-  }
-  if (!path) return url; // external URL — leave alone
-
-  const rest = path.replace(/^\/uploads\//, '');
-  if (rest.startsWith('thumbnails/')) {
-    return `/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}`;
-  }
-  return `/m/${cleanSlug}/${rest}`;
+  if (!slug || !slugify(String(slug))) return resolveUploadUrl(url);
+  return seoImagePath(url, slug) ?? url; // external URL — leave alone
 };
 
 export const getOptimizedImageUrl = (
