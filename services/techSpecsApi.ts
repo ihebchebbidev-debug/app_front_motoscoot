@@ -174,6 +174,8 @@ export function mapBackendTechSpec(b: BackendTechSpec): TechSpec {
     topSpeed: b.top_speed,
     normLogo: b.norm_logo,
     importer: b.importer || null,
+    categoryLabel: b.category || undefined,
+    updatedAt: (b as any).updated_at || undefined,
     importerId: b.importer_id ?? (b.importer ? b.importer.id : null) ?? null,
   };
 }

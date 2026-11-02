@@ -47,6 +47,36 @@ const powerCh = (v: unknown): number | null => {
   return m?.[2] ? Math.round(n * 1.35962 * 10) / 10 : n;
 };
 
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+export interface TechSpecSummaryInput extends TechSpecSeoInput {
+  year?: string | number | null;
+  /** Category as typed in the admin ("Maxi Scooter"), not the filter bucket. */
+  categoryLabel?: string | null;
+  /** ISO date of the last update, shown as the month the price was checked. */
+  updatedAt?: string | null;
+  importerName?: string | null;
+  importerCity?: string | null;
+}
+
+/**
+ * Answer-first sentence of a technical sheet, shown on the page and sent to
+ * crawlers (api/og-prerender.ts): model, displacement, power, new price in DT
+ * with the month it was checked, importer.
+ */
+export function techSpecSummary(s: TechSpecSummaryInput): string {
+  const name = [s.brand, s.model].filter(Boolean).join(' ').trim();
+  const cc = firstNumber(s.cc);
+  const p = priceNumber(s.price);
+  const checked = s.updatedAt ? new Date(s.updatedAt) : null;
+  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
+  return [
+    `${name}${s.year ? ` (${s.year})` : ''}${s.categoryLabel ? ` : ${String(s.categoryLabel).toLowerCase()}` : ''}${cc !== null ? ` de ${fmt(cc)} cm³` : ''}${s.power ? `, ${s.power}` : ''}.`,
+    p !== null ? `Prix du neuf en Tunisie : ${fmt(p)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
+    s.importerName ? `Importateur : ${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}.` : '',
+  ].filter(Boolean).join(' ');
+}
+
 export function techSpecTitle({ brand, model }: TechSpecSeoInput): string {
   const name = [brand, model].filter(Boolean).join(' ').trim() || 'Fiche technique';
   return `${name} | Prix en Tunisie & Fiche Technique`;

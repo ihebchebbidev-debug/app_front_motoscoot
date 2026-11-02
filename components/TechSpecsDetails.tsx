@@ -28,7 +28,7 @@ import SocialShareModal from './common/SocialShareModal';
 import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
-import { techSpecTitle, techSpecDescription } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -127,21 +127,23 @@ const S = {
   BackBtn: "p-2.5 md:p-2 bg-card border border-gray-100 md:border-border rounded-2xl md:rounded-xl text-gray-700 md:text-foreground hover:bg-gray-50 hover:text-primary shadow-sm transition-all active:scale-95",
   ContentBlock: "bg-card rounded-2xl border border-border overflow-hidden shadow-sm",
   BlockBody: "px-6 md:px-8 pt-3 pb-6 md:pt-4 md:pb-8 animate-fade-in",
-  SpecRow: "flex justify-between items-center py-3 md:py-4 border-b border-border/50 last:border-0",
-  SpecLabel: "font-sans text-[14px] font-normal text-muted-foreground leading-[20px]",
+  SpecRow: "border-b border-border/50 last:border-0",
+  SpecLabel: "py-3 md:py-4 pr-4 text-left align-middle font-sans text-[14px] font-normal text-muted-foreground leading-[20px]",
   SpecValue: "font-sans text-[14px] font-extrabold text-foreground text-right",
 };
 
 const SpecRow = memo(({ label, value, badge }: { label: string, value?: string, badge?: string }) => {
   if (!value && !badge) return null;
   return (
-    <div className={S.SpecRow}>
-      <span className={S.SpecLabel}>{label}</span>
-      <div className="flex items-center gap-2">
-        {value && <span className={S.SpecValue}>{value}</span>}
-        {badge && <Badge variant="default" className="text-[10px] uppercase tracking-wider bg-muted border-border text-foreground">{badge}</Badge>}
-      </div>
-    </div>
+    <tr className={S.SpecRow}>
+      <th scope="row" className={S.SpecLabel}>{label}</th>
+      <td className="py-3 md:py-4 align-middle">
+        <div className="flex items-center justify-end gap-2">
+          {value && <span className={S.SpecValue}>{value}</span>}
+          {badge && <Badge variant="default" className="text-[10px] uppercase tracking-wider bg-muted border-border text-foreground">{badge}</Badge>}
+        </div>
+      </td>
+    </tr>
   );
 });
 
@@ -165,7 +167,11 @@ const SpecGroup: React.FC<{ title: string; children: React.ReactNode }> = ({ tit
       <h3 className="font-sans text-[12px] font-extrabold uppercase tracking-[0.08em] text-foreground border-b-2 border-primary-600 pb-2 mb-3">
         {title}
       </h3>
-      <div>{rendered}</div>
+      {/* A real table (row headers + values) so crawlers and AI answers can lift the specs. */}
+      <table className="w-full border-collapse">
+        <caption className="sr-only">{title}</caption>
+        <tbody>{rendered}</tbody>
+      </table>
     </section>
   );
 };
@@ -477,6 +483,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 ))}
               </div>
             </div>
+
+            {/* Answer-first summary: same sentence as the crawler HTML (api/og-prerender.ts). */}
+            <p className="font-sans text-[14px] md:text-[15px] text-gray-600 leading-relaxed mb-6">
+              {techSpecSummary({
+                brand: spec.brand, model: spec.model, year: spec.year, categoryLabel: spec.categoryLabel,
+                cc: spec.engine?.cc, power: spec.engine?.power, price: spec.priceNew, updatedAt: spec.updatedAt,
+                importerName: spec.importer?.name, importerCity: spec.importer?.city,
+              })}
+            </p>
 
             {/* DETAILED SPECS */}
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
