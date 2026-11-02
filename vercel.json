@@ -150,6 +150,10 @@
       "destination": "/api/og-prerender?kind=marque&slugid=:brand"
     },
     {
+      "source": "/prix/:slug",
+      "destination": "/api/og-prerender?kind=prix&slugid=:slug"
+    },
+    {
       "source": "/mes-favoris",
       "destination": "/spa.html"
     },

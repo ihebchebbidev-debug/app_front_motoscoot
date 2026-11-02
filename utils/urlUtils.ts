@@ -130,6 +130,7 @@ const ROUTE_MAP: RouteMapping[] = [
   { view: 'admin', path: '/admin', pattern: /^\/admin/ },
   { view: 'tech-specs-brands', path: '/fiches-techniques', pattern: /^\/fiches-techniques$/ },
   { view: 'comparator', path: '/comparateur', pattern: /^\/comparateur\/?$/ },
+  { view: 'scooter-125-prices', path: '/prix/scooter-125-tunisie', pattern: /^\/prix\/scooter-125-tunisie\/?$/ },
   { view: 'legal', path: '/mentions-legales', pattern: /^\/mentions-legales\/?$/ },
   { view: 'security', path: '/securite', pattern: /^\/securite\/?$/ },
   { view: 'terms', path: '/conditions', pattern: /^\/conditions\/?$/ },
@@ -226,6 +227,7 @@ export const getUrlFromState = (view: string, params: any = {}): string => {
     case 'admin': path = '/admin'; break;
     case 'tech-specs-brands': path = '/fiches-techniques'; break;
     case 'comparator': path = '/comparateur'; break;
+    case 'scooter-125-prices': path = '/prix/scooter-125-tunisie'; break;
     case 'legal': path = '/mentions-legales'; break;
     case 'security': path = '/securite'; break;
     case 'terms': path = '/conditions'; break;

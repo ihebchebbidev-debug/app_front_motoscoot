@@ -23,6 +23,11 @@ import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
+import {
+  SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
+  scooter125Description, scooter125Faq, scooter125Heading, scooter125Intro, scooter125Method, scooter125Rows,
+  scooter125SourceFromApi, scooter125Title,
+} from '../utils/scooter125Guide.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -487,10 +492,125 @@ ${items}
   res.status(200).send(await renderWithApp(req, html));
 }
 
+// /prix/scooter-125-tunisie: the price guide generated from the sheets
+// (utils/scooter125Guide.ts, same rows and text as the React page).
+async function renderScooter125(req: any, res: any) {
+  const visible = 'available_in_tunisia=true';
+  const brandsRes = await fetch(`${API_BASE}/tech-specs/brands?${visible}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+  if (!brandsRes.ok) throw new Error('Content service unavailable');
+  const brandsData = await brandsRes.json();
+  const brands = (Array.isArray(brandsData) ? brandsData : brandsData.brands || [])
+    .map((b: any) => String(typeof b === 'string' ? b : b.brand || b.name || '')).filter(Boolean);
+  const lists = await Promise.all(brands.map(async (brand: string) => {
+    const r = await fetch(`${API_BASE}/tech-specs/brands/${encodeURIComponent(brand)}?${visible}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error('Content service unavailable');
+    const data = await r.json();
+    return (Array.isArray(data) ? data : data.models || []) as Doc[];
+  }));
+  const now = new Date();
+  const rows = scooter125Rows(lists.flat().map(scooter125SourceFromApi));
+  const canonical = `${SITE}${SCOOTER_125_PATH}`;
+  const title = `${scooter125Title(now)} | Moto-Scoot.tn`;
+  const description = scooter125Description(rows, now);
+  const heading = scooter125Heading(now);
+  const ficheUrl = (r: Scooter125Row) => `${SITE}/fiche-technique/${r.slug || `${slugify([r.brand, r.model, r.year].filter(Boolean).join(' '))}-${r.id}`}`;
+  const usedUrl = `${SITE}/annonces?type=Scooter&maxCC=125`;
+  const image = rows.find((r) => r.image)?.image;
+  const ogImage = image ? rewriteImageHost(image, rows.find((r) => r.image)?.name) : DEFAULT_OG;
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Fiches techniques', item: `${SITE}/fiches-techniques` },
+      { '@type': 'ListItem', position: 3, name: SCOOTER_125_BREADCRUMB, item: canonical },
+    ],
+  };
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: heading,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    numberOfItems: rows.length,
+    itemListElement: rows.map((r, i) => ({ '@type': 'ListItem', position: i + 1, name: r.name, url: ficheUrl(r) })),
+  };
+
+  const e = (v: unknown) => escapeHtml(String(v ?? ''));
+  const table = rows.length ? `<table>
+<caption>Prix des scooters 125 neufs en Tunisie</caption>
+<thead><tr><th scope="col">Modèle</th><th scope="col">Année</th><th scope="col">Prix neuf</th><th scope="col">Puissance</th><th scope="col">Poids</th><th scope="col">Importateur</th></tr></thead>
+<tbody>
+${rows.map((r) => `<tr><th scope="row"><a href="${ficheUrl(r)}">${e(r.name)}</a></th><td>${e(r.year ?? '—')}</td><td>${e(fmtDt(r.price))}</td><td>${e(fmtCh(r.powerCh))}</td><td>${e(fmtKg(r.weightKg))}</td><td>${e(r.importer || '—')}</td></tr>`).join('\n')}
+</tbody>
+</table>` : '';
+  const bands = scooter125Bands(rows).map((b) => `<h2>${e(b.title)}</h2>
+<p>${e(b.intro)}</p>${b.rows.length ? `\n<ul>${b.rows.map((r) => `<li><a href="${ficheUrl(r)}">${e(r.name)}</a> : ${e(fmtDt(r.price))}</li>`).join('')}</ul>` : ''}`).join('\n');
+  const advice = scooter125Advice(rows).map((a) => `<h3>${e(a.title)}</h3>\n<p>${e(a.text)}</p>`).join('\n');
+  const faq = scooter125Faq(rows).map((f) => `<h3>${e(f.question)}</h3>\n<p>${e(f.answer)}</p>`).join('\n');
+  const brandLinks = [...new Set(rows.map((r) => r.brand))].sort((x, y) => x.localeCompare(y, 'fr'))
+    .map((b) => `<li><a href="${SITE}/fiches-techniques/${slugify(b)}">Fiches techniques ${e(b)}</a></li>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>${e(title)}</title>
+<meta name="description" content="${e(description)}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<link rel="canonical" href="${canonical}" />
+<link rel="alternate" href="${canonical}" hreflang="fr-TN" />
+<link rel="alternate" href="${canonical}" hreflang="x-default" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
+<meta property="og:locale" content="fr_TN" />
+<meta property="og:title" content="${e(title)}" />
+<meta property="og:description" content="${e(description)}" />
+<meta property="og:url" content="${canonical}" />
+<meta property="og:image" content="${ogImage}" />
+<meta property="og:image:secure_url" content="${ogImage}" />
+<meta property="og:image:alt" content="${e(heading)}" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${e(title)}" />
+<meta name="twitter:description" content="${e(description)}" />
+<meta name="twitter:image" content="${ogImage}" />
+
+<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
+${rows.length ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(itemListLd)}</script>` : ''}
+</head>
+<body>
+<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a> › ${e(SCOOTER_125_BREADCRUMB)}</nav>
+<h1>${e(heading)}</h1>
+<p>${e(scooter125Intro(rows, now))}</p>
+${table}
+<p><a href="${SITE}/comparateur">Comparer 2 modèles</a> · <a href="${usedUrl}">Voir les scooters 125 d'occasion</a></p>
+${bands}
+<h2>Comment choisir son scooter 125 en Tunisie</h2>
+${advice}
+<h2>Neuf ou occasion ?</h2>
+<p>Un scooter 125 d'occasion coûte moins cher qu'un neuf, mais vérifiez l'entretien, le kilométrage et les papiers avant d'acheter. Les annonces Moto-Scoot.tn regroupent les scooters vendus par des particuliers et des professionnels partout en Tunisie. <a href="${usedUrl}">Voir les annonces</a></p>
+${faq ? `<h2>Questions fréquentes</h2>\n${faq}` : ''}
+<h2>Comment ces prix sont établis</h2>
+<p>${e(scooter125Method(now))}</p>
+${brandLinks ? `<ul>${brandLinks}<li><a href="${SITE}/fiches-techniques">Toutes les marques</a></li></ul>` : ''}
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.status(200).send(await renderWithApp(req, html));
+}
+
 export default async function handler(req: any, res: any) {
   try {
     const kind = String(req.query?.kind || '').toLowerCase() as Kind;
     const slugid = String(req.query?.slugid || '');
+    if ((kind as string) === 'prix' && `/prix/${slugid.replace(/\/$/, '')}` === SCOOTER_125_PATH) {
+      await renderScooter125(req, res);
+      return;
+    }
     if ((kind as string) === 'marque' && /^[a-z0-9-]+$/.test(slugid.replace(/\/$/, ''))) {
       await renderBrand(req, res, slugid.replace(/\/$/, ''));
       return;

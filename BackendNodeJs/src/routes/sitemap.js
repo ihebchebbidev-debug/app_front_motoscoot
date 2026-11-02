@@ -145,6 +145,7 @@ async function buildGroups() {
     { path: '/conseils',            changefreq: 'weekly',  priority: 0.8,  lastmod: latest(tips) },
     { path: '/fiches-techniques',   changefreq: 'weekly',  priority: 0.8,  lastmod: latest(techSpecs) },
     { path: '/comparateur',         changefreq: 'weekly',  priority: 0.7,  lastmod: latest(techSpecs) },
+    { path: '/prix/scooter-125-tunisie', changefreq: 'weekly', priority: 0.8, lastmod: latest(techSpecs) },
     { path: '/a-propos',            changefreq: 'monthly', priority: 0.6 },
     { path: '/contact',             changefreq: 'monthly', priority: 0.6 },
     { path: '/faq',                 changefreq: 'monthly', priority: 0.6 },

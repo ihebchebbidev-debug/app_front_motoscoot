@@ -303,6 +303,7 @@ const Header: React.FC<HeaderProps> = ({
                       {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
                       <div className={`${isTechMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
                           <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
+                          <Link to={getUrlFromState('scooter-125-prices')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Prix Scooters 125</Link>
                           <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
                       </div>
                   </div>
@@ -557,6 +558,7 @@ const Header: React.FC<HeaderProps> = ({
               <MenuLink image={iconSearch} label="Acheter" to={getUrlFromState('search')} />
               <MenuLink image={iconSell} label="Vendre" tag="Gratuit" variant="primary" onClick={() => isLoggedIn ? handleNavClick('deposit') : triggerLogin()} />
               <MenuLink image={iconSpecs} label="Fiches techniques" to={getUrlFromState('tech-specs-brands')} />
+              <MenuLink image={iconSpecs} label="Prix scooters 125" to={getUrlFromState('scooter-125-prices')} />
               <MenuLink image={iconCompare} label="Comparateur" to={getUrlFromState('comparator')} />
             </div>
 

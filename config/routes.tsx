@@ -35,6 +35,7 @@ const TechSpecsBrands = lazy(() => import('../components/TechSpecsBrands'));
 const TechSpecsModels = lazy(() => import('../components/TechSpecsModels'));
 const TechSpecsDetails = lazy(() => import('../components/TechSpecsDetails'));
 const Comparator = lazy(() => import('../components/Comparator'));
+const Scooter125Prices = lazy(() => import('../components/Scooter125Prices'));
 const SuperAdminDashboard = lazy(() => import('../components/admin/SuperAdminDashboard'));
 const ApiTester = lazy(() => import('../components/ApiTester'));
 const ResetPassword = lazy(() => import('../components/ResetPassword'));
@@ -96,6 +97,7 @@ export const ROUTES: Record<ViewStateName, RouteConfig> = {
   'dashboard-pro': { component: DashboardPro, layoutVariant: 'white', isProtected: true },
   'tech-specs-details': { component: TechSpecsDetails, layoutVariant: 'white' },
   'comparator': { component: Comparator, layoutVariant: 'transparent' },
+  'scooter-125-prices': { component: Scooter125Prices, layoutVariant: 'transparent' },
   'admin': { component: SuperAdminDashboard, layoutVariant: 'white', isAdminOnly: true, hideFooter: true, hideHeader: true },
   // /api-test exposes the raw API surface to the user — gate behind admin
   // so it isn't reachable by simply guessing the route name in production.
