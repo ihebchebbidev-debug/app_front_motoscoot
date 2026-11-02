@@ -23,6 +23,7 @@ import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
+import { seoImagePath } from '../utils/seoImagePath.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -352,6 +353,15 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
   ['Antipatinage', (d) => d.electronics?.tcs],
 ];
 
+// Fiche LCP: embed the API document (read by useTechSpec as initialData, so
+// the header renders without the API round trip) and preload the first
+// gallery image with the exact URL ListingGallery builds.
+function ficheHeadHints(d: Doc): string {
+  const first = ((d as any).gallery || []).filter(Boolean)[0] || (d as any).cover_image || d.image;
+  const lcpImage = first ? seoImagePath(String(first), [d.brand, d.model, d.year].filter(Boolean).join(' ')) : null;
+  return `${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />\n` : ''}<script>window.__TECH_SPEC__=${scriptSafeJson(d)}</script>`;
+}
+
 // Fiche technique body for crawlers that do not run JavaScript, in the same
 // order as the page: the full spec table, then the summary (price with the
 // date it was checked, importer), then links to the brand, the catalogue and
@@ -407,6 +417,12 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
   const modelName = (m: Doc) => [brand, m.model].filter(Boolean).join(' ');
   const firstImage = models.find((m) => m.image)?.image;
   const image = firstImage ? rewriteImageHost(firstImage, brand) : DEFAULT_OG;
+  // The first model card image is the mobile LCP: preload the exact URL the
+  // card builds (getOptimizedImageUrl → buildSeoImageUrl, slug "brand model year"),
+  // and embed the models (useTechSpecsByBrand initialData) so the grid renders
+  // without waiting for the brands and models API calls.
+  const first = models[0];
+  const lcpImage = first?.image ? seoImagePath(first.image, [first.brand || brand, first.model, first.year].filter(Boolean).join(' ')) : null;
 
   // Factual intro built from the data (counts and ranges only, no claims).
   const ccs = models.map((m) => Math.round(parseCc(m.engine?.cc) || 0)).filter((n) => n > 0);
@@ -469,6 +485,8 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 <meta name="twitter:description" content="${escapeHtml(description)}" />
 <meta name="twitter:image" content="${image}" />
 
+${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
+<script>window.__TECH_SPEC_BRAND__=${scriptSafeJson({ name: brand, models })}</script>
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(itemListLd)}</script>
 </head>
@@ -603,6 +621,7 @@ ${price ? `<meta property="product:price:amount" content="${price}" />\n<meta pr
 
 ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</script>` : ''}
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
+${kind === 'fiche-technique' ? ficheHeadHints(doc) : ''}
 </head>
 <body>
 ${kind === 'fiche-technique' ? renderFicheBody(doc) : `<h1>${escapeHtml(heading)}</h1>
