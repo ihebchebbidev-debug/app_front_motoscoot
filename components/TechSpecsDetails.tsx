@@ -28,14 +28,16 @@ import SocialShareModal from './common/SocialShareModal';
 import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
-import { techSpecTitle, techSpecDescription, techSpecSummary } from '../utils/techSpecSeo';
+import { Link } from 'react-router-dom';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
   const ft = (v?: string) => (v ? String(v).trim().split(/\s+/)[0] : '') || 'N/A';
   return [
     { key: 'speed', label: 'Vitesse Max', short: 'Vitesse', icon: '/icons/specs/vitesse-max.svg', value: `${ft(spec.topSpeed)} km/h` },
-    { key: 'power', label: 'Puissance', short: 'Puiss.', icon: '/icons/specs/puissance.svg', value: `${ft(spec.engine?.power)} cv` },
+    // kW values are converted ("9.3 kW (12.6 ch)" showed as "9.3 cv").
+    { key: 'power', label: 'Puissance', short: 'Puiss.', icon: '/icons/specs/puissance.svg', value: formatPowerCh(spec.engine?.power) || 'N/A' },
     { key: 'weight', label: 'Poids', short: 'Poids', icon: '/icons/specs/poids.svg', value: `${ft(spec.dimensions?.weight)} kg` },
     { key: 'torque', label: 'Couple', short: 'Couple', icon: '/icons/specs/couple.svg', value: `${ft(spec.engine?.torque)} Nm` },
   ];
@@ -258,7 +260,6 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     // offers / review / aggregateRating on Product). Otherwise downgrade
     // to Vehicle to keep the structured-data check green.
     if (price > 0) {
-      const validUntil = new Date(Date.now() + 180 * 86400_000).toISOString().slice(0, 10);
       return {
         "@context": "https://schema.org/",
         "@type": "Product",
@@ -274,11 +275,10 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           "@type": "Offer",
           priceCurrency: "TND",
           price,
-          availability: "https://schema.org/InStock",
+          // Catalogue price of the new model, as in api/og-prerender.ts:
+          // MotoScoot does not sell it (no seller, stock or validity date).
           itemCondition: "https://schema.org/NewCondition",
           url: canonical,
-          priceValidUntil: validUntil,
-          seller: { "@type": "Organization", name: "MotoScoot.tn", url: "https://www.moto-scoot.tn" },
         },
       };
     }
@@ -423,13 +423,14 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
            <div className="flex items-center gap-3 md:gap-4">
               <button onClick={handleBack} className={S.BackBtn} aria-label="Retour"><ArrowLeft size={18} className="md:w-5 md:h-5"/></button>
               <nav className={S.Breadcrumb}>
-                 <span className="flex items-center gap-1.5 hover:text-primary-600 cursor-pointer transition-colors" onClick={() => onNavigate?.('home')}>
+                 {/* Real links (crawlable), same targets as the prerendered breadcrumb. */}
+                 <Link to={getUrlFromState('home')} className="flex items-center gap-1.5 hover:text-primary-600 transition-colors">
                    <Home size={14} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
+                 </Link>
                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="hover:text-primary-600 cursor-pointer transition-colors" onClick={() => onNavigate?.('tech-specs-brands')}>Fiches Techniques</span>
+                 <Link to={getUrlFromState('tech-specs-brands')} className="hover:text-primary-600 transition-colors">Fiches Techniques</Link>
                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="text-foreground font-extrabold truncate max-w-[100px] md:max-w-none">{spec.brand}</span>
+                 <Link to={getUrlFromState('tech-specs-models', { brand: spec.brand })} className="text-foreground font-extrabold truncate max-w-[100px] md:max-w-none hover:text-primary-600 transition-colors">{spec.brand}</Link>
               </nav>
            </div>
         </header>

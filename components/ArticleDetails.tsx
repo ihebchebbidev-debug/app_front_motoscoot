@@ -28,6 +28,7 @@ import { useArticles, useArticle, useRelatedArticles } from '../hooks/useArticle
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
 import { getUrlFromState } from '../utils/urlUtils';
+import { Link } from 'react-router-dom';
 import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
@@ -337,7 +338,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                                 </div>
                                 <div className="p-6 flex flex-col flex-1">
                                     <h3 className="text-lg font-black text-gray-900 mb-3 leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">
-                                        {rel.title}
+                                        <Link to={getUrlFromState('article-details', { id: rel.id, title: rel.title })} onClick={(e) => e.stopPropagation()}>{rel.title}</Link>
                                     </h3>
                                     <div className="mt-auto pt-4 flex items-center gap-1.5 text-[12px] font-medium text-gray-400">
                                         <Calendar size={12} /> {rel.date}
