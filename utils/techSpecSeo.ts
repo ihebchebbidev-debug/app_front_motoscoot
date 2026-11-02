@@ -94,6 +94,20 @@ export function techSpecSummary(s: TechSpecSummaryInput): string {
   ].filter(Boolean).join(' ');
 }
 
+/**
+ * First row of the spec table: "9 000 DT (relevé en novembre 2026)", or ''
+ * without a price. Puts the price in the first lines of the page for AI
+ * answers while the full summary sentence stays at the bottom.
+ */
+export const TECH_SPEC_PRICE_LABEL = 'Prix neuf en Tunisie';
+export function techSpecPriceValue(price: unknown, updatedAt?: string | null): string {
+  const p = priceNumber(price);
+  if (p === null) return '';
+  const checked = updatedAt ? new Date(updatedAt) : null;
+  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
+  return `${fmt(p)} DT${checkedLabel ? ` (relevé en ${checkedLabel})` : ''}`;
+}
+
 export function techSpecTitle({ brand, model }: TechSpecSeoInput): string {
   const name = [brand, model].filter(Boolean).join(' ').trim() || 'Fiche technique';
   return `${name} | Prix en Tunisie & Fiche Technique`;

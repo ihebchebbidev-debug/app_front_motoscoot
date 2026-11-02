@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
@@ -328,6 +328,7 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
 }
 
 const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
+  [TECH_SPEC_PRICE_LABEL, (d) => techSpecPriceValue(d.price_new, d.updated_at)],
   ['Cylindrée', (d) => d.engine?.cc],
   ['Moteur', (d) => d.engine?.type],
   ['Puissance', (d) => d.engine?.power],

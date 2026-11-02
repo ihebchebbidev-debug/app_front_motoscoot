@@ -288,3 +288,11 @@ test('fiche summary: whole-number displacement is not repeated, missing parts ar
   assert.equal(techSpecSummary({ brand: 'Voge', model: '625', categoryLabel: 'Moto', cc: '581.2 cc' }), 'Voge 625 : moto 581 cm³ équipée d’un moteur de 581,2 cm³.');
   assert.ok(techSpecSummary({ brand: 'KTM', model: '390 Duke', categoryLabel: 'Roadster', cc: '398.7', price: 55000, importerName: 'SIMCC' }).endsWith('Le modèle est distribué en Tunisie par SIMCC.'));
 });
+test('fiche spec table starts with the dated new price (crawler HTML), and has no price row without a price', async () => {
+  const { renderFicheBody } = await import('../api/og-prerender');
+  const priced = renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', price_new: '9000', updated_at: '2026-11-01T19:54:01Z', engine: { cc: '124.7 cc' } } as any);
+  const firstRow = priced.match(/<tr>.*?<\/tr>/)?.[0];
+  assert.equal(firstRow, `<tr><th scope="row">Prix neuf en Tunisie</th><td>${(9000).toLocaleString('fr-FR')} DT (relevé en novembre 2026)</td></tr>`);
+  const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
+  assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
+});
