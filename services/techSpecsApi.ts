@@ -5,6 +5,7 @@ import { apiClient } from './apiClient';
 import { TechSpec } from '../types';
 import { registerSpecSlug } from '../utils/publicIds';
 import { PLACEHOLDER_LISTING } from '../utils/urlUtils';
+import { normalizeCategory } from '../utils/techSpecCategory';
 
 // Default moto image shown when a fiche technique has no uploaded photo yet.
 // Uses the bundled placeholder (always available) — the old remote
@@ -78,13 +79,6 @@ export interface BackendTechSpec {
   dimensions?: any;
 }
 
-const VALID_CATEGORIES = ['Roadster', 'Sportive', 'Trail', 'Scooter', 'Custom', 'Off-road'];
-
-function normalizeCategory(c?: string): TechSpec['category'] {
-  if (!c) return 'Roadster';
-  const found = VALID_CATEGORIES.find((v) => v.toLowerCase() === c.toLowerCase());
-  return (found || 'Roadster') as TechSpec['category'];
-}
 
 function fmtPrice(v?: number | string): string {
   if (v === null || v === undefined || v === '') return '—';

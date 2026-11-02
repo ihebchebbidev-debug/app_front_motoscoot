@@ -110,3 +110,46 @@ test('listing emits one Product + Vehicle node, not two competing entities', asy
     assert.ok(result.body.includes('"value":11000'));
   } finally { globalThis.fetch = original; }
 });
+test('sheet title and description follow the agreed format in the crawler HTML', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'kymco-people-s-125', brand: 'Kymco', model: 'People S 125', year: 2025, price_new: 8500, engine: { cc: '124.6 cc', power: '11 ch' }, dimensions: { weight: '120 kg' } });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'kymco-people-s-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes('<title>Kymco People S 125 | Prix en Tunisie &amp; Fiche Technique</title>'));
+    assert.ok(result.body.includes(`<meta name="description" content="Prix de la Kymco People S 125 en Tunisie : ${(8500).toLocaleString('fr-FR')} DT. Fiche technique : 124,6 cm³, 11 ch, 120 kg. Comparez et choisissez votre moto." />`));
+  } finally { globalThis.fetch = original; }
+});
+test('sheet description leaves out missing values and converts kW to ch', async () => {
+  const { techSpecDescription, techSpecTitle } = await import('./techSpecSeo');
+  assert.equal(techSpecTitle({ brand: 'SYM', model: 'Jet 14 EVO 125' }), 'SYM Jet 14 EVO 125 | Prix en Tunisie & Fiche Technique');
+  assert.equal(techSpecDescription({ brand: 'Honda', model: 'X-ADV', cc: '745 cc' }), 'Fiche technique de la Honda X-ADV en Tunisie. Caractéristiques : 745 cm³. Comparez et choisissez votre moto.');
+  assert.ok(techSpecDescription({ brand: 'Zontes', model: '125 X', price: '9 000 DT', power: '10 kW' }).includes('13,6 ch'));
+  assert.equal(techSpecDescription({ brand: 'A', model: 'B', cc: 'N/A' }).includes('N/A'), false);
+});
+test('power stored as "15 ch (11 kW)" stays 15 ch', async () => {
+  const { techSpecDescription } = await import('./techSpecSeo');
+  assert.ok(techSpecDescription({ brand: 'QJ Motor', model: 'FORT 125 N', power: '15 ch (11 kW) à 8 500 tr/min' }).includes(': 15 ch.'));
+});
+test('scooter sheets read "Prix du … votre scooter", motorcycles keep "de la … votre moto"', async () => {
+  const { techSpecDescription } = await import('./techSpecSeo');
+  for (const category of ['Scooter', 'Maxi Scooter', 'Scooter / Adventure (ADV)']) {
+    const d = techSpecDescription({ brand: 'SYM', model: 'Jet 14', category, price: 9000 });
+    assert.ok(d.startsWith('Prix du SYM Jet 14 en Tunisie'), d);
+    assert.ok(d.endsWith('votre scooter.'), d);
+  }
+  assert.ok(techSpecDescription({ brand: 'SYM', model: 'ADX 300', category: 'Scooter' }).startsWith('Fiche technique du SYM ADX 300'));
+  for (const category of ['Roadster', 'Trail', 'Moto', 'MotoTrail adventure', undefined]) {
+    const d = techSpecDescription({ brand: 'KTM', model: '390 Duke', category, price: 55000 });
+    assert.ok(d.startsWith('Prix de la KTM 390 Duke en Tunisie'), d);
+    assert.ok(d.endsWith('votre moto.'), d);
+  }
+});
+test('admin category variants map to Scooter / Trail instead of Roadster', async () => {
+  const { normalizeCategory: cat } = await import('./techSpecCategory');
+  assert.equal(cat('Maxi Scooter'), 'Scooter');
+  assert.equal(cat('Scooter / Adventure (ADV)'), 'Scooter');
+  assert.equal(cat('MotoTrail adventure'), 'Trail');
+  assert.equal(cat('Roadster'), 'Roadster');
+  assert.equal(cat('Moto'), 'Roadster');
+});

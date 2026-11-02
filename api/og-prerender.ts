@@ -21,6 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
+import { techSpecTitle, techSpecDescription } from '../utils/techSpecSeo.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -170,34 +171,11 @@ function parsePrice(v: any): number | null {
 
 function pickTitle(kind: Kind, d: Doc | null): string {
   if (!d) return `${KIND_CONFIG[kind].label} | MotoScoot`;
-  if (kind === 'fiche-technique') {
-    const t = [d.brand, d.model, d.year].filter(Boolean).join(' ').trim();
-    // Match competitor SERP pattern: "<Brand> <Model> Prix en Tunisie"
-    return `${t || 'Fiche technique'} Prix en Tunisie | MotoScoot.tn`;
-  }
+  if (kind === 'fiche-technique') return techSpecTitle(d);
   if (kind === 'garage') {
     return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | MotoScoot`;
   }
   return `${d.title || d.name || KIND_CONFIG[kind].label} | MotoScoot`;
-}
-
-function buildSpecSnippet(d: Doc): string {
-  // "·"-separated spec line so Google can lift it as the SERP snippet,
-  // mirroring the competitor's rich result format.
-  const parts: string[] = [];
-  const head = [d.brand, d.model].filter(Boolean).join(' ').trim();
-  if (head) parts.push(head);
-  if (d.year) parts.push(`Année ${d.year}`);
-  parts.push('Énergie Essence');
-  const cc = parseCc(d.engine?.cc);
-  const fuelSystem = d.engine?.fuelSystem || d.engine?.fuel_system;
-  if (cc) parts.push(`Moteur ${fmtNum(cc)} cc${fuelSystem ? `, ${fuelSystem}` : ''}`);
-  if (d.engine?.power) parts.push(`Puissance ${d.engine.power}`);
-  if (d.top_speed) parts.push(`Vitesse maximale ${d.top_speed}`);
-  if (d.engine?.acceleration) parts.push(`0-100 km/h ${d.engine.acceleration}`);
-  if (d.engine?.torque) parts.push(`Couple maxi ${d.engine.torque}`);
-  if (d.consumption) parts.push(`Conso ${d.consumption}`);
-  return parts.filter(Boolean).join(' · ');
 }
 
 function pickDescription(kind: Kind, d: Doc | null): string {
@@ -205,15 +183,11 @@ function pickDescription(kind: Kind, d: Doc | null): string {
     return "Découvrez nos motos, scooters, garages et conseils en Tunisie sur MotoScoot.tn.";
   }
   if (kind === 'fiche-technique') {
-    const spec = buildSpecSnippet(d);
-    if (spec) return clip(spec, 300);
+    return techSpecDescription({ brand: d.brand, model: d.model, category: d.category, price: d.price_new, cc: d.engine?.cc, power: d.engine?.power, weight: d.dimensions?.weight });
   }
   const raw = d.excerpt || d.summary || d.description || d.content || d.body || '';
   const text = stripHtml(String(raw));
   if (text) return clip(text, 160);
-  if (kind === 'fiche-technique') {
-    return clip(`Caractéristiques techniques ${[d.brand, d.model, d.year].filter(Boolean).join(' ')} : performance, équipements, prix en Tunisie sur MotoScoot.`, 160);
-  }
   if (kind === 'garage') {
     return clip(`Découvrez le garage moto ${d.name || ''}${d.city ? ` à ${d.city}` : ''} sur MotoScoot.tn : services, avis et contact.`, 160);
   }

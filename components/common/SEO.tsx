@@ -9,6 +9,8 @@ interface BreadcrumbItem {
 
 interface SEOProps {
   title?: string;
+  /** Use the title as-is, without the admin title template (e.g. "%s | Moto-Scoot.tn"). */
+  rawTitle?: boolean;
   description?: string;
   image?: string;
   /** Provide either a relative path (e.g. /annonce/xxx) or absolute URL. */
@@ -78,6 +80,7 @@ const toAbsolute = (path: string): string => {
 
 const SEO: React.FC<SEOProps> = ({
   title,
+  rawTitle = false,
   description,
   image,
   url,
@@ -99,7 +102,7 @@ const SEO: React.FC<SEOProps> = ({
     ? seo.title_template
     : `%s | ${BRAND_NAME}`;
   const fallbackTitle = seo?.default_title || "Motos et Scooters en Tunisie | Neufs & Occasion";
-  const fullTitle = title ? template.replace('%s', title) : fallbackTitle;
+  const fullTitle = title ? (rawTitle ? title : template.replace('%s', title)) : fallbackTitle;
   const defaultDescription = seo?.default_description
     || "Trouvez, vendez et comparez des motos et scooters en Tunisie : annonces neuves et d'occasion, prix, fiches techniques et nouveautés du marché.";
   const finalDescription = (description || defaultDescription).slice(0, 160);
