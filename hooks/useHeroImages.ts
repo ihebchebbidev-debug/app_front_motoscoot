@@ -27,6 +27,10 @@ export function useHeroImages(): ResolvedHeroImages {
     staleTime: 15 * 60 * 1000,
     gcTime:    60 * 60 * 1000,
     retry: 1,
+    // Settings stamped into the home HTML at build time: the first render
+    // shows the preloaded image; the query still refetches (updatedAt 0).
+    initialData: () => (typeof window !== 'undefined' ? (window as any).__HERO_IMAGES__ : undefined),
+    initialDataUpdatedAt: 0,
   });
 
   return {
