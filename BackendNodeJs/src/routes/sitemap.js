@@ -29,6 +29,13 @@ let _cache = { groups: null, at: 0 };
 // reports indexing per type; /api/sitemap.xml keeps every URL in one file.
 const SITEMAP_TYPES = ['pages', 'annonces', 'articles', 'guides', 'marques', 'fiches', 'garages'];
 
+// Articles and guides under this many words are served "noindex, follow"
+// by the front end (utils/editorial.ts, same threshold): keep them out.
+const THIN_CONTENT_WORDS = 300;
+const wordCount = (html) =>
+  (String(html || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').match(/[\p{L}\p{N}]+/gu) || []).length;
+const indexable = (row) => wordCount(row.content) >= THIN_CONTENT_WORDS;
+
 function slugify(text) {
   if (!text) return 'details';
   return String(text)
@@ -95,7 +102,7 @@ async function buildGroups() {
       []
     ),
     safe(
-      `SELECT id, title, COALESCE(updated_at, created_at, published_at) AS lastmod
+      `SELECT id, title, content, COALESCE(updated_at, created_at, published_at) AS lastmod
          FROM articles
         WHERE COALESCE(is_published, true) = true
         ORDER BY COALESCE(updated_at, created_at) DESC
@@ -103,7 +110,7 @@ async function buildGroups() {
       []
     ),
     safe(
-      `SELECT id, title, COALESCE(updated_at, created_at) AS lastmod
+      `SELECT id, title, content, COALESCE(updated_at, created_at) AS lastmod
          FROM tips
         WHERE COALESCE(is_published, true) = true
         ORDER BY COALESCE(updated_at, created_at) DESC
@@ -162,7 +169,7 @@ async function buildGroups() {
       priority: 0.8,
     }));
   }
-  for (const a of articles) {
+  for (const a of articles.filter(indexable)) {
     groups.articles.push(urlEntry({
       loc: `${SITE_ORIGIN}/article/${canonicalSlug(a.title)}-${a.id}`,
       lastmod: a.lastmod,
@@ -172,7 +179,7 @@ async function buildGroups() {
   }
   // Guides are included now that every guide page loads for crawlers (SEO
   // audit E1, 2026-11); SITEMAP_INCLUDE_GUIDES=0 excludes them again.
-  if (process.env.SITEMAP_INCLUDE_GUIDES !== '0') for (const t of tips) {
+  if (process.env.SITEMAP_INCLUDE_GUIDES !== '0') for (const t of tips.filter(indexable)) {
     groups.guides.push(urlEntry({
       loc: `${SITE_ORIGIN}/guide/${canonicalSlug(t.title)}-${t.id}`,
       lastmod: t.lastmod,
