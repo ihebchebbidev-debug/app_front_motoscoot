@@ -28,6 +28,7 @@ import SocialShareModal from './common/SocialShareModal';
 import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
+import { techSpecTitle, techSpecDescription } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -401,8 +402,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   return (
     <main className={S.Wrapper}>
       <SEO 
-        title={`${spec.brand} ${spec.model} Prix en Tunisie - Fiche Technique & Prix`}
-        description={`Découvrez la fiche technique complète de la ${spec.brand} ${spec.model} (${spec.year}). Caractéristiques, moteur ${spec.engine?.cc || 'N/A'}, puissance ${spec.engine?.power || 'N/A'}, et prix neuf en Tunisie.`}
+        title={techSpecTitle({ brand: spec.brand, model: spec.model })}
+        rawTitle
+        description={techSpecDescription({ brand: spec.brand, model: spec.model, price: spec.priceNew, cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight })}
         image={spec.image}
         type="product"
         url={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand} ${spec.model}` })}

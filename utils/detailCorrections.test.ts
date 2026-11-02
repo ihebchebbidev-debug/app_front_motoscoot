@@ -110,12 +110,24 @@ test('listing emits one Product + Vehicle node, not two competing entities', asy
     assert.ok(result.body.includes('"value":11000'));
   } finally { globalThis.fetch = original; }
 });
-test('sheet title is "<Marque> <Modèle> Prix en Tunisie - Fiche Technique & Prix", without the year', async () => {
+test('sheet title and description follow the agreed format in the crawler HTML', async () => {
   const original = globalThis.fetch;
   try {
-    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'kymco-people-s-125', brand: 'Kymco', model: 'People S 125', year: 2025, price_new: 8500 });
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'kymco-people-s-125', brand: 'Kymco', model: 'People S 125', year: 2025, price_new: 8500, engine: { cc: '124.6 cc', power: '11 ch' }, dimensions: { weight: '120 kg' } });
     const result = responseCapture();
     await detailHandler({ query: { kind: 'fiche-technique', slugid: 'kymco-people-s-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
-    assert.ok(result.body.includes('<title>Kymco People S 125 Prix en Tunisie - Fiche Technique &amp; Prix | Moto-Scoot.tn</title>'));
+    assert.ok(result.body.includes('<title>Kymco People S 125 | Prix en Tunisie &amp; Fiche Technique</title>'));
+    assert.ok(result.body.includes(`<meta name="description" content="Prix de la Kymco People S 125 en Tunisie : ${(8500).toLocaleString('fr-FR')} DT. Fiche technique : 124,6 cm³, 11 ch, 120 kg. Comparez et choisissez votre moto." />`));
   } finally { globalThis.fetch = original; }
+});
+test('sheet description leaves out missing values and converts kW to ch', async () => {
+  const { techSpecDescription, techSpecTitle } = await import('./techSpecSeo');
+  assert.equal(techSpecTitle({ brand: 'SYM', model: 'Jet 14 EVO 125' }), 'SYM Jet 14 EVO 125 | Prix en Tunisie & Fiche Technique');
+  assert.equal(techSpecDescription({ brand: 'Honda', model: 'X-ADV', cc: '745 cc' }), 'Fiche technique de la Honda X-ADV en Tunisie. Caractéristiques : 745 cm³. Comparez et choisissez votre moto.');
+  assert.ok(techSpecDescription({ brand: 'Zontes', model: '125 X', price: '9 000 DT', power: '10 kW' }).includes('13,6 ch'));
+  assert.equal(techSpecDescription({ brand: 'A', model: 'B', cc: 'N/A' }).includes('N/A'), false);
+});
+test('power stored as "15 ch (11 kW)" stays 15 ch', async () => {
+  const { techSpecDescription } = await import('./techSpecSeo');
+  assert.ok(techSpecDescription({ brand: 'QJ Motor', model: 'FORT 125 N', power: '15 ch (11 kW) à 8 500 tr/min' }).includes(': 15 ch.'));
 });
