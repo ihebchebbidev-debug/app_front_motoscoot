@@ -535,7 +535,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
 
   return (
     <div className="bg-neutral-50 min-h-screen">
-      <SEO title="Déposer une annonce" description="Publiez gratuitement votre annonce moto ou scooter sur MotoScoot.tn." noIndex url="/deposer-une-annonce" />
+      <SEO title="Déposer une annonce" description="Publiez gratuitement votre annonce moto ou scooter sur Moto-Scoot.tn." noIndex url="/deposer-une-annonce" />
       <div className={S.Container}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 space-y-6">

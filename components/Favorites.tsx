@@ -13,7 +13,7 @@ const Favorites: React.FC<BasePageProps> = ({ onGoHome, onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-12">
-      <SEO title="Mes Favoris" description="Vos annonces moto et scooter sauvegardées sur MotoScoot.tn." noIndex url="/mes-favoris" />
+      <SEO title="Mes Favoris" description="Vos annonces moto et scooter sauvegardées sur Moto-Scoot.tn." noIndex url="/mes-favoris" />
       <main className="max-w-7xl mx-auto px-6 md:px-20 lg:px-32 pt-28 pb-8">
         <header className="flex items-center justify-between mb-4 md:mb-6">
            <div className="flex items-center gap-3 md:gap-4">

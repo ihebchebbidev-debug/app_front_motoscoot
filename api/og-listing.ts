@@ -138,7 +138,7 @@ export default async function handler(req: any, res: any) {
       // Unknown listing: real 404, noindex, no canonical (soft-404 fix).
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('X-Robots-Tag', 'noindex');
-      res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Annonce introuvable | MotoScoot</title><meta name="robots" content="noindex" /></head><body><h1>Annonce introuvable</h1><p><a href="${SITE}/annonces">Voir les annonces</a></p></body></html>`);
+      res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Annonce introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Annonce introuvable</h1><p><a href="${SITE}/annonces">Voir les annonces</a></p></body></html>`);
       return;
     }
 
@@ -156,10 +156,10 @@ export default async function handler(req: any, res: any) {
     const seoInput = listing
       ? { brand: listing.brand, model: listing.model, year: listing.year, city: listing.city, price: listing.price, mileage: listing.mileage, cc: listing.cc, condition: listing.condition, type: listing.type }
       : null;
-    const title = seoInput ? listingTitle(seoInput) : "Annonce Moto & Scooter d'Occasion | MotoScoot";
+    const title = seoInput ? listingTitle(seoInput) : "Annonce Moto & Scooter d'Occasion | Moto-Scoot.tn";
     const description = seoInput
       ? listingDescription(seoInput)
-      : "Découvrez les annonces de motos et scooters d'occasion sur MotoScoot.tn.";
+      : "Découvrez les annonces de motos et scooters d'occasion sur Moto-Scoot.tn.";
 
     const imgSlug = listing ? [listing.brand, listing.model, listing.year].filter(Boolean).join('-') || listing.title : '';
     const image = rewriteImageHost(listing?.images?.[0] || DEFAULT_OG, imgSlug);
@@ -243,7 +243,7 @@ ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.p
 </dl>
 ${listing.description ? `<h2>Description</h2><p>${escapeHtml(listing.description.slice(0, 1500))}</p>` : ''}
 ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${src}" alt="${escapeHtml(`${listing.title} – photo ${i + 1}`)}" loading="lazy" />`).join('')}` : ''}
-<p><a href="${canonical}">Voir l'annonce complète sur MotoScoot.tn</a></p>
+<p><a href="${canonical}">Voir l'annonce complète sur Moto-Scoot.tn</a></p>
 ` : `
 <h1>Annonce non disponible</h1>
 <p>Cette annonce n'est plus disponible. <a href="${SITE}/annonces">Voir toutes les annonces moto & scooter en Tunisie</a>.</p>
@@ -262,7 +262,7 @@ ${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="h
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="product" />
-<meta property="og:site_name" content="MotoScoot" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
@@ -271,7 +271,7 @@ ${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="h
 <meta property="og:image:secure_url" content="${image}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="${escapeHtml(listing?.title || 'MotoScoot')}" />
+<meta property="og:image:alt" content="${escapeHtml(listing?.title || 'Moto-Scoot.tn')}" />
 ${listing?.price ? `<meta property="product:price:amount" content="${listing.price}" />` : ''}
 ${listing?.price ? `<meta property="product:price:currency" content="TND" />` : ''}
 ${listing?.condition ? `<meta property="product:condition" content="${isNewCondition(listing.condition) ? 'new' : 'used'}" />` : ''}
@@ -295,6 +295,6 @@ ${bodyHtml}
   } catch {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', '60');
-    res.status(503).setHeader('Content-Type', 'text/html; charset=utf-8').send('<!doctype html><html lang="fr"><head><title>Annonce temporairement indisponible | MotoScoot</title><meta name="robots" content="noindex"></head><body><h1>Annonce temporairement indisponible</h1><p>Veuillez réessayer dans quelques instants.</p></body></html>');
+    res.status(503).setHeader('Content-Type', 'text/html; charset=utf-8').send('<!doctype html><html lang="fr"><head><title>Annonce temporairement indisponible | Moto-Scoot.tn</title><meta name="robots" content="noindex"></head><body><h1>Annonce temporairement indisponible</h1><p>Veuillez réessayer dans quelques instants.</p></body></html>');
   }
 }

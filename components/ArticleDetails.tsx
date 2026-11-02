@@ -203,7 +203,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
                   <div className="absolute bottom-4 left-6 md:bottom-8 md:left-8">
                      <span className="px-3 py-1.5 md:px-5 md:py-2 bg-primary-600 text-white text-[12px] md:text-[12px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                        Exclusivité MotoScoot
+                        Exclusivité Moto-Scoot.tn
                      </span>
                   </div>
               </div>

@@ -323,7 +323,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
                 className="w-8 h-8 object-contain"
-                alt="MotoScoot"
+                alt="Moto-Scoot.tn"
               />
             </div>
             <h2 className={`text-gray-900 mb-2 ${isSignUp ? 'text-2xl md:text-3xl font-black tracking-tight' : 'text-[24px] font-extrabold tracking-normal font-sans'}`}>

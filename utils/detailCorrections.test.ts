@@ -89,7 +89,7 @@ test('sheet body gives crawlers one h1 with the brand, a dated price, a spec tab
   assert.ok(html.includes('<th scope="row">Poids</th><td>136 kg</td>'));
   assert.ok(html.includes('/fiches-techniques/sym"'));
 });
-test('sheet price is a catalogue price, not a MotoScoot offer in stock', async () => {
+test('sheet price is a catalogue price, not a Moto-Scoot.tn offer in stock', async () => {
   const original = globalThis.fetch;
   try {
     globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'honda-cb-500', brand: 'Honda', model: 'CB 500', price_new: 48000 });
@@ -179,7 +179,7 @@ test('listing title and description are built from the listing data, not the raw
   const kymco = { brand: 'Kymco', model: 'DINK-R', year: 2026, city: 'Tunis', price: 10000, mileage: 11000, cc: 125, condition: 'État neuf', type: 'Scooter' };
   const n = (x: number) => x.toLocaleString('fr-FR');
   assert.equal(listingTitle(kymco), `Kymco DINK-R 2026 d'occasion à Tunis – ${n(10000)} DT`);
-  assert.equal(listingDescription(kymco), `Scooter Kymco DINK-R 2026 d'occasion à vendre à Tunis : ${n(10000)} DT, ${n(11000)} km, 125 cm³. Contactez directement le vendeur sur MotoScoot.`);
+  assert.equal(listingDescription(kymco), `Scooter Kymco DINK-R 2026 d'occasion à vendre à Tunis : ${n(10000)} DT, ${n(11000)} km, 125 cm³. Contactez directement le vendeur sur Moto-Scoot.tn.`);
   assert.equal(listingTitle({ brand: 'SYM', model: 'Jet 14', price: '9 000 DT', mileage: '0 km', condition: 'Neuf' }), `SYM Jet 14 neuf en Tunisie – ${n(9000)} DT`);
   const original = globalThis.fetch;
   try {
@@ -270,10 +270,14 @@ test('server JSON-LD wins for the types it describes; types it lacks are still a
   assert.deepEqual(schemasMissingFromServer(page, server), [{ '@type': 'ItemList' }]);
   assert.equal(schemasMissingFromServer(page, new Set()).length, 3);
 });
-test('one site name: og:site_name is "MotoScoot" in every page source', () => {
+test('one site name: og:site_name is "Moto-Scoot.tn" in every page source', () => {
   for (const f of ['index.html', 'api/og-listing.ts', 'api/og-prerender.ts', 'src/seo/vitePluginSeoSnapshots.ts']) {
     const names = [...readFileSync(f, 'utf8').matchAll(/og:site_name" content="([^"$]+)"/g)].map((m) => m[1]);
     assert.ok(names.length > 0, f);
-    assert.deepEqual([...new Set(names)], ['MotoScoot'], f);
+    assert.deepEqual([...new Set(names)], ['Moto-Scoot.tn'], f);
   }
+});
+test('brand name is "Moto-Scoot.tn": no "MotoScoot" left in what the site shows or declares', () => {
+  const files = ['index.html', 'api/og-listing.ts', 'api/og-prerender.ts', 'src/seo/snapshots.ts', 'src/seo/vitePluginSeoSnapshots.ts', 'components/common/SEO.tsx', 'utils/editorial.ts', 'utils/listingSeo.ts', 'hooks/useSearchSEO.ts', 'components/Footer.tsx', 'public/llms.txt', 'public/404.html'];
+  for (const f of files) assert.equal(/(?<![A-Za-z@#])MotoScoot(?![A-Za-z])/.test(readFileSync(f, 'utf8')), false, f);
 });

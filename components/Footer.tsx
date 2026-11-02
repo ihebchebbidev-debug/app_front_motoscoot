@@ -138,7 +138,7 @@ const Footer: React.FC<FooterProps> = () => {
         {/* Bottom Bar */}
         <div className="pt-10 border-t border-neutral-900 flex flex-col md:flex-row justify-between items-center gap-8 text-[12px] font-black uppercase tracking-widest text-gray-500">
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
-            <p>© {new Date().getFullYear()} MotoScoot. Tous droits réservés.</p>
+            <p>© {new Date().getFullYear()} Moto-Scoot.tn. Tous droits réservés.</p>
             <p className="md:border-l md:border-neutral-900 md:pl-8">
               Réalisé par <a href="https://magma-studio.tn" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">magma-studio.tn</a>
             </p>

@@ -49,7 +49,7 @@ export function mapBackendArticle(a: BackendArticle): Article {
   const author =
     a.author_name ||
     (typeof a.author === 'string' ? a.author : a.author?.full_name || a.author?.name) ||
-    'MotoScoot';
+    'Moto-Scoot.tn';
   const rt = a.read_time ?? a.reading_time;
   return {
     id: a.id,

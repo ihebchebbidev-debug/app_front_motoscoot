@@ -39,7 +39,7 @@ const DashboardPro: React.FC<any> = ({ initialTab = 'overview', onLogout }) => {
 
   return (
     <div className={S.Wrapper}>
-      <SEO title="Espace Pro" description="Espace professionnel MotoScoot — pilotez vos annonces, statistiques et messagerie." noIndex url="/espace-pro" />
+      <SEO title="Espace Pro" description="Espace professionnel Moto-Scoot.tn — pilotez vos annonces, statistiques et messagerie." noIndex url="/espace-pro" />
       <main className={S.Container}>
         <div className={S.Layout}>
           <aside className={S.Sidebar}>

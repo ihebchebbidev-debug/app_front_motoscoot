@@ -90,7 +90,7 @@ const ResetPassword: React.FC<BasePageProps> = ({ onNavigate, onTriggerLogin }) 
   if (success) {
     return (
       <PageShell>
-        <SEO title="Mot de passe réinitialisé • MotoScoot" description="Votre mot de passe a été modifié avec succès." />
+        <SEO title="Mot de passe réinitialisé • Moto-Scoot.tn" description="Votre mot de passe a été modifié avec succès." />
         <Card>
           <IconBadge tone="success"><CheckCircle2 className="w-7 h-7" /></IconBadge>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 mt-4 mb-2">Mot de passe modifié</h1>
@@ -125,14 +125,14 @@ const ResetPassword: React.FC<BasePageProps> = ({ onNavigate, onTriggerLogin }) 
   return (
     <PageShell>
       <SEO
-        title="Réinitialiser votre mot de passe • MotoScoot"
-        description="Choisissez un nouveau mot de passe sécurisé pour accéder à votre compte MotoScoot."
+        title="Réinitialiser votre mot de passe • Moto-Scoot.tn"
+        description="Choisissez un nouveau mot de passe sécurisé pour accéder à votre compte Moto-Scoot.tn."
       />
       <Card>
         <IconBadge tone="brand"><ShieldCheck className="w-7 h-7" /></IconBadge>
         <h1 className="text-2xl md:text-3xl font-black text-gray-900 mt-4 mb-2">Nouveau mot de passe</h1>
         <p className="text-gray-600 leading-relaxed mb-6">
-          Choisissez un mot de passe d'au moins {PASSWORD_MIN} caractères pour votre compte MotoScoot.
+          Choisissez un mot de passe d'au moins {PASSWORD_MIN} caractères pour votre compte Moto-Scoot.tn.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">

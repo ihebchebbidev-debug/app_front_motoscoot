@@ -50,8 +50,8 @@ export const useSearchSEO = (
     const displayTitle = currentPage > 1 ? `${baseTitle} — Page ${currentPage}` : baseTitle;
 
     const metaDescription = currentPage > 1
-      ? `Page ${currentPage} sur ${totalPages} — annonces de ${subject || 'motos et scooters'} d'occasion ${place} sur MotoScoot.`
-      : `Découvrez ${results.length} annonce${results.length > 1 ? 's' : ''} de ${subject || 'motos et scooters'} d'occasion ${place} : prix en DT, kilométrage et contact direct du vendeur sur MotoScoot.`;
+      ? `Page ${currentPage} sur ${totalPages} — annonces de ${subject || 'motos et scooters'} d'occasion ${place} sur Moto-Scoot.tn.`
+      : `Découvrez ${results.length} annonce${results.length > 1 ? 's' : ''} de ${subject || 'motos et scooters'} d'occasion ${place} : prix en DT, kilométrage et contact direct du vendeur sur Moto-Scoot.tn.`;
 
     // Clean base path (no query string).
     const SITE = 'https://www.moto-scoot.tn';

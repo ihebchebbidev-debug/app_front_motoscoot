@@ -2,10 +2,10 @@
   "entries": [
     {
       "identifier": "urn:air:moto-scoot.tn:docs:llms-txt",
-      "displayName": "MotoScoot.tn — guide du site pour les agents IA",
+      "displayName": "Moto-Scoot.tn — guide du site pour les agents IA",
       "type": "text/markdown",
       "url": "https://www.moto-scoot.tn/llms.txt",
-      "description": "Présentation et liens principaux de la marketplace MotoScoot.tn (annonces, fiches techniques, comparateur, garages).",
+      "description": "Présentation et liens principaux de la marketplace Moto-Scoot.tn (annonces, fiches techniques, comparateur, garages).",
       "representativeQueries": [
         "moto occasion Tunisie",
         "fiche technique scooter Tunisie",

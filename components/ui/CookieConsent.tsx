@@ -130,7 +130,7 @@ export const CookieConsent: React.FC = () => {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Nous utilisons des cookies pour vous offrir une expérience{' '}
                 <span className="font-semibold text-foreground">premium</span>{' '}
-                sur MotoScoot : retenir vos préférences, sécuriser votre compte
+                sur Moto-Scoot.tn : retenir vos préférences, sécuriser votre compte
                 et vous proposer des annonces qui vous correspondent vraiment.
               </p>
 
