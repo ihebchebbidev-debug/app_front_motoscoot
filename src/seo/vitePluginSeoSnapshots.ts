@@ -25,7 +25,9 @@ function renderHead(snap: SeoSnapshot): string {
   const ogImage = snap.ogImage || DEFAULT_OG;
   const canonical = `${SITE_ORIGIN}${snap.path === '/' ? '/' : snap.path}`;
   const schemaJson = snap.schemas && snap.schemas.length
-    ? `<script type="application/ld+json">${JSON.stringify(snap.schemas.length === 1 ? snap.schemas[0] : snap.schemas)}</script>`
+    // data-ssr-ld: SEO.tsx keeps these on the landing page instead of adding
+    // its own (/faq had two FAQPage blocks with different answers).
+    ? `<script type="application/ld+json" data-ssr-ld>${JSON.stringify(snap.schemas.length === 1 ? snap.schemas[0] : snap.schemas)}</script>`
     : '';
 
   return `

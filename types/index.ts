@@ -280,6 +280,10 @@ export interface TechSpec {
   normLogo?: string;
   importer?: Importer | null;
   importerId?: string | null;
+  /** Category as typed in the admin ("Maxi Scooter"); `category` is the filter bucket. */
+  categoryLabel?: string;
+  /** ISO date of the last update (month the new price was checked). */
+  updatedAt?: string;
 }
 
 export interface Importer {

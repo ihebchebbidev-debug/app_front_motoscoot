@@ -21,8 +21,8 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription } from '../utils/techSpecSeo.js';
-import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary } from '../utils/techSpecSeo.js';
+import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -131,6 +131,7 @@ interface Doc {
   available_in_tunisia?: boolean;
   rating?: number | string;
   reviews_count?: number;
+  author_name?: string;
   reviews?: Array<{ rating?: unknown; is_verified?: boolean; author_name?: string; content?: string; created_at?: string }>;
 }
 
@@ -228,18 +229,19 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
     return {
       '@context': 'https://schema.org',
       '@type': kind === 'guide' ? 'HowTo' : 'Article',
-      headline: title,
+      headline: d.title || title,
       description,
       image: [image],
       url: canonical,
       datePublished: d.published_at || d.created_at,
       dateModified: d.updated_at || d.created_at,
       mainEntityOfPage: canonical,
-      publisher: {
-        '@type': 'Organization',
-        name: 'MotoScoot.tn',
-        logo: { '@type': 'ImageObject', url: `${SITE}/og-image.jpg` },
-      },
+      // The byline's author; placeholder CMS accounts ("Admin Admin") are
+      // credited to the organization instead of a fake person.
+      author: realAuthorName(d.author_name)
+        ? { '@type': 'Person', name: realAuthorName(d.author_name) }
+        : ORGANIZATION_NODE,
+      publisher: ORGANIZATION_NODE,
     };
   }
   if (kind === 'fiche-technique') {
@@ -349,22 +351,15 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
   ['Antipatinage', (d) => d.electronics?.tcs],
 ];
 
-const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-
 // Fiche technique body for crawlers that do not run JavaScript: an
 // answer-first summary (price with the date it was checked), the full spec
 // table and links to the brand, the catalogue and the comparator.
 export function renderFicheBody(d: Doc): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
-  const cc = parseCc(d.engine?.cc);
-  const price = parsePrice(d.price_new);
-  const checked = d.updated_at ? new Date(d.updated_at) : null;
-  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
-  const summary = [
-    `${name}${d.year ? ` (${d.year})` : ''}${d.category ? ` : ${String(d.category).toLowerCase()}` : ''}${cc ? ` de ${fmtNum(cc)} cm³` : ''}${d.engine?.power ? `, ${d.engine.power}` : ''}.`,
-    price ? `Prix du neuf en Tunisie : ${fmtNum(price)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
-    d.importer?.name ? `Importateur : ${d.importer.name}${d.importer.city ? ` (${d.importer.city})` : ''}.` : '',
-  ].filter(Boolean).join(' ');
+  const summary = techSpecSummary({
+    brand: d.brand, model: d.model, year: d.year, categoryLabel: d.category, cc: d.engine?.cc, power: d.engine?.power,
+    price: d.price_new, updatedAt: d.updated_at, importerName: d.importer?.name, importerCity: d.importer?.city,
+  });
   const rows = SPEC_ROWS
     .map(([label, get]) => [label, String(get(d) ?? '').trim()] as const)
     .filter(([, value]) => value)
@@ -611,8 +606,8 @@ ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</sc
 ${kind === 'fiche-technique' ? renderFicheBody(doc) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
 ${(() => {
-  const fullBody = stripHtml(String(doc.content || doc.body || doc.description || ''));
-  return fullBody ? `<article>${escapeHtml(fullBody).slice(0, 4000)}</article>` : '';
+  const body = crawlerBodyHtml(String(doc.content || doc.body || doc.description || ''));
+  return body ? `<article>\n${body}\n</article>` : '';
 })()}`}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
 ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}

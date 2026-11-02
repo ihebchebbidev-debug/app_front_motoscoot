@@ -32,7 +32,7 @@ import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
-import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -48,7 +48,7 @@ interface ArticleDetailsProps extends BasePageProps {
  * causing the embedded YouTube video to reload mid-watch.
  */
 const ArticleProseContent = React.memo(({ html }: { html: string }) => {
-  const sanitized = useMemo(() => sanitizeRichHtml(html), [html]);
+  const sanitized = useMemo(() => demoteBodyH1(sanitizeRichHtml(html)), [html]);
   return (
     <div
       className="prose prose-lg md:prose-xl prose-slate max-w-none 
@@ -131,19 +131,18 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         modifiedTime={(article as any).updatedAt || (article as any).updated_at}
         schema={{
           "@context": "https://schema.org",
-          "@type": "NewsArticle",
+          "@type": "Article",
           headline: article.title,
           description: article.summary,
           image: article.image ? [article.image] : undefined,
           datePublished: (article as any).publishedAt || (article as any).published_at || (article as any).createdAt,
           dateModified: (article as any).updatedAt || (article as any).updated_at || (article as any).publishedAt,
-          author: { "@type": "Organization", name: (article as any).author || "moto-scoot.tn" },
-          publisher: {
-            "@type": "Organization",
-            name: "moto-scoot.tn",
-            logo: { "@type": "ImageObject", url: "https://www.moto-scoot.tn/site-logo/logo-color.svg" },
-          },
-          mainEntityOfPage: { "@type": "WebPage", "@id": `https://www.moto-scoot.tn/article/${(article as any).id}` },
+          // Same entities as the prerender (api/og-prerender.ts).
+          author: realAuthorName(article.author)
+            ? { "@type": "Person", name: realAuthorName(article.author) }
+            : ORGANIZATION_NODE,
+          publisher: ORGANIZATION_NODE,
+          mainEntityOfPage: `https://www.moto-scoot.tn${getUrlFromState('article-details', { id: article.id, title: article.title })}`,
         }}
       />
       

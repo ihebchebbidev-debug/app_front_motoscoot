@@ -9,7 +9,7 @@ import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
-import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1 } from '../utils/editorial';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -182,7 +182,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
 
                 {/* Content */}
                 <Reveal animation="fade-in-up">
-                  <div className="prose prose-lg prose-slate max-w-none mb-12" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(tip.content || "") }} />
+                  <div className="prose prose-lg prose-slate max-w-none mb-12" dangerouslySetInnerHTML={{ __html: demoteBodyH1(sanitizeRichHtml(tip.content || "")) }} />
                 </Reveal>
 
                 {/* Feedback */}
