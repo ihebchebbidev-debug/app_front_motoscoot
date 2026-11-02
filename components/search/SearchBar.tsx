@@ -289,7 +289,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
           aria-selected={tab === 'occasion'}
           onClick={() => handleTab('occasion')}
           className={`flex-1 pb-3 text-[15px] font-bold transition-colors relative ${
-            tab === 'occasion' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+            tab === 'occasion' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Occasion
@@ -302,7 +302,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
           role="tab"
           aria-selected={tab === 'neuf'}
           onClick={() => handleTab('neuf')}
-          className="flex-1 pb-3 text-[15px] font-bold text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex-1 pb-3 text-[15px] font-bold text-gray-500 hover:text-gray-700 transition-colors"
         >
           Neuf
         </button>

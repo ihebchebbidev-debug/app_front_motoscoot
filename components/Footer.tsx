@@ -65,7 +65,7 @@ const Footer: React.FC<FooterProps> = () => {
                />
                <SectionLabel className="text-primary-600">La référence moto</SectionLabel>
             </Link>
-            <p className="text-gray-500 text-sm leading-relaxed font-medium max-w-xs">
+            <p className="text-gray-400 text-sm leading-relaxed font-medium max-w-xs">
               La référence en Tunisie pour l'achat et la vente de motos d'occasion et neuves. Trouvez votre liberté sur deux roues.
             </p>
             <div className="flex gap-4">
@@ -136,7 +136,7 @@ const Footer: React.FC<FooterProps> = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-10 border-t border-neutral-900 flex flex-col md:flex-row justify-between items-center gap-8 text-[12px] font-black uppercase tracking-widest text-gray-500">
+        <div className="pt-10 border-t border-neutral-900 flex flex-col md:flex-row justify-between items-center gap-8 text-[12px] font-black uppercase tracking-widest text-gray-400">
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
             <p>© {new Date().getFullYear()} Moto-Scoot.tn. Tous droits réservés.</p>
             <p className="md:border-l md:border-neutral-900 md:pl-8">

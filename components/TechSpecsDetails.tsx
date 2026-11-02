@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -500,6 +500,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 </div>
                 <br></br>
                 <div className="px-6 md:px-8 pb-6 md:pb-8 divide-y divide-transparent">
+                  {/* Dated new price first: same row as the crawler HTML (api/og-prerender.ts). */}
+                  <SpecGroup title={TECH_SPEC_PRICE_LABEL}>
+                    <SpecRow label="Prix" value={techSpecPriceValue(spec.priceNew, spec.updatedAt)} />
+                  </SpecGroup>
+
                   <SpecGroup title="Motorisation">                   
                     <SpecRow label="Type moteur" value={spec.engine.type} />
                     <SpecRow label="Cylindrée" value={spec.engine.cc} />

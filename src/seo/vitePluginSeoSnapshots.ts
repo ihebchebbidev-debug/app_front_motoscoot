@@ -16,6 +16,32 @@ import type { Plugin } from 'vite';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
+import { HERO_DEFAULTS } from '../../config/heroDefaults';
+
+interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
+
+// Admin hero images, read once at build time so the home page preloads and
+// paints the image the app will show. It used to preload the defaults while
+// the app displayed the admin upload: a wasted download and a late LCP
+// (PageSpeed: 660 ms resource load delay). Defaults when the API is down.
+const HERO_API = 'https://motoscoot.ihebchebbi.pro/api/site-settings/hero';
+async function fetchHeroImages(): Promise<{ hero: HeroImages; raw: unknown | null }> {
+  try {
+    const res = await fetch(HERO_API, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(String(res.status));
+    const raw = await res.json();
+    return {
+      raw,
+      hero: {
+        desktop_url: raw?.desktop_url || HERO_DEFAULTS.desktop_url,
+        mobile_url: raw?.mobile_url || HERO_DEFAULTS.mobile_url,
+        background_color: raw?.background_color || HERO_DEFAULTS.background_color,
+      },
+    };
+  } catch {
+    return { raw: null, hero: { ...HERO_DEFAULTS } };
+  }
+}
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -61,23 +87,23 @@ function renderHead(snap: SeoSnapshot): string {
 // Static first-paint shell for the home page (PageSpeed FCP/LCP): the header
 // bar + hero photo paint straight from HTML, before the JS bundle runs.
 // React.createRoot replaces it on mount. Inline styles only — no CSS needed.
-function renderHomeShell(): string {
+function renderHomeShell(hero: HeroImages): string {
   return `
-    <div data-home-shell aria-hidden="true" style="position:relative;background:#E25C00">
+    <div data-home-shell aria-hidden="true" style="position:relative;background:${escapeHtml(hero.background_color)}">
       <div style="position:absolute;top:0;left:0;right:0;z-index:2;height:64px;display:flex;align-items:center;padding:0 16px">
         <img src="https://www.moto-scoot.tn/site-logo/logo-white.svg" alt="" width="120" height="28" style="height:28px;width:auto" onerror="this.style.display='none'" />
       </div>
       <picture>
-        <source media="(min-width: 768px)" srcset="https://www.moto-scoot.tn/hero-assets/-hero-background.webp" />
-        <img src="/images/hero-mobile-828.webp" alt="" fetchpriority="high" decoding="async" style="display:block;width:100%;height:min(88vh,720px);object-fit:cover" />
+        <source media="(min-width: 768px)" srcset="${escapeHtml(hero.desktop_url)}" />
+        <img src="${escapeHtml(hero.mobile_url)}" alt="" fetchpriority="high" decoding="async" style="display:block;width:100%;height:min(88vh,720px);object-fit:cover" />
       </picture>
     </div>`;
 }
 
-function renderFallback(snap: SeoSnapshot): string {
+function renderFallback(snap: SeoSnapshot, hero: HeroImages): string {
   // SSR fallback content visible to non-JS crawlers / LLM training bots.
   // React hydration replaces this on mount, so end users never see it.
-  return `${snap.path === '/' ? renderHomeShell() : ''}
+  return `${snap.path === '/' ? renderHomeShell(hero) : ''}
     <noscript>
       <style>.__seo_fallback{font-family:Inter,system-ui,sans-serif;max-width:780px;margin:48px auto;padding:0 24px;line-height:1.6;color:#111}</style>
     </noscript>
@@ -89,7 +115,7 @@ function renderFallback(snap: SeoSnapshot): string {
   `;
 }
 
-function injectIntoIndex(indexHtml: string, snap: SeoSnapshot): string {
+function injectIntoIndex(indexHtml: string, snap: SeoSnapshot, hero: HeroImages, heroRaw: unknown | null): string {
   // Replace baseline <title> + <meta description> + canonical with route-
   // specific values, then append the rest of the per-route head block.
   let html = indexHtml;
@@ -104,6 +130,16 @@ function injectIntoIndex(indexHtml: string, snap: SeoSnapshot): string {
   html = html.replace(/<meta\s+name="twitter:[^"]+"[^>]*>/gi, '');
   html = html.replace(/\sdata-pre-hydrate/g, '');
   if (snap.path !== '/') html = html.replace(/<link[^>]+rel="preload"[^>]+as="image"[^>]*>/gi, '');
+  if (snap.path === '/') {
+    // Preload the hero the app will actually show, and hand it to the app
+    // (useHeroImages initialData) so React does not swap images on mount.
+    html = html.replace(/(<link[^>]+rel="preload"[^>]+as="image"[^>]+href=")[^"]*("[^>]*media="\(min-width: 768px\)")/, `$1${escapeHtml(hero.desktop_url)}$2`);
+    html = html.replace(/(<link[^>]+rel="preload"[^>]+as="image"[^>]+href=")[^"]*("[^>]*media="\(max-width: 767px\)")/, `$1${escapeHtml(hero.mobile_url)}$2`);
+    if (heroRaw) {
+      const json = JSON.stringify(heroRaw).replace(/</g, '\\u003c');
+      html = html.replace('</head>', `<script>window.__HERO_IMAGES__=${json}</script>\n  </head>`);
+    }
+  }
 
   if (snap.robots) {
     const robots = escapeHtml(snap.robots);
@@ -120,7 +156,7 @@ function injectIntoIndex(indexHtml: string, snap: SeoSnapshot): string {
   // alone (it's already inside #root and we just enrich it).
   html = html.replace(
     /<div id="root">[\s\S]*?<\/div>/,
-    `<div id="root">${renderFallback(snap)}</div>`,
+    `<div id="root">${renderFallback(snap, hero)}</div>`,
   );
 
   return html;
@@ -157,13 +193,17 @@ export function seoSnapshotsPlugin(): Plugin {
         .replace(/<meta\s+property="og:url"[^>]*>/gi, '');
       await fs.writeFile(SPA_SHELL, shell, 'utf-8');
 
+      const { hero, raw: heroRaw } = await fetchHeroImages();
+      // eslint-disable-next-line no-console
+      console.log(`[seo-snapshots] hero images: ${heroRaw ? 'admin settings' : 'defaults (API unavailable)'}`);
+
       let written = 0;
       for (const snap of SEO_SNAPSHOTS) {
         // Root snapshot REPLACES dist/index.html so the homepage gets the full
         // home metadata. Every other route writes to <outDir>/<path>/index.html
         // so SPA hosts (Vercel, Netlify, Cloudflare Pages) serve the
         // pre-stamped HTML when a deep URL is requested directly.
-        const html = injectIntoIndex(baseHtml, snap);
+        const html = injectIntoIndex(baseHtml, snap, hero, heroRaw);
         const target =
           snap.path === '/'
             ? path.resolve(outDir, 'index.html')
