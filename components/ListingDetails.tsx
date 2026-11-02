@@ -4,7 +4,7 @@ import {
   Heart, Share2, Phone, FileText, ArrowLeft, ChevronRight, ShieldCheck, AlertCircle, Home, Clock, Cog, AlertTriangle, X, CheckCircle2, ShieldAlert
 } from 'lucide-react';
 import { Badge } from './ui/Badge';
-import { BasePageProps } from '../types';
+import { BasePageProps, Listing } from '../types';
 import SEO from './common/SEO';
 import { slugify, getUrlFromState } from '../utils/urlUtils';
 import { useListing } from '../hooks/useListing';
@@ -32,6 +32,9 @@ import { reportsApi } from '../services/miscApi';
 import { tokenStorage } from '../services/apiClient';
 import { trackRecentlyViewed } from '../utils/recentSearches';
 import { tracker } from '../services/trackingService';
+import { listingTitle, listingDescription } from '../utils/listingSeo';
+
+const listingSeoInput = (l: Listing) => ({ brand: l.brand, model: l.model, year: l.year, city: l.location, price: l.price, mileage: l.mileage, cc: l.cc, condition: l.condition, type: l.type });
 
 const S = {
   Wrapper: "min-h-screen bg-muted font-sans pb-32 md:pb-20",
@@ -243,8 +246,9 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
     <div className={S.Wrapper}>
       {listing && (
         <SEO 
-          title={`${listing.title} • Occasion en Tunisie`} 
-          description={listing.description}
+          title={listingTitle(listingSeoInput(listing))}
+          rawTitle
+          description={listingDescription(listingSeoInput(listing))}
           image={listing.image}
           url={getUrlFromState('listing-details', { id: listing.id, title: listing.title })}
           type="product"
@@ -253,7 +257,6 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
           breadcrumbs={[
             { name: 'Accueil', url: '/' },
             { name: 'Annonces', url: '/annonces' },
-            { name: listing.brand, url: `/annonces?brand=${encodeURIComponent(listing.brand)}` },
             { name: listing.title, url: getUrlFromState('listing-details', { id: listing.id, title: listing.title }) },
           ]}
         />
