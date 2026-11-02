@@ -178,9 +178,11 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
             key={activeSource}
             onError={imageFallback}
             src={getOptimizedImageUrl(activeSource, 1200, 900, 90, undefined, title)}
-            className="w-full h-full object-cover animate-fade-in pointer-events-none" 
+            // The first photo is the page LCP: no fade-in, high priority.
+            className={`w-full h-full object-cover pointer-events-none ${activeImg === 0 ? '' : 'animate-fade-in'}`}
             alt={title}
             loading="eager"
+            fetchPriority={activeImg === 0 ? 'high' : 'auto'}
           />
           
           <div className={S.Counter}>{images.length ? activeIndex + 1 : 0} / {images.length}</div>
