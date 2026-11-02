@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useSeoSettings } from '../../hooks/useSeoSettings';
+import { jsonLdTypes, schemasMissingFromServer } from '../../utils/jsonLdTypes';
 
 interface BreadcrumbItem {
   name: string;
@@ -11,6 +12,12 @@ interface SEOProps {
   title?: string;
   /** Use the title as-is, without the admin title template (e.g. "%s | Moto-Scoot.tn"). */
   rawTitle?: boolean;
+  /**
+   * Site-wide defaults (App.tsx): applied only to pages without their own
+   * <SEO>, and never on the landing page, whose server HTML already carries
+   * the right metadata.
+   */
+  fallbackOnly?: boolean;
   description?: string;
   image?: string;
   /** Provide either a relative path (e.g. /annonce/xxx) or absolute URL. */
@@ -37,11 +44,18 @@ interface SEOProps {
 
 const SITE_ORIGIN = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = 'https://www.moto-scoot.tn/og-banner.webp';
-const SITE_NAME = 'MotoScoot.tn';
+// og:site_name: same name as the Organization / WebSite JSON-LD.
+const SITE_NAME = 'MotoScoot';
 const BRAND_NAME = 'MotoScoot';
 // Path the visitor landed on. The JSON-LD the server stamped into the HTML
 // (script[data-ssr-ld]) describes this path only.
 const LANDING_PATH = typeof window !== 'undefined' ? window.location.pathname : '';
+// Page-level <SEO> instances currently mounted, and whether the visitor has
+// navigated away from the landing page. The site-wide fallback used to
+// re-run when the admin settings arrived and overwrite the page's own title
+// with the default one ("Motos et scooters d'occasion en Tunisie").
+let pageSeoMounted = 0;
+let leftLandingPage = false;
 
 // Strip noisy tracking params from canonical URLs so Google doesn't see
 // dozens of "duplicate" pages (utm_*, fbclid, gclid, ref, etc.).
@@ -81,6 +95,7 @@ const toAbsolute = (path: string): string => {
 const SEO: React.FC<SEOProps> = ({
   title,
   rawTitle = false,
+  fallbackOnly = false,
   description,
   image,
   url,
@@ -117,6 +132,14 @@ const SEO: React.FC<SEOProps> = ({
   const twitterHandle = seo?.twitter_handle || '@motoscoot_tn';
 
   useEffect(() => {
+    if (fallbackOnly) return;
+    pageSeoMounted += 1;
+    return () => { pageSeoMounted -= 1; };
+  }, [fallbackOnly]);
+
+  useEffect(() => {
+    if (window.location.pathname !== LANDING_PATH) leftLandingPage = true;
+    if (fallbackOnly && (pageSeoMounted > 0 || !leftLandingPage)) return;
     document.title = fullTitle;
 
     const upsertMeta = (selector: string, attr: string, attrValue: string, contentAttr: string, contentValue: string) => {
@@ -221,28 +244,37 @@ const SEO: React.FC<SEOProps> = ({
     upsertOrRemoveLink('next', nextUrl);
 
     // ----- JSON-LD -----
-    // On the landing page the server blocks are the single source of truth:
-    // adding ours on top gave Google two conflicting entities per URL. After
-    // client-side navigation they describe the previous page, so drop them.
+    // On the landing page the server blocks are the source of truth for the
+    // types they describe: adding ours on top gave Google two conflicting
+    // entities per URL. Types they lack are still added. After client-side
+    // navigation they describe the previous page, so drop them.
     const ssrBlocks = document.querySelectorAll('script[data-ssr-ld]');
     const keepServerLd = ssrBlocks.length > 0 && window.location.pathname === LANDING_PATH;
-    if (!keepServerLd) ssrBlocks.forEach((el) => el.remove());
+    const serverTypes = new Set<string>();
+    if (keepServerLd) {
+      ssrBlocks.forEach((el) => {
+        try { jsonLdTypes(JSON.parse(el.textContent || 'null')).forEach((t) => serverTypes.add(t)); } catch { /* ignore */ }
+      });
+    } else {
+      ssrBlocks.forEach((el) => el.remove());
+    }
 
     // Page-specific block (Product, Article, FAQPage, etc.)
     const SCRIPT_ID = 'schema-jsonld-page';
     document.getElementById(SCRIPT_ID)?.remove();
-    if (schema && !keepServerLd) {
+    const pageSchemas = schema ? schemasMissingFromServer(Array.isArray(schema) ? schema : [schema], serverTypes) : [];
+    if (pageSchemas.length > 0) {
       const script = document.createElement('script');
       script.id = SCRIPT_ID;
       script.type = 'application/ld+json';
-      script.text = JSON.stringify(Array.isArray(schema) ? schema : [schema]);
+      script.text = JSON.stringify(pageSchemas);
       document.head.appendChild(script);
     }
 
     // Breadcrumbs block (managed independently so pages can omit it)
     const CRUMB_ID = 'schema-jsonld-breadcrumbs';
     document.getElementById(CRUMB_ID)?.remove();
-    if (breadcrumbs && breadcrumbs.length > 0 && !keepServerLd) {
+    if (breadcrumbs && breadcrumbs.length > 0 && !serverTypes.has('BreadcrumbList')) {
       const crumbScript = document.createElement('script');
       crumbScript.id = CRUMB_ID;
       crumbScript.type = 'application/ld+json';
@@ -287,7 +319,7 @@ const SEO: React.FC<SEOProps> = ({
       orgScript.text = JSON.stringify(org);
       document.head.appendChild(orgScript);
     }
-  }, [fullTitle, finalDescription, finalImage, type, finalUrl, schema, keywords, noIndex, robots, breadcrumbs, publishedTime, modifiedTime, prevUrl, nextUrl, twitterHandle, seo?.gsc_verification_code, seo?.organization_name, seo?.organization_logo, seo?.organization_email, seo?.organization_phone, seo?.organization_address, seo?.enable_organization_jsonld]);
+  }, [fallbackOnly, fullTitle, finalDescription, finalImage, type, finalUrl, schema, keywords, noIndex, robots, breadcrumbs, publishedTime, modifiedTime, prevUrl, nextUrl, twitterHandle, seo?.gsc_verification_code, seo?.organization_name, seo?.organization_logo, seo?.organization_email, seo?.organization_phone, seo?.organization_address, seo?.enable_organization_jsonld]);
 
   return null;
 };
