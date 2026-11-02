@@ -22,6 +22,7 @@ import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detail
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription } from '../utils/techSpecSeo.js';
+import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -569,7 +570,10 @@ export default async function handler(req: any, res: any) {
     const price = kind === 'fiche-technique' ? parsePrice(doc?.price_new) : null;
 
 
-    const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS : 'index, follow, max-image-preview:large, max-snippet:-1';
+    const thin = (kind === 'article' || kind === 'guide') && isThinContent(String(doc.content || doc.body || ''));
+    const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS
+      : thin ? THIN_CONTENT_ROBOTS
+      : 'index, follow, max-image-preview:large, max-snippet:-1';
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>

@@ -4,6 +4,7 @@
 import { apiClient } from './apiClient';
 import { Article } from '../types';
 import { resolveEditorial } from '../utils/publicContent';
+import { readingTime } from '../utils/editorial';
 
 const FALLBACK_IMAGE = 'https://www.moto-scoot.tn/content-fallbacks/article-default.jpg';
 
@@ -56,7 +57,7 @@ export function mapBackendArticle(a: BackendArticle): Article {
     category: normalizeCategory(a.category),
     image: a.cover_image || a.image || FALLBACK_IMAGE,
     date: formatDate(a.published_at || a.created_at),
-    readTime: rt ? `${String(rt).replace(/\s*min\s*$/i, '')} min` : '5 min',
+    readTime: readingTime(a.content || a.body, rt),
     author,
     summary: a.excerpt || a.summary || '',
     content: a.content || a.body,

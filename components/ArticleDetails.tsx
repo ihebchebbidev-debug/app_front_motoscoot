@@ -32,6 +32,7 @@ import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
+import { isThinContent, THIN_CONTENT_ROBOTS } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -122,6 +123,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
       <SEO 
         title={article.title} 
         description={article.summary} 
+        robots={isThinContent(article.content) ? THIN_CONTENT_ROBOTS : undefined}
         image={article.image} 
         url={getUrlFromState('article-details', { id: article.id, title: article.title })}
         type="article"
