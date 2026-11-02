@@ -501,8 +501,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 <br></br>
                 <div className="px-6 md:px-8 pb-6 md:pb-8 divide-y divide-transparent">
                   {/* Dated new price first: same row as the crawler HTML (api/og-prerender.ts). */}
-                  <SpecGroup title="Prix">
-                    <SpecRow label={TECH_SPEC_PRICE_LABEL} value={techSpecPriceValue(spec.priceNew, spec.updatedAt)} />
+                  <SpecGroup title={TECH_SPEC_PRICE_LABEL}>
+                    <SpecRow label="Prix" value={techSpecPriceValue(spec.priceNew, spec.updatedAt)} />
                   </SpecGroup>
 
                   <SpecGroup title="Motorisation">                   
