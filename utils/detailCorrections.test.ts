@@ -246,11 +246,34 @@ test('article prerender: author from the byline, organization for placeholder ac
 test('fiche summary is the same sentence for the crawler HTML and the React page', async () => {
   const { techSpecSummary } = await import('./techSpecSeo');
   const sentence = techSpecSummary({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, categoryLabel: 'Scooter', cc: '124.7 cc', power: '12.6 ch', price: '9 000 DT', updatedAt: '2026-11-01T19:54:01Z', importerName: 'Megacycle', importerCity: 'Sousse' });
-  assert.equal(sentence, `SYM Jet 14 EVO 125 (2026) : scooter de 124,7 cm³, 12.6 ch. Prix du neuf en Tunisie : ${(9000).toLocaleString('fr-FR')} DT (prix relevé en novembre 2026). Importateur : Megacycle (Sousse).`);
+  assert.equal(sentence, `SYM Jet 14 EVO 125 (2026) : scooter de 124,7 cm³, 12,6 ch. Prix du neuf en Tunisie : ${(9000).toLocaleString('fr-FR')} DT (prix relevé en novembre 2026). Importateur : Megacycle (Sousse).`);
   const { renderFicheBody } = await import('../api/og-prerender');
   assert.ok(renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, category: 'Scooter', engine: { cc: '124.7 cc', power: '12.6 ch' }, price_new: '9000', updated_at: '2026-11-01T19:54:01Z', importer: { name: 'Megacycle', city: 'Sousse' } } as any).includes(`<p>${sentence}</p>`));
 });
 test('build-time snapshots mark their JSON-LD as server-side', () => {
   const src = readFileSync('src/seo/vitePluginSeoSnapshots.ts', 'utf8');
   assert.ok(src.includes('<script type="application/ld+json" data-ssr-ld>'));
+});
+test('power shown in ch everywhere: "9.3 kW (12.6 ch) à 8000 tr/min" is 12,6 ch, not 9.3 cv', async () => {
+  const { formatPowerCh, techSpecSummary } = await import('./techSpecSeo');
+  assert.equal(formatPowerCh('9.3 kW (12.6 ch) à 8000 tr/min'), '12,6 ch');
+  assert.equal(formatPowerCh('43,5 ch à 8 000 tr/min'), '43,5 ch');
+  assert.equal(formatPowerCh('15 cv'), '15 ch');
+  assert.equal(formatPowerCh(''), '');
+  assert.ok(techSpecSummary({ brand: 'SYM', model: 'Jet X 125', power: '9.3 kW (12.6 ch) à 8000 tr/min' }).includes(', 12,6 ch.'));
+});
+test('server JSON-LD wins for the types it describes; types it lacks are still added', async () => {
+  const { jsonLdTypes, schemasMissingFromServer } = await import('./jsonLdTypes');
+  const server = jsonLdTypes([{ '@type': 'BreadcrumbList' }, { '@graph': [{ '@type': ['Product', 'Vehicle'] }] }]);
+  assert.deepEqual([...server].sort(), ['BreadcrumbList', 'Product', 'Vehicle']);
+  const page = [{ '@type': 'BreadcrumbList' }, { '@type': 'ItemList' }, { '@type': 'Vehicle' }];
+  assert.deepEqual(schemasMissingFromServer(page, server), [{ '@type': 'ItemList' }]);
+  assert.equal(schemasMissingFromServer(page, new Set()).length, 3);
+});
+test('one site name: og:site_name is "MotoScoot" in every page source', () => {
+  for (const f of ['index.html', 'api/og-listing.ts', 'api/og-prerender.ts', 'src/seo/vitePluginSeoSnapshots.ts']) {
+    const names = [...readFileSync(f, 'utf8').matchAll(/og:site_name" content="([^"$]+)"/g)].map((m) => m[1]);
+    assert.ok(names.length > 0, f);
+    assert.deepEqual([...new Set(names)], ['MotoScoot'], f);
+  }
 });

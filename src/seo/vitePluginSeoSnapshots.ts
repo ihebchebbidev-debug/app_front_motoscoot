@@ -37,7 +37,7 @@ function renderHead(snap: SeoSnapshot): string {
     <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
     <link rel="alternate" href="${canonical}" hreflang="x-default" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="MotoScoot.tn" />
+    <meta property="og:site_name" content="MotoScoot" />
     <meta property="og:locale" content="fr_TN" />
     <meta property="og:title" content="${escapeHtml(snap.title)}" />
     <meta property="og:description" content="${escapeHtml(snap.description)}" />

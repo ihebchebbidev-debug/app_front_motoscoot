@@ -40,11 +40,17 @@ const priceNumber = (v: unknown): number | null => {
 
 // Power is stored as "12.6 ch", "15 cv", "9.2 kW" or "15 ch (11 kW)"; the
 // description shows ch. Only the unit right after the first number counts.
-const powerCh = (v: unknown): number | null => {
+export const powerCh = (v: unknown): number | null => {
   const m = String(v ?? '').match(/(\d+(?:[.,]\d+)?)\s*(kw)?/i);
   const n = m ? parseFloat(m[1].replace(',', '.')) : NaN;
   if (!Number.isFinite(n) || n <= 0) return null;
   return m?.[2] ? Math.round(n * 1.35962 * 10) / 10 : n;
+};
+
+/** "12,6 ch" from any stored power value ("9.3 kW (12.6 ch) à 8000 tr/min", "15 cv"), or ''. */
+export const formatPowerCh = (v: unknown): string => {
+  const n = powerCh(v);
+  return n !== null ? `${fmt(n)} ch` : '';
 };
 
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -71,7 +77,7 @@ export function techSpecSummary(s: TechSpecSummaryInput): string {
   const checked = s.updatedAt ? new Date(s.updatedAt) : null;
   const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
   return [
-    `${name}${s.year ? ` (${s.year})` : ''}${s.categoryLabel ? ` : ${String(s.categoryLabel).toLowerCase()}` : ''}${cc !== null ? ` de ${fmt(cc)} cm³` : ''}${s.power ? `, ${s.power}` : ''}.`,
+    `${name}${s.year ? ` (${s.year})` : ''}${s.categoryLabel ? ` : ${String(s.categoryLabel).toLowerCase()}` : ''}${cc !== null ? ` de ${fmt(cc)} cm³` : ''}${formatPowerCh(s.power) ? `, ${formatPowerCh(s.power)}` : ''}.`,
     p !== null ? `Prix du neuf en Tunisie : ${fmt(p)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
     s.importerName ? `Importateur : ${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}.` : '',
   ].filter(Boolean).join(' ');

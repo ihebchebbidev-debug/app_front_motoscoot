@@ -23,6 +23,7 @@ const FullscreenAd = React.lazy(() => import('./components/FullscreenAd').then(m
 
 import { ROUTES } from './config/routes';
 import SEO from './components/common/SEO';
+import { HOME_SEO } from './src/seo/snapshots';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { SearchFilters, BasePageProps, NavigationParams } from './types';
 
@@ -151,7 +152,13 @@ const AppContent: React.FC = () => {
   return (
     <UserProvider isLoggedIn={isLoggedIn} onAuthLost={() => setIsLoggedIn(false)}>
       <AdminRedirect isLoggedIn={isLoggedIn} currentView={currentView} navigateTo={navigateTo} />
-      <SEO title={currentView === 'home' ? 'Achetez et vendez votre moto' : undefined} />
+      {/* Site-wide fallback: pages with their own <SEO> keep their title. Remounted
+          on each view so it re-applies after in-app navigation. */}
+      <SEO
+        key={currentView}
+        fallbackOnly
+        {...(currentView === 'home' ? { title: HOME_SEO.title, rawTitle: true, description: HOME_SEO.description } : {})}
+      />
       
       {clerkNeeded && (
         <Suspense fallback={null}>

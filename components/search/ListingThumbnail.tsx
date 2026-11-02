@@ -44,7 +44,7 @@ export const ListingThumbnail: React.FC<ListingThumbnailProps> = ({
     ? PLACEHOLDER_LISTING
     : getOptimizedImageUrl(image, isGrid ? 400 : 300, isGrid ? 300 : 225, 80, PLACEHOLDER_LISTING, title);
   
-  const seoAlt = `Photo moto d'occasion : ${title} - ${condition} en Tunisie | moto-scoot.tn`;
+  const seoAlt = `Photo moto d'occasion : ${title} - ${condition} en Tunisie`;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();

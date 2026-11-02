@@ -12,6 +12,8 @@ import { FilterBar } from './ui/FilterBar';
 import { BasePageProps } from '../types';
 import { TechSpecsHero } from './tech-specs/TechSpecsHero';
 import SEO from './common/SEO';
+import { Link } from 'react-router-dom';
+import { getUrlFromState } from '../utils/urlUtils';
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
@@ -172,7 +174,10 @@ const News: React.FC<BasePageProps> = ({ onNavigate, onGoHome, onSearch }) => {
                         </button>
                         <span className="text-[9px] font-black text-gray-300 uppercase">{article.date}</span>
                       </div>
-                      <h4 className="text-[14px] font-[800] text-gray-900 leading-[1.3] mb-2 line-clamp-2 tracking-tight">{article.title}</h4>
+                      <h4 className="text-[14px] font-[800] text-gray-900 leading-[1.3] mb-2 line-clamp-2 tracking-tight">
+                        {/* Real link so crawlers reach the article; the card click stays for the rest of the card. */}
+                        <Link to={getUrlFromState('article-details', { id: article.id, title: article.title })} onClick={(e) => e.stopPropagation()}>{article.title}</Link>
+                      </h4>
                       <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400">
                         <Clock size={11} className="text-gray-300" />
                         <span>{article.readTime} de lecture</span>
@@ -230,7 +235,9 @@ const News: React.FC<BasePageProps> = ({ onNavigate, onGoHome, onSearch }) => {
                             <Badge variant="primary" size="xs" className="bg-card/95 border-none shadow-sm hover:bg-primary-100">{article.category}</Badge>
                           </button>
                         </div>
-                        <h3 className={S.ArticleTitle}>{article.title}</h3>
+                        <h3 className={S.ArticleTitle}>
+                          <Link to={getUrlFromState('article-details', { id: article.id, title: article.title })} onClick={(e) => e.stopPropagation()}>{article.title}</Link>
+                        </h3>
                         <p className={S.ArticleSummary}>{article.summary}</p>
                         <div className="flex items-center gap-3 text-[12px] font-black uppercase text-foreground group-hover:text-primary-600 transition-colors">Découvrir <ArrowRight size={14} className="text-primary-600" /></div>
                       </div>

@@ -262,7 +262,7 @@ ${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="h
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="product" />
-<meta property="og:site_name" content="MotoScoot.tn" />
+<meta property="og:site_name" content="MotoScoot" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
