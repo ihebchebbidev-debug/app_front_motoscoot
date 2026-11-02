@@ -186,6 +186,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             return (
             <div key={sel.key} className="relative">
               <select 
+                aria-label={sel.label}
                 value={(filters[sel.key as keyof FilterState] as string) || sel.options[0]} 
                 disabled={modelDisabled}
                 onChange={(e) => {

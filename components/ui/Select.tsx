@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -13,16 +13,20 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   className = '',
   ...props
 }, ref) => {
+  // Tie the visible label to the select so it is its accessible name.
+  const autoId = useId();
+  const id = props.id ?? autoId;
   return (
     <div className="space-y-2 w-full group">
       {label && (
-        <label className="block text-[12px] font-extrabold text-foreground uppercase tracking-[1px] ml-1 transition-colors group-focus-within:text-primary-600">
+        <label htmlFor={id} className="block text-[12px] font-extrabold text-foreground uppercase tracking-[1px] ml-1 transition-colors group-focus-within:text-primary-600">
           {label}
         </label>
       )}
       <div className="relative">
         <select
           ref={ref}
+          id={id}
           className={`
             w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all font-bold text-gray-900 shadow-none
             focus:bg-card focus:border-primary-600 focus:ring-4 focus:ring-primary-50
