@@ -10,7 +10,7 @@ import {
   Filter,
   Activity
 } from 'lucide-react';
-import { useTechSpecsByBrand, prerenderedBrand } from '../hooks/useTechSpecs';
+import { useTechSpecsByBrand } from '../hooks/useTechSpecs';
 import { useBrands } from '../hooks/useReferenceData';
 import { Section } from './ui/Section';
 import { EmptyState } from './ui/EmptyState';
@@ -53,11 +53,7 @@ const S = {
   DetailsButton: "mt-auto w-full py-2.5 bg-primary-600 text-white text-[11px] md:text-[10px] lg:text-[13px] font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary-700 transition-all duration-300 shadow-md shadow-primary-600/20 active:scale-[0.98]"
 };
 
-// First grid row: eager images (the first one is the mobile LCP) and no
-// fade-in, so the browser paints them as soon as the data arrives.
-const PRIORITY_CARDS = 4;
-
-const ModelCard = memo(({ spec, highlightTerms, priority = 'none' }: { spec: any; highlightTerms: string[]; priority?: 'high' | 'eager' | 'none' }) => (
+const ModelCard = memo(({ spec, highlightTerms }: { spec: any; highlightTerms: string[] }) => (
   <Link
     to={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand}-${spec.model}-${spec.year}` })}
     className={S.ModelCard}
@@ -67,9 +63,8 @@ const ModelCard = memo(({ spec, highlightTerms, priority = 'none' }: { spec: any
         src={getOptimizedImageUrl(spec.image, 600, 400, 80, undefined, `${spec.brand} ${spec.model} ${spec.year}`)} 
         className="w-full h-full object-cover transition-transform duration-700" 
         alt={spec.model} 
-        loading={priority === 'none' ? 'lazy' : 'eager'}
-        fetchPriority={priority === 'high' ? 'high' : 'auto'}
-        decoding={priority === 'none' ? 'async' : 'auto'}
+        loading="lazy"
+        decoding="async"
       />
       <div className="absolute top-2 left-2 md:top-4 md:left-4">
         <Badge variant="primary" className="border-none shadow-sm px-2 py-0.5 md:px-3 md:py-1 text-[9px] md:text-[10px]">
@@ -131,11 +126,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
   // 1. Trouver le nom officiel de la marque
   const brandName = useMemo(() => {
     const found = allBrands.find(b => slugify(b.name) === slugify(brandSlug));
-    if (found) return found.name;
-    // Before the brands list loads, the prerendered name avoids a second
-    // models request keyed on the slug.
-    const embedded = prerenderedBrand();
-    return embedded && slugify(embedded.name) === slugify(brandSlug) ? embedded.name : brandSlug;
+    return found?.name || brandSlug;
   }, [allBrands, brandSlug]);
 
   // 2. Modèles depuis le backend uniquement
@@ -309,14 +300,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           </div>
         ) : filteredModels.length > 0 ? (
           <div className={S.Grid}>
-              {filteredModels.map((spec, idx) => idx < PRIORITY_CARDS ? (
-                <ModelCard
-                  key={spec.id}
-                  spec={spec}
-                  highlightTerms={highlightTerms}
-                  priority={idx === 0 ? 'high' : 'eager'}
-                />
-              ) : (
+              {filteredModels.map((spec, idx) => (
                 <Reveal key={spec.id} animation="fade-in-up" delay={idx % 6 * 50}>
                   <ModelCard 
                     spec={spec} 
