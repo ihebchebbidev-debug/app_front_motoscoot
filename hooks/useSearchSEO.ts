@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { FilterState } from './useListingFilters';
 import { Listing } from '../types';
-import { slugify } from '../utils/urlUtils';
+import { getUrlFromState } from '../utils/urlUtils';
 
 export interface SEOData {
   displayTitle: string;
@@ -36,27 +36,28 @@ export const useSearchSEO = (
   return useMemo(() => {
     const brand = filters.brand && filters.brand !== 'Toutes les marques' ? filters.brand : '';
     const model = filters.model && filters.model !== 'Tous les modèles' ? filters.model : '';
-    const location = filters.location ? filters.location : (userLocation ? 'Autour de moi' : 'Tunisie');
+    const place = filters.location ? `à ${filters.location}` : (userLocation ? 'autour de vous' : 'en Tunisie');
     const type = filters.type && filters.type !== 'Tous les types' ? filters.type : 'Moto & Scooter';
+    const subject = [brand, model].filter(Boolean).join(' ');
 
     const currentPage = Math.max(1, pagination?.currentPage || 1);
     const totalPages = Math.max(1, pagination?.totalPages || 1);
 
     // Titre H1 / Meta Title — préfixé "Page N" pour différencier les paginations.
-    const baseTitle = brand
-      ? `${brand} ${model} d'occasion à ${location}`
-      : `${type} d'occasion en Tunisie`;
+    const baseTitle = subject
+      ? `${subject} d'occasion ${place}`
+      : `${type} d'occasion ${place}`;
     const displayTitle = currentPage > 1 ? `${baseTitle} — Page ${currentPage}` : baseTitle;
 
     const metaDescription = currentPage > 1
-      ? `Page ${currentPage} sur ${totalPages} — annonces de ${brand || 'motos et scooters'} ${model} à ${location} sur moto-scoot.tn.`
-      : `Découvrez ${results.length} annonces de ${brand} ${model} disponibles à ${location}. moto-scoot.tn : la référence pour votre achat moto en Tunisie.`;
+      ? `Page ${currentPage} sur ${totalPages} — annonces de ${subject || 'motos et scooters'} d'occasion ${place} sur MotoScoot.`
+      : `Découvrez ${results.length} annonce${results.length > 1 ? 's' : ''} de ${subject || 'motos et scooters'} d'occasion ${place} : prix en DT, kilométrage et contact direct du vendeur sur MotoScoot.`;
 
     // Clean base path (no query string).
     const SITE = 'https://www.moto-scoot.tn';
-    let basePath = '/annonces';
-    if (brand) basePath += `/${slugify(brand)}`;
-    if (model) basePath += `/${slugify(model)}`;
+    // Brand / model landing pages (/annonces/<marque>) do not exist yet and
+    // return 404: filtered views canonicalise to the /annonces series.
+    const basePath = '/annonces';
 
     // Self-canonical: page 1 omits `?page=`, page N>1 carries it.
     const pagedPath = (p: number) => (p <= 1 ? basePath : `${basePath}?page=${p}`);
@@ -71,8 +72,7 @@ export const useSearchSEO = (
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Accueil", "item": `${SITE}/` },
         { "@type": "ListItem", "position": 2, "name": "Annonces", "item": `${SITE}/annonces` },
-        brand ? { "@type": "ListItem", "position": 3, "name": brand, "item": `${SITE}/annonces/${slugify(brand)}` } : null
-      ].filter(Boolean)
+      ]
     };
 
     const itemListSchema = {
@@ -83,7 +83,7 @@ export const useSearchSEO = (
       "itemListElement": results.slice(0, 10).map((l, i) => ({
         "@type": "ListItem",
         "position": i + 1,
-        "url": `${SITE}/annonce/${slugify(l.title)}-${l.id}`,
+        "url": `${SITE}${getUrlFromState('listing-details', { id: l.id, title: l.title })}`,
         "name": l.title
       }))
     };
