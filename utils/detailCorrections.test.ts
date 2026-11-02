@@ -296,3 +296,15 @@ test('fiche spec table starts with the dated new price (crawler HTML), and has n
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
   assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
 });
+test('guides use Article structured data, not the deprecated HowTo', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: '4703630e-6577-40ec-8ef2-95cbf4596263', title: 'Comment bien graisser son kit chaîne ?', author_name: 'Admin Admin', content: '<p>' + 'mot '.repeat(400) + '</p>' });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'guide', slugid: 'comment-bien-graisser-son-kit-chaine-4703630e-6577-40ec-8ef2-95cbf4596263' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.equal(result.code, 200);
+    assert.ok(result.body.includes('"@type":"Article"'));
+    assert.equal(result.body.includes('HowTo'), false);
+  } finally { globalThis.fetch = original; }
+  assert.equal(readFileSync('components/TipDetails.tsx', 'utf8').includes('"@type": "HowTo"'), false);
+});

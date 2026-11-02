@@ -9,7 +9,7 @@ import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
-import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1 } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -87,19 +87,20 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         modifiedTime={(tip as any).updatedAt || (tip as any).updated_at}
         schema={{
           "@context": "https://schema.org",
-          "@type": "HowTo",
-          name: tip.title,
+          // Same entities as the prerender (api/og-prerender.ts): an Article,
+          // not HowTo (rich results removed in 2023, no step markup here).
+          "@type": "Article",
+          headline: tip.title,
           url: `https://www.moto-scoot.tn${getUrlFromState('tip-details', { id: tip.id, title: tip.title })}`,
+          mainEntityOfPage: `https://www.moto-scoot.tn${getUrlFromState('tip-details', { id: tip.id, title: tip.title })}`,
           description: tip.summary,
           image: tip.image ? [tip.image] : undefined,
           datePublished: (tip as any).publishedAt || (tip as any).published_at || (tip as any).createdAt,
           dateModified: (tip as any).updatedAt || (tip as any).updated_at,
-          author: { "@type": "Organization", name: "moto-scoot.tn" },
-          publisher: {
-            "@type": "Organization",
-            name: "moto-scoot.tn",
-            logo: { "@type": "ImageObject", url: "https://www.moto-scoot.tn/site-logo/logo-color.svg" },
-          },
+          author: realAuthorName(tip.author)
+            ? { "@type": "Person", name: realAuthorName(tip.author) }
+            : ORGANIZATION_NODE,
+          publisher: ORGANIZATION_NODE,
         }}
       />
       
