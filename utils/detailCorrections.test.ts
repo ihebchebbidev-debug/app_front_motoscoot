@@ -222,3 +222,35 @@ test('listing HTML preloads the first gallery photo at the exact URL the gallery
     assert.equal(result.body.includes('/hero.webp'), false, 'home hero preload is dropped');
   } finally { globalThis.fetch = original; }
 });
+test('article body for crawlers keeps headings, paragraphs and lists, with every text escaped', async () => {
+  const { crawlerBodyHtml, demoteBodyH1, realAuthorName } = await import('./editorial');
+  const html = crawlerBodyHtml('<h1>Top 125</h1><p>Le <strong>SYM Jet 14</strong> coûte 9&nbsp;000 DT.</p><ul><li>Fiable</li><li>Sobre &amp; léger</li></ul><h3 class="x">Budget</h3><p><img src=x onerror=alert(1)>&lt;script&gt;</p>');
+  assert.equal(html, '<h2>Top 125</h2>\n<p>Le SYM Jet 14 coûte 9 000 DT.</p>\n<ul>\n<li>Fiable</li>\n<li>Sobre &amp; léger</li>\n</ul>\n<h3>Budget</h3>\n<p>&lt;script&gt;</p>');
+  assert.equal(demoteBodyH1('<h1 class="a">T</h1><h2>U</h2>'), '<h2 class="a">T</h2><h2>U</h2>');
+  assert.equal(realAuthorName('Admin Admin'), null);
+  assert.equal(realAuthorName('Mehdi Jelliti'), 'Mehdi Jelliti');
+});
+test('article prerender: author from the byline, organization for placeholder accounts, full body', async () => {
+  const original = globalThis.fetch;
+  try {
+    for (const [author, expected] of [['Mehdi Jelliti', '"author":{"@type":"Person","name":"Mehdi Jelliti"}'], ['Admin Admin', '"author":{"@type":"Organization","@id":"https://www.moto-scoot.tn/#organization"']] as const) {
+      globalThis.fetch = async () => Response.json({ id: '7a760d0c-56de-4da6-8279-23e5f6d7030e', title: 'Meilleures 125', author_name: author, content: '<h1>Intro</h1>' + '<p>mot mot mot mot mot</p>'.repeat(200) + '<h2>Fin</h2><p>dernier paragraphe</p>' });
+      const result = responseCapture();
+      await detailHandler({ query: { kind: 'article', slugid: 'meilleures-125-7a760d0c-56de-4da6-8279-23e5f6d7030e' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+      assert.ok(result.body.includes(expected), author);
+      assert.ok(result.body.includes('<p>dernier paragraphe</p>'), 'full body, not cut at 4000 characters');
+      assert.equal(result.body.match(/<h1>/g)?.length, 1);
+    }
+  } finally { globalThis.fetch = original; }
+});
+test('fiche summary is the same sentence for the crawler HTML and the React page', async () => {
+  const { techSpecSummary } = await import('./techSpecSeo');
+  const sentence = techSpecSummary({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, categoryLabel: 'Scooter', cc: '124.7 cc', power: '12.6 ch', price: '9 000 DT', updatedAt: '2026-11-01T19:54:01Z', importerName: 'Megacycle', importerCity: 'Sousse' });
+  assert.equal(sentence, `SYM Jet 14 EVO 125 (2026) : scooter de 124,7 cm³, 12.6 ch. Prix du neuf en Tunisie : ${(9000).toLocaleString('fr-FR')} DT (prix relevé en novembre 2026). Importateur : Megacycle (Sousse).`);
+  const { renderFicheBody } = await import('../api/og-prerender');
+  assert.ok(renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, category: 'Scooter', engine: { cc: '124.7 cc', power: '12.6 ch' }, price_new: '9000', updated_at: '2026-11-01T19:54:01Z', importer: { name: 'Megacycle', city: 'Sousse' } } as any).includes(`<p>${sentence}</p>`));
+});
+test('build-time snapshots mark their JSON-LD as server-side', () => {
+  const src = readFileSync('src/seo/vitePluginSeoSnapshots.ts', 'utf8');
+  assert.ok(src.includes('<script type="application/ld+json" data-ssr-ld>'));
+});
