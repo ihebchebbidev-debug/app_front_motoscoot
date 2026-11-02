@@ -16,7 +16,7 @@ const SMTP_HOST = process.env.SMTP_HOST || 'ssl0.ovh.net';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 const SMTP_USER = process.env.SMTP_USER || 'motoscoot_password_reset_protoco@spadadibattaglia.com';
 const SMTP_PASS = process.env.SMTP_PASS || 'Dadouhibou2025';
-const FROM_NAME = process.env.SMTP_FROM_NAME || 'MotoScoot';
+const FROM_NAME = process.env.SMTP_FROM_NAME || 'Moto-Scoot.tn';
 
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
@@ -67,7 +67,7 @@ function resetPasswordTemplate({ link, name }) {
   const safeName = escapeHtml(name || '');
   const safeLink = escapeHtml(link);
   const greeting = safeName ? `Bonjour ${safeName},` : 'Bonjour,';
-  const subject = 'Réinitialisation de votre mot de passe MotoScoot';
+  const subject = 'Réinitialisation de votre mot de passe Moto-Scoot.tn';
   const logoUrl = 'https://www.magma-studio.tn/portfolio2/moto/Logo/logo-white.svg';
   const year = new Date().getFullYear();
 
@@ -84,7 +84,7 @@ function resetPasswordTemplate({ link, name }) {
   </head>
   <body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;-webkit-font-smoothing:antialiased;">
     <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;font-size:1px;line-height:1px;color:#f5f6f8;">
-      Réinitialisez votre mot de passe MotoScoot en un clic. Lien valable 1 heure.
+      Réinitialisez votre mot de passe Moto-Scoot.tn en un clic. Lien valable 1 heure.
     </span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:40px 16px;">
       <tr>
@@ -108,7 +108,7 @@ function resetPasswordTemplate({ link, name }) {
                 </h1>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#475569;">${greeting}</p>
                 <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#475569;">
-                  Vous avez demandé la réinitialisation de votre mot de passe MotoScoot.
+                  Vous avez demandé la réinitialisation de votre mot de passe Moto-Scoot.tn.
                   Cliquez sur le bouton ci-dessous pour en choisir un nouveau&nbsp;:
                 </p>
 
@@ -155,7 +155,7 @@ function resetPasswordTemplate({ link, name }) {
                   Achetez et vendez votre moto, scooter ou quad en toute confiance.
                 </p>
                 <p style="margin:12px 0 0;font-size:11px;color:#64748b;letter-spacing:0.4px;">
-                  © ${year} MotoScoot — Tous droits réservés
+                  © ${year} Moto-Scoot.tn — Tous droits réservés
                 </p>
               </td>
             </tr>
@@ -173,7 +173,7 @@ function resetPasswordTemplate({ link, name }) {
 
   const text = `${greeting}
 
-Vous avez demandé la réinitialisation de votre mot de passe MotoScoot.
+Vous avez demandé la réinitialisation de votre mot de passe Moto-Scoot.tn.
 
 Ouvrez ce lien pour en choisir un nouveau (valable 1 heure) :
 ${link}
@@ -181,7 +181,7 @@ ${link}
 Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail —
 votre mot de passe restera inchangé.
 
-— L'équipe MotoScoot
+— L'équipe Moto-Scoot.tn
 https://moto-scoot.tn`;
 
   return { subject, html, text };
@@ -208,8 +208,8 @@ async function sendPasswordResetEmail({ to, name, link }) {
 // ---- HTML template: welcome (post-signup) ----
 function welcomeTemplate({ name, siteUrl }) {
   const safeName = escapeHtml(name || '');
-  const greeting = safeName ? `Bienvenue ${safeName} 👋` : 'Bienvenue sur MotoScoot 👋';
-  const subject = 'Bienvenue sur MotoScoot — votre compte est prêt 🎉';
+  const greeting = safeName ? `Bienvenue ${safeName} 👋` : 'Bienvenue sur Moto-Scoot.tn 👋';
+  const subject = 'Bienvenue sur Moto-Scoot.tn — votre compte est prêt 🎉';
   const logoUrl = 'https://www.magma-studio.tn/portfolio2/moto/Logo/logo-white.svg';
   const home = (siteUrl || 'https://www.moto-scoot.tn').replace(/\/+$/, '');
   const depositUrl = `${home}/deposer-une-annonce`;
@@ -227,7 +227,7 @@ function welcomeTemplate({ name, siteUrl }) {
   </head>
   <body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;-webkit-font-smoothing:antialiased;">
     <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;font-size:1px;line-height:1px;color:#f5f6f8;">
-      Votre compte MotoScoot est prêt. Déposez votre première annonce gratuitement.
+      Votre compte Moto-Scoot.tn est prêt. Déposez votre première annonce gratuitement.
     </span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:40px 16px;">
       <tr>
@@ -251,7 +251,7 @@ function welcomeTemplate({ name, siteUrl }) {
                   ${greeting}
                 </h1>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#475569;">
-                  Merci d'avoir rejoint MotoScoot — la plus grande communauté de passionnés de
+                  Merci d'avoir rejoint Moto-Scoot.tn — la plus grande communauté de passionnés de
                   deux-roues en Tunisie. Votre compte est créé et prêt à l'emploi.
                 </p>
                 <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#475569;">
@@ -343,7 +343,7 @@ function welcomeTemplate({ name, siteUrl }) {
                   Achetez et vendez votre moto, scooter ou quad en toute confiance.
                 </p>
                 <p style="margin:12px 0 0;font-size:11px;color:#64748b;letter-spacing:0.4px;">
-                  © ${year} MotoScoot — Tous droits réservés
+                  © ${year} Moto-Scoot.tn — Tous droits réservés
                 </p>
               </td>
             </tr>
@@ -360,7 +360,7 @@ function welcomeTemplate({ name, siteUrl }) {
 
   const text = `${greeting}
 
-Merci d'avoir rejoint MotoScoot — la marketplace moto en Tunisie.
+Merci d'avoir rejoint Moto-Scoot.tn — la marketplace moto en Tunisie.
 Votre compte est créé et prêt à l'emploi.
 
 Pour bien démarrer :
@@ -371,7 +371,7 @@ Pour bien démarrer :
 Astuce : complétez votre profil (photo, ville, téléphone) pour augmenter
 vos chances de vendre vite.
 
-— L'équipe MotoScoot
+— L'équipe Moto-Scoot.tn
 https://moto-scoot.tn`;
 
   return { subject, html, text };
@@ -398,7 +398,7 @@ async function sendWelcomeEmail({ to, name, siteUrl }) {
 function verificationTemplate({ name, link }) {
   const safeName = escapeHtml(name || '');
   const greeting = safeName ? `Bonjour ${safeName},` : 'Bonjour,';
-  const subject = 'Confirmez votre adresse e-mail — MotoScoot';
+  const subject = 'Confirmez votre adresse e-mail — Moto-Scoot.tn';
   const logoUrl = 'https://www.magma-studio.tn/portfolio2/moto/Logo/logo-white.svg';
   const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -406,13 +406,13 @@ function verificationTemplate({ name, link }) {
 <body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;">
 <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-top:24px;">
   <div style="background:linear-gradient(135deg,#ff6a00,#ff8a3d);padding:28px 32px;text-align:center;">
-    <img src="${logoUrl}" alt="MotoScoot" height="36" style="height:36px;display:inline-block;">
+    <img src="${logoUrl}" alt="Moto-Scoot.tn" height="36" style="height:36px;display:inline-block;">
   </div>
   <div style="padding:32px;">
     <h1 style="font-size:22px;margin:0 0 16px;color:#1a1a1a;">Confirmez votre e-mail</h1>
     <p style="font-size:15px;line-height:1.6;margin:0 0 16px;color:#444;">${greeting}</p>
     <p style="font-size:15px;line-height:1.6;margin:0 0 24px;color:#444;">
-      Pour activer toutes les fonctionnalités de votre compte MotoScoot, veuillez confirmer votre adresse e-mail
+      Pour activer toutes les fonctionnalités de votre compte Moto-Scoot.tn, veuillez confirmer votre adresse e-mail
       en cliquant sur le bouton ci-dessous. Ce lien est valable pendant 24 heures.
     </p>
     <div style="text-align:center;margin:32px 0;">
@@ -427,10 +427,10 @@ function verificationTemplate({ name, link }) {
   </div>
   <div style="background:#f9fafb;padding:20px 32px;text-align:center;font-size:12px;color:#888;">
     Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.<br>
-    — L'équipe MotoScoot
+    — L'équipe Moto-Scoot.tn
   </div>
 </div></body></html>`;
-  const text = `${greeting}\n\nConfirmez votre e-mail MotoScoot en ouvrant ce lien (valable 24h) :\n${link}\n\n— L'équipe MotoScoot`;
+  const text = `${greeting}\n\nConfirmez votre e-mail Moto-Scoot.tn en ouvrant ce lien (valable 24h) :\n${link}\n\n— L'équipe Moto-Scoot.tn`;
   return { subject, html, text };
 }
 
@@ -453,7 +453,7 @@ function newMessageTemplate({ recipientName, senderName, messagePreview, listing
   const safeListing = escapeHtml(listingTitle || '');
   const safeUrl = escapeHtml(conversationUrl);
   const greeting = safeRecipient ? `Bonjour ${safeRecipient},` : 'Bonjour,';
-  const subject = `💬 Nouveau message de ${safeSender} sur MotoScoot`;
+  const subject = `💬 Nouveau message de ${safeSender} sur Moto-Scoot.tn`;
   const logoUrl = 'https://www.magma-studio.tn/portfolio2/moto/Logo/logo-white.svg';
   const year = new Date().getFullYear();
 
@@ -467,7 +467,7 @@ function newMessageTemplate({ recipientName, senderName, messagePreview, listing
   </head>
   <body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;-webkit-font-smoothing:antialiased;">
     <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;font-size:1px;line-height:1px;color:#f5f6f8;">
-      Vous avez reçu un nouveau message de ${safeSender} sur MotoScoot.
+      Vous avez reçu un nouveau message de ${safeSender} sur Moto-Scoot.tn.
     </span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:40px 16px;">
       <tr>
@@ -520,13 +520,13 @@ function newMessageTemplate({ recipientName, senderName, messagePreview, listing
                   Achetez et vendez votre moto, scooter ou quad en toute confiance.
                 </p>
                 <p style="margin:12px 0 0;font-size:11px;color:#64748b;letter-spacing:0.4px;">
-                  © ${year} MotoScoot — Tous droits réservés
+                  © ${year} Moto-Scoot.tn — Tous droits réservés
                 </p>
               </td>
             </tr>
           </table>
           <p style="max-width:600px;margin:16px auto 0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.5;">
-            Vous recevez cet e-mail car quelqu'un vous a écrit sur MotoScoot.
+            Vous recevez cet e-mail car quelqu'un vous a écrit sur Moto-Scoot.tn.
           </p>
         </td>
       </tr>
@@ -536,13 +536,13 @@ function newMessageTemplate({ recipientName, senderName, messagePreview, listing
 
   const text = `${greeting}
 
-${safeSender} vous a envoyé un nouveau message sur MotoScoot${safeListing ? ` à propos de "${safeListing}"` : ''}.
+${safeSender} vous a envoyé un nouveau message sur Moto-Scoot.tn${safeListing ? ` à propos de "${safeListing}"` : ''}.
 
 "${safePreview}"
 
 Répondre : ${conversationUrl}
 
-— L'équipe MotoScoot`;
+— L'équipe Moto-Scoot.tn`;
 
   return { subject, html, text };
 }
@@ -572,7 +572,7 @@ function listingApprovedTemplate({ recipientName, listingTitle, listingUrl, dash
   const safeUrl = escapeHtml(listingUrl || dashboardUrl || 'https://www.moto-scoot.tn');
   const safeDashUrl = escapeHtml(dashboardUrl || 'https://www.moto-scoot.tn/tableau-de-bord');
   const greeting = safeName ? `Bonjour ${safeName},` : 'Bonjour,';
-  const subject = `✅ Votre annonce "${safeListing}" est en ligne sur MotoScoot`;
+  const subject = `✅ Votre annonce "${safeListing}" est en ligne sur Moto-Scoot.tn`;
   const logoUrl = 'https://www.magma-studio.tn/portfolio2/moto/Logo/logo-white.svg';
   const year = new Date().getFullYear();
 
@@ -607,7 +607,7 @@ function listingApprovedTemplate({ recipientName, listingTitle, listingUrl, dash
                 </h1>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#475569;">${greeting}</p>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#334155;">
-                  Bonne nouvelle&nbsp;: votre annonce <strong style="color:#0f172a;">${safeListing}</strong> a été validée par notre équipe de modération et est désormais visible par tous les acheteurs sur MotoScoot.
+                  Bonne nouvelle&nbsp;: votre annonce <strong style="color:#0f172a;">${safeListing}</strong> a été validée par notre équipe de modération et est désormais visible par tous les acheteurs sur Moto-Scoot.tn.
                 </p>
 
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;margin:0 0 24px;">
@@ -643,13 +643,13 @@ function listingApprovedTemplate({ recipientName, listingTitle, listingUrl, dash
                   Achetez et vendez votre moto, scooter ou quad en toute confiance.
                 </p>
                 <p style="margin:12px 0 0;font-size:11px;color:#64748b;letter-spacing:0.4px;">
-                  © ${year} MotoScoot — Tous droits réservés
+                  © ${year} Moto-Scoot.tn — Tous droits réservés
                 </p>
               </td>
             </tr>
           </table>
           <p style="max-width:600px;margin:16px auto 0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.5;">
-            Vous recevez cet e-mail car votre annonce vient d'être validée sur MotoScoot.
+            Vous recevez cet e-mail car votre annonce vient d'être validée sur Moto-Scoot.tn.
           </p>
         </td>
       </tr>
@@ -659,12 +659,12 @@ function listingApprovedTemplate({ recipientName, listingTitle, listingUrl, dash
 
   const text = `${greeting}
 
-Bonne nouvelle : votre annonce "${safeListing}" a été validée et est désormais en ligne sur MotoScoot.
+Bonne nouvelle : votre annonce "${safeListing}" a été validée et est désormais en ligne sur Moto-Scoot.tn.
 
 Voir votre annonce : ${listingUrl || dashboardUrl || 'https://www.moto-scoot.tn'}
 Tableau de bord : ${dashboardUrl || 'https://www.moto-scoot.tn/tableau-de-bord'}
 
-— L'équipe MotoScoot`;
+— L'équipe Moto-Scoot.tn`;
 
   return { subject, html, text };
 }
@@ -708,7 +708,7 @@ function listingRejectedTemplate({ recipientName, listingTitle, reason, dashboar
                 </h1>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#475569;">${greeting}</p>
                 <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#334155;">
-                  Après vérification par notre équipe de modération, votre annonce <strong style="color:#0f172a;">${safeListing}</strong> n'a pas pu être publiée sur MotoScoot.
+                  Après vérification par notre équipe de modération, votre annonce <strong style="color:#0f172a;">${safeListing}</strong> n'a pas pu être publiée sur Moto-Scoot.tn.
                 </p>
 
                 ${safeReason ? `
@@ -751,7 +751,7 @@ function listingRejectedTemplate({ recipientName, listingTitle, reason, dashboar
               <td style="background:#0f172a;padding:24px 32px;text-align:center;">
                 <p style="margin:0 0 6px;font-size:13px;color:#cbd5e1;font-weight:600;">Moto-Scoot.tn</p>
                 <p style="margin:12px 0 0;font-size:11px;color:#64748b;letter-spacing:0.4px;">
-                  © ${year} MotoScoot — Tous droits réservés
+                  © ${year} Moto-Scoot.tn — Tous droits réservés
                 </p>
               </td>
             </tr>
@@ -764,12 +764,12 @@ function listingRejectedTemplate({ recipientName, listingTitle, reason, dashboar
 
   const text = `${greeting}
 
-Votre annonce "${safeListing}" n'a pas pu être publiée sur MotoScoot.${safeReason ? `\n\nMotif : ${safeReason}` : ''}
+Votre annonce "${safeListing}" n'a pas pu être publiée sur Moto-Scoot.tn.${safeReason ? `\n\nMotif : ${safeReason}` : ''}
 
 Vous pouvez la modifier et la soumettre à nouveau depuis votre tableau de bord :
 ${dashboardUrl || 'https://www.moto-scoot.tn/tableau-de-bord'}
 
-— L'équipe MotoScoot`;
+— L'équipe Moto-Scoot.tn`;
 
   return { subject, html, text };
 }
@@ -892,7 +892,7 @@ function similarListingsTemplate({ recipientName, listings = [], unsubscribeUrl 
     </td></tr>`).join('');
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0f172a;">Nouveautés sélectionnées pour vous</h1>
-    <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#374151;">${greeting}<br/>D'après vos favoris et recherches, voici ce qui vient d'arriver sur MotoScoot.</p>
+    <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#374151;">${greeting}<br/>D'après vos favoris et recherches, voici ce qui vient d'arriver sur Moto-Scoot.tn.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table>
     <p style="text-align:center;margin:24px 0 0;">
       <a href="https://www.moto-scoot.tn" style="display:inline-block;background:#ff6a00;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;">Voir toutes les annonces</a>
@@ -900,7 +900,7 @@ function similarListingsTemplate({ recipientName, listings = [], unsubscribeUrl 
   const footer = unsubscribeUrl
     ? `<a href="${escapeHtml(unsubscribeUrl)}" style="color:#6b7280;text-decoration:underline;">Se désabonner de ces alertes</a><br/>`
     : '';
-  const text = `${greeting}\n\nNouveautés MotoScoot:\n\n${listings.map(l => `- ${l.title}${l.price ? ` — ${l.price} TND` : ''}\n  ${l.url || ''}`).join('\n')}\n`;
+  const text = `${greeting}\n\nNouveautés Moto-Scoot.tn:\n\n${listings.map(l => `- ${l.title}${l.price ? ` — ${l.price} TND` : ''}\n  ${l.url || ''}`).join('\n')}\n`;
   return { subject, html: brandedShell({ subject, eyebrow: 'Annonces similaires', preheader: subject, bodyHtml: body, footerExtraHtml: footer }), text };
 }
 

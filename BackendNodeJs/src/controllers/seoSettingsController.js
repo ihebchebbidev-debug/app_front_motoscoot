@@ -24,12 +24,12 @@ const KEY = 'seo_settings';
 
 const DEFAULTS = {
   default_title: null,
-  title_template: '%s | MotoScoot',
+  title_template: '%s | Moto-Scoot.tn',
   default_description: null,
   default_keywords: null,
   default_og_image: null,
   twitter_handle: '@motoscoot_tn',
-  organization_name: 'MotoScoot',
+  organization_name: 'Moto-Scoot.tn',
   organization_logo: null,
   organization_phone: null,
   organization_email: null,
@@ -276,7 +276,7 @@ async function testCredentials(_req, res) {
 }
 
 /* ---------- Public robots.txt (merges admin `robots_extra`) ---------- */
-const ROBOTS_BASE = `# MotoScoot.tn — robots.txt (dynamic)
+const ROBOTS_BASE = `# Moto-Scoot.tn — robots.txt (dynamic)
 User-agent: *
 Allow: /
 Disallow: /admin

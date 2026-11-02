@@ -172,17 +172,17 @@ function parsePrice(v: any): number | null {
 }
 
 function pickTitle(kind: Kind, d: Doc | null): string {
-  if (!d) return `${KIND_CONFIG[kind].label} | MotoScoot`;
+  if (!d) return `${KIND_CONFIG[kind].label} | Moto-Scoot.tn`;
   if (kind === 'fiche-technique') return techSpecTitle(d);
   if (kind === 'garage') {
-    return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | MotoScoot`;
+    return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | Moto-Scoot.tn`;
   }
-  return `${d.title || d.name || KIND_CONFIG[kind].label} | MotoScoot`;
+  return `${d.title || d.name || KIND_CONFIG[kind].label} | Moto-Scoot.tn`;
 }
 
 function pickDescription(kind: Kind, d: Doc | null): string {
   if (!d) {
-    return "Découvrez nos motos, scooters, garages et conseils en Tunisie sur MotoScoot.tn.";
+    return "Découvrez nos motos, scooters, garages et conseils en Tunisie sur Moto-Scoot.tn.";
   }
   if (kind === 'fiche-technique') {
     return techSpecDescription({ brand: d.brand, model: d.model, category: d.category, price: d.price_new, cc: d.engine?.cc, power: d.engine?.power, weight: d.dimensions?.weight });
@@ -191,9 +191,9 @@ function pickDescription(kind: Kind, d: Doc | null): string {
   const text = stripHtml(String(raw));
   if (text) return clip(text, 160);
   if (kind === 'garage') {
-    return clip(`Découvrez le garage moto ${d.name || ''}${d.city ? ` à ${d.city}` : ''} sur MotoScoot.tn : services, avis et contact.`, 160);
+    return clip(`Découvrez le garage moto ${d.name || ''}${d.city ? ` à ${d.city}` : ''} sur Moto-Scoot.tn : services, avis et contact.`, 160);
   }
-  return clip(`${d.title || ''}. À lire sur MotoScoot (moto-scoot.tn), la marketplace tunisienne des motos et scooters.`, 160);
+  return clip(`${d.title || ''}. À lire sur Moto-Scoot.tn, la marketplace tunisienne des motos et scooters.`, 160);
 }
 
 async function fetchDoc(kind: Kind, id: string): Promise<Doc | null> {
@@ -259,7 +259,7 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
     // Google requires Product to expose offers/review/aggregateRating.
     // When we know the price we emit a valid Offer; otherwise we fall back
     // to a Vehicle entity (no such requirement) to avoid validator errors.
-    // The Offer is the catalogue price of the new model: MotoScoot does not
+    // The Offer is the catalogue price of the new model: Moto-Scoot.tn does not
     // sell it, so no seller, stock status or invented validity date.
     if (price) {
       return {
@@ -388,7 +388,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
   if (!brand) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('X-Robots-Tag', 'noindex');
-    res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | MotoScoot</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/fiches-techniques">Voir toutes les fiches techniques</a></p></body></html>`);
+    res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/fiches-techniques">Voir toutes les fiches techniques</a></p></body></html>`);
     return;
   }
 
@@ -399,7 +399,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 
   const canonical = `${SITE}/fiches-techniques/${brandSlug}`;
   const pageTitle = `${brand} : fiches techniques et prix en Tunisie`;
-  const title = `${pageTitle} | MotoScoot`;
+  const title = `${pageTitle} | Moto-Scoot.tn`;
   const description = `Fiches techniques des modèles ${brand} vendus en Tunisie : prix du neuf en DT, cylindrée, puissance, couple, poids et consommation.`;
   const modelUrl = (m: Doc) => `${SITE}/fiche-technique/${(m as any).slug || `${slugify([m.brand, m.model, m.year].filter(Boolean).join(' '))}-${m.id}`}`;
   const modelName = (m: Doc) => [brand, m.model].filter(Boolean).join(' ');
@@ -453,7 +453,7 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="MotoScoot" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
@@ -507,7 +507,7 @@ export default async function handler(req: any, res: any) {
     if (!doc || (!doc.id && !doc.title && !doc.name && !doc.model)) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('X-Robots-Tag', 'noindex');
-      res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | MotoScoot</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/">Retour à l'accueil</a></p></body></html>`);
+      res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/">Retour à l'accueil</a></p></body></html>`);
       return;
     }
     if (kind === 'garage') {
@@ -581,7 +581,7 @@ export default async function handler(req: any, res: any) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="${ogType}" />
-<meta property="og:site_name" content="MotoScoot" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
@@ -611,7 +611,7 @@ ${(() => {
 })()}`}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
 ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
-<p><a href="${canonical}">Voir sur MotoScoot.tn</a></p>
+<p><a href="${canonical}">Voir sur Moto-Scoot.tn</a></p>
 </body>
 </html>`;
 
@@ -622,6 +622,6 @@ ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}
   } catch {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', '60');
-    res.status(503).setHeader('Content-Type', 'text/html; charset=utf-8').send('<!doctype html><html lang="fr"><head><title>Page temporairement indisponible | MotoScoot</title><meta name="robots" content="noindex"></head><body><h1>Page temporairement indisponible</h1><p>Veuillez réessayer dans quelques instants.</p></body></html>');
+    res.status(503).setHeader('Content-Type', 'text/html; charset=utf-8').send('<!doctype html><html lang="fr"><head><title>Page temporairement indisponible | Moto-Scoot.tn</title><meta name="robots" content="noindex"></head><body><h1>Page temporairement indisponible</h1><p>Veuillez réessayer dans quelques instants.</p></body></html>');
   }
 }

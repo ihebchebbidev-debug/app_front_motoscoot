@@ -276,7 +276,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           priceCurrency: "TND",
           price,
           // Catalogue price of the new model, as in api/og-prerender.ts:
-          // MotoScoot does not sell it (no seller, stock or validity date).
+          // Moto-Scoot.tn does not sell it (no seller, stock or validity date).
           itemCondition: "https://schema.org/NewCondition",
           url: canonical,
         },

@@ -16,7 +16,7 @@ const Reviews: React.FC = () => {
         id: r.id,
         name: r.name,
         role: r.role || 'Membre',
-        // Always use the branded MotoScoot helmet placeholder for visual
+        // Always use the branded Moto-Scoot.tn helmet placeholder for visual
         // consistency across the "Ce qu'ils disent de nous" section.
         image: '',
         content: r.content,
@@ -37,7 +37,7 @@ const Reviews: React.FC = () => {
               Avis de la communauté
             </h2>
             <p className="text-gray-500 text-[17px] font-normal tracking-normal leading-relaxed animate-fade-in-up">
-              Les avis des motards qui utilisent MotoScoot pour acheter, vendre et comparer des motos et scooters en Tunisie.
+              Les avis des motards qui utilisent Moto-Scoot.tn pour acheter, vendre et comparer des motos et scooters en Tunisie.
             </p>
           </div>
 
@@ -68,7 +68,7 @@ const Reviews: React.FC = () => {
             variant="inline"
             icon={MessageSquareQuote}
             title="Soyez le premier à témoigner"
-            description="Aucun avis n'a encore été publié. Partagez votre expérience pour aider la communauté MotoScoot."
+            description="Aucun avis n'a encore été publié. Partagez votre expérience pour aider la communauté Moto-Scoot.tn."
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">

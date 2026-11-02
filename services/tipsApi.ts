@@ -56,7 +56,7 @@ export function mapBackendTip(t: BackendTip): Tip {
   const author =
     t.author_name ||
     (typeof t.author === 'string' ? t.author : t.author?.full_name || t.author?.name) ||
-    'MotoScoot';
+    'Moto-Scoot.tn';
   const rt = t.read_time ?? t.reading_time;
   return {
     id: t.id,

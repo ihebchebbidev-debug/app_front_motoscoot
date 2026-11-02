@@ -44,7 +44,7 @@ export const SectionLabel: React.FC<TextProps> = ({ children, className = '' }) 
 );
 
 /**
- * Price - Signature visuelle MotoScoot
+ * Price - Signature visuelle Moto-Scoot.tn
  */
 export const Price: React.FC<TextProps> = ({ children, className = '' }) => (
   <span className={`font-[900] text-primary-600 tracking-tighter tabular-nums ${className}`}>

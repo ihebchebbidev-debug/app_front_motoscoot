@@ -27,7 +27,7 @@ export function demoteBodyH1(html: string): string {
 export const ORGANIZATION_NODE = {
   '@type': 'Organization',
   '@id': 'https://www.moto-scoot.tn/#organization',
-  name: 'MotoScoot',
+  name: 'Moto-Scoot.tn',
   url: 'https://www.moto-scoot.tn/',
   logo: 'https://www.moto-scoot.tn/site-logo/logo-color.svg',
 };

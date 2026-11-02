@@ -6,7 +6,7 @@
  * Titre :       {Marque} {Modèle} {Année} d'occasion à {Ville} – {Prix} DT
  * Description : {Type} {Marque} {Modèle} {Année} d'occasion à vendre à {Ville} :
  *               {Prix} DT, {km} km, {cylindrée} cm³. Contactez directement le
- *               vendeur sur MotoScoot.
+ *               vendeur sur Moto-Scoot.tn.
  * Missing values are left out.
  */
 
@@ -59,5 +59,5 @@ export function listingDescription(l: ListingSeoInput): string {
   const facts = [price ? `${fmt(price)} DT` : '', km !== null ? `${fmt(km)} km` : '', cc ? `${fmt(cc)} cm³` : ''].filter(Boolean).join(', ');
   const type = l.type && /^(moto|scooter|quad)$/i.test(l.type) ? `${l.type[0].toUpperCase()}${l.type.slice(1).toLowerCase()} ` : '';
   const place = l.city ? `à ${l.city}` : 'en Tunisie';
-  return `${type}${name(l)} ${usedLabel(l.condition)} à vendre ${place}${facts ? ` : ${facts}` : ''}. Contactez directement le vendeur sur MotoScoot.`;
+  return `${type}${name(l)} ${usedLabel(l.condition)} à vendre ${place}${facts ? ` : ${facts}` : ''}. Contactez directement le vendeur sur Moto-Scoot.tn.`;
 }

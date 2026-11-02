@@ -45,8 +45,8 @@ interface SEOProps {
 const SITE_ORIGIN = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = 'https://www.moto-scoot.tn/og-banner.webp';
 // og:site_name: same name as the Organization / WebSite JSON-LD.
-const SITE_NAME = 'MotoScoot';
-const BRAND_NAME = 'MotoScoot';
+const SITE_NAME = 'Moto-Scoot.tn';
+const BRAND_NAME = 'Moto-Scoot.tn';
 // Path the visitor landed on. The JSON-LD the server stamped into the HTML
 // (script[data-ssr-ld]) describes this path only.
 const LANDING_PATH = typeof window !== 'undefined' ? window.location.pathname : '';

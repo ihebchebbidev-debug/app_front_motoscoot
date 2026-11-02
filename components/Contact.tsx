@@ -68,7 +68,7 @@ const Contact: React.FC<BasePageProps> = ({ onNavigate }) => {
         title="Contact Moto-Scoot.tn — Support & Partenariats en Tunisie"
         description="Contactez l'équipe Moto-Scoot.tn : support utilisateur, partenariats professionnels, presse. Réponse sous 24h, du lundi au vendredi."
         url="/contact"
-        keywords={['contact MotoScoot', 'support moto Tunisie', 'partenariat moto']}
+        keywords={['contact Moto-Scoot.tn', 'support moto Tunisie', 'partenariat moto']}
         breadcrumbs={[
           { name: 'Accueil', url: '/' },
           { name: 'Contact', url: '/contact' },

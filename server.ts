@@ -26,7 +26,7 @@ const { Pool } = pg;
 // index.html before sending it.
 
 const API_ORIGIN = (process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'https://motoscoot.ihebchebbi.pro/api').replace(/\/+$/, '');
-const SITE_NAME = 'MotoScoot.tn';
+const SITE_NAME = 'Moto-Scoot.tn';
 
 // Matches /annonce/<slug>-<uuid-or-numeric-id>
 const LISTING_URL_RE = /^\/annonce\/[a-z0-9-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)\/?$/i;
@@ -351,7 +351,7 @@ async function startServer() {
           const notFound = path.join(distPath, '404.html');
           res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8');
           if (fs.existsSync(notFound)) return res.send(fs.readFileSync(notFound, 'utf-8'));
-          return res.send('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page introuvable | MotoScoot</title></head><body><h1>Page introuvable</h1><p><a href="/">Retour à l\'accueil</a></p></body></html>');
+          return res.send('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page introuvable | Moto-Scoot.tn</title></head><body><h1>Page introuvable</h1><p><a href="/">Retour à l\'accueil</a></p></body></html>');
         }
 
         const listingMatch = req.path.match(LISTING_URL_RE);

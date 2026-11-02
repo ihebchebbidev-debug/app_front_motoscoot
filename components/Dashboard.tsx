@@ -292,7 +292,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
 
   return (
     <div className={S.Wrapper} style={{ letterSpacing: '0px' }}>
-      <SEO title="Mon compte" description="Tableau de bord MotoScoot — gérez vos annonces, messages et favoris." noIndex url="/mon-compte" />
+      <SEO title="Mon compte" description="Tableau de bord Moto-Scoot.tn — gérez vos annonces, messages et favoris." noIndex url="/mon-compte" />
       <div className={S.MainContainer}>
         <aside className={S.Sidebar}>
           {activeMenu !== 'my-ads' && activeMenu !== 'messages' && activeMenu !== 'favorites' && (

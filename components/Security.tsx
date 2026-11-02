@@ -45,7 +45,7 @@ const Security: React.FC<any> = ({ onGoHome, onNavigate }) => {
                     <button onClick={() => onNavigate?.('contact')} className="px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2"><Mail size={20} /> Modération</button>
                 </div>
             </div>
-            <div className="pt-12 flex justify-between items-center"><div className="flex items-center gap-2 text-gray-400"><ShieldCheck size={18} /><span className="text-sm">Sécurité MotoScoot</span></div><button onClick={onGoHome} className="px-6 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold flex items-center gap-2"><Home size={18} /> Accueil</button></div>
+            <div className="pt-12 flex justify-between items-center"><div className="flex items-center gap-2 text-gray-400"><ShieldCheck size={18} /><span className="text-sm">Sécurité Moto-Scoot.tn</span></div><button onClick={onGoHome} className="px-6 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold flex items-center gap-2"><Home size={18} /> Accueil</button></div>
         </div>
       </div>
     </div>

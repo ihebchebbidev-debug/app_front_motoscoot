@@ -60,7 +60,7 @@ const SeoTab: React.FC = () => {
     const s = settingsQuery.data;
     setDraft({
       default_title: s.default_title || '',
-      title_template: s.title_template || '%s | MotoScoot',
+      title_template: s.title_template || '%s | Moto-Scoot.tn',
       default_description: s.default_description || '',
       default_keywords: s.default_keywords || '',
       default_og_image: s.default_og_image || '',
@@ -196,11 +196,11 @@ const SeoTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={LABEL}>Titre par défaut</label>
-            <input className={TEXT_INPUT} value={draft.default_title || ''} onChange={(e) => set('default_title', e.target.value)} placeholder="MotoScoot — Vente Moto en Tunisie" />
+            <input className={TEXT_INPUT} value={draft.default_title || ''} onChange={(e) => set('default_title', e.target.value)} placeholder="Moto-Scoot.tn — Vente Moto en Tunisie" />
           </div>
           <div>
             <label className={LABEL}>Modèle de titre</label>
-            <input className={TEXT_INPUT} value={draft.title_template || ''} onChange={(e) => set('title_template', e.target.value)} placeholder="%s | MotoScoot" />
+            <input className={TEXT_INPUT} value={draft.title_template || ''} onChange={(e) => set('title_template', e.target.value)} placeholder="%s | Moto-Scoot.tn" />
             <p className="text-[11px] text-muted-foreground mt-1">{`Utilise %s comme placeholder du titre de page.`}</p>
           </div>
           <div className="md:col-span-2">

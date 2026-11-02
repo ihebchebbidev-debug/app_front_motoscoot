@@ -69,13 +69,13 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/',
     title: HOME_SEO.title,
     description: HOME_SEO.description,
-    h1: "MotoScoot — Motos & Scooters d'Occasion en Tunisie",
+    h1: "Moto-Scoot.tn — Motos & Scooters d'Occasion en Tunisie",
     intro:
-      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne pour acheter et vendre des motos et scooters d'occasion. Chaque annonce indique le prix en dinars (DT), l'année, le kilométrage et la ville, et la publication est gratuite pour les particuliers. Le site propose aussi les fiches techniques et les prix du neuf des modèles vendus en Tunisie, un comparateur et des conseils d'entretien.",
+      "Moto-Scoot.tn est une marketplace tunisienne pour acheter et vendre des motos et scooters d'occasion. Chaque annonce indique le prix en dinars (DT), l'année, le kilométrage et la ville, et la publication est gratuite pour les particuliers. Le site propose aussi les fiches techniques et les prix du neuf des modèles vendus en Tunisie, un comparateur et des conseils d'entretien.",
   },
   {
     path: '/annonces',
-    title: "Annonces Moto & Scooter d'Occasion en Tunisie | MotoScoot",
+    title: "Annonces Moto & Scooter d'Occasion en Tunisie | Moto-Scoot.tn",
     description:
       "Motos et scooters d'occasion en Tunisie : prix en DT, année et kilométrage sur chaque annonce. Filtrez par marque, modèle, budget, cylindrée et ville.",
     h1: "Annonces de Motos et Scooters d'Occasion",
@@ -91,7 +91,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   {
     path: '/garages',
     robots: GARAGES_PUBLIC ? undefined : GARAGES_ROBOTS,
-    title: "Garages Moto en Tunisie — Réparation & Entretien | MotoScoot",
+    title: "Garages Moto en Tunisie — Réparation & Entretien | Moto-Scoot.tn",
     description:
       "Annuaire des meilleurs garages moto en Tunisie. Réparation, entretien, diagnostic, accessoires. Avis vérifiés, contacts, horaires et géolocalisation.",
     h1: "Garages Moto Partenaires en Tunisie",
@@ -106,7 +106,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/actualites',
-    title: "Actualités Moto en Tunisie — Nouveautés, Tests, Marché | MotoScoot",
+    title: "Actualités Moto en Tunisie — Nouveautés, Tests, Marché | Moto-Scoot.tn",
     description:
       "Actualités du monde de la moto en Tunisie : nouveautés, essais, tendances marché, nouveaux modèles et événements. Restez informé sur l'univers deux-roues.",
     h1: "Actualités Moto & Scooter",
@@ -121,7 +121,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/conseils',
-    title: "Conseils & Guides Moto — Achat, Entretien, Sécurité | MotoScoot",
+    title: "Conseils & Guides Moto — Achat, Entretien, Sécurité | Moto-Scoot.tn",
     description:
       "Tous nos conseils pour bien acheter, vendre et entretenir votre moto ou scooter en Tunisie. Guides pratiques, sécurité, assurance, équipement.",
     h1: "Conseils et Guides Pratiques",
@@ -136,7 +136,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/fiches-techniques',
-    title: "Fiches Techniques Motos & Scooters — Toutes Marques | MotoScoot",
+    title: "Fiches Techniques Motos & Scooters — Toutes Marques | Moto-Scoot.tn",
     description:
       "Base de données complète des fiches techniques moto et scooter : Yamaha, Honda, Suzuki, Kawasaki, BMW, KTM, Piaggio. Caractéristiques, performances, prix.",
     h1: "Fiches Techniques Moto & Scooter",
@@ -151,7 +151,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/comparateur',
-    title: "Comparateur de Motos & Scooters | MotoScoot",
+    title: "Comparateur de Motos & Scooters | Moto-Scoot.tn",
     description:
       "Comparez deux motos ou scooters côte à côte : caractéristiques techniques, performances, équipements, prix. Faites le meilleur choix pour votre prochain deux-roues.",
     h1: "Comparateur Moto & Scooter",
@@ -160,9 +160,9 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/a-propos',
-    title: "À Propos — Marketplace moto en Tunisie | MotoScoot",
+    title: "À Propos — Marketplace moto en Tunisie | Moto-Scoot.tn",
     description:
-      "MotoScoot (moto-scoot.tn) est une marketplace tunisienne de motos et scooters, créée par des motards pour des motards. Mission, valeurs et équipe.",
+      "Moto-Scoot.tn est une marketplace tunisienne de motos et scooters, créée par des motards pour des motards. Mission, valeurs et équipe.",
     h1: "À Propos de moto-scoot.tn",
     intro:
       "moto-scoot.tn est née de la passion d'une équipe de motards tunisiens. Notre mission : rendre l'achat et la vente de motos fluides, sûrs et passionnants partout en Tunisie.",
@@ -175,12 +175,12 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/contact',
-    title: "Contact — Nous Joindre | MotoScoot",
+    title: "Contact — Nous Joindre | Moto-Scoot.tn",
     description:
       "Contactez l'équipe moto-scoot.tn : support utilisateur, partenariats, signalements. Téléphone +216 21 719 109 ou via le formulaire de contact.",
     h1: "Contactez moto-scoot.tn",
     intro:
-      "Une question, une suggestion, un problème ? L'équipe MotoScoot est joignable par téléphone, email ou via notre formulaire de contact. Nous répondons sous 24h ouvrées.",
+      "Une question, une suggestion, un problème ? L'équipe Moto-Scoot.tn est joignable par téléphone, email ou via notre formulaire de contact. Nous répondons sous 24h ouvrées.",
     schemas: [
       {
         '@context': 'https://schema.org',
@@ -196,7 +196,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/faq',
-    title: "Questions Fréquentes — FAQ | MotoScoot",
+    title: "Questions Fréquentes — FAQ | Moto-Scoot.tn",
     description:
       "Réponses aux questions les plus posées sur moto-scoot.tn : comment acheter, vendre, déposer une annonce, sécurité, paiement, modération.",
     h1: "Foire Aux Questions",
@@ -213,7 +213,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
         mainEntity: [
           {
             '@type': 'Question',
-            name: "Comment déposer une annonce sur MotoScoot ?",
+            name: "Comment déposer une annonce sur Moto-Scoot.tn ?",
             acceptedAnswer: {
               '@type': 'Answer',
               text: "Créez un compte gratuit, cliquez sur « Déposer une annonce », renseignez la marque, le modèle, l'année, le kilométrage et le prix, ajoutez jusqu'à 10 photos, puis publiez. Votre annonce est validée sous 24h.",
@@ -232,12 +232,12 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
             name: "Comment contacter un vendeur en toute sécurité ?",
             acceptedAnswer: {
               '@type': 'Answer',
-              text: "Utilisez la messagerie interne MotoScoot ou le numéro affiché sur l'annonce. Ne payez jamais avant d'avoir vu le véhicule et vérifié les papiers (carte grise, certificat de non-gage).",
+              text: "Utilisez la messagerie interne Moto-Scoot.tn ou le numéro affiché sur l'annonce. Ne payez jamais avant d'avoir vu le véhicule et vérifié les papiers (carte grise, certificat de non-gage).",
             },
           },
           {
             '@type': 'Question',
-            name: "MotoScoot couvre-t-il toute la Tunisie ?",
+            name: "Moto-Scoot.tn couvre-t-il toute la Tunisie ?",
             acceptedAnswer: {
               '@type': 'Answer',
               text: "Oui — Tunis, Sousse, Sfax, Nabeul, Bizerte, Gabès, Monastir et toutes les villes tunisiennes. La recherche permet de filtrer par gouvernorat ou par rayon autour de votre position.",
@@ -257,7 +257,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/securite',
-    title: "Conseils de Sécurité — Acheter & Vendre en Confiance | MotoScoot",
+    title: "Conseils de Sécurité — Acheter & Vendre en Confiance | Moto-Scoot.tn",
     description:
       "Tous nos conseils pour acheter ou vendre une moto en toute sécurité en Tunisie : éviter les arnaques, vérifier les documents, transactions sécurisées.",
     h1: "Sécurité — Acheter et Vendre en Confiance",
@@ -266,14 +266,14 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/mentions-legales',
-    title: "Mentions Légales | MotoScoot",
+    title: "Mentions Légales | Moto-Scoot.tn",
     description: "Mentions légales du site moto-scoot.tn : éditeur, hébergement, propriété intellectuelle, contact.",
     h1: "Mentions Légales",
     intro: "Informations légales relatives au site moto-scoot.tn — éditeur, hébergeur, contact.",
   },
   {
     path: '/conditions',
-    title: "Conditions Générales d'Utilisation | MotoScoot",
+    title: "Conditions Générales d'Utilisation | Moto-Scoot.tn",
     description:
       "Conditions générales d'utilisation de moto-scoot.tn : règles de publication d'annonces, comportement des utilisateurs, modération, responsabilités.",
     h1: "Conditions Générales d'Utilisation",
@@ -282,7 +282,7 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/cookies',
-    title: "Politique de Cookies | MotoScoot",
+    title: "Politique de Cookies | Moto-Scoot.tn",
     description: "Politique d'utilisation des cookies sur moto-scoot.tn : types de cookies, finalités, gestion de votre consentement.",
     h1: "Politique de Cookies",
     intro:

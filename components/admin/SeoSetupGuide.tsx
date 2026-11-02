@@ -56,7 +56,7 @@ const SeoSetupGuide: React.FC<Props> = ({ draft, hasServiceAccount, serviceAccou
           <p>Ces valeurs apparaissent par défaut dans Google et lors d'un partage Facebook/WhatsApp/X lorsqu'une page n'a pas de méta dédiée.</p>
           <ol className="list-decimal pl-5 space-y-1">
             <li>Descendez à la section <strong>« Méta par défaut »</strong> ci-dessous.</li>
-            <li>Remplissez <strong>Titre par défaut</strong> (ex : « MotoScoot — Vente Moto en Tunisie »).</li>
+            <li>Remplissez <strong>Titre par défaut</strong> (ex : « Moto-Scoot.tn — Vente Moto en Tunisie »).</li>
             <li>Remplissez <strong>Description par défaut</strong> (≤ 160 caractères, accrocheur).</li>
             <li>Ajoutez une <strong>Image OG</strong> (1200×630 px recommandé) — c'est l'image qui s'affiche dans les partages sociaux.</li>
             <li>Cliquez sur <strong>Enregistrer</strong> en haut à droite.</li>
@@ -80,7 +80,7 @@ const SeoSetupGuide: React.FC<Props> = ({ draft, hasServiceAccount, serviceAccou
               et connectez-vous.
             </li>
             <li>Cliquez sur <strong>Administration</strong> (icône engrenage) → <strong>Créer une propriété</strong>.</li>
-            <li>Nom : <code className="px-1 bg-muted rounded">MotoScoot</code> · Fuseau : <strong>Tunisie</strong> · Devise : <strong>TND</strong>.</li>
+            <li>Nom : <code className="px-1 bg-muted rounded">Moto-Scoot.tn</code> · Fuseau : <strong>Tunisie</strong> · Devise : <strong>TND</strong>.</li>
             <li>Type de plateforme : <strong>Web</strong>. URL : <code className="px-1 bg-muted rounded">https://moto-scoot.tn</code>.</li>
             <li>Copiez le <strong>Measurement ID</strong> affiché (format <code>G-XXXXXXXXXX</code>).</li>
             <li>Collez-le dans le champ <strong>« Measurement ID »</strong> de la section Google Analytics 4 ci-dessous.</li>
