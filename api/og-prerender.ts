@@ -351,9 +351,10 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
   ['Antipatinage', (d) => d.electronics?.tcs],
 ];
 
-// Fiche technique body for crawlers that do not run JavaScript: an
-// answer-first summary (price with the date it was checked), the full spec
-// table and links to the brand, the catalogue and the comparator.
+// Fiche technique body for crawlers that do not run JavaScript, in the same
+// order as the page: the full spec table, then the summary (price with the
+// date it was checked, importer), then links to the brand, the catalogue and
+// the comparator.
 export function renderFicheBody(d: Doc): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
   const summary = techSpecSummary({
@@ -368,8 +369,8 @@ export function renderFicheBody(d: Doc): string {
   const brandSlug = d.brand ? slugify(d.brand) : '';
   return `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="${SITE}/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
-<p>${escapeHtml(summary)}</p>
 ${rows ? `<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
+<p>${escapeHtml(summary)}</p>
 <ul>
 ${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
 <li><a href="${SITE}/comparateur">Comparer avec un autre modèle</a></li>
