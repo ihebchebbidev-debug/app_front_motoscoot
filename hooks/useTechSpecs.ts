@@ -9,11 +9,13 @@ const retryStrategy = (failureCount: number, error: any) => {
 };
 
 /** Popular tech specs across brands — used as a representative dataset. */
-/** Every public fiche — the comparator must list all brands. */
-export const useCatalogTechSpecs = () => {
+/** Every public fiche — the comparator must list all brands. The price
+ *  guides (/prix/…) pass availableInTunisia to list only models sold here. */
+export const useCatalogTechSpecs = (options: TechSpecsVisibilityOptions = {}) => {
+  const availableInTunisia = options.availableInTunisia === true;
   return useQuery<TechSpec[]>({
-    queryKey: ['tech-specs', 'catalog'],
-    queryFn: ({ signal }) => techSpecsApi.getAll(signal),
+    queryKey: availableInTunisia ? ['tech-specs', 'catalog', { availableInTunisia }] : ['tech-specs', 'catalog'],
+    queryFn: ({ signal }) => techSpecsApi.getAll(signal, { availableInTunisia }),
     staleTime: 1000 * 60 * 30,
     retry: retryStrategy,
   });

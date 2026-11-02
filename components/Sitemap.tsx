@@ -12,7 +12,7 @@ const Sitemap: React.FC<any> = ({ onGoHome, onNavigate }) => {
   const sections = [
     { title: "Marché", icon: ShoppingBag, links: [{ label: "Accueil", view: "home" }, { label: "Annonces", view: "search" }, { label: "Vendre", view: "deposit" }] },
     { title: "Services", icon: Wrench, links: [{ label: "Garages", view: "garages" }, { label: "Contact Pro", view: "contact" }] },
-    { title: "Infos", icon: FileText, links: [{ label: "Actus", view: "news" }, { label: "Conseils", view: "tips" }, { label: "Fiches Tech", view: "tech-specs-brands" }, { label: "FAQ", view: "faq" }] },
+    { title: "Infos", icon: FileText, links: [{ label: "Actus", view: "news" }, { label: "Conseils", view: "tips" }, { label: "Fiches Tech", view: "tech-specs-brands" }, { label: "Prix scooters 125", view: "scooter-125-prices" }, { label: "FAQ", view: "faq" }] },
     { title: "Profil", icon: User, links: [{ label: "Dashboard", view: "dashboard" }, { label: "Favoris", view: "favorites" }] }
   ];
 

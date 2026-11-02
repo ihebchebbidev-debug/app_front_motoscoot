@@ -296,7 +296,7 @@ async function startServer() {
   });
   app.use(async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-    const match = req.path.match(/^\/(annonce|article|guide|garage|fiche-technique|fiches-techniques)\/([^/]+)\/?$/);
+    const match = req.path.match(/^\/(annonce|article|guide|garage|fiche-technique|fiches-techniques|prix)\/([^/]+)\/?$/);
     if (match) {
       try {
         const shellPath = process.env.NODE_ENV === 'production' ? path.join(process.cwd(), 'dist', 'spa.html') : path.join(process.cwd(), 'index.html');

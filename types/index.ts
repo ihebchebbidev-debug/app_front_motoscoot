@@ -6,7 +6,7 @@ export type ViewStateName =
   | 'about' | 'sitemap' | 'legal' | 'security' | 'terms' | 'cookies' 
   | 'listing-details' | 'article-details' | 'tip-details' | 'deposit' | 'edit-listing' 
   | 'garage-details' | 'favorites' | 'dashboard' | 'dashboard-pro' 
-  | 'tech-specs-brands' | 'tech-specs-models' | 'tech-specs-details'
+  | 'tech-specs-brands' | 'tech-specs-models' | 'tech-specs-details' | 'scooter-125-prices'
   | 'comparator' | 'admin' | 'api-test' | 'reset-password' | 'not-found';
 
 export interface NavigationParams {

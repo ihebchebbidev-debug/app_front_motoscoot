@@ -215,13 +215,14 @@ export const techSpecsApi = {
   },
 
   /** Full public catalogue (used by the comparator picker). */
-  async getAll(signal?: AbortSignal): Promise<TechSpec[]> {
+  async getAll(signal?: AbortSignal, options: TechSpecsVisibilityOptions = {}): Promise<TechSpec[]> {
     // Brand endpoints are exhaustive even on API versions that cap /popular.
     // Fail as a whole rather than silently publish an incomplete comparison catalog.
-    const brands = await techSpecsApi.getBrands({ signal });
+    const { availableInTunisia } = options;
+    const brands = await techSpecsApi.getBrands({ signal, availableInTunisia });
     const models: TechSpec[] = [];
     for (let offset = 0; offset < brands.length; offset += 4) {
-      const batch = await Promise.all(brands.slice(offset, offset + 4).map(brand => techSpecsApi.getModels(brand, { signal })));
+      const batch = await Promise.all(brands.slice(offset, offset + 4).map(brand => techSpecsApi.getModels(brand, { signal, availableInTunisia })));
       models.push(...batch.flat());
     }
     return [...new Map(models.map(model => [String(model.id), model])).values()]
