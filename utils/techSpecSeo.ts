@@ -7,12 +7,15 @@
  * Description : Prix de la {Marque} {Modèle} en Tunisie : {Prix} DT.
  *               Fiche technique : {cylindrée} cm³, {puissance} ch, {poids} kg.
  *               Comparez et choisissez votre moto.
+ * Scooters ("Scooter", "Maxi Scooter", "Scooter / Adventure (ADV)") read
+ * "Prix du …" and "votre scooter"; every other category keeps "la" / "moto".
  * Missing values are left out rather than shown as "N/A".
  */
 
 export interface TechSpecSeoInput {
   brand?: string | null;
   model?: string | null;
+  category?: string | null;
   /** Raw API value or formatted string ("9000", "9 000 DT"). */
   price?: number | string | null;
   cc?: string | null;
@@ -49,8 +52,10 @@ export function techSpecTitle({ brand, model }: TechSpecSeoInput): string {
   return `${name} | Prix en Tunisie & Fiche Technique`;
 }
 
-export function techSpecDescription({ brand, model, price, cc, power, weight }: TechSpecSeoInput): string {
+export function techSpecDescription({ brand, model, category, price, cc, power, weight }: TechSpecSeoInput): string {
   const name = [brand, model].filter(Boolean).join(' ').trim();
+  const scooter = /scooter/i.test(String(category ?? ''));
+  const of = scooter ? 'du' : 'de la';
   const p = priceNumber(price);
   const specs = [
     firstNumber(cc) !== null ? `${fmt(firstNumber(cc)!)} cm³` : '',
@@ -58,8 +63,8 @@ export function techSpecDescription({ brand, model, price, cc, power, weight }: 
     firstNumber(weight) !== null ? `${fmt(firstNumber(weight)!)} kg` : '',
   ].filter(Boolean).join(', ');
   return [
-    p !== null ? `Prix de la ${name} en Tunisie : ${fmt(p)} DT.` : `Fiche technique de la ${name} en Tunisie.`,
+    p !== null ? `Prix ${of} ${name} en Tunisie : ${fmt(p)} DT.` : `Fiche technique ${of} ${name} en Tunisie.`,
     specs ? `${p !== null ? 'Fiche technique' : 'Caractéristiques'} : ${specs}.` : '',
-    'Comparez et choisissez votre moto.',
+    `Comparez et choisissez votre ${scooter ? 'scooter' : 'moto'}.`,
   ].filter(Boolean).join(' ');
 }

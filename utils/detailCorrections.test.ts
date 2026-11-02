@@ -131,3 +131,25 @@ test('power stored as "15 ch (11 kW)" stays 15 ch', async () => {
   const { techSpecDescription } = await import('./techSpecSeo');
   assert.ok(techSpecDescription({ brand: 'QJ Motor', model: 'FORT 125 N', power: '15 ch (11 kW) à 8 500 tr/min' }).includes(': 15 ch.'));
 });
+test('scooter sheets read "Prix du … votre scooter", motorcycles keep "de la … votre moto"', async () => {
+  const { techSpecDescription } = await import('./techSpecSeo');
+  for (const category of ['Scooter', 'Maxi Scooter', 'Scooter / Adventure (ADV)']) {
+    const d = techSpecDescription({ brand: 'SYM', model: 'Jet 14', category, price: 9000 });
+    assert.ok(d.startsWith('Prix du SYM Jet 14 en Tunisie'), d);
+    assert.ok(d.endsWith('votre scooter.'), d);
+  }
+  assert.ok(techSpecDescription({ brand: 'SYM', model: 'ADX 300', category: 'Scooter' }).startsWith('Fiche technique du SYM ADX 300'));
+  for (const category of ['Roadster', 'Trail', 'Moto', 'MotoTrail adventure', undefined]) {
+    const d = techSpecDescription({ brand: 'KTM', model: '390 Duke', category, price: 55000 });
+    assert.ok(d.startsWith('Prix de la KTM 390 Duke en Tunisie'), d);
+    assert.ok(d.endsWith('votre moto.'), d);
+  }
+});
+test('admin category variants map to Scooter / Trail instead of Roadster', async () => {
+  const { normalizeCategory: cat } = await import('./techSpecCategory');
+  assert.equal(cat('Maxi Scooter'), 'Scooter');
+  assert.equal(cat('Scooter / Adventure (ADV)'), 'Scooter');
+  assert.equal(cat('MotoTrail adventure'), 'Trail');
+  assert.equal(cat('Roadster'), 'Roadster');
+  assert.equal(cat('Moto'), 'Roadster');
+});

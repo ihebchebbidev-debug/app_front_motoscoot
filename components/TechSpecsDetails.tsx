@@ -404,7 +404,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
       <SEO 
         title={techSpecTitle({ brand: spec.brand, model: spec.model })}
         rawTitle
-        description={techSpecDescription({ brand: spec.brand, model: spec.model, price: spec.priceNew, cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight })}
+        description={techSpecDescription({ brand: spec.brand, model: spec.model, category: spec.category, price: spec.priceNew, cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight })}
         image={spec.image}
         type="product"
         url={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand} ${spec.model}` })}

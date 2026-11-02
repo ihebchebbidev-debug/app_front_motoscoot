@@ -183,7 +183,7 @@ function pickDescription(kind: Kind, d: Doc | null): string {
     return "Découvrez nos motos, scooters, garages et conseils en Tunisie sur MotoScoot.tn.";
   }
   if (kind === 'fiche-technique') {
-    return techSpecDescription({ brand: d.brand, model: d.model, price: d.price_new, cc: d.engine?.cc, power: d.engine?.power, weight: d.dimensions?.weight });
+    return techSpecDescription({ brand: d.brand, model: d.model, category: d.category, price: d.price_new, cc: d.engine?.cc, power: d.engine?.power, weight: d.dimensions?.weight });
   }
   const raw = d.excerpt || d.summary || d.description || d.content || d.body || '';
   const text = stripHtml(String(raw));
