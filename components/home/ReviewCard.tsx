@@ -35,8 +35,8 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => {
           />
         </div>
         <div>
-          <h4 className="font-black text-gray-900 text-lg tracking-tight">{review.name}</h4>
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{review.role}</span>
+          <h3 className="font-black text-gray-900 text-lg tracking-tight">{review.name}</h3>
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{review.role}</span>
         </div>
       </div>
 
@@ -49,7 +49,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => {
             className={`${i < review.rating ? 'text-warning-400 fill-warning-400' : 'text-gray-200 fill-gray-200'}`}
           />
         ))}
-        <span className="text-[12px] text-gray-400 ml-2 font-black uppercase tracking-widest">{review.date}</span>
+        <span className="text-[12px] text-gray-500 ml-2 font-black uppercase tracking-widest">{review.date}</span>
       </div>
 
       {/* Content */}
@@ -60,7 +60,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => {
       {/* Verified Badge */}
       <div className="mt-6 pt-4 border-t border-gray-50 flex items-center gap-2">
         <Quote className="w-4 h-4 text-primary-600" />
-        <span className="text-[12px] font-black text-gray-400 uppercase tracking-[0.2em]">{review.isAdminEntry ? 'Témoignage ajouté par l’équipe' : 'Avis de la communauté'}</span>
+        <span className="text-[12px] font-black text-gray-500 uppercase tracking-[0.2em]">{review.isAdminEntry ? 'Témoignage ajouté par l’équipe' : 'Avis de la communauté'}</span>
       </div>
     </div>
   );
