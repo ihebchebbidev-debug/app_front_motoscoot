@@ -485,15 +485,6 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
               </div>
             </div>
 
-            {/* Answer-first summary: same sentence as the crawler HTML (api/og-prerender.ts). */}
-            <p className="font-sans text-[14px] md:text-[15px] text-gray-600 leading-relaxed mb-6">
-              {techSpecSummary({
-                brand: spec.brand, model: spec.model, year: spec.year, categoryLabel: spec.categoryLabel,
-                cc: spec.engine?.cc, power: spec.engine?.power, price: spec.priceNew, updatedAt: spec.updatedAt,
-                importerName: spec.importer?.name, importerCity: spec.importer?.city,
-              })}
-            </p>
-
             {/* DETAILED SPECS */}
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
                 one card, multiple section groups separated by uppercase
@@ -633,6 +624,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             </div>
           </div>
         </div>
+
+        {/* Summary, last on the page: same sentence as the crawler HTML (api/og-prerender.ts). */}
+        <p className="font-sans text-[14px] md:text-[15px] text-gray-600 leading-relaxed mt-8 md:mt-12">
+          {techSpecSummary({
+            brand: spec.brand, model: spec.model, year: spec.year, categoryLabel: spec.categoryLabel,
+            cc: spec.engine?.cc, power: spec.engine?.power, price: spec.priceNew, updatedAt: spec.updatedAt,
+            importerName: spec.importer?.name, importerCity: spec.importer?.city,
+          })}
+        </p>
       </article>
 
       {/* STICKY BOTTOM BAR (Mobile Only) */}

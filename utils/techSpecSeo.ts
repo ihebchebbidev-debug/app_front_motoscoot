@@ -66,20 +66,31 @@ export interface TechSpecSummaryInput extends TechSpecSeoInput {
 }
 
 /**
- * Answer-first sentence of a technical sheet, shown on the page and sent to
- * crawlers (api/og-prerender.ts): model, displacement, power, new price in DT
- * with the month it was checked, importer.
+ * Summary of a technical sheet, shown at the bottom of the page and in the
+ * crawler HTML (api/og-prerender.ts):
+ *   "SYM Jet 14 EVO 125 (2026) : scooter 125 cm³ équipé d’un moteur de 124,7 cm³
+ *    développant 12,6 ch. Son prix neuf en Tunisie est d’environ 9 000 DT (prix
+ *    relevé en novembre 2026). Le modèle est distribué en Tunisie par Megacycle,
+ *    basé à Sousse."
+ * Missing values drop their part of the sentence; when the exact displacement
+ * is already a whole number ("125 cc") the "équipé d’un moteur de" part is
+ * left out instead of repeating it.
  */
 export function techSpecSummary(s: TechSpecSummaryInput): string {
   const name = [s.brand, s.model].filter(Boolean).join(' ').trim();
   const cc = firstNumber(s.cc);
+  const power = formatPowerCh(s.power);
   const p = priceNumber(s.price);
   const checked = s.updatedAt ? new Date(s.updatedAt) : null;
   const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
+  const kind = s.categoryLabel ? String(s.categoryLabel).trim().toLowerCase() : 'moto';
+  const feminine = kind === 'moto';
+  const sizeClass = cc !== null ? ` ${Math.round(cc)} cm³` : '';
+  const engine = cc !== null && Math.round(cc) !== cc ? ` ${feminine ? 'équipée' : 'équipé'} d’un moteur de ${fmt(cc)} cm³` : '';
   return [
-    `${name}${s.year ? ` (${s.year})` : ''}${s.categoryLabel ? ` : ${String(s.categoryLabel).toLowerCase()}` : ''}${cc !== null ? ` de ${fmt(cc)} cm³` : ''}${formatPowerCh(s.power) ? `, ${formatPowerCh(s.power)}` : ''}.`,
-    p !== null ? `Prix du neuf en Tunisie : ${fmt(p)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
-    s.importerName ? `Importateur : ${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}.` : '',
+    `${name}${s.year ? ` (${s.year})` : ''} : ${kind}${sizeClass}${engine}${power ? ` développant ${power}` : ''}.`,
+    p !== null ? `Son prix neuf en Tunisie est d’environ ${fmt(p)} DT${checkedLabel ? ` (prix relevé en ${checkedLabel})` : ''}.` : '',
+    s.importerName ? `Le modèle est distribué en Tunisie par ${s.importerName}${s.importerCity ? `, basé à ${s.importerCity}` : ''}.` : '',
   ].filter(Boolean).join(' ');
 }
 

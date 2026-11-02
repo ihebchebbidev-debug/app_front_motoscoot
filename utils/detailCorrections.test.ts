@@ -86,6 +86,7 @@ test('sheet body gives crawlers one h1 with the brand, a dated price, a spec tab
   assert.equal(html.match(/<h1>/g)?.length, 1);
   assert.ok(html.includes('<h1>SYM Jet 14 EVO 125</h1>'));
   assert.ok(html.includes('prix relevé en novembre 2026'));
+  assert.ok(html.indexOf('</table>') < html.indexOf('Son prix neuf'), 'summary comes after the spec table');
   assert.ok(html.includes('<th scope="row">Poids</th><td>136 kg</td>'));
   assert.ok(html.includes('/fiches-techniques/sym"'));
 });
@@ -246,7 +247,7 @@ test('article prerender: author from the byline, organization for placeholder ac
 test('fiche summary is the same sentence for the crawler HTML and the React page', async () => {
   const { techSpecSummary } = await import('./techSpecSeo');
   const sentence = techSpecSummary({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, categoryLabel: 'Scooter', cc: '124.7 cc', power: '12.6 ch', price: '9 000 DT', updatedAt: '2026-11-01T19:54:01Z', importerName: 'Megacycle', importerCity: 'Sousse' });
-  assert.equal(sentence, `SYM Jet 14 EVO 125 (2026) : scooter de 124,7 cm³, 12,6 ch. Prix du neuf en Tunisie : ${(9000).toLocaleString('fr-FR')} DT (prix relevé en novembre 2026). Importateur : Megacycle (Sousse).`);
+  assert.equal(sentence, `SYM Jet 14 EVO 125 (2026) : scooter 125 cm³ équipé d’un moteur de 124,7 cm³ développant 12,6 ch. Son prix neuf en Tunisie est d’environ ${(9000).toLocaleString('fr-FR')} DT (prix relevé en novembre 2026). Le modèle est distribué en Tunisie par Megacycle, basé à Sousse.`);
   const { renderFicheBody } = await import('../api/og-prerender');
   assert.ok(renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, category: 'Scooter', engine: { cc: '124.7 cc', power: '12.6 ch' }, price_new: '9000', updated_at: '2026-11-01T19:54:01Z', importer: { name: 'Megacycle', city: 'Sousse' } } as any).includes(`<p>${sentence}</p>`));
 });
@@ -260,7 +261,7 @@ test('power shown in ch everywhere: "9.3 kW (12.6 ch) à 8000 tr/min" is 12,6 ch
   assert.equal(formatPowerCh('43,5 ch à 8 000 tr/min'), '43,5 ch');
   assert.equal(formatPowerCh('15 cv'), '15 ch');
   assert.equal(formatPowerCh(''), '');
-  assert.ok(techSpecSummary({ brand: 'SYM', model: 'Jet X 125', power: '9.3 kW (12.6 ch) à 8000 tr/min' }).includes(', 12,6 ch.'));
+  assert.ok(techSpecSummary({ brand: 'SYM', model: 'Jet X 125', power: '9.3 kW (12.6 ch) à 8000 tr/min' }).includes('développant 12,6 ch.'));
 });
 test('server JSON-LD wins for the types it describes; types it lacks are still added', async () => {
   const { jsonLdTypes, schemasMissingFromServer } = await import('./jsonLdTypes');
@@ -280,4 +281,10 @@ test('one site name: og:site_name is "Moto-Scoot.tn" in every page source', () =
 test('brand name is "Moto-Scoot.tn": no "MotoScoot" left in what the site shows or declares', () => {
   const files = ['index.html', 'api/og-listing.ts', 'api/og-prerender.ts', 'src/seo/snapshots.ts', 'src/seo/vitePluginSeoSnapshots.ts', 'components/common/SEO.tsx', 'utils/editorial.ts', 'utils/listingSeo.ts', 'hooks/useSearchSEO.ts', 'components/Footer.tsx', 'public/llms.txt', 'public/404.html'];
   for (const f of files) assert.equal(/(?<![A-Za-z@#])MotoScoot(?![A-Za-z])/.test(readFileSync(f, 'utf8')), false, f);
+});
+test('fiche summary: whole-number displacement is not repeated, missing parts are left out', async () => {
+  const { techSpecSummary } = await import('./techSpecSeo');
+  assert.equal(techSpecSummary({ brand: 'Zontes', model: '125 X', year: 2026, categoryLabel: 'Moto', cc: '125 cc', power: '15 cv' }), 'Zontes 125 X (2026) : moto 125 cm³ développant 15 ch.');
+  assert.equal(techSpecSummary({ brand: 'Voge', model: '625', categoryLabel: 'Moto', cc: '581.2 cc' }), 'Voge 625 : moto 581 cm³ équipée d’un moteur de 581,2 cm³.');
+  assert.ok(techSpecSummary({ brand: 'KTM', model: '390 Duke', categoryLabel: 'Roadster', cc: '398.7', price: 55000, importerName: 'SIMCC' }).endsWith('Le modèle est distribué en Tunisie par SIMCC.'));
 });
