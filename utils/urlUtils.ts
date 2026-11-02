@@ -1,15 +1,5 @@
-export const slugify = (text: string): string => {
-  if (!text) return 'details';
-  return text
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-');
-};
+import { slugify } from './slugify';
+export { slugify };
 
 // Branded fallback images (orange theme) generated for the marketplace.
 // Imported as ES modules so Vite hashes & ships them with the bundle.

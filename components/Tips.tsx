@@ -9,6 +9,8 @@ import { BasePageProps } from '../types';
 import { TechSpecsHero } from './tech-specs/TechSpecsHero';
 import { TechSpecsErrorRetry } from './tech-specs/TechSpecsErrorRetry';
 import SEO from './common/SEO';
+import { Link } from 'react-router-dom';
+import { getUrlFromState } from '../utils/urlUtils';
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
@@ -202,7 +204,10 @@ const Tips: React.FC<BasePageProps> = ({ onNavigate }) => {
                         </button>
                         <span className="text-[9px] font-black text-gray-300 uppercase">{tip.date}</span>
                       </div>
-                      <h4 className="text-[14px] font-[800] text-gray-900 leading-[1.3] mb-2 line-clamp-2 tracking-tight">{tip.title}</h4>
+                      <h4 className="text-[14px] font-[800] text-gray-900 leading-[1.3] mb-2 line-clamp-2 tracking-tight">
+                        {/* Real link so crawlers reach the guide; the card click stays for the rest of the card. */}
+                        <Link to={getUrlFromState('tip-details', { id: tip.id, title: tip.title })} onClick={(e) => e.stopPropagation()}>{tip.title}</Link>
+                      </h4>
                       <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400">
                         <Clock size={11} className="text-gray-300" />
                         <span>{tip.readTime}</span>
@@ -257,7 +262,9 @@ const Tips: React.FC<BasePageProps> = ({ onNavigate }) => {
                       <div className="flex items-center gap-1.5"><Calendar size={12} className="text-primary-600" /> {tip.date}</div>
                       <div className="flex items-center gap-1.5"><Clock size={12} /> {tip.readTime}</div>
                     </div>
-                    <h3 className="text-xl font-[900] text-foreground leading-[1.2] mb-4 group-hover:text-primary-600 transition-colors line-clamp-2 tracking-tight">{tip.title}</h3>
+                    <h3 className="text-xl font-[900] text-foreground leading-[1.2] mb-4 group-hover:text-primary-600 transition-colors line-clamp-2 tracking-tight">
+                      <Link to={getUrlFromState('tip-details', { id: tip.id, title: tip.title })} onClick={(e) => e.stopPropagation()}>{tip.title}</Link>
+                    </h3>
                     <p className="text-gray-500 text-sm font-medium line-clamp-3 leading-relaxed mb-8">{tip.summary}</p>
                     <div className="flex items-center gap-3 text-[12px] font-black uppercase text-foreground group-hover:text-primary-600 transition-colors">
                       Lire le guide <ArrowRight size={14} className="text-primary-600" />
