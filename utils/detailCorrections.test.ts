@@ -208,3 +208,17 @@ test('internal guide links use the canonical slug (no trailing dash before the i
   assert.equal(slugify('Comment bien graisser son kit chaîne ?'), 'comment-bien-graisser-son-kit-chaine');
   assert.equal(slugify('« Essai » Honda'), 'essai-honda');
 });
+test('listing HTML preloads the first gallery photo at the exact URL the gallery requests', async () => {
+  const { seoImagePath } = await import('./seoImagePath');
+  assert.equal(seoImagePath('https://motoscoot.ihebchebbi.pro/uploads/a.webp', 'Kymco DINK-R 2026'), '/m/kymco-dink-r-2026/a.webp');
+  assert.equal(seoImagePath('/uploads/thumbnails/a.webp', 'Kymco DINK-R 2026'), '/m/kymco-dink-r-2026/t/a.webp');
+  assert.equal(seoImagePath('https://cdn.example.com/a.webp', 'Kymco'), null);
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ listing: { id: 'x', listing_number: 3, title: 'Kymco DINK-R 2026', brand: 'Kymco', model: 'DINK-R', price: 10000, images: ['https://motoscoot.ihebchebbi.pro/uploads/first.webp', 'https://motoscoot.ihebchebbi.pro/uploads/second.webp'] } });
+    const result = responseCapture();
+    await listingHandler({ query: { slugid: 'kymco-dink-r-2026-3' }, appShell: '<html><head><link rel="preload" as="image" href="/hero.webp"></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes('<link rel="preload" as="image" href="/m/kymco-dink-r-2026/first.webp" fetchpriority="high" />'));
+    assert.equal(result.body.includes('/hero.webp'), false, 'home hero preload is dropped');
+  } finally { globalThis.fetch = original; }
+});
