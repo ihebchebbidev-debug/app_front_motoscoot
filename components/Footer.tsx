@@ -58,8 +58,9 @@ const Footer: React.FC<FooterProps> = () => {
               aria-label="Retour à l'accueil"
             >
                <img 
-                 src={LOGO_WHITE} 
-                 alt="moto-scoot.tn" width={373} height={48} 
+                 src={LOGO_WHITE}
+                 alt="moto-scoot.tn" width={373} height={48}
+                 loading="lazy" decoding="async"
                  className="h-6 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                />
                <SectionLabel className="text-primary-600">La référence moto</SectionLabel>
