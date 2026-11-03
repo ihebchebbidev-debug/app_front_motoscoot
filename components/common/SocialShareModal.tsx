@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, Link2, Send, ImageIcon } from 'lucide-react';
+import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, MessagesSquare, Link2, Send, ImageIcon } from 'lucide-react';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
 
@@ -45,13 +45,16 @@ export interface ShareContent {
   tags?: string[];
 }
 
+export type SharePlatform = 'facebook' | 'messenger' | 'linkedin' | 'instagram' | 'whatsapp';
+type Platform = SharePlatform;
+
 interface SocialShareModalProps {
   open: boolean;
   onClose: () => void;
   content: ShareContent;
+  /** Tab selected when the modal opens (e.g. the LinkedIn rail button opens on LinkedIn). */
+  initialTab?: SharePlatform;
 }
-
-type Platform = 'facebook' | 'linkedin' | 'instagram' | 'whatsapp';
 
 const SITE = 'Moto-Scoot.tn';
 
@@ -90,6 +93,7 @@ const buildCaption = (content: ShareContent, platform: Platform, url: string): s
       return `${head}${sub}${sum}\n\n👉 Lien dans la bio · ${SITE}\n\n.\n.\n.\n${tags} #motoTunisie #scootertunisie #ridetunisia`;
 
     case 'whatsapp':
+    case 'messenger':
       return `Salut 👋\nÀ voir sur ${SITE} :\n\n${head}${sub}${content.summary ? `\n\n${content.summary}` : ''}\n\n${url}`;
   }
 };
@@ -138,8 +142,8 @@ export const shareNatively = async (content: ShareContent): Promise<boolean> => 
   }
 };
 
-export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content }) => {
-  const [activeTab, setActiveTab] = useState<Platform>('facebook');
+export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content, initialTab = 'facebook' }) => {
+  const [activeTab, setActiveTab] = useState<Platform>(initialTab);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -148,6 +152,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const caption = useMemo(() => buildCaption(content, activeTab, url), [content, activeTab, url]);
 
   useEffect(() => { setImgError(false); }, [content.image]);
+  useEffect(() => { if (open) setActiveTab(initialTab); }, [open, initialTab]);
 
   useEffect(() => {
     if (!open) return;
@@ -182,6 +187,9 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   /**
    * Per-platform deep-link strategy:
    *  - Facebook: sharer.php with `quote` (caption appears pre-filled).
+   *  - Messenger: its web send dialog needs a Facebook app id, which the site
+   *    has none of. Copy the text, then open the Messenger app on phones
+   *    (fb-messenger:// deep link) or messenger.com on desktop.
    *  - LinkedIn: share-offsite uses only the URL — LinkedIn fetches OG tags.
    *    We auto-copy the caption so users can paste a richer commentary.
    *  - WhatsApp: wa.me with the text — the URL inside it auto-expands into
@@ -201,6 +209,15 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
+    if (activeTab === 'messenger') {
+      await copyCaption();
+      if (window.matchMedia?.('(pointer: coarse)').matches) {
+        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(url)}`;
+      } else {
+        window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     if (activeTab === 'whatsapp') {
       const u = `https://wa.me/?text=${encodeURIComponent(caption)}`;
       window.open(u, '_blank', 'noopener,noreferrer');
@@ -213,6 +230,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   const tabs: Array<{ id: Platform; label: string; icon: React.ReactNode; brand: string }> = [
     { id: 'facebook', label: 'Facebook', icon: <Facebook size={18} />, brand: 'hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2]' },
+    { id: 'messenger', label: 'Messenger', icon: <MessagesSquare size={18} />, brand: 'hover:bg-[#0084FF] hover:text-white hover:border-[#0084FF]' },
     { id: 'linkedin', label: 'LinkedIn', icon: <Linkedin size={18} />, brand: 'hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]' },
     { id: 'instagram', label: 'Instagram', icon: <Instagram size={18} />, brand: 'hover:bg-gradient-to-tr hover:from-[#feda75] hover:via-[#d62976] hover:to-[#4f5bd5] hover:text-white hover:border-transparent' },
     { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={18} />, brand: 'hover:bg-[#25D366] hover:text-white hover:border-[#25D366]' },
@@ -221,6 +239,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const ctaLabel = (() => {
     switch (activeTab) {
       case 'facebook': return 'Partager sur Facebook';
+      case 'messenger': return copied ? 'Texte copié — Ouvrir Messenger' : 'Copier le texte & ouvrir Messenger';
       case 'linkedin': return copied ? 'Texte copié — Ouvrir LinkedIn' : 'Copier le texte & ouvrir LinkedIn';
       case 'instagram': return copied ? 'Texte copié — Ouvrir Instagram' : 'Copier le texte & ouvrir Instagram';
       case 'whatsapp': return 'Envoyer sur WhatsApp';
@@ -286,8 +305,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
         </div>
 
         {/* Tabs */}
-        <div className="px-6 pt-5">
-          <div className="grid grid-cols-4 gap-2">
+        <div className="px-4 sm:px-6 pt-5">
+          <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
             {tabs.map((t) => {
               const active = activeTab === t.id;
               return (
@@ -302,7 +321,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
                   aria-pressed={active}
                 >
                   {t.icon}
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider">{t.label}</span>
+                  <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-tight sm:tracking-wider">{t.label}</span>
                 </button>
               );
             })}
@@ -331,6 +350,11 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
           {activeTab === 'instagram' && (
             <p className="text-[11px] font-medium text-gray-500 leading-snug bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
               💡 Instagram ne permet pas le partage automatique depuis le web. Le texte sera copié — collez-le dans votre publication ou story.
+            </p>
+          )}
+          {activeTab === 'messenger' && (
+            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              💬 Le texte et le lien seront copiés — collez-les dans la conversation Messenger de votre choix.
             </p>
           )}
           {activeTab === 'linkedin' && (
