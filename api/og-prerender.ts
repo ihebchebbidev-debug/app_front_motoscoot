@@ -22,7 +22,7 @@ import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detail
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
-import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial.js';
+import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
   scooter125Description, scooter125Faq, scooter125Heading, scooter125Intro, scooter125Method, scooter125Rows,
@@ -182,7 +182,8 @@ function pickTitle(kind: Kind, d: Doc | null): string {
   if (kind === 'garage') {
     return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | Moto-Scoot.tn`;
   }
-  return `${d.title || d.name || KIND_CONFIG[kind].label} | Moto-Scoot.tn`;
+  // article / guide
+  return editorialTitle(d.title || d.name || KIND_CONFIG[kind].label);
 }
 
 function pickDescription(kind: Kind, d: Doc | null): string {
