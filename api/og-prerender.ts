@@ -233,7 +233,9 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
   if (kind === 'article' || kind === 'guide') {
     return {
       '@context': 'https://schema.org',
-      '@type': kind === 'guide' ? 'HowTo' : 'Article',
+      // Guides are articles too: HowTo rich results were removed in 2023 and
+      // these pages have no step-by-step markup.
+      '@type': 'Article',
       headline: d.title || title,
       description,
       image: [image],
