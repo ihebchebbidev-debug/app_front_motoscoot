@@ -66,9 +66,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
     id: tip.id,
     title: tip.title,
     subtitle: (tip as any).category,
-    summary: tip.summary,
     image: tip.image,
-    tags: [(tip as any).category, (tip as any).difficulty].filter(Boolean) as string[],
   };
 
   const handleShare = async () => {

@@ -680,9 +680,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             id: spec.id,
             title: `${spec.brand} ${spec.model} ${spec.year || ''}`.trim(),
             subtitle: [spec.engine?.cc, spec.engine?.power, spec.priceNew].filter(Boolean).join(' • '),
-            summary: `Fiche technique complète : ${spec.brand} ${spec.model}${spec.year ? ` ${spec.year}` : ''}.`,
             image: spec.image,
-            tags: [spec.brand, spec.model].filter(Boolean) as string[],
           }}
         />
       )}

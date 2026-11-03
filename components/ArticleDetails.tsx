@@ -31,7 +31,7 @@ import { Link } from 'react-router-dom';
 import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
-import SocialShareModal, { shareNatively, type ShareContent, type SharePlatform } from './common/SocialShareModal';
+import SocialShareModal, { shareNatively, shareTo, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
@@ -72,7 +72,6 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
 }) => {
   const [readingProgress, setReadingProgress] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareTab, setShareTab] = useState<SharePlatform>('facebook');
 
   const { data: fetchedArticle, isLoading: articleLoading, error: articleError, refetch: reloadArticle } = useArticle(articleId);
   const { data: fetchedRelated } = useRelatedArticles(articleId);
@@ -129,18 +128,11 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
     id: article.id,
     title: article.title,
     subtitle: (article as any).category,
-    summary: (article as any).excerpt || (article as any).summary,
     image: article.image,
-    tags: [(article as any).category].filter(Boolean) as string[],
-  };
-
-  const openShare = (tab: SharePlatform) => {
-    setShareTab(tab);
-    setShareOpen(true);
   };
 
   const handleShare = async () => {
-    if (!(await shareNatively(shareContent))) openShare('facebook');
+    if (!(await shareNatively(shareContent))) setShareOpen(true);
   };
 
   return (
@@ -251,13 +243,13 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
             <div className="hidden lg:block lg:col-span-1 lg:col-start-1">
                 <div className="sticky top-32 flex flex-col items-center gap-5">
                     <span className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180 mb-2">Partager</span>
-                    <button onClick={() => openShare('facebook')} aria-label="Partager sur Facebook" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm active:scale-90">
+                    <button onClick={() => shareTo('facebook', shareContent)} aria-label="Partager sur Facebook" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm active:scale-90">
                         <Facebook size={18} />
                     </button>
-                    <button onClick={() => openShare('linkedin')} aria-label="Partager sur LinkedIn" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#0A66C2] hover:text-white transition-all shadow-sm active:scale-90">
+                    <button onClick={() => shareTo('linkedin', shareContent)} aria-label="Partager sur LinkedIn" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#0A66C2] hover:text-white transition-all shadow-sm active:scale-90">
                         <Linkedin size={18} />
                     </button>
-                    <button onClick={() => openShare('facebook')} aria-label="Plus de partage" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90">
+                    <button onClick={() => setShareOpen(true)} aria-label="Plus de partage" className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90">
                         <Share2 size={18} />
                     </button>
                 </div>
@@ -390,7 +382,6 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         content={shareContent}
-        initialTab={shareTab}
       />
     </div>
   );

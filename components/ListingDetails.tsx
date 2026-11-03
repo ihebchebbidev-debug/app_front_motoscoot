@@ -443,9 +443,7 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
               listing.price,
               listing.location,
             ].filter(Boolean).join(' • '),
-            summary: (listing as any).description?.slice(0, 220),
             image: Array.isArray((listing as any).images) ? (listing as any).images[0] : (listing as any).image,
-            tags: [listing.brand, listing.model].filter(Boolean) as string[],
           }}
         />
       )}
