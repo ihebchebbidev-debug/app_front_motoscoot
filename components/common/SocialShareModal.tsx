@@ -190,7 +190,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   /**
    * Per-platform deep-link strategy:
-   *  - Facebook: sharer.php with `quote` (caption appears pre-filled).
+   *  - Facebook: sharer.php takes the URL only — Facebook has ignored the
+   *    `quote` pre-fill since 2018. Copy the caption first, like LinkedIn.
    *  - Messenger: its web send dialog needs a Facebook app id, which the site
    *    has none of. Copy the text, then open the Messenger app on phones
    *    (fb-messenger:// deep link) or messenger.com on desktop.
@@ -203,7 +204,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const handlePlatformAction = async () => {
     trackShare(activeTab, content);
     if (activeTab === 'facebook') {
-      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}&quote=${encodeURIComponent(caption)}`;
+      await copyCaption();
+      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
@@ -242,7 +244,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   const ctaLabel = (() => {
     switch (activeTab) {
-      case 'facebook': return 'Partager sur Facebook';
+      case 'facebook': return copied ? 'Texte copié — Ouvrir Facebook' : 'Copier le texte & ouvrir Facebook';
       case 'messenger': return copied ? 'Texte copié — Ouvrir Messenger' : 'Copier le texte & ouvrir Messenger';
       case 'linkedin': return copied ? 'Texte copié — Ouvrir LinkedIn' : 'Copier le texte & ouvrir LinkedIn';
       case 'instagram': return copied ? 'Texte copié — Ouvrir Instagram' : 'Copier le texte & ouvrir Instagram';
@@ -359,6 +361,11 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
           {activeTab === 'messenger' && (
             <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
               💬 Le texte et le lien seront copiés — collez-les dans la conversation Messenger de votre choix.
+            </p>
+          )}
+          {activeTab === 'facebook' && (
+            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              👍 Facebook récupère automatiquement l'image et le titre. Le texte sera copié — collez-le dans votre publication.
             </p>
           )}
           {activeTab === 'linkedin' && (
