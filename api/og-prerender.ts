@@ -242,6 +242,8 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
       url: canonical,
       datePublished: d.published_at || d.created_at,
       dateModified: d.updated_at || d.created_at,
+      inLanguage: 'fr-TN',
+      ...(d.category ? { articleSection: d.category } : {}),
       mainEntityOfPage: canonical,
       // The byline's author; placeholder CMS accounts ("Admin Admin") are
       // credited to the organization instead of a fake person.
@@ -705,6 +707,11 @@ export default async function handler(req: any, res: any) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="${ogType}" />
+${ogType === 'article' && doc ? [
+  doc.published_at || doc.created_at ? `<meta property="article:published_time" content="${escapeHtml(String(doc.published_at || doc.created_at))}" />` : '',
+  doc.updated_at ? `<meta property="article:modified_time" content="${escapeHtml(String(doc.updated_at))}" />` : '',
+  doc.category ? `<meta property="article:section" content="${escapeHtml(String(doc.category))}" />` : '',
+].filter(Boolean).join('\n') : ''}
 <meta property="og:site_name" content="Moto-Scoot.tn" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
