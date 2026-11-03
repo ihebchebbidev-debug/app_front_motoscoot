@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, MessagesSquare, Link2, Send, ImageIcon } from 'lucide-react';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
+import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
 
 /**
  * Generic, content-type-agnostic social share modal.
@@ -130,7 +131,7 @@ const shareUrlFor = (content: ShareContent): string => {
 export const shareNatively = async (content: ShareContent): Promise<boolean> => {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
   if (!window.matchMedia?.('(pointer: coarse)').matches) return false;
-  const data: ShareData = { title: content.title, text: content.summary, url: shareUrlFor(content) };
+  const data: ShareData = { title: content.title, text: content.summary, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
   if (navigator.canShare && !navigator.canShare(data)) return false;
   try {
     await navigator.share(data);
@@ -149,7 +150,10 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const [imgError, setImgError] = useState(false);
 
   const url = shareUrlFor(content);
-  const caption = useMemo(() => buildCaption(content, activeTab, url), [content, activeTab, url]);
+  // "Copier uniquement le lien" keeps the clean URL; captions and share
+  // dialogs get utm tags where the platform needs them (utils/shareLinks.ts).
+  const sharedUrl = shareLink(url, activeTab, content.kind);
+  const caption = useMemo(() => buildCaption(content, activeTab, sharedUrl), [content, activeTab, sharedUrl]);
 
   useEffect(() => { setImgError(false); }, [content.image]);
   useEffect(() => { if (open) setActiveTab(initialTab); }, [open, initialTab]);
@@ -186,7 +190,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   /**
    * Per-platform deep-link strategy:
-   *  - Facebook: sharer.php with `quote` (caption appears pre-filled).
+   *  - Facebook: sharer.php takes the URL only — Facebook has ignored the
+   *    `quote` pre-fill since 2018. Copy the caption first, like LinkedIn.
    *  - Messenger: its web send dialog needs a Facebook app id, which the site
    *    has none of. Copy the text, then open the Messenger app on phones
    *    (fb-messenger:// deep link) or messenger.com on desktop.
@@ -199,20 +204,21 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const handlePlatformAction = async () => {
     trackShare(activeTab, content);
     if (activeTab === 'facebook') {
-      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(caption)}`;
+      await copyCaption();
+      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'linkedin') {
       await copyCaption();
-      const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+      const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'messenger') {
       await copyCaption();
       if (window.matchMedia?.('(pointer: coarse)').matches) {
-        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(url)}`;
+        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(sharedUrl)}`;
       } else {
         window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
       }
@@ -238,7 +244,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   const ctaLabel = (() => {
     switch (activeTab) {
-      case 'facebook': return 'Partager sur Facebook';
+      case 'facebook': return copied ? 'Texte copié — Ouvrir Facebook' : 'Copier le texte & ouvrir Facebook';
       case 'messenger': return copied ? 'Texte copié — Ouvrir Messenger' : 'Copier le texte & ouvrir Messenger';
       case 'linkedin': return copied ? 'Texte copié — Ouvrir LinkedIn' : 'Copier le texte & ouvrir LinkedIn';
       case 'instagram': return copied ? 'Texte copié — Ouvrir Instagram' : 'Copier le texte & ouvrir Instagram';
@@ -355,6 +361,11 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
           {activeTab === 'messenger' && (
             <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
               💬 Le texte et le lien seront copiés — collez-les dans la conversation Messenger de votre choix.
+            </p>
+          )}
+          {activeTab === 'facebook' && (
+            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              👍 Facebook récupère automatiquement l'image et le titre. Le texte sera copié — collez-le dans votre publication.
             </p>
           )}
           {activeTab === 'linkedin' && (
