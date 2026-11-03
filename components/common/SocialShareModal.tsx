@@ -1,30 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, MessagesSquare, Link2, Send, ImageIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Facebook, Linkedin, Check, MessageCircle, MessagesSquare, Link2, ImageIcon } from 'lucide-react';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
 import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
 import { copyText } from '../../utils/clipboard';
 
 /**
- * Generic, content-type-agnostic social share modal.
- *
- * Why this exists
- * ---------------
- * Listings, articles, tips, and tech-specs all need the same "share to FB /
- * LinkedIn / Instagram / WhatsApp" UX. Each platform has very different
- * sharing semantics:
- *   - Facebook & LinkedIn: real share dialog, scrape the URL's OG tags
- *     server-side. We just need to pass the URL — the OG image/title come
- *     from the page's <meta og:*> tags (set by <SEO />).
- *   - WhatsApp: text-only deep link; the URL inside the text auto-expands
- *     into a preview card on mobile/desktop using the OG tags.
- *   - Instagram: no public web share endpoint at all. The only working
- *     pattern is "copy the caption + open Instagram so the user pastes".
- *
- * The OG image (og:image) is the single most important thing for a polished
- * share — that's what becomes the preview banner on every network. We
- * surface a live preview of it inside the modal so the user knows exactly
- * what their friends will see before they hit "Share".
+ * Generic, content-type-agnostic share modal (listings, articles, tips,
+ * tech-specs). One click shares the page: no caption to write or paste.
+ * Every network builds its own preview card (image, title, description) from
+ * the page's og:* tags (<SEO /> and the prerender), so we only hand it the
+ * link. The modal shows that card so the user knows what friends will see.
  */
 
 export type ShareContentKind = 'listing' | 'article' | 'tip' | 'techspec';
@@ -33,72 +19,27 @@ export interface ShareContent {
   kind: ShareContentKind;
   /** Stable ID — used for analytics + server-side share counting. */
   id: string | number;
-  /** Headline shown in modal + used in captions. */
+  /** Page title — shown on the preview card and sent with the link. */
   title: string;
-  /** Optional secondary line (e.g. "Yamaha MT-07 2022 • 12 000 km"). */
+  /** Optional secondary line on the preview card (e.g. "2022 • 12 000 km"). */
   subtitle?: string;
-  /** Optional short summary used in long-form captions (FB/LinkedIn). */
-  summary?: string;
-  /** Canonical URL of the page (defaults to window.location.href). */
+  /** Canonical URL of the page (defaults to the <link rel="canonical">). */
   url?: string;
-  /** Hero/cover image — also used as og:image fallback for the preview. */
+  /** Hero/cover image for the preview card. */
   image?: string;
-  /** Optional 1-3 hashtag-friendly keywords (e.g. ['Yamaha','MT07']). */
-  tags?: string[];
 }
 
-export type SharePlatform = 'facebook' | 'messenger' | 'linkedin' | 'instagram' | 'whatsapp';
-type Platform = SharePlatform;
+export type SharePlatform = 'facebook' | 'messenger' | 'linkedin' | 'whatsapp';
 
 interface SocialShareModalProps {
   open: boolean;
   onClose: () => void;
   content: ShareContent;
-  /** Tab selected when the modal opens (e.g. the LinkedIn rail button opens on LinkedIn). */
-  initialTab?: SharePlatform;
 }
 
 const SITE = 'Moto-Scoot.tn';
 
-const kindLabel = (k: ShareContentKind) => {
-  switch (k) {
-    case 'listing': return { fr: 'annonce', emoji: '🏍️' };
-    case 'article': return { fr: 'article', emoji: '📰' };
-    case 'tip': return { fr: 'guide', emoji: '💡' };
-    case 'techspec': return { fr: 'fiche technique', emoji: '⚙️' };
-  }
-};
-
-const buildHashtags = (content: ShareContent): string => {
-  const base = ['MotoScootTN', 'Tunisie'];
-  const extra = (content.tags || [])
-    .map((t) => t.replace(/[^A-Za-z0-9À-ÿ]+/g, ''))
-    .filter(Boolean);
-  return [...base, ...extra].slice(0, 6).map((t) => `#${t}`).join(' ');
-};
-
-const buildCaption = (content: ShareContent, platform: Platform, url: string): string => {
-  const { emoji, fr } = kindLabel(content.kind);
-  const head = `${emoji} ${content.title}`;
-  const sub = content.subtitle ? `\n${content.subtitle}` : '';
-  const sum = content.summary ? `\n\n${content.summary}` : '';
-  const tags = buildHashtags(content);
-
-  switch (platform) {
-    case 'facebook':
-      return `${head}${sub}${sum}\n\n👉 Lire / voir sur ${SITE}\n${url}\n\n${tags}`;
-
-    case 'linkedin':
-      return `${head}${sub}${sum}\n\nDécouvrez cette ${fr} sur ${SITE}, la marketplace tunisienne des motos et scooters.\n\n${url}\n\n${tags}`;
-
-    case 'instagram':
-      return `${head}${sub}${sum}\n\n👉 Lien dans la bio · ${SITE}\n\n.\n.\n.\n${tags} #motoTunisie #scootertunisie #ridetunisia`;
-
-    case 'whatsapp':
-    case 'messenger':
-      return `Salut 👋\nÀ voir sur ${SITE} :\n\n${head}${sub}${content.summary ? `\n\n${content.summary}` : ''}\n\n${url}`;
-  }
-};
+const isTouchDevice = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 
 const trackShare = (platform: string, content: ShareContent) => {
   monitoring.trackEvent('ContentShared', {
@@ -124,15 +65,49 @@ const shareUrlFor = (content: ShareContent): string => {
 };
 
 /**
+ * Opens the network's own share flow with the page link:
+ *  - Facebook / LinkedIn: their share dialog (URL only).
+ *  - WhatsApp: wa.me with the title and the link, which unfurls into the card.
+ *  - Messenger: the web send dialog needs a Facebook app id, which the site
+ *    has none of. Phones get the app's deep link; desktops get the link
+ *    copied and messenger.com opened, where pasting it shows the same card.
+ * Resolves whether the link was copied (Messenger on desktop only).
+ */
+export const shareTo = async (platform: SharePlatform, content: ShareContent): Promise<{ copied?: boolean }> => {
+  const url = shareLink(shareUrlFor(content), platform, content.kind);
+  trackShare(platform, content);
+  switch (platform) {
+    case 'facebook':
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=620,height=640');
+      return {};
+    case 'linkedin':
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=620,height=640');
+      return {};
+    case 'whatsapp':
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${content.title}\n${url}`)}`, '_blank', 'noopener,noreferrer');
+      return {};
+    case 'messenger': {
+      if (isTouchDevice()) {
+        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(url)}`;
+        return {};
+      }
+      const copied = await copyText(url);
+      window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
+      return { copied };
+    }
+  }
+};
+
+/**
  * Touch devices get their own share sheet (WhatsApp, Messenger, Instagram,
- * SMS…) through the Web Share API. Resolves false when there is none, so the
- * caller opens <SocialShareModal /> instead. Mouse-driven desktops keep the
- * modal: its Facebook / LinkedIn previews suit them better.
+ * SMS…) through the Web Share API, with the page title and link. Resolves
+ * false when there is none, so the caller opens <SocialShareModal /> instead.
+ * Mouse-driven desktops keep the modal.
  */
 export const shareNatively = async (content: ShareContent): Promise<boolean> => {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
-  if (!window.matchMedia?.('(pointer: coarse)').matches) return false;
-  const data: ShareData = { title: content.title, text: content.summary, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
+  if (!isTouchDevice()) return false;
+  const data: ShareData = { title: content.title, text: content.title, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
   if (navigator.canShare && !navigator.canShare(data)) return false;
   try {
     await navigator.share(data);
@@ -144,23 +119,24 @@ export const shareNatively = async (content: ShareContent): Promise<boolean> => 
   }
 };
 
-export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content, initialTab = 'facebook' }) => {
-  const [activeTab, setActiveTab] = useState<Platform>(initialTab);
-  const [copied, setCopied] = useState(false);
+const NETWORKS: Array<{ id: SharePlatform; label: string; icon: React.ReactNode; color: string }> = [
+  { id: 'facebook', label: 'Facebook', icon: <Facebook size={22} />, color: 'text-[#1877F2]' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={22} />, color: 'text-[#25D366]' },
+  { id: 'messenger', label: 'Messenger', icon: <MessagesSquare size={22} />, color: 'text-[#0084FF]' },
+  { id: 'linkedin', label: 'LinkedIn', icon: <Linkedin size={22} />, color: 'text-[#0A66C2]' },
+];
+
+export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content }) => {
   const [linkCopied, setLinkCopied] = useState(false);
-  // Which copy the browser refused — shown to the user with a manual fallback.
-  const [copyFailed, setCopyFailed] = useState<null | 'caption' | 'link'>(null);
+  // Shown under the buttons: Messenger's "paste the link" hint, or the link
+  // itself when the browser refused to copy it.
+  const [notice, setNotice] = useState<null | 'messenger' | 'copy-blocked'>(null);
   const [imgError, setImgError] = useState(false);
 
   const url = shareUrlFor(content);
-  // "Copier uniquement le lien" keeps the clean URL; captions and share
-  // dialogs get utm tags where the platform needs them (utils/shareLinks.ts).
-  const sharedUrl = shareLink(url, activeTab, content.kind);
-  const caption = useMemo(() => buildCaption(content, activeTab, sharedUrl), [content, activeTab, sharedUrl]);
 
   useEffect(() => { setImgError(false); }, [content.image]);
-  useEffect(() => { if (open) setActiveTab(initialTab); }, [open, initialTab]);
-  useEffect(() => { setCopyFailed(null); }, [open, activeTab]);
+  useEffect(() => { if (open) setNotice(null); }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -175,101 +151,23 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   if (!open) return null;
 
-  const copyCaption = async (): Promise<boolean> => {
-    if (!(await copyText(caption))) {
-      setCopied(false);
-      setCopyFailed('caption');
-      return false;
-    }
-    setCopyFailed(null);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    return true;
+  const share = async (platform: SharePlatform) => {
+    setNotice(null);
+    const { copied } = await shareTo(platform, content);
+    if (copied !== undefined) setNotice(copied ? 'messenger' : 'copy-blocked');
   };
 
   const copyLink = async () => {
     if (!(await copyText(url))) {
       setLinkCopied(false);
-      setCopyFailed('link');
+      setNotice('copy-blocked');
       return;
     }
-    setCopyFailed(null);
+    setNotice(null);
     setLinkCopied(true);
     trackShare('copy_link', content);
     setTimeout(() => setLinkCopied(false), 2000);
   };
-
-  // Copy the caption before leaving for the platform. If the browser refuses,
-  // stay on the modal once so the user can copy it by hand; the next click
-  // ("… quand même") opens the platform without retrying.
-  const captionReady = async (): Promise<boolean> => copyFailed === 'caption' || copyCaption();
-
-  /**
-   * Per-platform deep-link strategy:
-   *  - Facebook: sharer.php takes the URL only — Facebook has ignored the
-   *    `quote` pre-fill since 2018. Copy the caption first, like LinkedIn.
-   *  - Messenger: its web send dialog needs a Facebook app id, which the site
-   *    has none of. Copy the text, then open the Messenger app on phones
-   *    (fb-messenger:// deep link) or messenger.com on desktop.
-   *  - LinkedIn: share-offsite uses only the URL — LinkedIn fetches OG tags.
-   *    We auto-copy the caption so users can paste a richer commentary.
-   *  - WhatsApp: wa.me with the text — the URL inside it auto-expands into
-   *    a preview using OG tags.
-   *  - Instagram: no web share endpoint exists. Copy + open the app.
-   */
-  const handlePlatformAction = async () => {
-    trackShare(activeTab, content);
-    if (activeTab === 'facebook') {
-      if (!(await captionReady())) return;
-      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}`;
-      window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
-      return;
-    }
-    if (activeTab === 'linkedin') {
-      if (!(await captionReady())) return;
-      const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharedUrl)}`;
-      window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
-      return;
-    }
-    if (activeTab === 'messenger') {
-      if (!(await captionReady())) return;
-      if (window.matchMedia?.('(pointer: coarse)').matches) {
-        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(sharedUrl)}`;
-      } else {
-        window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
-      }
-      return;
-    }
-    if (activeTab === 'whatsapp') {
-      const u = `https://wa.me/?text=${encodeURIComponent(caption)}`;
-      window.open(u, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    // Instagram — no web share endpoint
-    if (!(await captionReady())) return;
-    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
-  };
-
-  const tabs: Array<{ id: Platform; label: string; icon: React.ReactNode; brand: string }> = [
-    { id: 'facebook', label: 'Facebook', icon: <Facebook size={18} />, brand: 'hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2]' },
-    { id: 'messenger', label: 'Messenger', icon: <MessagesSquare size={18} />, brand: 'hover:bg-[#0084FF] hover:text-white hover:border-[#0084FF]' },
-    { id: 'linkedin', label: 'LinkedIn', icon: <Linkedin size={18} />, brand: 'hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]' },
-    { id: 'instagram', label: 'Instagram', icon: <Instagram size={18} />, brand: 'hover:bg-gradient-to-tr hover:from-[#feda75] hover:via-[#d62976] hover:to-[#4f5bd5] hover:text-white hover:border-transparent' },
-    { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={18} />, brand: 'hover:bg-[#25D366] hover:text-white hover:border-[#25D366]' },
-  ];
-
-  const ctaLabel = (() => {
-    if (copyFailed === 'caption' && activeTab !== 'whatsapp') {
-      return `Ouvrir ${tabs.find((t) => t.id === activeTab)?.label} quand même`;
-    }
-    switch (activeTab) {
-      case 'facebook': return copied ? 'Texte copié — Ouvrir Facebook' : 'Copier le texte & ouvrir Facebook';
-      case 'messenger': return copied ? 'Texte copié — Ouvrir Messenger' : 'Copier le texte & ouvrir Messenger';
-      case 'linkedin': return copied ? 'Texte copié — Ouvrir LinkedIn' : 'Copier le texte & ouvrir LinkedIn';
-      case 'instagram': return copied ? 'Texte copié — Ouvrir Instagram' : 'Copier le texte & ouvrir Instagram';
-      case 'whatsapp': return 'Envoyer sur WhatsApp';
-    }
-  })();
 
   return (
     <div
@@ -287,7 +185,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-card z-10">
           <div>
             <h2 className="font-sans font-black text-[18px] text-foreground tracking-tight">Partager</h2>
-            <p className="text-[12px] font-medium text-gray-500 mt-0.5">Texte & visuel prêts à publier</p>
+            <p className="text-[12px] font-medium text-gray-500 mt-0.5">Choisissez où partager</p>
           </div>
           <button
             onClick={onClose}
@@ -298,7 +196,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
           </button>
         </div>
 
-        {/* OG Preview card — exactly what FB/LinkedIn/WhatsApp will render */}
+        {/* OG Preview card — what FB/LinkedIn/WhatsApp/Messenger will render */}
         <div className="px-6 pt-5">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Aperçu du partage</span>
           <div className="mt-2 rounded-2xl border border-gray-200 overflow-hidden bg-gray-50">
@@ -329,104 +227,48 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* One click per network */}
         <div className="px-4 sm:px-6 pt-5">
-          <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-            {tabs.map((t) => {
-              const active = activeTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all ${
-                    active
-                      ? 'bg-primary-50 border-primary-600 text-primary-600 shadow-sm'
-                      : `bg-gray-50 border-gray-100 text-gray-500 ${t.brand}`
-                  }`}
-                  aria-pressed={active}
-                >
-                  {t.icon}
-                  <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-tight sm:tracking-wider">{t.label}</span>
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-4 gap-2">
+            {NETWORKS.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => share(n.id)}
+                aria-label={`Partager sur ${n.label}`}
+                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 hover:border-gray-200 text-gray-700 transition-all active:scale-95"
+              >
+                <span className={n.color}>{n.icon}</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-tight sm:tracking-wider">{n.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Caption preview */}
-        <div className="px-6 py-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Texte du post</span>
-            <button
-              type="button"
-              onClick={copyCaption}
-              className="flex items-center gap-1.5 text-[11px] font-extrabold text-primary-600 hover:text-primary-700 transition-colors"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Copié !' : 'Copier'}
-            </button>
-          </div>
-          <textarea
-            readOnly
-            value={caption}
-            onFocus={(e) => e.currentTarget.select()}
-            className="w-full min-h-[160px] p-4 rounded-xl border border-gray-200 bg-gray-50/50 text-[13px] leading-relaxed font-medium text-gray-700 outline-none focus:border-primary-600 transition resize-none whitespace-pre-wrap"
-          />
-          {activeTab === 'instagram' && (
-            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-              💡 Instagram ne permet pas le partage automatique depuis le web. Le texte sera copié — collez-le dans votre publication ou story.
+        {/* Link */}
+        <div className="px-6 pt-4 pb-6 space-y-3">
+          {notice === 'messenger' && (
+            <p role="status" className="text-[12px] font-medium text-blue-900 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              Lien copié : collez-le dans la conversation Messenger, l'aperçu s'affichera.
             </p>
           )}
-          {activeTab === 'messenger' && (
-            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              💬 Le texte et le lien seront copiés — collez-les dans la conversation Messenger de votre choix.
-            </p>
-          )}
-          {activeTab === 'facebook' && (
-            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              👍 Facebook récupère automatiquement l'image et le titre. Le texte sera copié — collez-le dans votre publication.
-            </p>
-          )}
-          {activeTab === 'linkedin' && (
-            <p className="text-[11px] font-medium text-gray-500 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              💼 LinkedIn récupère automatiquement l'image et le titre. Le texte sera copié — collez-le comme commentaire pour un post plus engageant.
-            </p>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="px-6 pb-6 space-y-3">
-          {copyFailed && (
+          {notice === 'copy-blocked' && (
             <div role="alert" className="text-[12px] font-medium text-amber-900 leading-snug bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-2">
-              {copyFailed === 'caption' ? (
-                <p>Ce navigateur bloque la copie automatique. Sélectionnez le texte ci-dessus (appui long sur mobile) et copiez-le vous-même.</p>
-              ) : (
-                <>
-                  <p>Ce navigateur bloque la copie automatique. Copiez le lien ci-dessous :</p>
-                  <input
-                    readOnly
-                    value={url}
-                    aria-label="Lien de la page"
-                    onFocus={(e) => e.currentTarget.select()}
-                    className="w-full px-2 py-1.5 rounded-md border border-amber-200 bg-white text-[12px] text-gray-700 outline-none"
-                  />
-                </>
-              )}
+              <p>Ce navigateur bloque la copie automatique. Copiez le lien ci-dessous :</p>
+              <input
+                readOnly
+                value={url}
+                aria-label="Lien de la page"
+                onFocus={(e) => e.currentTarget.select()}
+                className="w-full px-2 py-1.5 rounded-md border border-amber-200 bg-white text-[12px] text-gray-700 outline-none"
+              />
             </div>
           )}
-          <button
-            onClick={handlePlatformAction}
-            className="w-full h-12 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-extrabold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
-          >
-            <Send size={16} />
-            {ctaLabel}
-          </button>
           <button
             onClick={copyLink}
             className="w-full h-11 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-700 font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
           >
             {linkCopied ? <Check size={14} className="text-emerald-600" /> : <Link2 size={14} />}
-            {linkCopied ? 'Lien copié !' : 'Copier uniquement le lien'}
+            {linkCopied ? 'Lien copié !' : 'Copier le lien'}
           </button>
         </div>
       </div>
