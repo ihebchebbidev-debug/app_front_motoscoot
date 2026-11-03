@@ -32,7 +32,7 @@ import { Link } from 'react-router-dom';
 import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
-import SocialShareModal from './common/SocialShareModal';
+import SocialShareModal, { shareNatively, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
@@ -124,6 +124,20 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
     );
   }
 
+  const shareContent: ShareContent = {
+    kind: 'article',
+    id: article.id,
+    title: article.title,
+    subtitle: (article as any).category,
+    summary: (article as any).excerpt || (article as any).summary,
+    image: article.image,
+    tags: [(article as any).category].filter(Boolean) as string[],
+  };
+
+  const handleShare = async () => {
+    if (!(await shareNatively(shareContent))) setShareOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9F9] md:bg-card font-sans pb-12">
       <SEO 
@@ -196,6 +210,13 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
               <h1 className="hidden md:block text-[45px] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-8">
                 {article.title}
               </h1>
+              {/* Phones & tablets: the share rail beside the article is desktop-only (lg) */}
+              <button
+                onClick={handleShare}
+                className="lg:hidden inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-gray-200 text-gray-700 hover:border-primary-600 hover:text-primary-600 transition-all text-[11px] font-extrabold uppercase tracking-wider shadow-sm active:scale-95"
+              >
+                <Share2 size={14} /> Partager
+              </button>
             </Reveal>
         </header>
 
@@ -360,21 +381,11 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         </section>
       </div>
 
-      {article && (
-        <SocialShareModal
-          open={shareOpen}
-          onClose={() => setShareOpen(false)}
-          content={{
-            kind: 'article',
-            id: article.id,
-            title: article.title,
-            subtitle: (article as any).category,
-            summary: (article as any).excerpt || (article as any).summary,
-            image: article.image,
-            tags: [(article as any).category].filter(Boolean) as string[],
-          }}
-        />
-      )}
+      <SocialShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        content={shareContent}
+      />
     </div>
   );
 };

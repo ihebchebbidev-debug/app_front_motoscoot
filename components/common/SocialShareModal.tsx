@@ -107,19 +107,44 @@ const trackShare = (platform: string, content: ShareContent) => {
   }
 };
 
+// Prefer the canonical URL set by <SEO/> over window.location — it's the
+// exact URL FB/LinkedIn will scrape for og:* tags, so the share preview
+// matches what the user sees in the modal.
+const shareUrlFor = (content: ShareContent): string => {
+  const canonical = typeof document !== 'undefined'
+    ? (document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null)?.href
+    : undefined;
+  return content.url || canonical || (typeof window !== 'undefined' ? window.location.href : '');
+};
+
+/**
+ * Touch devices get their own share sheet (WhatsApp, Messenger, Instagram,
+ * SMS…) through the Web Share API. Resolves false when there is none, so the
+ * caller opens <SocialShareModal /> instead. Mouse-driven desktops keep the
+ * modal: its Facebook / LinkedIn previews suit them better.
+ */
+export const shareNatively = async (content: ShareContent): Promise<boolean> => {
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
+  if (!window.matchMedia?.('(pointer: coarse)').matches) return false;
+  const data: ShareData = { title: content.title, text: content.summary, url: shareUrlFor(content) };
+  if (navigator.canShare && !navigator.canShare(data)) return false;
+  try {
+    await navigator.share(data);
+    trackShare('native', content);
+    return true;
+  } catch (e) {
+    // Closing the sheet is the user's choice: don't open the modal on top of it.
+    return (e as DOMException)?.name === 'AbortError';
+  }
+};
+
 export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content }) => {
   const [activeTab, setActiveTab] = useState<Platform>('facebook');
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // Prefer the canonical URL set by <SEO/> over window.location — it's the
-  // exact URL FB/LinkedIn will scrape for og:* tags, so the share preview
-  // matches what the user sees in the modal.
-  const canonical = typeof document !== 'undefined'
-    ? (document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null)?.href
-    : undefined;
-  const url = content.url || canonical || (typeof window !== 'undefined' ? window.location.href : '');
+  const url = shareUrlFor(content);
   const caption = useMemo(() => buildCaption(content, activeTab, url), [content, activeTab, url]);
 
   useEffect(() => { setImgError(false); }, [content.image]);
