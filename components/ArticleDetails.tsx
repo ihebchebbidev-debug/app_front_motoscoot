@@ -74,7 +74,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
   const [readingProgress, setReadingProgress] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const { data: fetchedArticle } = useArticle(articleId);
+  const { data: fetchedArticle, isLoading: articleLoading, error: articleError, refetch: reloadArticle } = useArticle(articleId);
   const { data: fetchedRelated } = useRelatedArticles(articleId);
   const { data: allArticles = [] } = useArticles();
 
@@ -106,7 +106,12 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [articleId]);
 
+  if (!article && articleLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-card text-gray-500 text-sm">Chargement…</div>;
+  }
+
   if (!article) {
+    if (articleError && (articleError as { status?: number }).status !== 404) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center"><p role="alert">L'article est momentanément indisponible.</p><Button onClick={() => reloadArticle()}>Réessayer</Button></div>;
     return (
       <div className="min-h-screen flex items-center justify-center bg-card text-center px-6">
         <Header variant="white" />
