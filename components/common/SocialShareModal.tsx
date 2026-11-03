@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, MessagesSquare, Link2, Send, ImageIcon } from 'lucide-react';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
+import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
 
 /**
  * Generic, content-type-agnostic social share modal.
@@ -130,7 +131,7 @@ const shareUrlFor = (content: ShareContent): string => {
 export const shareNatively = async (content: ShareContent): Promise<boolean> => {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
   if (!window.matchMedia?.('(pointer: coarse)').matches) return false;
-  const data: ShareData = { title: content.title, text: content.summary, url: shareUrlFor(content) };
+  const data: ShareData = { title: content.title, text: content.summary, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
   if (navigator.canShare && !navigator.canShare(data)) return false;
   try {
     await navigator.share(data);
@@ -149,7 +150,10 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const [imgError, setImgError] = useState(false);
 
   const url = shareUrlFor(content);
-  const caption = useMemo(() => buildCaption(content, activeTab, url), [content, activeTab, url]);
+  // "Copier uniquement le lien" keeps the clean URL; captions and share
+  // dialogs get utm tags where the platform needs them (utils/shareLinks.ts).
+  const sharedUrl = shareLink(url, activeTab, content.kind);
+  const caption = useMemo(() => buildCaption(content, activeTab, sharedUrl), [content, activeTab, sharedUrl]);
 
   useEffect(() => { setImgError(false); }, [content.image]);
   useEffect(() => { if (open) setActiveTab(initialTab); }, [open, initialTab]);
@@ -199,20 +203,20 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const handlePlatformAction = async () => {
     trackShare(activeTab, content);
     if (activeTab === 'facebook') {
-      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(caption)}`;
+      const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}&quote=${encodeURIComponent(caption)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'linkedin') {
       await copyCaption();
-      const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+      const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'messenger') {
       await copyCaption();
       if (window.matchMedia?.('(pointer: coarse)').matches) {
-        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(url)}`;
+        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(sharedUrl)}`;
       } else {
         window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
       }
