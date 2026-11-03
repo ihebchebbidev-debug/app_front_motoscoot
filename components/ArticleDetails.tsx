@@ -33,7 +33,7 @@ import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
-import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -128,6 +128,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
     <div className="min-h-screen bg-[#F8F9F9] md:bg-card font-sans pb-12">
       <SEO 
         title={article.title} 
+        rawTitle={!titleFitsBrandSuffix(article.title)}
         description={article.summary} 
         robots={isThinContent(article.content) ? THIN_CONTENT_ROBOTS : undefined}
         image={article.image} 

@@ -18,6 +18,23 @@ export function isThinContent(html?: string | null): boolean {
   return wordCount(html) < THIN_CONTENT_WORDS;
 }
 
+export const BRAND_TITLE_SUFFIX = ' | Moto-Scoot.tn';
+export const MAX_TITLE_LENGTH = 60;
+
+/**
+ * Article and guide titles keep the brand suffix only while the whole
+ * <title> fits in MAX_TITLE_LENGTH characters; longer ones are served alone
+ * so Google does not cut the article's own words.
+ */
+export function titleFitsBrandSuffix(title?: string | null): boolean {
+  return `${String(title ?? '').trim()}${BRAND_TITLE_SUFFIX}`.length <= MAX_TITLE_LENGTH;
+}
+
+export function editorialTitle(title?: string | null): string {
+  const t = String(title ?? '').trim();
+  return titleFitsBrandSuffix(t) ? `${t}${BRAND_TITLE_SUFFIX}` : t;
+}
+
 /** The page title is the only <h1>: headings typed in the CMS body start at <h2>. */
 export function demoteBodyH1(html: string): string {
   return String(html ?? '').replace(/<(\/?)h1\b/gi, '<$1h2');

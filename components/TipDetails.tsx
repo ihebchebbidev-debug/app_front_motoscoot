@@ -9,7 +9,7 @@ import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
-import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -78,6 +78,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
     <div className="min-h-screen bg-[#F8F9F9] md:bg-card font-sans pb-0">
       <SEO 
         title={tip.title} 
+        rawTitle={!titleFitsBrandSuffix(tip.title)}
         description={tip.summary} 
         robots={isThinContent(tip.content) ? THIN_CONTENT_ROBOTS : undefined}
         image={tip.image} 
