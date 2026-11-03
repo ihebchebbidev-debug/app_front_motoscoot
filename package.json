@@ -51,7 +51,6 @@
     "@types/node": "^22.0.0",
     "@types/pg": "^8.20.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "lighthouse": "^13.5.0",
     "std-env": "^4.3.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
