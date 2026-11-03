@@ -3,6 +3,7 @@ import {
   ArrowLeft, 
   Calendar, 
   Clock, 
+  Share,
   Share2, 
   Facebook, 
   Linkedin,
@@ -33,6 +34,10 @@ import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, shareTo, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
+
+// Share glyph people know on their platform: iOS/macOS "box + arrow",
+// Android/Windows "three nodes".
+const ShareGlyph = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ? Share : Share2;
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -207,13 +212,6 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
               <h1 className="hidden md:block text-[45px] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-8">
                 {article.title}
               </h1>
-              {/* Phones & tablets: the share rail beside the article is desktop-only (lg) */}
-              <button
-                onClick={handleShare}
-                className="lg:hidden inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-gray-200 text-gray-700 hover:border-primary-600 hover:text-primary-600 transition-all text-[11px] font-extrabold uppercase tracking-wider shadow-sm active:scale-95"
-              >
-                <Share2 size={14} /> Partager
-              </button>
             </Reveal>
         </header>
 
@@ -232,6 +230,19 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                         Exclusivité Moto-Scoot.tn
                      </span>
                   </div>
+                  {/* Phones & tablets share from the photo's corner (the share rail
+                      beside the article is desktop-only). Dark frosted glass: the
+                      darkened, blurred backdrop keeps the white glyph ≥ 3:1 even
+                      over a white sky; without backdrop-filter, a denser tint. */}
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    aria-label="Partager l'article"
+                    title="Partager"
+                    className="lg:hidden absolute top-3 right-3 md:top-6 md:right-6 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full text-white bg-black/50 supports-[backdrop-filter]:bg-black/30 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-75 ring-1 ring-inset ring-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.25)] transition-transform duration-150 hover:scale-105 active:scale-90 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                  >
+                    <ShareGlyph size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
+                  </button>
               </div>
             </Reveal>
         </div>
