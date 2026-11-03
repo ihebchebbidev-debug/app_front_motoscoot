@@ -439,7 +439,7 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
             title: `${listing.brand ?? ''} ${listing.model ?? ''}`.trim(),
             subtitle: [
               (listing as any).year,
-              (listing as any).mileage ? `${(listing as any).mileage} km` : null,
+              listing.mileage, // already "11 000 km" (services/listingsApi.ts)
               listing.price,
               listing.location,
             ].filter(Boolean).join(' • '),
