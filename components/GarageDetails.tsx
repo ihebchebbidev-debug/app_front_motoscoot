@@ -29,10 +29,11 @@ import AdBanner from './common/AdBanner';
 import AuthLockOverlay from './common/AuthLockOverlay';
 import { useNativeShare } from '../hooks/useNativeShare';
 import { ReviewModal } from './ReviewModal';
+import { Button } from './ui/Button';
 import { publishedReviewAverage, verifiedReviewMarkup } from '../utils/reviewUtils';
 
 const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTriggerLogin }) => {
-  const { data: fetchedGarage } = useGarage(garageId);
+  const { data: fetchedGarage, isLoading: garageLoading, error: garageError, refetch: reloadGarage } = useGarage(garageId);
   const { data: listingsResp } = useListings({ limit: 100 });
   const relatedListings = listingsResp?.listings ?? [];
   const { data: backendReviews = [] } = useGarageReviews(garageId);
@@ -135,7 +136,12 @@ const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTrig
     }
   };
 
+  if (!garage && garageLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-muted text-gray-500 text-sm">Chargement…</div>;
+  }
+
   if (!garage) {
+    if (garageError && (garageError as { status?: number }).status !== 404) return <div className="min-h-screen flex flex-col gap-4 items-center justify-center"><p role="alert">Le garage est momentanément indisponible.</p><Button onClick={() => reloadGarage()}>Réessayer</Button></div>;
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted text-center px-6">
         <div>
