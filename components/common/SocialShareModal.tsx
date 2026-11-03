@@ -3,6 +3,7 @@ import { X, Facebook, Instagram, Linkedin, Copy, Check, MessageCircle, MessagesS
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
 import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
+import { copyText } from '../../utils/clipboard';
 
 /**
  * Generic, content-type-agnostic social share modal.
@@ -147,6 +148,8 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const [activeTab, setActiveTab] = useState<Platform>(initialTab);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  // Which copy the browser refused — shown to the user with a manual fallback.
+  const [copyFailed, setCopyFailed] = useState<null | 'caption' | 'link'>(null);
   const [imgError, setImgError] = useState(false);
 
   const url = shareUrlFor(content);
@@ -157,6 +160,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   useEffect(() => { setImgError(false); }, [content.image]);
   useEffect(() => { if (open) setActiveTab(initialTab); }, [open, initialTab]);
+  useEffect(() => { setCopyFailed(null); }, [open, activeTab]);
 
   useEffect(() => {
     if (!open) return;
@@ -171,22 +175,34 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   if (!open) return null;
 
-  const copyCaption = async () => {
-    try {
-      await navigator.clipboard.writeText(caption);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { /* ignore */ }
+  const copyCaption = async (): Promise<boolean> => {
+    if (!(await copyText(caption))) {
+      setCopied(false);
+      setCopyFailed('caption');
+      return false;
+    }
+    setCopyFailed(null);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    return true;
   };
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setLinkCopied(true);
-      trackShare('copy_link', content);
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch { /* ignore */ }
+    if (!(await copyText(url))) {
+      setLinkCopied(false);
+      setCopyFailed('link');
+      return;
+    }
+    setCopyFailed(null);
+    setLinkCopied(true);
+    trackShare('copy_link', content);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
+
+  // Copy the caption before leaving for the platform. If the browser refuses,
+  // stay on the modal once so the user can copy it by hand; the next click
+  // ("… quand même") opens the platform without retrying.
+  const captionReady = async (): Promise<boolean> => copyFailed === 'caption' || copyCaption();
 
   /**
    * Per-platform deep-link strategy:
@@ -204,19 +220,19 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   const handlePlatformAction = async () => {
     trackShare(activeTab, content);
     if (activeTab === 'facebook') {
-      await copyCaption();
+      if (!(await captionReady())) return;
       const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'linkedin') {
-      await copyCaption();
+      if (!(await captionReady())) return;
       const u = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharedUrl)}`;
       window.open(u, '_blank', 'noopener,noreferrer,width=620,height=640');
       return;
     }
     if (activeTab === 'messenger') {
-      await copyCaption();
+      if (!(await captionReady())) return;
       if (window.matchMedia?.('(pointer: coarse)').matches) {
         window.location.href = `fb-messenger://share/?link=${encodeURIComponent(sharedUrl)}`;
       } else {
@@ -230,7 +246,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
       return;
     }
     // Instagram — no web share endpoint
-    await copyCaption();
+    if (!(await captionReady())) return;
     window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
   };
 
@@ -243,6 +259,9 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
   ];
 
   const ctaLabel = (() => {
+    if (copyFailed === 'caption' && activeTab !== 'whatsapp') {
+      return `Ouvrir ${tabs.find((t) => t.id === activeTab)?.label} quand même`;
+    }
     switch (activeTab) {
       case 'facebook': return copied ? 'Texte copié — Ouvrir Facebook' : 'Copier le texte & ouvrir Facebook';
       case 'messenger': return copied ? 'Texte copié — Ouvrir Messenger' : 'Copier le texte & ouvrir Messenger';
@@ -377,6 +396,24 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
         {/* Actions */}
         <div className="px-6 pb-6 space-y-3">
+          {copyFailed && (
+            <div role="alert" className="text-[12px] font-medium text-amber-900 leading-snug bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-2">
+              {copyFailed === 'caption' ? (
+                <p>Ce navigateur bloque la copie automatique. Sélectionnez le texte ci-dessus (appui long sur mobile) et copiez-le vous-même.</p>
+              ) : (
+                <>
+                  <p>Ce navigateur bloque la copie automatique. Copiez le lien ci-dessous :</p>
+                  <input
+                    readOnly
+                    value={url}
+                    aria-label="Lien de la page"
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="w-full px-2 py-1.5 rounded-md border border-amber-200 bg-white text-[12px] text-gray-700 outline-none"
+                  />
+                </>
+              )}
+            </div>
+          )}
           <button
             onClick={handlePlatformAction}
             className="w-full h-12 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-extrabold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
