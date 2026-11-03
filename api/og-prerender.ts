@@ -243,6 +243,8 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
       url: canonical,
       datePublished: d.published_at || d.created_at,
       dateModified: d.updated_at || d.created_at,
+      inLanguage: 'fr-TN',
+      ...(d.category ? { articleSection: d.category } : {}),
       mainEntityOfPage: canonical,
       // The byline's author; placeholder CMS accounts ("Admin Admin") are
       // credited to the organization instead of a fake person.
@@ -606,6 +608,26 @@ ${brandLinks ? `<ul>${brandLinks}<li><a href="${SITE}/fiches-techniques">Toutes 
   res.status(200).send(await renderWithApp(req, html));
 }
 
+// Crawler-only links for an article or guide: same category first, then the
+// most recent, never the page itself nor thin (noindex) entries. An API
+// failure only drops the block.
+async function relatedLinksHtml(kind: 'article' | 'guide', doc: Doc): Promise<string> {
+  const endpoint = kind === 'article' ? 'articles' : 'tips';
+  try {
+    const r = await fetch(`${API_BASE}/${endpoint}?limit=20`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return '';
+    const data = await r.json();
+    const rows: Doc[] = Array.isArray(data) ? data : data[endpoint] || [];
+    const pool = rows.filter((x) => x.id && x.title && String(x.id) !== String(doc.id) && !isThinContent(String(x.content || x.body || '')));
+    const picked = [...pool.filter((x) => x.category && x.category === doc.category), ...pool.filter((x) => !x.category || x.category !== doc.category)].slice(0, 3);
+    if (!picked.length) return '';
+    const items = picked.map((x) => `<li><a href="${SITE}/${kind}/${slugify(x.title || '')}-${x.id}">${escapeHtml(x.title || '')}</a></li>`).join('\n');
+    return `<section>\n<h2>${kind === 'article' ? 'À lire aussi' : 'Autres conseils'}</h2>\n<ul>\n${items}\n</ul>\n</section>`;
+  } catch {
+    return '';
+  }
+}
+
 export default async function handler(req: any, res: any) {
   try {
     const kind = String(req.query?.kind || '').toLowerCase() as Kind;
@@ -691,6 +713,7 @@ export default async function handler(req: any, res: any) {
 
 
     const thin = (kind === 'article' || kind === 'guide') && isThinContent(String(doc.content || doc.body || ''));
+    const related = kind === 'article' || kind === 'guide' ? await relatedLinksHtml(kind, doc) : '';
     const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS
       : thin ? THIN_CONTENT_ROBOTS
       : 'index, follow, max-image-preview:large, max-snippet:-1';
@@ -706,6 +729,11 @@ export default async function handler(req: any, res: any) {
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
 <meta property="og:type" content="${ogType}" />
+${ogType === 'article' && doc ? [
+  doc.published_at || doc.created_at ? `<meta property="article:published_time" content="${escapeHtml(String(doc.published_at || doc.created_at))}" />` : '',
+  doc.updated_at ? `<meta property="article:modified_time" content="${escapeHtml(String(doc.updated_at))}" />` : '',
+  doc.category ? `<meta property="article:section" content="${escapeHtml(String(doc.category))}" />` : '',
+].filter(Boolean).join('\n') : ''}
 <meta property="og:site_name" content="Moto-Scoot.tn" />
 <meta property="og:locale" content="fr_TN" />
 <meta property="og:title" content="${escapeHtml(title)}" />
@@ -728,12 +756,14 @@ ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</sc
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
 </head>
 <body>
+${kind === 'article' || kind === 'guide' ? `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/${kind === 'article' ? 'actualites' : 'conseils'}">${kind === 'article' ? 'Actualités' : 'Conseils'}</a> › ${escapeHtml(heading)}</nav>` : ''}
 ${kind === 'fiche-technique' ? renderFicheBody(doc) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
 ${(() => {
   const body = crawlerBodyHtml(String(doc.content || doc.body || doc.description || ''));
   return body ? `<article>\n${body}\n</article>` : '';
 })()}`}
+${related}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
 ${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
 <p><a href="${canonical}">Voir sur Moto-Scoot.tn</a></p>

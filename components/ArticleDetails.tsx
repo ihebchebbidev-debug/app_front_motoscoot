@@ -33,7 +33,7 @@ import { Button } from './ui/Button';
 import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal from './common/SocialShareModal';
-import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
+import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -48,8 +48,8 @@ interface ArticleDetailsProps extends BasePageProps {
  * produces a new string identity each time and React replaces the iframe —
  * causing the embedded YouTube video to reload mid-watch.
  */
-const ArticleProseContent = React.memo(({ html }: { html: string }) => {
-  const sanitized = useMemo(() => demoteBodyH1(sanitizeRichHtml(html)), [html]);
+const ArticleProseContent = React.memo(({ html, title }: { html: string; title: string }) => {
+  const sanitized = useMemo(() => prepareBodyImages(demoteBodyH1(sanitizeRichHtml(html)), title), [html, title]);
   return (
     <div
       className="prose prose-lg md:prose-xl prose-slate max-w-none 
@@ -134,16 +134,18 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         image={article.image} 
         url={getUrlFromState('article-details', { id: article.id, title: article.title })}
         type="article"
-        publishedTime={(article as any).publishedAt || (article as any).published_at || (article as any).createdAt}
-        modifiedTime={(article as any).updatedAt || (article as any).updated_at}
+        publishedTime={article.publishedAt}
+        modifiedTime={article.updatedAt}
         schema={{
           "@context": "https://schema.org",
           "@type": "Article",
           headline: article.title,
           description: article.summary,
           image: article.image ? [article.image] : undefined,
-          datePublished: (article as any).publishedAt || (article as any).published_at || (article as any).createdAt,
-          dateModified: (article as any).updatedAt || (article as any).updated_at || (article as any).publishedAt,
+          datePublished: article.publishedAt,
+          dateModified: article.updatedAt || article.publishedAt,
+          inLanguage: 'fr-TN',
+          articleSection: article.category,
           // Same entities as the prerender (api/og-prerender.ts).
           author: realAuthorName(article.author)
             ? { "@type": "Person", name: realAuthorName(article.author) }
@@ -258,7 +260,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                 {/* Prose Content — isolated in a memoized component so scroll-driven
                     re-renders of the parent don't reset innerHTML and reload
                     embedded YouTube iframes. */}
-                <ArticleProseContent html={article.content || "<p>Contenu en cours de rédaction...</p>"} />
+                <ArticleProseContent html={article.content || "<p>Contenu en cours de rédaction...</p>"} title={article.title} />
 
                 {/* Author Signature */}
                 <div className="flex items-center gap-5 py-10 border-t border-gray-100 mt-16 group">
