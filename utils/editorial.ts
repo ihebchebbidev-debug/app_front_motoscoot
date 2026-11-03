@@ -23,6 +23,25 @@ export function demoteBodyH1(html: string): string {
   return String(html ?? '').replace(/<(\/?)h1\b/gi, '<$1h2');
 }
 
+/**
+ * Body images from the CMS: the editor inserts them without alt text and they
+ * all loaded eagerly. Missing/empty alt becomes "<title> (photo n)"; every
+ * image but the first is lazy-loaded; all decode asynchronously.
+ */
+export function prepareBodyImages(html: string, title: string): string {
+  let n = 0;
+  return String(html ?? '').replace(/<img\b([^>]*?)\s*\/?>/gi, (_m, attrs: string) => {
+    n += 1;
+    let a = attrs.replace(/\salt=(["'])\s*\1/i, '');
+    if (!/\salt=/i.test(a) && title) a += ` alt="${escapeAttr(`${title} (photo ${n})`)}"`;
+    if (n > 1 && !/\sloading=/i.test(a)) a += ' loading="lazy"';
+    if (!/\sdecoding=/i.test(a)) a += ' decoding="async"';
+    return `<img${a}>`;
+  });
+}
+
+const escapeAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 /** Organization node (same @id as index.html) for article author / publisher. */
 export const ORGANIZATION_NODE = {
   '@type': 'Organization',
