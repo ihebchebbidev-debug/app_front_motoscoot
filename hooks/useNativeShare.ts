@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useToast } from '../context/ToastContext';
 import { monitoring } from '../utils/monitoring';
+import { openShareSheet } from '../utils/deviceShare';
 
 interface ShareData {
   title: string;
@@ -34,24 +35,12 @@ export const useNativeShare = () => {
       url: sharableUrl,
     };
 
-    // 2. Execution with Feature Detection
-    if (navigator.share) {
-      try {
-        // Use canShare check if supported by browser for extra safety
-        if (typeof navigator.canShare === 'function' && !navigator.canShare(finalData)) {
-          throw new Error('Unsharable data');
-        }
-
-        await navigator.share(finalData);
-        monitoring.trackEvent('ContentShared', { method: 'native_api', url: sharableUrl });
-      } catch (err) {
-        // AbortError is triggered when user cancels, we should ignore it.
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Share failed, falling back to clipboard:', err);
-          copyToClipboard(sharableUrl);
-        }
-      }
-    } else {
+    // 2. Device share sheet; the clipboard only when there is no usable sheet
+    //    (not when the user closed it, nor on a repeat tap while it opens).
+    const result = await openShareSheet(finalData);
+    if (result === 'shared') {
+      monitoring.trackEvent('ContentShared', { method: 'native_api', url: sharableUrl });
+    } else if (result === 'unavailable' || result === 'failed') {
       copyToClipboard(sharableUrl);
     }
   }, [addToast]);

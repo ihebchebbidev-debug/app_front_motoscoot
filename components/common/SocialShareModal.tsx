@@ -5,6 +5,7 @@ import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
 import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
 import { copyText } from '../../utils/clipboard';
+import { openShareSheet } from '../../utils/deviceShare';
 
 /**
  * Generic, content-type-agnostic share modal (listings, articles, tips,
@@ -120,21 +121,14 @@ export const shareTo = async (platform: SharePlatform, content: ShareContent): P
 
 /**
  * The device's own share sheet (WhatsApp, Instagram, SMS…) through the Web
- * Share API, with the page title and link. Resolves false when there is none
- * or it failed — not when the user simply closed it.
+ * Share API, with the page title and link. Resolves false only when there is
+ * no usable sheet, so the caller opens the modal: not when the user closed it,
+ * nor on a repeat tap while the sheet is still opening (utils/deviceShare.ts).
  */
 const openDeviceShare = async (content: ShareContent): Promise<boolean> => {
-  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
-  const data: ShareData = { title: content.title, text: content.title, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
-  if (navigator.canShare && !navigator.canShare(data)) return false;
-  try {
-    await navigator.share(data);
-    trackShare('native', content);
-    return true;
-  } catch (e) {
-    // Closing the sheet is the user's choice: don't open the modal on top of it.
-    return (e as DOMException)?.name === 'AbortError';
-  }
+  const result = await openShareSheet({ title: content.title, text: content.title, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) });
+  if (result === 'shared') trackShare('native', content);
+  return result !== 'unavailable' && result !== 'failed';
 };
 
 /**
