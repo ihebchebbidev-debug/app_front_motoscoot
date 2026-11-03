@@ -1,15 +1,15 @@
 /**
  * Shared links carry utm_* tags only where they travel as plain text
- * (WhatsApp, Messenger, the phone's share sheet): a click there sends no
- * referrer, so services/trackingService.ts would count the visit as direct.
- * Facebook and LinkedIn are left alone — they link to og:url (the clean
- * canonical) and their referrer already identifies the visit.
+ * (WhatsApp, Messenger, Telegram, e-mail, the phone's share sheet): a click
+ * there sends no referrer, so services/trackingService.ts would count the
+ * visit as direct. Facebook, LinkedIn, X and Pinterest are left alone — they
+ * link to og:url (the clean canonical) or send their own referrer.
  * The canonical URL drops utm_* again (components/common/SEO.tsx), so Google
  * still sees a single page.
  */
 export const NATIVE_SHARE_SOURCE = 'partage-mobile';
 
-const TAGGED_SOURCES = new Set(['whatsapp', 'messenger', NATIVE_SHARE_SOURCE]);
+const TAGGED_SOURCES = new Set(['whatsapp', 'messenger', 'telegram', 'email', NATIVE_SHARE_SOURCE]);
 
 const CAMPAIGN_BY_KIND = {
   listing: 'partage-annonce',
