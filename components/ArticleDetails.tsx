@@ -3,7 +3,6 @@ import {
   ArrowLeft, 
   Calendar, 
   Clock, 
-  Share,
   Share2, 
   Facebook, 
   Linkedin,
@@ -34,10 +33,6 @@ import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, shareTo, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
-
-// Share glyph people know on their platform: iOS/macOS "box + arrow",
-// Android/Windows "three nodes".
-const ShareGlyph = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ? Share : Share2;
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -241,7 +236,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                     title="Partager"
                     className="lg:hidden absolute top-3 right-3 md:top-6 md:right-6 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full text-white bg-black/50 supports-[backdrop-filter]:bg-black/30 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-75 ring-1 ring-inset ring-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.25)] transition-transform duration-150 hover:scale-105 active:scale-90 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                   >
-                    <ShareGlyph size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
+                    <Share2 size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
                   </button>
               </div>
             </Reveal>
