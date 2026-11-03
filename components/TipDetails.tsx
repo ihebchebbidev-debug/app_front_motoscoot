@@ -6,7 +6,7 @@ import Header from './layout/Header';
 import { Reveal } from './ui/Reveal';
 import SEO from './common/SEO';
 import AdBanner from './common/AdBanner';
-import SocialShareModal from './common/SocialShareModal';
+import SocialShareModal, { shareNatively, type ShareContent } from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
@@ -61,8 +61,18 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
 
 
 
-  const handleShare = () => {
-    setShareOpen(true);
+  const shareContent: ShareContent = {
+    kind: 'tip',
+    id: tip.id,
+    title: tip.title,
+    subtitle: (tip as any).category,
+    summary: tip.summary,
+    image: tip.image,
+    tags: [(tip as any).category, (tip as any).difficulty].filter(Boolean) as string[],
+  };
+
+  const handleShare = async () => {
+    if (!(await shareNatively(shareContent))) setShareOpen(true);
   };
 
   const getDifficultyColor = (diff: string) => {
@@ -294,15 +304,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
       <SocialShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        content={{
-          kind: 'tip',
-          id: tip.id,
-          title: tip.title,
-          subtitle: (tip as any).category,
-          summary: tip.summary,
-          image: tip.image,
-          tags: [(tip as any).category, (tip as any).difficulty].filter(Boolean) as string[],
-        }}
+        content={shareContent}
       />
     </div>
   );
