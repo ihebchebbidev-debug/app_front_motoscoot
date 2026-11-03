@@ -181,11 +181,11 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
               </div>
 
               {/* Titre Mobile */}
-              <div className="md:hidden text-[2rem] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-6">
+              <div className="md:hidden text-[30px] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-6">
                 {article.title}
               </div>
               {/* Titre Desktop */}
-              <h1 className="hidden md:block text-[3.5rem] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-8">
+              <h1 className="hidden md:block text-[45px] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-8">
                 {article.title}
               </h1>
             </Reveal>
