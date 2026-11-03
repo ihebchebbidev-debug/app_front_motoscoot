@@ -18,6 +18,7 @@ export interface BackendArticle {
   image?: string;
   published_at?: string;
   created_at?: string;
+  updated_at?: string;
   read_time?: string | number;
   reading_time?: string | number;
   author?: string | { full_name?: string; name?: string };
@@ -63,6 +64,8 @@ export function mapBackendArticle(a: BackendArticle): Article {
     content: a.content || a.body,
     tags: a.tags,
     isFeatured: !!a.is_featured,
+    publishedAt: a.published_at || a.created_at,
+    updatedAt: a.updated_at,
   };
 }
 

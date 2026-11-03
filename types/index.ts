@@ -177,6 +177,9 @@ export interface Article {
   content?: string; 
   tags?: string[];
   isFeatured?: boolean;
+  /** ISO dates from the API, for article:published_time and the JSON-LD. */
+  publishedAt?: string;
+  updatedAt?: string;
 }
 
 export interface Tip {

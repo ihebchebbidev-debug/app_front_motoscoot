@@ -133,16 +133,18 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         image={article.image} 
         url={getUrlFromState('article-details', { id: article.id, title: article.title })}
         type="article"
-        publishedTime={(article as any).publishedAt || (article as any).published_at || (article as any).createdAt}
-        modifiedTime={(article as any).updatedAt || (article as any).updated_at}
+        publishedTime={article.publishedAt}
+        modifiedTime={article.updatedAt}
         schema={{
           "@context": "https://schema.org",
           "@type": "Article",
           headline: article.title,
           description: article.summary,
           image: article.image ? [article.image] : undefined,
-          datePublished: (article as any).publishedAt || (article as any).published_at || (article as any).createdAt,
-          dateModified: (article as any).updatedAt || (article as any).updated_at || (article as any).publishedAt,
+          datePublished: article.publishedAt,
+          dateModified: article.updatedAt || article.publishedAt,
+          inLanguage: 'fr-TN',
+          articleSection: article.category,
           // Same entities as the prerender (api/og-prerender.ts).
           author: realAuthorName(article.author)
             ? { "@type": "Person", name: realAuthorName(article.author) }
