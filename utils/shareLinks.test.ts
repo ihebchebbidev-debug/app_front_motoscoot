@@ -4,17 +4,19 @@ import { shareLink, NATIVE_SHARE_SOURCE } from './shareLinks.ts';
 
 const ARTICLE = 'https://www.moto-scoot.tn/article/yamaha-rw350-le-petit-scooter-qui-voit-grand-bdb88e25-0527-41fa-af3f-8e09c2d7cfb5';
 
-test('WhatsApp, Messenger and the phone share sheet get utm tags', () => {
+test('WhatsApp, Messenger, Telegram, e-mail and the phone share sheet get utm tags', () => {
   assert.equal(
     shareLink(ARTICLE, 'whatsapp', 'article'),
     `${ARTICLE}?utm_source=whatsapp&utm_medium=social&utm_campaign=partage-article`,
   );
   assert.match(shareLink(ARTICLE, 'messenger', 'tip'), /utm_source=messenger&utm_medium=social&utm_campaign=partage-guide$/);
   assert.match(shareLink(ARTICLE, NATIVE_SHARE_SOURCE, 'listing'), /utm_source=partage-mobile&.*utm_campaign=partage-annonce$/);
+  assert.match(shareLink(ARTICLE, 'telegram', 'article'), /utm_source=telegram&/);
+  assert.match(shareLink(ARTICLE, 'email', 'techspec'), /utm_source=email&.*utm_campaign=partage-fiche-technique$/);
 });
 
-test('Facebook, LinkedIn and Instagram links stay clean', () => {
-  for (const source of ['facebook', 'linkedin', 'instagram', 'copy_link']) {
+test('Facebook, LinkedIn, X and Pinterest links stay clean', () => {
+  for (const source of ['facebook', 'linkedin', 'x', 'pinterest', 'copy_link']) {
     assert.equal(shareLink(ARTICLE, source, 'article'), ARTICLE);
   }
 });

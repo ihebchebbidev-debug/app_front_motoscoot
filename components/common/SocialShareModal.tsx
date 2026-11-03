@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { X, Facebook, Linkedin, Check, MessageCircle, MessagesSquare, Link2, ImageIcon } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { X, Check, Copy, Link2, Mail, Share2, ImageIcon, Linkedin } from 'lucide-react';
+import { siFacebook, siWhatsapp, siMessenger, siTelegram, siX, siPinterest, type SimpleIcon } from 'simple-icons';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
 import { shareLink, NATIVE_SHARE_SOURCE } from '../../utils/shareLinks';
@@ -10,7 +11,8 @@ import { copyText } from '../../utils/clipboard';
  * tech-specs). One click shares the page: no caption to write or paste.
  * Every network builds its own preview card (image, title, description) from
  * the page's og:* tags (<SEO /> and the prerender), so we only hand it the
- * link. The modal shows that card so the user knows what friends will see.
+ * link. The modal shows a compact version of that card.
+ * Bottom sheet on phones, centred dialog from md up.
  */
 
 export type ShareContentKind = 'listing' | 'article' | 'tip' | 'techspec';
@@ -25,19 +27,17 @@ export interface ShareContent {
   subtitle?: string;
   /** Canonical URL of the page (defaults to the <link rel="canonical">). */
   url?: string;
-  /** Hero/cover image for the preview card. */
+  /** Hero/cover image for the preview card (and Pinterest's pin image). */
   image?: string;
 }
 
-export type SharePlatform = 'facebook' | 'messenger' | 'linkedin' | 'whatsapp';
+export type SharePlatform = 'facebook' | 'whatsapp' | 'messenger' | 'telegram' | 'x' | 'linkedin' | 'pinterest' | 'email';
 
 interface SocialShareModalProps {
   open: boolean;
   onClose: () => void;
   content: ShareContent;
 }
-
-const SITE = 'Moto-Scoot.tn';
 
 const isTouchDevice = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 
@@ -64,10 +64,14 @@ const shareUrlFor = (content: ShareContent): string => {
   return content.url || canonical || (typeof window !== 'undefined' ? window.location.href : '');
 };
 
+const openPopup = (url: string) => window.open(url, '_blank', 'noopener,noreferrer,width=620,height=640');
+
 /**
  * Opens the network's own share flow with the page link:
  *  - Facebook / LinkedIn: their share dialog (URL only).
- *  - WhatsApp: wa.me with the title and the link, which unfurls into the card.
+ *  - WhatsApp, Telegram, X, e-mail: the page title and the link, which
+ *    unfurls into the preview card.
+ *  - Pinterest: the link, the title and the page image as the pin.
  *  - Messenger: the web send dialog needs a Facebook app id, which the site
  *    has none of. Phones get the app's deep link; desktops get the link
  *    copied and messenger.com opened, where pasting it shows the same card.
@@ -75,20 +79,36 @@ const shareUrlFor = (content: ShareContent): string => {
  */
 export const shareTo = async (platform: SharePlatform, content: ShareContent): Promise<{ copied?: boolean }> => {
   const url = shareLink(shareUrlFor(content), platform, content.kind);
+  const link = encodeURIComponent(url);
+  const title = encodeURIComponent(content.title);
   trackShare(platform, content);
   switch (platform) {
     case 'facebook':
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=620,height=640');
+      openPopup(`https://www.facebook.com/sharer/sharer.php?u=${link}`);
       return {};
     case 'linkedin':
-      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer,width=620,height=640');
+      openPopup(`https://www.linkedin.com/sharing/share-offsite/?url=${link}`);
       return {};
+    case 'x':
+      openPopup(`https://x.com/intent/post?url=${link}&text=${title}`);
+      return {};
+    case 'pinterest': {
+      const media = content.image ? `&media=${encodeURIComponent(new URL(content.image, url).href)}` : '';
+      openPopup(`https://www.pinterest.com/pin/create/button/?url=${link}&description=${title}${media}`);
+      return {};
+    }
     case 'whatsapp':
       window.open(`https://wa.me/?text=${encodeURIComponent(`${content.title}\n${url}`)}`, '_blank', 'noopener,noreferrer');
       return {};
+    case 'telegram':
+      window.open(`https://t.me/share/url?url=${link}&text=${title}`, '_blank', 'noopener,noreferrer');
+      return {};
+    case 'email':
+      window.location.href = `mailto:?subject=${title}&body=${encodeURIComponent(`${content.title}\n${url}`)}`;
+      return {};
     case 'messenger': {
       if (isTouchDevice()) {
-        window.location.href = `fb-messenger://share/?link=${encodeURIComponent(url)}`;
+        window.location.href = `fb-messenger://share/?link=${link}`;
         return {};
       }
       const copied = await copyText(url);
@@ -99,14 +119,12 @@ export const shareTo = async (platform: SharePlatform, content: ShareContent): P
 };
 
 /**
- * Touch devices get their own share sheet (WhatsApp, Messenger, Instagram,
- * SMS…) through the Web Share API, with the page title and link. Resolves
- * false when there is none, so the caller opens <SocialShareModal /> instead.
- * Mouse-driven desktops keep the modal.
+ * The device's own share sheet (WhatsApp, Instagram, SMS…) through the Web
+ * Share API, with the page title and link. Resolves false when there is none
+ * or it failed — not when the user simply closed it.
  */
-export const shareNatively = async (content: ShareContent): Promise<boolean> => {
+const openDeviceShare = async (content: ShareContent): Promise<boolean> => {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
-  if (!isTouchDevice()) return false;
   const data: ShareData = { title: content.title, text: content.title, url: shareLink(shareUrlFor(content), NATIVE_SHARE_SOURCE, content.kind) };
   if (navigator.canShare && !navigator.canShare(data)) return false;
   try {
@@ -119,12 +137,35 @@ export const shareNatively = async (content: ShareContent): Promise<boolean> => 
   }
 };
 
-const NETWORKS: Array<{ id: SharePlatform; label: string; icon: React.ReactNode; color: string }> = [
-  { id: 'facebook', label: 'Facebook', icon: <Facebook size={22} />, color: 'text-[#1877F2]' },
-  { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={22} />, color: 'text-[#25D366]' },
-  { id: 'messenger', label: 'Messenger', icon: <MessagesSquare size={22} />, color: 'text-[#0084FF]' },
-  { id: 'linkedin', label: 'LinkedIn', icon: <Linkedin size={22} />, color: 'text-[#0A66C2]' },
+/**
+ * Touch devices go straight to their share sheet; resolves false when there
+ * is none, so the caller opens <SocialShareModal /> instead. Mouse-driven
+ * desktops keep the modal (it offers the device sheet too, as "Plus d'options").
+ */
+export const shareNatively = async (content: ShareContent): Promise<boolean> =>
+  isTouchDevice() ? openDeviceShare(content) : false;
+
+/** Simple Icons logo (CC0), drawn in the current text colour. */
+const BrandLogo: React.FC<{ icon: SimpleIcon; size?: number }> = ({ icon, size = 26 }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false">
+    <path d={icon.path} />
+  </svg>
+);
+
+// `tint`: logo in the brand colour on a 10 % wash of it. LinkedIn is not in
+// Simple Icons (removed at the brand's request), so it keeps lucide's icon.
+const NETWORKS: Array<{ id: SharePlatform; label: string; logo: React.ReactNode; tint: string }> = [
+  { id: 'facebook', label: 'Facebook', logo: <BrandLogo icon={siFacebook} />, tint: 'text-[#0866FF] bg-[#0866FF]/10' },
+  { id: 'whatsapp', label: 'WhatsApp', logo: <BrandLogo icon={siWhatsapp} />, tint: 'text-[#25D366] bg-[#25D366]/10' },
+  { id: 'messenger', label: 'Messenger', logo: <BrandLogo icon={siMessenger} />, tint: 'text-[#0866FF] bg-[#0866FF]/10' },
+  { id: 'telegram', label: 'Telegram', logo: <BrandLogo icon={siTelegram} />, tint: 'text-[#26A5E4] bg-[#26A5E4]/10' },
+  { id: 'x', label: 'X', logo: <BrandLogo icon={siX} size={22} />, tint: 'text-black bg-black/[0.06] dark:text-white dark:bg-white/10' },
+  { id: 'linkedin', label: 'LinkedIn', logo: <Linkedin size={24} />, tint: 'text-[#0A66C2] bg-[#0A66C2]/10' },
+  { id: 'pinterest', label: 'Pinterest', logo: <BrandLogo icon={siPinterest} />, tint: 'text-[#BD081C] bg-[#BD081C]/10' },
+  { id: 'email', label: 'E-mail', logo: <Mail size={24} />, tint: 'text-primary-600 bg-primary-50' },
 ];
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-card';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea, select, [tabindex]:not([tabindex="-1"])';
 
@@ -146,18 +187,29 @@ const trapFocus = (e: KeyboardEvent, panel: HTMLElement | null) => {
 };
 
 export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content }) => {
-  const [linkCopied, setLinkCopied] = useState(false);
-  // Shown under the buttons: Messenger's "paste the link" hint, or the link
-  // itself when the browser refused to copy it.
-  const [notice, setNotice] = useState<null | 'messenger' | 'copy-blocked'>(null);
+  const titleId = useId();
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'blocked'>('idle');
+  const [messengerHint, setMessengerHint] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [canUseDeviceShare, setCanUseDeviceShare] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const linkRef = useRef<HTMLInputElement>(null);
 
   const url = shareUrlFor(content);
 
   useEffect(() => { setImgError(false); }, [content.image]);
-  useEffect(() => { if (open) setNotice(null); }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    setCopyState('idle');
+    setMessengerHint(false);
+    setCanUseDeviceShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function');
+  }, [open]);
+  useEffect(() => {
+    if (copyState !== 'copied') return;
+    const t = setTimeout(() => setCopyState('idle'), 2000);
+    return () => clearTimeout(t);
+  }, [copyState]);
 
   // Keyboard and screen-reader users: focus moves into the modal when it
   // opens and goes back to the button that opened it when it closes. Kept
@@ -185,128 +237,149 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
 
   if (!open) return null;
 
+  // The browser refused to copy: select the link so the user can copy it.
+  const showBlockedCopy = () => {
+    setCopyState('blocked');
+    linkRef.current?.focus();
+    linkRef.current?.select();
+  };
+
   const share = async (platform: SharePlatform) => {
-    setNotice(null);
+    setMessengerHint(false);
     const { copied } = await shareTo(platform, content);
-    if (copied !== undefined) setNotice(copied ? 'messenger' : 'copy-blocked');
+    if (copied === true) setMessengerHint(true);
+    if (copied === false) showBlockedCopy();
   };
 
   const copyLink = async () => {
     if (!(await copyText(url))) {
-      setLinkCopied(false);
-      setNotice('copy-blocked');
+      showBlockedCopy();
       return;
     }
-    setNotice(null);
-    setLinkCopied(true);
+    setCopyState('copied');
     trackShare('copy_link', content);
-    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-0 md:p-4"
+      className="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in motion-reduce:animate-none md:p-4"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Partager"
     >
       <div
         ref={panelRef}
-        className="bg-card w-full md:max-w-lg md:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up max-h-[95vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full md:max-w-md bg-card rounded-t-[28px] md:rounded-[28px] shadow-2xl max-h-[92vh] overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))] animate-fade-in-up md:animate-scale-in motion-reduce:animate-none"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Bottom-sheet grabber (phones) */}
+        <div aria-hidden="true" className="md:hidden mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-gray-200" />
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-card z-10">
-          <div>
-            <h2 className="font-sans font-black text-[18px] text-foreground tracking-tight">Partager</h2>
-            <p className="text-[12px] font-medium text-gray-500 mt-0.5">Choisissez où partager</p>
-          </div>
+        <div className="flex items-center justify-between px-6 pt-3 md:pt-6">
+          <h2 id={titleId} className="font-sans font-black text-[20px] text-foreground tracking-tight">Partager</h2>
           <button
             ref={closeRef}
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+            className={`-mr-2 grid h-10 w-10 place-items-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors ${FOCUS_RING}`}
             aria-label="Fermer"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
-        {/* OG Preview card — what FB/LinkedIn/WhatsApp/Messenger will render */}
-        <div className="px-6 pt-5">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Aperçu du partage</span>
-          <div className="mt-2 rounded-2xl border border-gray-200 overflow-hidden bg-gray-50">
-            <div className="aspect-[1.91/1] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-              {content.image && !imgError ? (
-                <img
-                  src={content.image}
-                  alt={content.title}
-                  className="w-full h-full object-cover"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <ImageIcon size={42} />
-                </div>
-              )}
-              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
-                {SITE}
-              </div>
-            </div>
-            <div className="px-4 py-3 bg-card">
-              <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">moto-scoot.tn</div>
-              <div className="text-[14px] font-extrabold text-gray-900 leading-tight line-clamp-2 mt-0.5">{content.title}</div>
-              {content.subtitle && (
-                <div className="text-[12px] text-gray-500 font-medium line-clamp-1 mt-0.5">{content.subtitle}</div>
-              )}
-            </div>
+        {/* Compact preview: what the networks will show */}
+        <div className="mx-6 mt-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-2.5">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-200">
+            {content.image && !imgError ? (
+              <img src={content.image} alt="" className="h-full w-full object-cover" onError={() => setImgError(true)} />
+            ) : (
+              <div className="grid h-full w-full place-items-center text-gray-400"><ImageIcon size={24} /></div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">moto-scoot.tn</p>
+            <p className="line-clamp-2 text-[14px] font-extrabold leading-snug text-gray-900">{content.title}</p>
+            {content.subtitle && <p className="truncate text-[12px] font-medium text-gray-500">{content.subtitle}</p>}
           </div>
         </div>
 
         {/* One click per network */}
-        <div className="px-4 sm:px-6 pt-5">
-          <div className="grid grid-cols-4 gap-2">
-            {NETWORKS.map((n) => (
+        <ul className="mt-6 grid grid-cols-4 gap-x-1 gap-y-5 px-3 sm:px-5">
+          {NETWORKS.map((n) => (
+            <li key={n.id}>
               <button
-                key={n.id}
+                type="button"
                 onClick={() => share(n.id)}
                 aria-label={`Partager sur ${n.label}`}
-                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 hover:border-gray-200 text-gray-700 transition-all active:scale-95"
+                className={`group flex w-full flex-col items-center gap-2 rounded-2xl py-1 ${FOCUS_RING}`}
               >
-                <span className={n.color}>{n.icon}</span>
-                <span className="text-[10px] font-extrabold uppercase tracking-tight sm:tracking-wider">{n.label}</span>
+                <span className={`grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full transition-transform duration-150 group-hover:scale-105 group-active:scale-95 motion-reduce:transition-none ${n.tint}`}>
+                  {n.logo}
+                </span>
+                <span className="text-[12px] font-semibold text-gray-700">{n.label}</span>
               </button>
-            ))}
-          </div>
-        </div>
+            </li>
+          ))}
+        </ul>
 
-        {/* Link */}
-        <div className="px-6 pt-4 pb-6 space-y-3">
-          {notice === 'messenger' && (
-            <p role="status" className="text-[12px] font-medium text-blue-900 leading-snug bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              Lien copié : collez-le dans la conversation Messenger, l'aperçu s'affichera.
-            </p>
-          )}
-          {notice === 'copy-blocked' && (
-            <div role="alert" className="text-[12px] font-medium text-amber-900 leading-snug bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-2">
-              <p>Ce navigateur bloque la copie automatique. Copiez le lien ci-dessous :</p>
-              <input
-                readOnly
-                value={url}
-                aria-label="Lien de la page"
-                onFocus={(e) => e.currentTarget.select()}
-                className="w-full px-2 py-1.5 rounded-md border border-amber-200 bg-white text-[12px] text-gray-700 outline-none"
-              />
-            </div>
-          )}
+        {messengerHint && (
+          <p className="mx-6 mt-4 rounded-xl bg-[#0866FF]/10 px-3 py-2 text-[12px] font-medium text-blue-900 dark:text-blue-100">
+            Lien copié : collez-le dans la conversation Messenger, l'aperçu s'affichera.
+          </p>
+        )}
+
+        {/* Copy link */}
+        <div aria-hidden="true" className="mt-6 flex items-center gap-3 px-6 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+          <span className="h-px flex-1 bg-gray-200" />
+          ou copier le lien
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+        <div className="mx-6 mt-3 flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-1.5 pl-3 focus-within:border-primary-600 transition-colors">
+          <Link2 size={18} aria-hidden="true" className="shrink-0 text-gray-400" />
+          <input
+            ref={linkRef}
+            readOnly
+            value={url}
+            aria-label="Lien de la page"
+            onFocus={(e) => e.currentTarget.select()}
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-gray-700 text-ellipsis outline-none"
+          />
           <button
+            type="button"
             onClick={copyLink}
-            className="w-full h-11 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-700 font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-4 text-[13px] font-bold text-white transition-colors ${FOCUS_RING} ${
+              copyState === 'copied' ? 'bg-emerald-600' : 'bg-primary-600 hover:bg-primary-700'
+            }`}
           >
-            {linkCopied ? <Check size={14} className="text-emerald-600" /> : <Link2 size={14} />}
-            {linkCopied ? 'Lien copié !' : 'Copier le lien'}
+            {copyState === 'copied' ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+            {copyState === 'copied' ? 'Copié' : 'Copier'}
           </button>
         </div>
+        {copyState === 'blocked' && (
+          <p role="alert" className="mx-6 mt-2 text-[12px] font-medium text-amber-800 dark:text-amber-300">
+            Ce navigateur bloque la copie automatique : le lien est sélectionné, copiez-le (appui long ou Ctrl+C).
+          </p>
+        )}
+        <p role="status" className="sr-only">
+          {copyState === 'copied' ? 'Lien copié' : messengerHint ? 'Lien copié pour Messenger' : ''}
+        </p>
+
+        {/* The device's own sheet: Instagram, SMS… */}
+        {canUseDeviceShare && (
+          <div className="px-6 mt-3">
+            <button
+              type="button"
+              onClick={() => openDeviceShare(content)}
+              className={`flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors ${FOCUS_RING}`}
+            >
+              <Share2 size={16} aria-hidden="true" />
+              Plus d'options (Instagram, SMS…)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
