@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Facebook, Linkedin, Check, MessageCircle, MessagesSquare, Link2, ImageIcon } from 'lucide-react';
 import { monitoring } from '../../utils/monitoring';
 import { apiClient } from '../../services/apiClient';
@@ -126,21 +126,55 @@ const NETWORKS: Array<{ id: SharePlatform; label: string; icon: React.ReactNode;
   { id: 'linkedin', label: 'LinkedIn', icon: <Linkedin size={22} />, color: 'text-[#0A66C2]' },
 ];
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea, select, [tabindex]:not([tabindex="-1"])';
+
+/** Keeps Tab / Shift+Tab cycling inside the modal panel. */
+const trapFocus = (e: KeyboardEvent, panel: HTMLElement | null) => {
+  if (!panel) return;
+  const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)];
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  const inside = panel.contains(document.activeElement);
+  if (e.shiftKey && (!inside || document.activeElement === first)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (!inside || document.activeElement === last)) {
+    e.preventDefault();
+    first.focus();
+  }
+};
+
 export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClose, content }) => {
   const [linkCopied, setLinkCopied] = useState(false);
   // Shown under the buttons: Messenger's "paste the link" hint, or the link
   // itself when the browser refused to copy it.
   const [notice, setNotice] = useState<null | 'messenger' | 'copy-blocked'>(null);
   const [imgError, setImgError] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   const url = shareUrlFor(content);
 
   useEffect(() => { setImgError(false); }, [content.image]);
   useEffect(() => { if (open) setNotice(null); }, [open]);
 
+  // Keyboard and screen-reader users: focus moves into the modal when it
+  // opens and goes back to the button that opened it when it closes. Kept
+  // apart from the effect below, which re-runs whenever onClose changes.
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    return () => { opener?.focus?.(); };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab') trapFocus(e, panelRef.current);
+    };
     window.addEventListener('keydown', handler);
     document.body.style.overflow = 'hidden';
     return () => {
@@ -178,6 +212,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
       aria-label="Partager"
     >
       <div
+        ref={panelRef}
         className="bg-card w-full md:max-w-lg md:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -188,6 +223,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ open, onClos
             <p className="text-[12px] font-medium text-gray-500 mt-0.5">Choisissez où partager</p>
           </div>
           <button
+            ref={closeRef}
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
             aria-label="Fermer"
