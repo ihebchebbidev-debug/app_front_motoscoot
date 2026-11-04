@@ -69,7 +69,11 @@ const openPopup = (url: string) => window.open(url, '_blank', 'noopener,noreferr
 
 /**
  * Opens the network's own share flow with the page link:
- *  - Facebook / LinkedIn: their share dialog (URL only).
+ *  - Facebook / LinkedIn: their share dialog (URL only). On phones, a
+ *    facebook.com link opens the Facebook app (iOS universal links, Android
+ *    app links), which ignores sharer.php and just shows the feed: the device
+ *    share sheet hands the link to the app's composer instead. sharer.php
+ *    stays the fallback when there is no usable sheet.
  *  - WhatsApp, Telegram, X, e-mail: the page title and the link, which
  *    unfurls into the preview card.
  *  - Pinterest: the link, the title and the page image as the pin.
@@ -85,6 +89,10 @@ export const shareTo = async (platform: SharePlatform, content: ShareContent): P
   trackShare(platform, content);
   switch (platform) {
     case 'facebook':
+      if (isTouchDevice()) {
+        const result = await openShareSheet({ title: content.title, text: content.title, url });
+        if (result !== 'unavailable' && result !== 'failed') return {};
+      }
       openPopup(`https://www.facebook.com/sharer/sharer.php?u=${link}`);
       return {};
     case 'linkedin':
