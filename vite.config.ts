@@ -2,6 +2,7 @@ import path from 'path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { seoSnapshotsPlugin } from './src/seo/vitePluginSeoSnapshots';
+import { addAssetRetry } from './utils/assetRetry';
 
 // Emits /version.json into the build output so the running app can poll it
 // and detect when a new deploy is available (see hooks/useAppVersion.ts).
@@ -20,6 +21,15 @@ function versionManifestPlugin(): Plugin {
         source: JSON.stringify({ version, builtAt: new Date().toISOString() }),
       });
     },
+  };
+}
+
+// Load-error recovery for the entry CSS / JS (see utils/assetRetry.ts).
+function assetRetryPlugin(): Plugin {
+  return {
+    name: 'asset-retry',
+    apply: 'build',
+    transformIndexHtml: { order: 'post', handler: addAssetRetry },
   };
 }
 
@@ -61,7 +71,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-      plugins: [react(), versionManifestPlugin(), seoSnapshotsPlugin()],
+      plugins: [react(), versionManifestPlugin(), assetRetryPlugin(), seoSnapshotsPlugin()],
       optimizeDeps: {
         // heic2any is a UMD bundle that breaks Vite's ESM dep optimization
         // (forced re-optimization invalidates the React chunk and yields

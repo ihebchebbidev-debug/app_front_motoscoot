@@ -181,11 +181,17 @@ export function useAppVersion() {
         (e?.reason && (e.reason.message || String(e.reason))) || '';
       if (isChunkError(msg)) safeReload({ allowDuringInput: true });
     };
+    // Vite's own signal for a lazy chunk (JS or its stylesheet: admin
+    // console, map) that failed to load. React.lazy hands that rejection to
+    // the error boundary, so it never reaches the window listeners above.
+    const onPreloadError = () => safeReload({ allowDuringInput: true });
     window.addEventListener('error', onError);
     window.addEventListener('unhandledrejection', onRejection);
+    window.addEventListener('vite:preloadError', onPreloadError);
     return () => {
       window.removeEventListener('error', onError);
       window.removeEventListener('unhandledrejection', onRejection);
+      window.removeEventListener('vite:preloadError', onPreloadError);
     };
   }, []);
 }
