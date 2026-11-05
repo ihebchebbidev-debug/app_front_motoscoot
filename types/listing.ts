@@ -22,8 +22,9 @@ export const listingSchema = z.object({
   condition: z.string().min(1, "État requis"),
   equipment: z.array(z.string()).default([]),
   price: z.string().min(1, "Le prix est requis"),
-  city: z.string().min(1, "La ville est requise"),
-  governorate: z.string().optional().default(''),
+  // No city field in the deposit form any more: the governorate is enough.
+  city: z.string().optional().or(z.literal('')),
+  governorate: z.string().trim().min(1, 'Veuillez choisir un gouvernorat'),
   phone: z
     .string()
     .min(1, 'Numéro de téléphone requis')
