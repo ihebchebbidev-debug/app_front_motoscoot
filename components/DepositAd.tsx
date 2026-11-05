@@ -27,6 +27,7 @@ import { StepMedia } from './deposit/StepMedia';
 import { StepPublish } from './deposit/StepPublish';
 import { StepRecap } from './deposit/StepRecap';
 import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess';
+import { primeSuccessSound } from '../utils/successSound';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
 
 import { listingService } from '../services/listingService';
@@ -526,6 +527,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
    * surfacing on the location step because Zod validates the whole schema.
    */
   const handlePublish = async () => {
+    // Inside the click: lets the success screen play its sound later.
+    primeSuccessSound();
     const isAccessory = allValues.category === 'Accessoires';
     const lastStep = depositSteps(isAccessory).length;
     const labels = stepLabels(isAccessory);
