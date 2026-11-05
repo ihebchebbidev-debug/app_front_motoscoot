@@ -18,7 +18,6 @@ import { techSpecsApi } from '../services/techSpecsApi';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
 import { BasePageProps, Importer, TechSpec } from '../types';
-import { Reveal } from './ui/Reveal';
 import { Section } from './ui/Section';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -548,7 +547,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           {/* LEFT COLUMN */}
           <div className="lg:col-span-8 space-y-8">
             {/* IMAGE GALLERY — same viewer as the listing details page */}
-            <Reveal animation="fade-in-up">
+            <div>
               <div className="flex flex-col gap-3">
                 <ListingGallery
                   images={images}
@@ -564,7 +563,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                   ) : undefined}
                 />
               </div>
-            </Reveal>
+            </div>
 
             {/* MOBILE HEADER INFO (Visible only on mobile/tablet) */}
             <div className="lg:hidden mb-8">
@@ -601,7 +600,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
                 one card, multiple section groups separated by uppercase
                 headers + a thin primary underline. No per-section icons. */}
-            <Reveal animation="fade-in-up" delay={150}>
+            <div>
               <div className={S.ContentBlock}>
                 <div className="px-6 md:px-8 py-4 border-b border-border">
                   <h2 className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground">
@@ -671,7 +670,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                   )}
                 </div>
               </div>
-            </Reveal>
+            </div>
 
             {/* Same models as the crawler HTML (api/og-prerender.ts). */}
             <SimilarModels models={similar} />
@@ -681,7 +680,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           <div className="lg:col-span-4">
             <div className="sticky top-28 space-y-6">
               {/* HEADER INFO CARD (Desktop Only) */}
-              <Reveal animation="fade-in-up" delay={100}>
+              <div>
                 <div className="hidden lg:block bg-card rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-sans text-[14px] font-bold text-primary-600 tracking-[0px]">{spec.brand}</span>
@@ -719,7 +718,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                     </Button>
                   </div>
                 </div>
-              </Reveal>
+              </div>
 
               {/* Publicité — Format Carré (visible sur mobile, tablette et desktop) */}
               <div className="block">
@@ -733,9 +732,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
               {/* IMPORTER CARD — populated from tech_specs.importer_id.
                   When no importer is assigned the whole card is hidden
                   (the admin can attach one from /admin → Importateurs). */}
-              <Reveal animation="fade-in-up" delay={200}>
+              <div>
                 <ImporterCard importer={spec.importer} />
-              </Reveal>
+              </div>
             </div>
           </div>
         </div>
