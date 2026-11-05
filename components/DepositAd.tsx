@@ -27,6 +27,7 @@ import { StepEquipment } from './deposit/StepEquipment';
 import { StepMedia } from './deposit/StepMedia';
 import { StepPublish } from './deposit/StepPublish';
 import { StepLocation } from './deposit/StepLocation';
+import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS } from '../utils/depositSteps';
 
 import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
@@ -124,7 +125,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialStepFromUrl = (() => {
     const raw = parseInt(searchParams.get('step') || '', 10);
-    return Number.isFinite(raw) && raw >= 1 && raw <= 6 ? raw : 1;
+    return Number.isFinite(raw) && raw >= 1 && raw <= MAX_DEPOSIT_STEPS ? raw : 1;
   })();
   const [step, setStepState] = useState<number>(initialStepFromUrl);
 
@@ -156,7 +157,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // the setStep effect above.
   useEffect(() => {
     const raw = parseInt(searchParams.get('step') || '', 10);
-    const fromUrl = Number.isFinite(raw) && raw >= 1 && raw <= 6 ? raw : 1;
+    const fromUrl = Number.isFinite(raw) && raw >= 1 && raw <= MAX_DEPOSIT_STEPS ? raw : 1;
     setStepState((prev) => (prev === fromUrl ? prev : fromUrl));
   }, [searchParams]);
 
@@ -338,14 +339,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     address: 'Adresse',
   };
 
-  const stepLabels = (isAccessory: boolean): Record<number, string> => ({
-    1: 'Catégorie',
-    2: isAccessory ? 'Spécifications accessoire' : 'Spécifications techniques',
-    3: isAccessory ? 'Photos' : 'Équipements',
-    4: isAccessory ? 'Publication' : 'Photos',
-    5: isAccessory ? 'Localisation' : 'Publication',
-    6: 'Localisation',
-  });
+  const stepLabels = (isAccessory: boolean): Record<number, string> =>
+    Object.fromEntries(depositSteps(isAccessory).map((id, i) => [i + 1, depositStepLabel(id, isAccessory)]));
 
   /**
    * Returns the list of required fields for a given step + whether the user
@@ -354,10 +349,13 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
    * (e.g. step 3 for non-accessories: optional equipment).
    */
   const getStepFields = (targetStep: number, isAccessory: boolean): string[] => {
-    if (targetStep === 1) return ['category'];
-
-    if (targetStep === 2) {
-      if (isAccessory) {
+    switch (depositStepAt(targetStep, isAccessory)) {
+      case 'photos':
+        return ['images'];
+      case 'category':
+        return ['category'];
+      case 'technical': {
+        if (!isAccessory) return ['brand', 'model', 'condition', 'year', 'mileage', 'cc'];
         const f: string[] = ['brand', 'model', 'condition', 'accessoryType'];
         if (allValues.accessoryType === 'Casque') f.push('helmetType', 'visorType');
         if (['Gant', 'Veste', 'Pantalons'].includes(allValues.accessoryType || '')) f.push('size');
@@ -367,22 +365,12 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         if (allValues.accessoryType === 'Intercom') f.push('intercomFeatures');
         return f;
       }
-      return ['brand', 'model', 'condition', 'year', 'mileage', 'cc'];
+      case 'publish':
+        return ['price', 'governorate', 'city', 'phone', 'description'];
+      // Equipment and location (address only) are optional.
+      default:
+        return [];
     }
-
-    // Step 3 — equipment for non-accessories is optional, photos for accessories
-    if (targetStep === 3) return isAccessory ? ['images'] : [];
-
-    // Step 4 — photos for non-accessories, publish for accessories
-    if (targetStep === 4) return isAccessory ? ['price', 'governorate', 'city', 'phone', 'description'] : ['images'];
-
-    // Step 5 — location for accessories (optional), publish for non-accessories
-    if (targetStep === 5) return isAccessory ? [] : ['price', 'governorate', 'city', 'phone', 'description'];
-
-    // Step 6 — location for non-accessories (optional, address only)
-    if (targetStep === 6) return [];
-
-    return [];
   };
 
   /**
@@ -442,8 +430,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     const { valid, missing, fields } = await validateStep(step, isAccessory);
 
     // Block on still-uploading photos (only when on the photos step).
-    const isPhotosStep =
-      (step === 3 && isAccessory) || (step === 4 && !isAccessory);
+    const isPhotosStep = depositStepAt(step, isAccessory) === 'photos';
     if (isPhotosStep && valid) {
       const isUploading = mediaList.some((m) => m.status === 'uploading');
       if (isUploading) {
@@ -473,7 +460,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     // On déclenche la validation de la catégorie et on passe à la suite si OK
     const isValid = await trigger('category');
     if (isValid) {
-      setStep(2);
+      setStep(depositStepNumber('category', id === 'Accessoires') + 1);
     }
   }, [setValue, trigger]);
 
@@ -527,7 +514,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
    */
   const handlePublish = async () => {
     const isAccessory = allValues.category === 'Accessoires';
-    const lastStep = isAccessory ? 5 : 6;
+    const lastStep = depositSteps(isAccessory).length;
     const labels = stepLabels(isAccessory);
 
     for (let s = 1; s <= lastStep; s++) {
@@ -561,6 +548,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     handleSubmit(onSubmit)();
   };
 
+  const totalSteps = depositSteps(category === 'Accessoires').length;
+  const stepId = depositStepAt(step, category === 'Accessoires');
+
   return (
     <div className="bg-neutral-50 min-h-screen">
       <SEO title="Déposer une annonce" description="Publiez gratuitement votre annonce moto ou scooter sur Moto-Scoot.tn." noIndex url="/deposer-une-annonce" />
@@ -570,7 +560,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
             <div className={`${S.MainCard} relative`}>
               <StepProgress
                 step={step}
-                totalSteps={category === 'Accessoires' ? 5 : 6}
+                totalSteps={totalSteps}
                 disabled={publishSuccess}
               />
               <form
@@ -584,16 +574,16 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   tabIndex={-1}
                   aria-live="polite"
                   role="region"
-                  aria-label={`Dépôt d'annonce - Étape ${step} sur ${category === 'Accessoires' ? 5 : 6}`}
+                  aria-label={`Dépôt d'annonce - Étape ${step} sur ${totalSteps}`}
                 >
-                  {step === 1 && (
+                  {stepId === 'category' && (
                     <StepCategory 
                       category={category} 
                       onSelect={handleCategorySelect} 
                       hasError={!!errors.category} 
                     />
                   )}
-                  {step === 2 && (
+                  {stepId === 'technical' && (
                     <StepTechnical 
                       register={register} 
                       errors={stepErrors} 
@@ -604,13 +594,13 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       brands={brandNames}
                     />
                   )}
-                  {step === 3 && category !== 'Accessoires' && (
+                  {stepId === 'equipment' && (
                     <StepEquipment 
                       selectedEquipment={selectedEquipment} 
                       onToggle={toggleEquipment} 
                     />
                   )}
-                  {((step === 3 && category === 'Accessoires') || (step === 4 && category !== 'Accessoires')) && (
+                  {stepId === 'photos' && (
                     <StepMedia 
                       mediaList={mediaList} 
                       onImageChange={handleImageChange} 
@@ -622,7 +612,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       errors={stepErrors} 
                     />
                   )}
-                  {((step === 4 && category === 'Accessoires') || (step === 5 && category !== 'Accessoires')) && (
+                  {stepId === 'publish' && (
                     <StepPublish 
                       register={register} 
                       errors={stepErrors} 
@@ -630,7 +620,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       setValue={setValue}
                     />
                   )}
-                  {((step === 5 && category === 'Accessoires') || (step === 6 && category !== 'Accessoires')) && (
+                  {stepId === 'location' && (
                     <StepLocation
                       register={register}
                       errors={stepErrors}
@@ -650,7 +640,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   >
                     Retour
                   </Button>
-                  {step < (category === 'Accessoires' ? 5 : 6) ? (
+                  {step < totalSteps ? (
                     <Button 
                       type="button" 
                       variant="primary" 
