@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Navigation, X, Search } from 'lucide-react';
 import {
   useBrands,
@@ -101,8 +102,11 @@ const Field: React.FC<FieldProps> = ({
           <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
-      {isOpen && !isDisabled && (
+      {/* Rendered at the page level: inside the search card (relative z-20)
+          the sheet sat under the site header and the cookie banner. */}
+      {isOpen && !isDisabled && createPortal(
         <div
+          data-searchbar-sheet=""
           className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
           onClick={onToggle}
           role="dialog"
@@ -144,7 +148,8 @@ const Field: React.FC<FieldProps> = ({
               {children}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
@@ -196,6 +201,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
   useEffect(() => {
     function handleOutside(event: Event) {
       const target = event.target as Node;
+      // The open sheet lives in document.body (portal): a tap inside it is not "outside".
+      if ((target as Element).closest?.('[data-searchbar-sheet]')) return;
       const inside = Object.values(refs).some((r) => r.current?.contains(target));
       if (!inside) setOpenMenu(null);
     }
