@@ -301,7 +301,7 @@ test('fiche opens with the dated new price block before the spec table (crawler 
   assert.ok(block.includes('<tr><th scope="row">Disponibilité</th><td>Commercialisé en Tunisie</td></tr>'));
   assert.ok(block.includes('<tr><th scope="row">Concessionnaire</th><td>Megacycle (Sousse)</td></tr>'));
   assert.equal(block.includes('/comparateur'), false, 'the page has its own compare button');
-  const link = priced.indexOf('href="https://www.moto-scoot.tn/prix/scooter-125-tunisie">Prix des scooters 125 neufs en Tunisie</a>');
+  const link = priced.indexOf('href="/prix/scooter-125-tunisie">Prix des scooters 125 neufs en Tunisie</a>');
   assert.ok(link > priced.indexOf('Son prix neuf'), '125 prices link under the summary');
   assert.equal(/<th scope="row">Prix<\/th>/.test(priced.slice(priced.indexOf('<h2>Caractéristiques</h2>'))), false, 'price not repeated in the spec table');
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
@@ -318,4 +318,16 @@ test('guides use Article structured data, not the deprecated HowTo', async () =>
     assert.equal(result.body.includes('HowTo'), false);
   } finally { globalThis.fetch = original; }
   assert.equal(readFileSync('components/TipDetails.tsx', 'utf8').includes('"@type": "HowTo"'), false);
+});
+test('sheet body links are site-relative (href="/…"), breadcrumb and similar models included', async () => {
+  const { renderFicheBody } = await import('../api/og-prerender');
+  const html = renderFicheBody(
+    { brand: 'SYM', model: 'Jet 14 EVO 125', category: 'Scooter', price_new: '9000', engine: { cc: '124.7 cc' } } as any,
+    [{ href: '/fiche-technique/sym-jet-x-125', name: 'SYM Jet X 125', price: '9\u00a0399\u00a0DT\u00a0TTC' }],
+  );
+  assert.equal(html.includes('href="https://'), false, 'no absolute internal link');
+  const hrefs = [...new Set(html.match(/href="\/[^"]*"/g))];
+  for (const h of ['href="/"', 'href="/fiches-techniques"', 'href="/fiches-techniques/sym"', 'href="/fiche-technique/sym-jet-x-125"', 'href="/prix/scooter-125-tunisie"', 'href="/comparateur"', 'href="/annonces"']) {
+    assert.ok(hrefs.includes(h), h);
+  }
 });
