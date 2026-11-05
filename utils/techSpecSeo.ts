@@ -227,3 +227,33 @@ export function similarTechSpecs(current: SimilarModelSource, catalogue: Similar
       price: `${x.price} TTC`,
     }));
 }
+
+export interface TechSpecPropertyInput {
+  cc?: unknown;
+  power?: unknown;
+  torque?: unknown;
+  topSpeed?: unknown;
+  consumption?: unknown;
+  weight?: unknown;
+  tank?: unknown;
+}
+
+/**
+ * Product.additionalProperty of a technical sheet, shared by the crawler HTML
+ * and the React page: numeric values with their unit (UN/CEFACT unitCode where
+ * one exists, unitText always) so search engines and AI answers can read
+ * "26" + "ch" instead of the text "26 ch". Missing or "N/A" values are left out.
+ */
+export function techSpecProperties(s: TechSpecPropertyInput): Array<Record<string, unknown>> {
+  const row = (name: string, value: number | null, unitCode: string | null, unitText: string) =>
+    value === null ? null : { '@type': 'PropertyValue', name, value, ...(unitCode ? { unitCode } : {}), unitText };
+  return [
+    row('Cylindrée', firstNumber(s.cc), 'CMQ', 'cm³'),
+    row('Puissance', powerCh(s.power), null, 'ch'),
+    row('Couple', firstNumber(s.torque), 'NU', 'Nm'),
+    row('Vitesse max', firstNumber(s.topSpeed), 'KMH', 'km/h'),
+    row('Consommation', firstNumber(s.consumption), null, 'L/100 km'),
+    row('Poids', firstNumber(s.weight), 'KGM', 'kg'),
+    row('Réservoir', firstNumber(s.tank), 'LTR', 'L'),
+  ].filter((r): r is NonNullable<typeof r> => r !== null);
+}

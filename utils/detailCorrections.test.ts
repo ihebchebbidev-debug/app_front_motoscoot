@@ -331,3 +331,26 @@ test('sheet body links are site-relative (href="/…"), breadcrumb and similar m
     assert.ok(hrefs.includes(h), h);
   }
 });
+test('sheet Product JSON-LD: model (not mpn) and numeric spec properties with units', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({
+      id: 'abc', slug: 'sym-adx-300', brand: 'SYM', model: 'ADX 300', category: 'Scooter', price_new: '24000',
+      engine: { cc: '278 cc', power: '26 ch', torque: '26 Nm' }, top_speed: '130 km/h', consumption: '3.5 L/100 km',
+      dimensions: { weight: '200 kg', tank: '16 L' },
+    });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'sym-adx-300' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    const product = [...result.body.matchAll(/<script[^>]*application\/ld\+json[^>]*>(.*?)<\/script>/gs)]
+      .map((m) => JSON.parse(m[1])).find((j) => j['@type'] === 'Product');
+    assert.ok(product, 'Product JSON-LD present');
+    assert.equal('mpn' in product, false, 'the model name is not a manufacturer part number');
+    assert.equal(product.model, 'ADX 300');
+    assert.equal(product.offers.price, 24000);
+    const props = Object.fromEntries(product.additionalProperty.map((p: any) => [p.name, p]));
+    assert.deepEqual([props['Puissance'].value, props['Puissance'].unitText], [26, 'ch']);
+    assert.deepEqual([props['Vitesse max'].value, props['Vitesse max'].unitCode], [130, 'KMH']);
+    assert.equal(typeof props['Consommation'].value, 'number');
+    assert.equal(props['Réservoir'].value, 16);
+  } finally { globalThis.fetch = original; }
+});

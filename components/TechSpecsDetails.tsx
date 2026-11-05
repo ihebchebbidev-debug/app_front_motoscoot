@@ -30,7 +30,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -349,6 +349,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     const canonical = typeof window !== 'undefined'
       ? `https://www.moto-scoot.tn${window.location.pathname}`
       : `https://www.moto-scoot.tn/fiche-technique/${spec.id}`;
+    // Same numeric specs as the crawler JSON-LD (api/og-prerender.ts).
+    const properties = techSpecProperties({
+      cc: spec.engine?.cc, power: spec.engine?.power, torque: spec.engine?.torque, topSpeed: spec.topSpeed,
+      consumption: spec.consumption, weight: spec.dimensions?.weight, tank: spec.dimensions?.tank,
+    });
     const description = `Fiche technique complète ${name}. Moteur ${spec.engine?.cc || 'N/A'}, puissance ${spec.engine?.power || 'N/A'}${price ? `, prix neuf ${price.toLocaleString('fr-FR')} DT en Tunisie` : ''}.`;
 
     // Emit Product + Offer when we have a valid price (Google requires
@@ -362,7 +367,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         description,
         image: images,
         sku: `MS-${spec.id}`,
-        mpn: spec.model,
+        // The model name, not a manufacturer part number (mpn).
+        model: spec.model,
         category: (spec as any).category || 'Motorcycle',
         brand: { "@type": "Brand", "name": spec.brand },
         url: canonical,
@@ -375,6 +381,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           itemCondition: "https://schema.org/NewCondition",
           url: canonical,
         },
+        ...(properties.length ? { additionalProperty: properties } : {}),
       };
     }
     return {
