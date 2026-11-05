@@ -43,3 +43,9 @@ test('photo arrows are plain white buttons with an orange arrow, no glass', () =
 test('the technical sheet shows every block at load, nothing waits for a scroll', () => {
   assert.doesNotMatch(readFileSync('components/TechSpecsDetails.tsx', 'utf8'), /<Reveal\b/);
 });
+
+test('the listing price card uses the same light shadow as the other cards', () => {
+  const card = readFileSync('components/listing/ListingSellerCard.tsx', 'utf8').match(/SidebarCard: .*$/m)![0];
+  assert.match(card, /\bshadow-sm\b/);
+  assert.doesNotMatch(card, /shadow-\[/);
+});

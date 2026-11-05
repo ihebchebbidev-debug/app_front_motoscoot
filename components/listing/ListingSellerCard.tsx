@@ -33,7 +33,7 @@ const TikTokIcon = ({ size = 20 }: { size?: number }) => (
 );
 
 const S = {
-  SidebarCard: (isPro: boolean, className: string = "") => `bg-card rounded-[24px] border ${isPro ? 'border-primary-100 border-t-4 border-t-primary-600' : 'border-gray-100'} shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col ${className}`,
+  SidebarCard: (isPro: boolean, className: string = "") => `bg-card rounded-[24px] border ${isPro ? 'border-primary-100 border-t-4 border-t-primary-600' : 'border-gray-100'} shadow-sm overflow-hidden flex flex-col ${className}`,
   PriceSection: "hidden md:block px-6 py-4 bg-gray-50/50 border-b border-gray-100",
   PriceLabel: "text-[12px] font-black text-gray-400 uppercase tracking-widest mb-1 block",
   PriceValue: "text-[28px] md:text-[30px] font-black text-primary-600 tracking-tighter leading-none",
