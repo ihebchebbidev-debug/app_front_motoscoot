@@ -87,7 +87,7 @@ export const StepEquipment = memo(({ selectedEquipment, onToggle, accessoryType 
         ))}
 
         {equipmentGroups.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-8">Chargement des équipements…</p>
+          <p className="text-sm text-gray-500 text-center py-8">Chargement des équipements…</p>
         )}
       </div>
     </div>

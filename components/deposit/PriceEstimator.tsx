@@ -10,9 +10,9 @@ export const PriceEstimator: React.FC<PriceEstimatorProps> = ({ estimation, hasE
   if (!hasEnoughData) {
     return (
       <div className="flex items-center gap-3 py-3 px-6 bg-gray-50/50 rounded-2xl border border-gray-100/50 shrink-0">
-        <BarChart3 size={20} className="text-gray-300" />
-        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight leading-tight">
-          Pas assez de données<br/>pour estimation
+        <BarChart3 size={20} className="text-gray-400 shrink-0" aria-hidden="true" />
+        <span className="text-[12px] font-semibold text-gray-500 leading-snug">
+          Pas encore assez d'annonces similaires pour estimer le prix du marché.
         </span>
       </div>
     );
@@ -22,15 +22,15 @@ export const PriceEstimator: React.FC<PriceEstimatorProps> = ({ estimation, hasE
 
   return (
     <div className="flex items-center gap-4 py-3 px-6 bg-gray-50/50 rounded-2xl border border-gray-100/50 group transition-all hover:border-primary-100 shrink-0">
-      <div className="w-9 h-9 rounded-xl bg-card flex items-center justify-center text-primary-500 border border-gray-100 shadow-none">
+      <div className="w-9 h-9 rounded-xl bg-card flex items-center justify-center text-primary-700 border border-gray-100 shadow-none">
         <CircleDollarSign size={20} />
       </div>
       <div>
         <div className="flex items-baseline gap-1.5 leading-none">
           <span className="text-lg font-black text-gray-900">{estimation.toLocaleString()}</span>
-          <span className="text-[12px] font-black text-gray-400 uppercase">DT</span>
+          <span className="text-[12px] font-black text-gray-500 uppercase">DT</span>
         </div>
-        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">Prix du Marché</p>
+        <p className="text-[12px] font-semibold text-gray-500 mt-1">Prix du marché (moyenne)</p>
       </div>
     </div>
   );

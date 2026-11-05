@@ -26,7 +26,7 @@ export const StepMedia = memo(({ mediaList, onImageChange, onRemoveImage, onRetr
         onSetMain={onSetMain}
         onCropDone={onCropDone}
       />
-      {errors.images && <p className="text-red-500 text-xs font-bold mt-4">{errors.images.message}</p>}
+      {errors.images && <p className="text-red-600 text-xs font-bold mt-4">{errors.images.message}</p>}
     </div>
   );
 });
