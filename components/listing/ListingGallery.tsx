@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Heart, Share2 } from 'lucide-react';
 
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
+import { photoFit } from '../../utils/photoFit';
 import { Button } from '../ui/Button';
 
 interface ListingGalleryProps {
@@ -18,17 +19,10 @@ interface ListingGalleryProps {
 }
 
 const S = {
-  GalleryMain: "relative aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden bg-card group shadow-md select-none md:cursor-zoom-in transition-transform active:scale-[0.99] touch-pan-y",
+  GalleryMain: "relative aspect-[4/3] rounded-2xl overflow-hidden bg-card md:bg-neutral-100 group shadow-md select-none md:cursor-zoom-in transition-transform active:scale-[0.99] touch-pan-y",
   GalleryNav: "absolute inset-y-0 hidden md:flex items-center justify-between px-3 w-full pointer-events-none z-20",
-  GalleryBtn: "w-10 h-10 md:w-12 md:h-12 bg-card/90 backdrop-blur-md rounded-full text-gray-900 shadow-xl pointer-events-auto active:scale-90 transition-all hover:bg-card flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100",
-  ThumbsWrapper: "hidden md:flex gap-2.5 mt-4 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory",
-  Thumb: (active: boolean) => `
-    relative flex-shrink-0 w-20 h-14 md:w-28 md:h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer snap-start
-    ${active 
-      ? 'border-primary-600 ring-2 ring-orange-50 scale-[0.98]' 
-      : 'border-transparent opacity-60 hover:opacity-100'}
-  `,
-  Counter: "absolute bottom-4 right-4 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-white text-[12px] font-extrabold uppercase tracking-widest border border-white/10 z-20",
+  GalleryBtn: "w-10 h-10 md:w-12 md:h-12 bg-white hover:bg-white active:bg-white rounded-full text-primary-600 shadow-xl pointer-events-auto active:scale-90 transition-[opacity,transform] flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
+  Counter: "absolute bottom-4 right-4 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-lg text-white text-[12px] font-extrabold uppercase tracking-widest border border-white/10 z-20",
   DotPagination: "absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 md:hidden",
   Dot: (active: boolean) => `w-1.5 h-1.5 rounded-full transition-all duration-300 ${active ? 'bg-card w-4' : 'bg-white/40'}`,
   
@@ -63,6 +57,8 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Desktop fit of the 4:3 main photo, set from each photo's own shape once loaded.
+  const [fit, setFit] = useState<'cover' | 'contain'>('cover');
   const galleryRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -178,15 +174,16 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
             key={activeSource}
             onError={imageFallback}
             src={getOptimizedImageUrl(activeSource, 1200, 900, 90, undefined, title)}
-            className="w-full h-full object-cover animate-fade-in pointer-events-none" 
+            onLoad={(e) => setFit(photoFit(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight))}
+            className={`w-full h-full object-cover ${fit === 'contain' ? 'md:object-contain' : ''} animate-fade-in pointer-events-none`} 
             alt={title}
             loading="eager"
           />
           
           <div className={S.Counter}>{images.length ? activeIndex + 1 : 0} / {images.length}</div>
           {images.length > 1 && <div className={S.GalleryNav}>
-            <Button variant="ghost" aria-label="Photo précédente" className={S.GalleryBtn} onClick={prevImg}><ChevronLeft /></Button>
-            <Button variant="ghost" aria-label="Photo suivante" className={S.GalleryBtn} onClick={nextImg}><ChevronRight /></Button>
+            <button type="button" aria-label="Photo précédente" className={S.GalleryBtn} onClick={prevImg}><ChevronLeft strokeWidth={2.5} /></button>
+            <button type="button" aria-label="Photo suivante" className={S.GalleryBtn} onClick={nextImg}><ChevronRight strokeWidth={2.5} /></button>
           </div>}
           
           {images.length > 1 && (
@@ -230,15 +227,6 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
           </div>
         </div>
 
-        {images.length > 1 && !isFullscreen && (
-          <div className={S.ThumbsWrapper}>
-            {images.map((img, idx) => (
-              <button key={img} aria-label={`Afficher la photo ${idx + 1}`} className={S.Thumb(activeIndex === idx)} onClick={() => setActiveImg(idx)}>
-                <img onError={imageFallback} src={getOptimizedImageUrl(img, 200, 150, 70, undefined, title)} className="w-full h-full object-cover" alt="" />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {isFullscreen && typeof document !== 'undefined' && createPortal(
