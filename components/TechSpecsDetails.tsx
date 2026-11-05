@@ -591,16 +591,18 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                       <SpecRow label="Révisions suivantes" value={spec.maintenance?.serviceInterval} />
                     </SpecGroup>
                   )}
-                  {priceBlock.pricesLink && (
-                    <p className="pt-6 text-sm font-semibold">
-                      <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
-                        {priceBlock.pricesLink.label}
-                      </Link>
-                    </p>
-                  )}
                 </div>
               </div>
             </Reveal>
+
+            {/* Below the spec card, outside it: link to the 125 cm³ scooter prices page. */}
+            {priceBlock.pricesLink && (
+              <p className="mt-4 px-2 text-sm font-semibold">
+                <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
+                  {priceBlock.pricesLink.label}
+                </Link>
+              </p>
+            )}
           </div>
 
           {/* RIGHT COLUMN (SIDEBAR) */}
