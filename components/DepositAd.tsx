@@ -624,6 +624,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       errors={stepErrors} 
                       control={control}
                       setValue={setValue}
+                      priceEstimate={category === 'Accessoires' ? null : priceEstimate}
                     />
                   )}
                   {stepId === 'recap' && (

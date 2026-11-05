@@ -8,13 +8,18 @@ import { useToast } from '../../context/ToastContext';
 import { useGovernorates, useCities } from '../../hooks/useReferenceData';
 import { useUser } from '../../context/UserContext';
 import { cleanPhoneInput } from '../../utils/phoneUtils';
+import type { PriceEstimate } from '../../services/listingsApi';
 
 interface StepPublishProps {
   register: UseFormRegister<ListingFormData>;
   errors: FieldErrors<ListingFormData>;
   control: Control<ListingFormData>;
   setValue: UseFormSetValue<ListingFormData>;
+  /** Market price for this brand / model / year (shown on phones; desktops have the side panel). */
+  priceEstimate?: PriceEstimate | null;
 }
+
+const dt = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} DT`;
 
 const S = {
   HeaderSection: "text-center md:text-left mb-10",
@@ -26,7 +31,8 @@ const S = {
   TemplateButton: "flex items-center gap-1.5 text-[12px] font-black text-primary-700 uppercase tracking-tight hover:text-primary-800 transition-colors"
 };
 
-export const StepPublish = memo(({ register, errors, control, setValue }: StepPublishProps) => {
+export const StepPublish = memo(({ register, errors, control, setValue, priceEstimate }: StepPublishProps) => {
+  const hasMarketPrice = !!priceEstimate && priceEstimate.n > 0 && priceEstimate.avg != null;
   const { addToast } = useToast();
   const { user } = useUser();
   const formData            = useWatch({ control });
@@ -99,14 +105,27 @@ Le véhicule est en très bon état général. Entretien à jour.`;
       </div>
       <div className="space-y-6">
         <div className={S.GridFields}>
-          <Input
-            label="PRIX (DT)"
-            placeholder="Ex: 48500"
-            type="number"
-            {...register('price')}
-            error={errors.price?.message}
-            leftIcon={<BadgeEuro size={18} />}
-          />
+          <div>
+            <Input
+              label="PRIX (DT)"
+              placeholder="Ex: 48500"
+              type="number"
+              {...register('price')}
+              error={errors.price?.message}
+              leftIcon={<BadgeEuro size={18} />}
+              aria-describedby={hasMarketPrice ? 'price-market' : undefined}
+            />
+            {/* Phones have no side panel: give the market price where the price is typed. */}
+            {hasMarketPrice && (
+              <p id="price-market" className="lg:hidden mt-2 ml-1 text-[13px] leading-snug text-gray-600">
+                Prix du marché : <strong className="font-bold text-gray-900">{dt(priceEstimate!.avg!)}</strong> en moyenne
+                {priceEstimate!.min != null && priceEstimate!.max != null && priceEstimate!.min !== priceEstimate!.max && (
+                  <> (de {dt(priceEstimate!.min)} à {dt(priceEstimate!.max)})</>
+                )}
+                , d'après {priceEstimate!.n} annonce{priceEstimate!.n > 1 ? 's' : ''} similaire{priceEstimate!.n > 1 ? 's' : ''}.
+              </p>
+            )}
+          </div>
 
           {/* GOUVERNORAT first, then VILLE filtered by it */}
           <Select
