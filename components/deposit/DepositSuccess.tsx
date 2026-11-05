@@ -66,11 +66,11 @@ export const DepositSuccess: React.FC<DepositSuccessProps> = ({ listing, onView,
       <h2
         ref={headingRef}
         tabIndex={-1}
-        className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight outline-none"
+        className="text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 tracking-[-0.02em] outline-none"
       >
         Annonce envoyée !
       </h2>
-      <p className="mt-3 max-w-[46ch] text-[15px] leading-relaxed text-gray-600 font-medium">
+      <p className="mt-3 max-w-[46ch] text-base leading-relaxed text-gray-600">
         Notre équipe la vérifie avant sa mise en ligne. Vous recevrez un e-mail dès qu'elle sera visible
         par les acheteurs.
       </p>

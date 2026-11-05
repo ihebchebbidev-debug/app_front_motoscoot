@@ -13,17 +13,17 @@ interface StepRecapProps {
 
 const S = {
   HeaderSection: 'text-center md:text-left mb-8',
-  Title: 'text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight',
-  Subtitle: 'text-gray-500 font-medium',
+  Title: 'text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]',
+  Subtitle: 'text-base leading-relaxed text-gray-600',
   Section: 'py-6 first:pt-0 last:pb-0',
   SectionHead: 'flex items-center justify-between gap-4 mb-4',
-  SectionTitle: 'text-[12px] font-black text-gray-500 uppercase tracking-widest',
+  SectionTitle: 'text-[16px] font-bold text-gray-900',
   EditButton:
-    'inline-flex items-center gap-1.5 min-h-11 px-3 -mr-3 rounded-xl text-[12px] font-black text-primary-700 uppercase tracking-tight hover:bg-primary-50 hover:text-primary-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900',
+    'inline-flex items-center gap-1.5 min-h-11 px-3 -mr-3 rounded-xl text-[14px] font-semibold text-primary-700 hover:bg-primary-50 hover:text-primary-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900',
   Grid: 'grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4',
-  Term: 'text-[12px] font-semibold text-gray-500',
-  Value: 'mt-0.5 text-[15px] font-bold text-gray-900 break-words',
-  Missing: 'mt-0.5 text-[15px] font-medium text-gray-500',
+  Term: 'text-[13px] font-medium text-gray-600',
+  Value: 'mt-0.5 text-[16px] font-semibold text-gray-900 break-words',
+  Missing: 'mt-0.5 text-[16px] text-gray-500',
 };
 
 const show = (v: unknown): string | null => {
@@ -144,7 +144,7 @@ export const StepRecap = memo(({ values: v, mediaList, isAccessory, onEdit }: St
             {equipment.length > 0 ? (
               <ul className="flex flex-wrap gap-2">
                 {equipment.map((e) => (
-                  <li key={e} className="px-3 py-1.5 rounded-full bg-gray-100 text-[13px] font-semibold text-gray-700">{e}</li>
+                  <li key={e} className="px-3 py-1.5 rounded-full bg-gray-100 text-[14px] font-medium text-gray-700">{e}</li>
                 ))}
               </ul>
             ) : (

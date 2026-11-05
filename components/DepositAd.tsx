@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { Button } from './ui/Button';
+import { TypeScaleProvider } from './ui/TypeScale';
 import { StepProgress } from './deposit/StepProgress';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
 import { useToast } from '../context/ToastContext';
@@ -577,6 +578,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const stepId = depositStepAt(step, category === 'Accessoires');
 
   return (
+    // Calm type scale (sentence case, fewer weights) for the deposit only.
+    <TypeScaleProvider tone="calm">
     <div className="bg-neutral-50 min-h-screen">
       <SEO title="Déposer une annonce" description="Publiez gratuitement votre annonce moto ou scooter sur Moto-Scoot.tn." noIndex url="/deposer-une-annonce" />
       <div className={S.Container}>
@@ -708,6 +711,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         </div>
       </div>
     </div>
+    </TypeScaleProvider>
   );
 };
 

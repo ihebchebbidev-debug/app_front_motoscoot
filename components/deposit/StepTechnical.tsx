@@ -22,13 +22,13 @@ interface StepTechnicalProps {
 
 const S = {
   HeaderSection: "text-center md:text-left mb-10",
-  Title: "text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight",
-  Subtitle: "text-gray-500 font-medium",
+  Title: "text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]",
+  Subtitle: "text-base leading-relaxed text-gray-600",
   GridFields: "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8",
   AutocompleteWrapper: "relative w-full",
   SuggestionList: "absolute top-[calc(100%+8px)] left-0 w-full bg-card border border-neutral-200 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] z-[100] overflow-hidden py-2 animate-scale-in origin-top",
-  SuggestionItem: "w-full text-left px-5 py-3 text-[13px] font-bold text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors flex items-center justify-between group",
-  NoResult: "px-5 py-3.5 text-xs font-bold text-gray-500 italic",
+  SuggestionItem: "w-full text-left px-5 py-3 text-[15px] font-medium text-gray-900 hover:bg-primary-50 hover:text-primary-600 transition-colors flex items-center justify-between group",
+  NoResult: "px-5 py-3.5 text-[13px] text-gray-600",
   LabelBadge: "text-[11px] font-black text-gray-500 uppercase tracking-widest px-5 py-2 border-b border-gray-100 mb-1",
 };
 
@@ -113,7 +113,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       <div className={S.GridFields}>
 
         {/* CATÉGORIE: the other fields depend on it (brands, accessory fields). */}
-        <Select label="CATÉGORIE" {...register('category')} error={errors.category?.message}>
+        <Select label="Catégorie" {...register('category')} error={errors.category?.message}>
           <option value="">Choisir une catégorie</option>
           {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
         </Select>
@@ -121,7 +121,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {category && (<>
         {category === 'Accessoires' && (
           <Select
-            label="TYPE D'ACCESSOIRE"
+            label="Type d'accessoire"
             {...register('accessoryType')}
             error={errors.accessoryType?.message}
           >
@@ -131,7 +131,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         )}
 
         {/* MARQUE */}
-        <Select label="MARQUE" {...register('brand')} error={errors.brand?.message}>
+        <Select label="Marque" {...register('brand')} error={errors.brand?.message}>
           <option value="">Sélectionner</option>
           {brands.map((b) => <option key={b} value={b}>{b}</option>)}
         </Select>
@@ -139,7 +139,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {/* MODÈLE avec autocomplete API */}
         <div className={S.AutocompleteWrapper} ref={containerRef}>
           <Input
-            label="MODÈLE"
+            label="Modèle"
             placeholder="Ex: TMAX 560"
             leftIcon={<Layers size={18} className="text-primary-600" />}
             {...register('model')}
@@ -172,20 +172,20 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         </div>
 
         {/* ÉTAT */}
-        <Select label="ÉTAT" {...register('condition')} error={errors.condition?.message}>
+        <Select label="État" {...register('condition')} error={errors.condition?.message}>
           <option value="">Choisir l'état</option>
           {conditionList.map((c) => <option key={c} value={c}>{c}</option>)}
         </Select>
 
         {category === 'Accessoires' && accessoryType === 'Casque' && (
           <>
-            <Select label="TYPE DE CASQUE" {...register('helmetType')} error={errors.helmetType?.message}>
+            <Select label="Type de casque" {...register('helmetType')} error={errors.helmetType?.message}>
               <option value="">Sélectionner</option>
               {helmetTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black text-gray-700 uppercase tracking-widest">
+              <label className="text-[14px] leading-[1.3] font-semibold text-gray-900">
                 TYPE DE VISIÈRE (MAX 2)
               </label>
               <div className="flex flex-wrap gap-3">
@@ -203,7 +203,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
                 ))}
               </div>
               {errors.visorType?.message && (
-                <p className="text-red-500 text-xs mt-1">{errors.visorType.message}</p>
+                <p className="text-red-600 text-[13px] font-medium mt-1">{errors.visorType.message}</p>
               )}
             </div>
           </>
@@ -212,14 +212,14 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {category === 'Accessoires' && (
           <>
             {['Gant', 'Veste', 'Pantalons'].includes(accessoryType || '') && (
-              <Select label="TAILLE" {...register('size')} error={errors.size?.message}>
+              <Select label="Taille" {...register('size')} error={errors.size?.message}>
                 <option value="">Sélectionner</option>
                 {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
               </Select>
             )}
 
             {['Veste', 'Pantalons', 'Chaussures'].includes(accessoryType || '') && (
-              <Select label="GENRE" {...register('gender')} error={errors.gender?.message}>
+              <Select label="Genre" {...register('gender')} error={errors.gender?.message}>
                 <option value="">Sélectionner</option>
                 {genders.map((g) => <option key={g} value={g}>{g}</option>)}
               </Select>
@@ -227,7 +227,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
 
             {accessoryType === 'Chaussures' && (
               <Input
-                label="POINTURE"
+                label="Pointure"
                 placeholder="Ex: 42"
                 type="number"
                 inputMode="numeric"
@@ -237,7 +237,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             )}
 
             {accessoryType === 'Antivol' && (
-              <Select label="TYPE D'ANTIVOL" {...register('antiTheftType')} error={errors.antiTheftType?.message}>
+              <Select label="Type d'antivol" {...register('antiTheftType')} error={errors.antiTheftType?.message}>
                 <option value="">Sélectionner</option>
                 {antiTheftTypes.map((t) => <option key={t} value={t}>{t}</option>)}
               </Select>
@@ -245,7 +245,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
 
             {accessoryType === 'Intercom' && (
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-black text-gray-700 uppercase tracking-widest">
+                <label className="text-[14px] leading-[1.3] font-semibold text-gray-900">
                   FONCTIONNALITÉS INTERCOM
                 </label>
                 <div className="flex flex-wrap gap-3">
@@ -262,7 +262,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
                   ))}
                 </div>
                 {errors.intercomFeatures?.message && (
-                  <p className="text-red-500 text-xs mt-1">{errors.intercomFeatures.message}</p>
+                  <p className="text-red-600 text-[13px] font-medium mt-1">{errors.intercomFeatures.message}</p>
                 )}
               </div>
             )}
@@ -271,13 +271,13 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
 
         {category !== 'Accessoires' && (
           <>
-            <Select label="ANNÉE" {...register('year')} error={errors.year?.message}>
+            <Select label="Année" {...register('year')} error={errors.year?.message}>
               <option value="">Sélectionner l'année</option>
               {years.map((year) => <option key={year} value={year}>{year}</option>)}
             </Select>
 
             <Input
-              label="KILOMÉTRAGE"
+              label="Kilométrage"
               placeholder="Ex: 5000"
               type="number"
               inputMode="numeric"
@@ -286,7 +286,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
               error={errors.mileage?.message}
             />
 
-            <Select label="CYLINDRÉE (CC)" {...register('cc')} error={errors.cc?.message}>
+            <Select label="Cylindrée (cc)" {...register('cc')} error={errors.cc?.message}>
               <option value="">Sélectionner la cylindrée</option>
               {displacementOptions.map((cc) => (
                 <option key={cc} value={cc}>{cc} cc</option>

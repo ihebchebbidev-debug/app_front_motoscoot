@@ -191,10 +191,10 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     <div className="space-y-6">
       <div className="text-center md:text-left">
         <div className="flex items-baseline justify-center md:justify-between gap-3">
-          <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Galerie Photos</h2>
-          <span className="text-sm font-semibold text-gray-600 tabular-nums">{mediaList.length} sur {maxImages}</span>
+          <h2 className="text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 tracking-[-0.02em]">Galerie Photos</h2>
+          <span className="text-[13px] font-medium text-gray-600 tabular-nums">{mediaList.length} sur {maxImages}</span>
         </div>
-        <p className="text-sm text-gray-600 font-medium mt-1">
+        <p className="text-base leading-relaxed text-gray-600 mt-2">
           {mediaList.length > 1
             ? "La première photo est la photo principale. Faites glisser une photo pour changer l'ordre (appui long sur téléphone)."
             : 'Optimisez vos chances de vente avec de belles photos.'}
@@ -252,9 +252,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             {/* Same shape as a photo tile: a 4:3 area and a 48px bar. */}
             <span className={`flex flex-col items-center justify-center gap-2 w-full ${mediaList.length === 0 ? 'py-10' : 'aspect-[4/3]'}`}>
               <Camera className="w-7 h-7 text-primary-600" aria-hidden="true" />
-              <span className="text-sm font-bold">{mediaList.length === 0 ? 'Ajouter des photos' : 'Ajouter'}</span>
+              <span className="text-[16px] font-semibold">{mediaList.length === 0 ? 'Ajouter des photos' : 'Ajouter'}</span>
             </span>
-            <span className="h-12 w-full flex items-center justify-center px-2 text-xs font-medium text-gray-600 text-center">
+            <span className="h-12 w-full flex items-center justify-center px-2 text-[13px] text-gray-600 text-center">
               {mediaList.length === 0 ? `Jusqu'à ${maxImages} photos · format 4:3 conseillé` : `Encore ${maxImages - mediaList.length}`}
             </span>
           </button>

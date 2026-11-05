@@ -6,9 +6,9 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'u
 
 test('the price step asks for the governorate only, not the city', () => {
   const step = read('components/deposit/StepPublish.tsx');
-  assert.doesNotMatch(step, /label="VILLE"/);
+  assert.doesNotMatch(step, /label="(VILLE|Ville)"/);
   assert.doesNotMatch(step, /register\('city'\)/);
-  assert.match(step, /label="GOUVERNORAT"/);
+  assert.match(step, /label="Gouvernorat"/);
   const wizard = read('components/DepositAd.tsx');
   assert.match(wizard, /return \['price', 'governorate', 'phone', 'description'\];/);
   assert.match(read('types/listing.ts'), /city: z\.string\(\)\.optional\(\)/);
