@@ -1,5 +1,5 @@
 import { displayPhone } from '../utils/phoneUtils';
-import React, { useEffect, useMemo, useState, memo, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, memo, useCallback, useRef } from 'react';
 import { 
   ChevronLeft, 
   Share2, 
@@ -24,12 +24,13 @@ import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { TechSpecsDetailsSkeleton } from './tech-specs/TechSpecsSkeletons';
 import { TechSpecsErrorRetry } from './tech-specs/TechSpecsErrorRetry';
+import { TechSpecModelCard } from './tech-specs/TechSpecModelCard';
 import SocialShareModal from './common/SocialShareModal';
 import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, type SimilarModelSource } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -74,32 +75,55 @@ const PriceBlock: React.FC<{ block: TechSpecPriceBlock }> = ({ block }) => {
   );
 };
 
-/** "Modèles similaires": linked model name | price, same table style as the specs. */
-const SimilarModels: React.FC<{ models: SimilarModel[] }> = ({ models }) => {
+/**
+ * "Modèles similaires": the catalogue's model cards (TechSpecModelCard, as on
+ * the brand pages) in a horizontal slider: swipe with scroll snap on phones,
+ * previous / next buttons from md up, each card a link reachable with Tab.
+ */
+const SimilarModels: React.FC<{ models: TechSpec[] }> = ({ models }) => {
+  const track = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const updateEdges = useCallback(() => {
+    const el = track.current;
+    if (!el) return;
+    setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+  }, []);
+  useEffect(() => {
+    updateEdges();
+    window.addEventListener('resize', updateEdges);
+    return () => window.removeEventListener('resize', updateEdges);
+  }, [models, updateEdges]);
+  const slide = (dir: 1 | -1) => {
+    const el = track.current;
+    if (!el) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: reduce ? 'auto' : 'smooth' });
+  };
   if (!models.length) return null;
+  const arrow = 'grid h-10 w-10 place-items-center rounded-full bg-card border border-gray-200 text-foreground transition-colors hover:border-primary-600 hover:text-primary-600 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600';
   return (
-    <section aria-labelledby="modeles-similaires" className={`${S.ContentBlock} mt-6`}>
-      <div className="px-6 md:px-8 pt-5">
+    <section aria-labelledby="modeles-similaires" className="mt-8">
+      <div className="flex items-end justify-between gap-4 mb-4">
         <h2 id="modeles-similaires" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground border-b-2 border-primary-600 pb-2">
           {SIMILAR_MODELS_HEADING}
         </h2>
+        <div className="hidden md:flex gap-2 shrink-0">
+          <button type="button" className={arrow} onClick={() => slide(-1)} disabled={edges.start} aria-label="Modèles précédents"><ChevronLeft size={18} /></button>
+          <button type="button" className={arrow} onClick={() => slide(1)} disabled={edges.end} aria-label="Modèles suivants"><ChevronRight size={18} /></button>
+        </div>
       </div>
-      <div className="px-6 md:px-8 pb-2">
-        <table className="w-full border-collapse">
-          <caption className="sr-only">{SIMILAR_MODELS_HEADING}</caption>
-          <tbody>
-            {models.map((m) => (
-              <tr key={m.href} className={S.SpecRow}>
-                <th scope="row" className={S.SpecLabel}>
-                  <Link to={m.href} className="text-primary-600 hover:text-primary-700 font-semibold underline-offset-4 hover:underline">{m.name}</Link>
-                </th>
-                <td className="py-3 md:py-4 align-middle text-right">
-                  <span className={S.SpecValue}>{m.price}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div
+        ref={track}
+        onScroll={updateEdges}
+        role="list"
+        aria-label={SIMILAR_MODELS_HEADING}
+        className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth motion-reduce:scroll-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2"
+      >
+        {models.map((m) => (
+          <div key={String(m.id)} role="listitem" className="shrink-0 w-[78%] sm:w-[260px] md:w-[270px] snap-start">
+            <TechSpecModelCard spec={m} />
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -247,12 +271,16 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const spec = fetchedSpec;
   // Models sold in Tunisia, for "Modèles similaires" (cached, shared with the comparator and price guides).
   const { data: catalogue = [] } = useCatalogTechSpecs({ availableInTunisia: true });
-  const similar = useMemo<SimilarModel[]>(() => {
+  // Same selection as the crawler HTML (similarTechSpecs), shown with the catalogue's own cards.
+  const similar = useMemo<TechSpec[]>(() => {
     if (!spec) return [];
     const source = (m: TechSpec): SimilarModelSource => ({
       id: m.id, slug: m.slug, brand: m.brand, model: m.model, category: m.categoryLabel || m.category, cc: m.engine?.cc, price: m.priceNew,
     });
-    return similarTechSpecs(source(spec), catalogue.map(source));
+    const bySlug = new Map(catalogue.map((m) => [`/fiche-technique/${m.slug}`, m]));
+    return similarTechSpecs(source(spec), catalogue.map(source))
+      .map((m) => bySlug.get(m.href))
+      .filter((m): m is TechSpec => !!m);
   }, [spec, catalogue]);
   const [shareOpen, setShareOpen] = useState(false);
 
