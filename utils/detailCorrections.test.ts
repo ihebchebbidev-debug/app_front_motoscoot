@@ -297,7 +297,7 @@ test('fiche opens with the dated new price block before the spec table (crawler 
   const block = priced.slice(priced.indexOf('<h2>Prix neuf en Tunisie</h2>'), priced.indexOf('</section>'));
   assert.ok(priced.indexOf('<h1>') < priced.indexOf('<h2>Prix neuf en Tunisie</h2>'), 'price block right under the h1');
   assert.ok(priced.indexOf('</section>') < priced.indexOf('<h2>Caractéristiques</h2>'), 'then the spec table');
-  assert.ok(block.includes('<tr><th scope="row">Prix relevé en novembre 2026</th><td>9 000 DT TTC</td></tr>'));
+  assert.ok(block.includes('<tr><th scope="row">Prix (Novembre 2026)</th><td>9 000 DT TTC</td></tr>'));
   assert.ok(block.includes('<tr><th scope="row">Disponibilité</th><td>Commercialisé en Tunisie</td></tr>'));
   assert.ok(block.includes('<tr><th scope="row">Concessionnaire</th><td>Megacycle (Sousse)</td></tr>'));
   assert.equal(block.includes('/comparateur'), false, 'the page has its own compare button');

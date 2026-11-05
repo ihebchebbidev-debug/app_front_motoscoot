@@ -116,7 +116,7 @@ export interface TechSpecPriceBlockInput {
 }
 
 export interface TechSpecPriceBlock {
-  /** Row label of the price: "Prix relevé en novembre 2026", or "Prix" undated. */
+  /** Row label of the price: "Prix (Novembre 2026)", or "Prix" undated. */
   priceLabel: string;
   /** "9 000 DT TTC" */
   price: string | null;
@@ -147,7 +147,7 @@ export function techSpecPriceBlock(s: TechSpecPriceBlockInput): TechSpecPriceBlo
     : null;
   const scooter125 = /scooter/i.test(String(s.category ?? '')) && cc !== null && cc >= 110 && cc <= 130;
   return {
-    priceLabel: checkedLabel ? `Prix relevé en ${checkedLabel}` : 'Prix',
+    priceLabel: checkedLabel ? `Prix (${checkedLabel.charAt(0).toUpperCase()}${checkedLabel.slice(1)})` : 'Prix',
     price: price ? `${price} TTC` : null,
     availability,
     dealer: s.importerName ? `${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}` : null,

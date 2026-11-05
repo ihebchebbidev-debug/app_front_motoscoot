@@ -16,7 +16,7 @@ test('price block of a 125 scooter: dated price row, availability, dealer, 125 p
     updatedAt: '2026-11-01T19:54:01Z', availableInTunisia: true, importerName: 'Megacycle', importerCity: 'Sousse',
   });
   assert.deepEqual(b, {
-    priceLabel: 'Prix relevé en novembre 2026',
+    priceLabel: 'Prix (Novembre 2026)',
     price: '9 000 DT TTC',
     availability: 'Commercialisé en Tunisie',
     dealer: 'Megacycle (Sousse)',

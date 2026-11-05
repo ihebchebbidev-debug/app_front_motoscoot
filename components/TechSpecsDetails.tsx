@@ -54,8 +54,9 @@ const PriceBlock: React.FC<{ block: TechSpecPriceBlock }> = ({ block }) => {
   if (!block.price && !block.availability && !block.dealer) return null;
   return (
     <section aria-labelledby="prix-neuf" className={`${S.ContentBlock} mb-6`}>
-      <div className="px-6 md:px-8 py-4 border-b border-border">
-        <h2 id="prix-neuf" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground">
+      {/* Orange underline, like the spec groups (Motorisation…). */}
+      <div className="px-6 md:px-8 pt-5">
+        <h2 id="prix-neuf" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground border-b-2 border-primary-600 pb-2">
           {TECH_SPEC_PRICE_LABEL}
         </h2>
       </div>
