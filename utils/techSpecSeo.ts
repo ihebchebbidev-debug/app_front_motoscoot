@@ -176,3 +176,54 @@ export function techSpecDescription({ brand, model, category, price, cc, power, 
     `Comparez et choisissez votre ${scooter ? 'scooter' : 'moto'}.`,
   ].filter(Boolean).join(' ');
 }
+
+/** One sheet of the catalogue, from the raw API document or the mapped TechSpec. */
+export interface SimilarModelSource {
+  id?: string | number;
+  slug?: string;
+  brand?: string;
+  model?: string;
+  category?: string | null;
+  cc?: unknown;
+  /** 9000, "9 399 DT", "En arrivage"… */
+  price?: unknown;
+}
+
+export interface SimilarModel {
+  /** Site-relative: "/fiche-technique/sym-jet-x-125" */
+  href: string;
+  name: string;
+  /** "9 399 DT TTC" */
+  price: string;
+}
+
+export const SIMILAR_MODELS_HEADING = 'Modèles similaires';
+
+/**
+ * "Modèles similaires" of a technical sheet, shared by the React page and the
+ * crawler HTML: same family (scooter with scooter, otherwise the same
+ * category), displacement within 25 % (at least ±15 cm³), a known price —
+ * closest price first (closest displacement when the sheet has no price).
+ */
+export function similarTechSpecs(current: SimilarModelSource, catalogue: SimilarModelSource[], max = 4): SimilarModel[] {
+  const family = (c: unknown) => (/scooter/i.test(String(c ?? '')) ? 'scooter' : String(c ?? '').trim().toLowerCase());
+  const cc0 = firstNumber(current.cc);
+  const p0 = priceNumber(current.price);
+  const seen = new Set<string>();
+  return catalogue
+    .filter((m) => m.slug && m.slug !== current.slug && String(m.id ?? '') !== String(current.id ?? '-'))
+    .filter((m) => family(m.category) === family(current.category))
+    .map((m) => ({ m, cc: firstNumber(m.cc), price: formatDinars(m.price), p: priceNumber(m.price) }))
+    .filter((x) => x.price !== null && x.p !== null)
+    .filter((x) => cc0 === null || (x.cc !== null && Math.abs(x.cc - cc0) <= Math.max(15, cc0 * 0.25)))
+    .sort((a, b) =>
+      (p0 !== null ? Math.abs(a.p! - p0) - Math.abs(b.p! - p0) : Math.abs((a.cc ?? 0) - (cc0 ?? 0)) - Math.abs((b.cc ?? 0) - (cc0 ?? 0)))
+      || `${a.m.brand} ${a.m.model}`.localeCompare(`${b.m.brand} ${b.m.model}`, 'fr'))
+    .filter((x) => !seen.has(x.m.slug!) && !!seen.add(x.m.slug!))
+    .slice(0, max)
+    .map((x) => ({
+      href: `/fiche-technique/${x.m.slug}`,
+      name: [x.m.brand, x.m.model].filter(Boolean).join(' '),
+      price: `${x.price} TTC`,
+    }));
+}

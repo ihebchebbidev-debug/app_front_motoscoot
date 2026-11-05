@@ -302,7 +302,7 @@ test('fiche opens with the dated new price block before the spec table (crawler 
   assert.ok(block.includes('<tr><th scope="row">Concessionnaire</th><td>Megacycle (Sousse)</td></tr>'));
   assert.equal(block.includes('/comparateur'), false, 'the page has its own compare button');
   const link = priced.indexOf('href="https://www.moto-scoot.tn/prix/scooter-125-tunisie">Prix des scooters 125 neufs en Tunisie</a>');
-  assert.ok(link > priced.lastIndexOf('</table>'), '125 prices link under the spec table');
+  assert.ok(link > priced.indexOf('Son prix neuf'), '125 prices link under the summary');
   assert.equal(/<th scope="row">Prix<\/th>/.test(priced.slice(priced.indexOf('<h2>Caractéristiques</h2>'))), false, 'price not repeated in the spec table');
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
   assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
