@@ -21,7 +21,8 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
+import { seoImagePath } from '../utils/seoImagePath.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -759,6 +760,10 @@ export default async function handler(req: any, res: any) {
     const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS
       : thin ? THIN_CONTENT_ROBOTS
       : 'index, follow, max-image-preview:large, max-snippet:-1';
+    // The sheet gallery's first photo is the LCP element: start it with the
+    // HTML, at the exact URL ListingGallery builds (same title, same path).
+    const firstPhoto = kind === 'fiche-technique' ? techSpecShareImage(doc) : null;
+    const lcpImage = firstPhoto ? seoImagePath(firstPhoto, techSpecGalleryTitle(doc)) : null;
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -769,6 +774,7 @@ export default async function handler(req: any, res: any) {
 <link rel="canonical" href="${canonical}" />
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
+${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
 
 <meta property="og:type" content="${ogType}" />
 ${ogType === 'article' && doc ? [
