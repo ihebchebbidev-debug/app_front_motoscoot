@@ -51,7 +51,7 @@ interface DepositAdProps {
 const S = {
   Container: "max-w-[1280px] mx-auto px-4 md:px-6 py-6 md:py-24 pb-32 md:pb-8",
   MainCard: "bg-card rounded-2xl md:rounded-[2.5rem] border border-neutral-200 overflow-hidden shadow-none mb-0 md:mb-8",
-  StepWrapper: "px-4 pb-4 pt-6 md:px-12 md:pb-12 md:pt-8 min-h-[400px] md:min-h-[500px] outline-none focus:ring-0",
+  StepWrapper: "px-4 pb-4 pt-6 md:px-12 md:pb-12 md:pt-8 xl:pt-10 min-h-[400px] md:min-h-[500px] outline-none focus:ring-0",
   ActionNav: "fixed bottom-0 left-0 right-0 z-[100] md:relative md:z-auto flex justify-between items-center gap-3 md:gap-4 px-4 md:px-10 py-4 md:py-8 bg-card/90 backdrop-blur-xl md:bg-neutral-50 border-t border-neutral-100 shadow-[0_-8px_30px_rgb(0,0,0,0.08)] md:shadow-none md:rounded-b-[2.5rem] pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-8",
 };
 
