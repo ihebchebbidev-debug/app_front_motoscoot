@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -49,13 +49,8 @@ const WhatsAppIcon = ({ size = 20, className }: { size?: number, className?: str
   </svg>
 );
 
-/** "Prix neuf en Tunisie" block under the header: price, availability, dealer, links. */
-const PriceBlock: React.FC<{ spec: TechSpec }> = ({ spec }) => {
-  const block = techSpecPriceBlock({
-    brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, cc: spec.engine?.cc,
-    price: spec.priceNew, updatedAt: spec.updatedAt, availableInTunisia: spec.availableInTunisia,
-    importerName: spec.importer?.name, importerCity: spec.importer?.city,
-  });
+/** "Prix neuf en Tunisie" block under the header: dated price, availability, dealer, as spec rows. */
+const PriceBlock: React.FC<{ block: TechSpecPriceBlock }> = ({ block }) => {
   if (!block.price && !block.availability && !block.dealer) return null;
   return (
     <section aria-labelledby="prix-neuf" className={`${S.ContentBlock} mb-6`}>
@@ -64,36 +59,15 @@ const PriceBlock: React.FC<{ spec: TechSpec }> = ({ spec }) => {
           {TECH_SPEC_PRICE_LABEL}
         </h2>
       </div>
-      <div className="px-6 md:px-8 py-5 space-y-4">
-        {block.price && (
-          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-2xl md:text-3xl font-black text-foreground">{block.price}</span>
-            {block.checked && <span className="text-sm text-gray-500">prix relevé en {block.checked}</span>}
-          </p>
-        )}
-        {(block.availability || block.dealer) && (
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            {block.availability && (
-              <div>
-                <dt className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Disponibilité</dt>
-                <dd className="font-semibold text-foreground">{block.availability}</dd>
-              </div>
-            )}
-            {block.dealer && (
-              <div>
-                <dt className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Concessionnaire</dt>
-                <dd className="font-semibold text-foreground">{block.dealer}</dd>
-              </div>
-            )}
-          </dl>
-        )}
-        <p className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
-          {block.links.map((l) => (
-            <Link key={l.href} to={l.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
-              {l.label}
-            </Link>
-          ))}
-        </p>
+      <div className="px-6 md:px-8 pb-2">
+        <table className="w-full border-collapse">
+          <caption className="sr-only">{TECH_SPEC_PRICE_LABEL}</caption>
+          <tbody>
+            <SpecRow label={block.priceLabel} value={block.price || undefined} />
+            <SpecRow label="Disponibilité" value={block.availability || undefined} />
+            <SpecRow label="Concessionnaire" value={block.dealer || undefined} />
+          </tbody>
+        </table>
       </div>
     </section>
   );
@@ -454,6 +428,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   // Indicative monthly installment (price spread over 60 months, no interest).
   // Purely informational — not a financing offer.
   const priceRaw = (spec.priceNew || '').replace(/[^\d]/g, '');
+  const priceBlock = techSpecPriceBlock({
+    brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, cc: spec.engine?.cc,
+    price: spec.priceNew, updatedAt: spec.updatedAt, availableInTunisia: spec.availableInTunisia,
+    importerName: spec.importer?.name, importerCity: spec.importer?.city,
+  });
   const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
@@ -538,7 +517,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             </div>
 
             {/* "Prix neuf en Tunisie": same block as the crawler HTML (api/og-prerender.ts). */}
-            <PriceBlock spec={spec} />
+            <PriceBlock block={priceBlock} />
 
             {/* DETAILED SPECS */}
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
@@ -611,6 +590,13 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                       <SpecRow label="1ère révision" value={spec.maintenance?.firstService} />
                       <SpecRow label="Révisions suivantes" value={spec.maintenance?.serviceInterval} />
                     </SpecGroup>
+                  )}
+                  {priceBlock.pricesLink && (
+                    <p className="pt-6 text-sm font-semibold">
+                      <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
+                        {priceBlock.pricesLink.label}
+                      </Link>
+                    </p>
                   )}
                 </div>
               </div>

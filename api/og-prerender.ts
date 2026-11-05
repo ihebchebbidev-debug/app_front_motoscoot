@@ -362,8 +362,9 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 ];
 
 // Fiche technique body for crawlers that do not run JavaScript, in the same
-// order as the page: the "Prix neuf en Tunisie" block (price, availability,
-// dealer, links), the full spec table, then the summary (price with the date
+// order as the page: the "Prix neuf en Tunisie" rows (dated price,
+// availability, dealer), the full spec table and the 125 scooter prices link,
+// then the summary (price with the date
 // it was checked, importer), then links to the brand, the catalogue and the
 // comparator.
 export function renderFicheBody(d: Doc): string {
@@ -372,15 +373,16 @@ export function renderFicheBody(d: Doc): string {
     brand: d.brand, model: d.model, category: d.category, cc: d.engine?.cc, price: d.price_new, updatedAt: d.updated_at,
     availableInTunisia: d.available_in_tunisia, importerName: d.importer?.name, importerCity: d.importer?.city,
   });
-  const facts = [
-    block.availability ? `<li>Disponibilité : ${escapeHtml(block.availability)}</li>` : '',
-    block.dealer ? `<li>Concessionnaire : ${escapeHtml(block.dealer)}</li>` : '',
-  ].filter(Boolean).join('\n');
-  const priceSection = block.price || block.availability || block.dealer ? `<section>
+  const priceRows = [
+    [block.priceLabel, block.price],
+    ['Disponibilité', block.availability],
+    ['Concessionnaire', block.dealer],
+  ].filter(([, v]) => v).map(([l, v]) => `<tr><th scope="row">${escapeHtml(String(l))}</th><td>${escapeHtml(String(v))}</td></tr>`).join('\n');
+  const priceSection = priceRows ? `<section>
 <h2>${TECH_SPEC_PRICE_LABEL}</h2>
-${block.price ? `<p><strong>${escapeHtml(block.price)}</strong>${block.checked ? `, prix relevé en ${escapeHtml(block.checked)}` : ''}.</p>` : ''}
-${facts ? `<ul>\n${facts}\n</ul>` : ''}
-<p>${block.links.map((l) => `<a href="${SITE}${l.href}">${escapeHtml(l.label)}</a>`).join(' · ')}</p>
+<table>
+${priceRows}
+</table>
 </section>` : '';
   const summary = techSpecSummary({
     brand: d.brand, model: d.model, year: d.year, categoryLabel: d.category, cc: d.engine?.cc, power: d.engine?.power,
@@ -396,6 +398,7 @@ ${facts ? `<ul>\n${facts}\n</ul>` : ''}
 <h1>${escapeHtml(name)}</h1>
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
+${block.pricesLink ? `<p><a href="${SITE}${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
 <p>${escapeHtml(summary)}</p>
 <ul>
 ${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}

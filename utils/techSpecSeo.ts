@@ -116,46 +116,42 @@ export interface TechSpecPriceBlockInput {
 }
 
 export interface TechSpecPriceBlock {
+  /** Row label of the price: "Prix relevé en novembre 2026", or "Prix" undated. */
+  priceLabel: string;
   /** "9 000 DT TTC" */
   price: string | null;
-  /** Month the price was checked: "novembre 2026". */
-  checked: string | null;
   availability: string | null;
   /** "Megacycle (Sousse)" */
   dealer: string | null;
-  /** Site-relative links: 125 cm³ scooter prices (125 scooters only), comparator. */
-  links: Array<{ href: string; label: string }>;
+  /** 125 cm³ scooters only: link to the 125 scooter price page, shown under the spec table. */
+  pricesLink: { href: string; label: string } | null;
 }
 
 /**
- * "Prix neuf en Tunisie" block, right under the H1 of a technical sheet.
- * Shared by the React page and the crawler HTML (api/og-prerender.ts) so both
- * show the same price, availability, dealer and links. Availability only says
- * whether the model is sold in Tunisia: the data has no stock level.
+ * "Prix neuf en Tunisie" block, right under the H1 of a technical sheet: three
+ * label / value rows (dated price, availability, dealer). Shared by the React
+ * page and the crawler HTML (api/og-prerender.ts) so both show the same rows.
+ * Availability only says whether the model is sold in Tunisia: the data has
+ * no stock level. The comparator is reached from the page's own button.
  */
 export const TECH_SPEC_PRICE_LABEL = 'Prix neuf en Tunisie';
 export function techSpecPriceBlock(s: TechSpecPriceBlockInput): TechSpecPriceBlock {
-  const name = [s.brand, s.model].filter(Boolean).join(' ').trim();
   const price = formatDinars(s.price);
   const checked = s.updatedAt ? new Date(s.updatedAt) : null;
+  const checkedLabel = price && checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : null;
   const cc = firstNumber(s.cc);
   const availability =
     price === null && /arrivage/i.test(String(s.price ?? '')) ? 'En arrivage en Tunisie'
     : s.availableInTunisia === true ? 'Commercialisé en Tunisie'
     : s.availableInTunisia === false ? 'Non commercialisé en Tunisie'
     : null;
-  const scooter = /scooter/i.test(String(s.category ?? ''));
-  const links: TechSpecPriceBlock['links'] = [];
-  if (scooter && cc !== null && cc >= 110 && cc <= 130) {
-    links.push({ href: '/prix/scooter-125-tunisie', label: 'Prix des scooters 125 neufs en Tunisie' });
-  }
-  links.push({ href: '/comparateur', label: name ? `Comparer ${scooter ? 'le' : 'la'} ${name} avec un autre modèle` : 'Comparer avec un autre modèle' });
+  const scooter125 = /scooter/i.test(String(s.category ?? '')) && cc !== null && cc >= 110 && cc <= 130;
   return {
+    priceLabel: checkedLabel ? `Prix relevé en ${checkedLabel}` : 'Prix',
     price: price ? `${price} TTC` : null,
-    checked: price && checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : null,
     availability,
     dealer: s.importerName ? `${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}` : null,
-    links,
+    pricesLink: scooter125 ? { href: '/prix/scooter-125-tunisie', label: 'Prix des scooters 125 neufs en Tunisie' } : null,
   };
 }
 
