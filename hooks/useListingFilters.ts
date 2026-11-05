@@ -37,6 +37,34 @@ const DEFAULT_FILTERS: FilterState = {
   minPrice: 0, maxPrice: 200000, minCC: 50, maxCC: 1650,
 };
 
+/**
+ * The filter state a search page starts with, from the filters it was
+ * opened with (home search card, links). Shared with the home search card so
+ * its result count uses exactly the filters the results page will apply.
+ */
+export function filtersFromSearch(initialFilters?: Partial<SearchFilters> | null): FilterState {
+  return {
+    ...DEFAULT_FILTERS,
+    search: initialFilters?.search ?? '',
+    seller: (initialFilters as any)?.seller ?? '',
+    sellerId: (initialFilters as any)?.sellerId ?? '',
+    type: initialFilters?.type ?? '',
+    brand: initialFilters?.brand ?? '',
+    model: initialFilters?.model ?? '',
+    location: initialFilters?.location ?? '',
+    onlyPro: (initialFilters as any)?.onlyPro ?? false,
+    conditions: (initialFilters as any)?.conditions ?? [],
+    minYear: initialFilters?.minYear ?? DEFAULT_FILTERS.minYear,
+    maxYear: initialFilters?.maxYear ?? DEFAULT_FILTERS.maxYear,
+    minKm: (initialFilters as any)?.minKm ?? DEFAULT_FILTERS.minKm,
+    maxKm: (initialFilters as any)?.maxKm ?? DEFAULT_FILTERS.maxKm,
+    minPrice: initialFilters?.minPrice ?? DEFAULT_FILTERS.minPrice,
+    maxPrice: initialFilters?.maxPrice ?? DEFAULT_FILTERS.maxPrice,
+    minCC: (initialFilters as any)?.minCC ?? DEFAULT_FILTERS.minCC,
+    maxCC: (initialFilters as any)?.maxCC ?? DEFAULT_FILTERS.maxCC,
+  };
+}
+
 const RANGE_BOUNDS = {
   minYear: 2000, maxYear: 2026,
   minKm: 0, maxKm: 300000,
@@ -139,26 +167,7 @@ export const useListingFilters = (
 
   const [searchInputValue, setSearchInputValue] = useState(initialFilters?.search ?? '');
 
-  const [filters, setFilters] = useState<FilterState>({
-    ...DEFAULT_FILTERS,
-    search: initialFilters?.search ?? '',
-    seller: initialFilters?.seller ?? '',
-    sellerId: initialFilters?.sellerId ?? '',
-    type: initialFilters?.type ?? '',
-    brand: initialFilters?.brand ?? '',
-    model: initialFilters?.model ?? '',
-    location: initialFilters?.location ?? '',
-    onlyPro: initialFilters?.onlyPro ?? false,
-    conditions: initialFilters?.conditions ?? [],
-    minYear: initialFilters?.minYear ?? DEFAULT_FILTERS.minYear,
-    maxYear: initialFilters?.maxYear ?? DEFAULT_FILTERS.maxYear,
-    minKm: initialFilters?.minKm ?? DEFAULT_FILTERS.minKm,
-    maxKm: initialFilters?.maxKm ?? DEFAULT_FILTERS.maxKm,
-    minPrice: initialFilters?.minPrice ?? DEFAULT_FILTERS.minPrice,
-    maxPrice: initialFilters?.maxPrice ?? DEFAULT_FILTERS.maxPrice,
-    minCC: initialFilters?.minCC ?? DEFAULT_FILTERS.minCC,
-    maxCC: initialFilters?.maxCC ?? DEFAULT_FILTERS.maxCC,
-  });
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromSearch(initialFilters));
 
   // Debounce search input → committed filter (avoids a refetch on every keystroke)
   useEffect(() => {

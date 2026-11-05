@@ -8,7 +8,8 @@ import {
   useVehicleCategoriesRich,
 } from '../../hooks/useReferenceData';
 import { useAvailableSearchOptions } from '../../hooks/useAvailableSearchOptions';
-import { useListingsCount } from '../../hooks/useListings';
+import { useListingsTotal } from '../../hooks/useListings';
+import { filtersFromSearch, filtersToServerParams } from '../../hooks/useListingFilters';
 
 interface SearchBarProps {
   onSearch?: (filters: any) => void;
@@ -216,18 +217,30 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
     );
   };
 
-  const handleSearchClick = () => {
-    onSearch?.({
-      type,
-      search: type === 'Accessoires' ? accessoryCategory : '',
-      brand,
-      model,
-      location: location === 'Ma position' ? '' : location,
-      aroundMe: location === 'Ma position',
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      minYear: minYear ? Number(minYear) : undefined,
-    });
+  const searchFilters = {
+    type,
+    search: type === 'Accessoires' ? accessoryCategory : '',
+    brand,
+    model,
+    location: location === 'Ma position' ? '' : location,
+    aroundMe: location === 'Ma position',
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    minYear: minYear ? Number(minYear) : undefined,
   };
+
+  const handleSearchClick = () => {
+    onSearch?.(searchFilters);
+  };
+
+  // The button's number = what the results page will show for these choices
+  // (same filter mapping). « Autour de moi » depends on the visitor's
+  // position, known only on the results page: no number then.
+  const countParams = useMemo(
+    () => (searchFilters.aroundMe ? null : filtersToServerParams(filtersFromSearch(searchFilters as any), ['recent'], null, 1, 1)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [type, accessoryCategory, brand, model, location, maxPrice, minYear],
+  );
+  const { data: matchCount } = useListingsTotal(countParams);
 
   // Reference data
   const activeBrandCategory = type && type !== 'Accessoires' ? type : undefined;
@@ -237,7 +250,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
   const { data: cityRows = [], names: cityNames } = useCityNames();
   const { data: accessoryTypesData = [] } = useAccessoryTypes();
   const { data: vehicleCategories = [] } = useVehicleCategoriesRich();
-  const { data: liveCount } = useListingsCount();
 
   const {
     brandCounts,
@@ -535,7 +547,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         className="w-full mt-3 md:mt-0 md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
       >
         <Search size={16} strokeWidth={2.5} />
-        <span className="md:hidden">Rechercher{liveCount && liveCount > 0 ? ` (${liveCount.toLocaleString('fr-FR')})` : ''}</span>
+        <span className="md:hidden">Rechercher{typeof matchCount === 'number' && countParams ? ` (${matchCount.toLocaleString('fr-FR')})` : ''}</span>
         <span className="hidden md:inline">Rechercher</span>
       </button>
       </div>
