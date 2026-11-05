@@ -664,15 +664,6 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
               </div>
             </Reveal>
 
-            {/* Below the spec card, outside it: link to the 125 cm³ scooter prices page. */}
-            {priceBlock.pricesLink && (
-              <p className="mt-4 px-2 text-sm font-semibold">
-                <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
-                  {priceBlock.pricesLink.label}
-                </Link>
-              </p>
-            )}
-
             {/* Same models as the crawler HTML (api/og-prerender.ts). */}
             <SimilarModels models={similar} />
           </div>
@@ -748,6 +739,14 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             importerName: spec.importer?.name, importerCity: spec.importer?.city,
           })}
         </p>
+        {/* Under the summary: link to the 125 cm³ scooter prices page. */}
+        {priceBlock.pricesLink && (
+          <p className="mt-3 text-sm font-semibold">
+            <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
+              {priceBlock.pricesLink.label}
+            </Link>
+          </p>
+        )}
       </article>
 
       {/* STICKY BOTTOM BAR (Mobile Only) */}

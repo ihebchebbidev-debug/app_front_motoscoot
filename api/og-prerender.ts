@@ -363,8 +363,9 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 
 // Fiche technique body for crawlers that do not run JavaScript, in the same
 // order as the page: the "Prix neuf en Tunisie" rows (dated price,
-// availability, dealer), the full spec table and the 125 scooter prices link,
-// the "Modèles similaires" (closest price, same family and displacement), then the summary (price with the date
+// availability, dealer), the full spec table, the "Modèles similaires"
+// (closest price, same family and displacement), then the summary and the
+// 125 scooter prices link (price with the date
 // it was checked, importer), then links to the brand, the catalogue and the
 // comparator.
 export function renderFicheBody(d: Doc, similar: SimilarModel[] = []): string {
@@ -398,9 +399,9 @@ ${priceRows}
 <h1>${escapeHtml(name)}</h1>
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
-${block.pricesLink ? `<p><a href="${SITE}${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
 ${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${SITE}${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
 <p>${escapeHtml(summary)}</p>
+${block.pricesLink ? `<p><a href="${SITE}${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
 <ul>
 ${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
 <li><a href="${SITE}/comparateur">Comparer avec un autre modèle</a></li>
