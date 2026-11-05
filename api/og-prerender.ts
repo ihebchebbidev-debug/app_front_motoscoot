@@ -368,6 +368,8 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 // 125 scooter prices link (price with the date
 // it was checked, importer), then links to the brand, the catalogue and the
 // comparator.
+// Internal links are site-relative ("/fiches-techniques/sym"): same pages, and
+// what the SEO checks that count href="/…" expect.
 export function renderFicheBody(d: Doc, similar: SimilarModel[] = []): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
   const block = techSpecPriceBlock({
@@ -395,17 +397,17 @@ ${priceRows}
     .map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
     .join('\n');
   const brandSlug = d.brand ? slugify(d.brand) : '';
-  return `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="${SITE}/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
+  return `<nav aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <a href="/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
-${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${SITE}${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
+${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
 <p>${escapeHtml(summary)}</p>
-${block.pricesLink ? `<p><a href="${SITE}${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
+${block.pricesLink ? `<p><a href="${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
 <ul>
-${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
-<li><a href="${SITE}/comparateur">Comparer avec un autre modèle</a></li>
-<li><a href="${SITE}/annonces">Motos et scooters d'occasion en Tunisie</a></li>
+${brandSlug ? `<li><a href="/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
+<li><a href="/comparateur">Comparer avec un autre modèle</a></li>
+<li><a href="/annonces">Motos et scooters d'occasion en Tunisie</a></li>
 </ul>`;
 }
 
