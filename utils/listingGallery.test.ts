@@ -39,3 +39,7 @@ test('photo arrows are plain white buttons with an orange arrow, no glass', () =
   assert.doesNotMatch(btn, /backdrop-blur|bg-card\/|text-gray-900/);
   assert.doesNotMatch(gallery, /<Button variant="ghost" aria-label="Photo (précédente|suivante)"/);
 });
+
+test('the technical sheet shows every block at load, nothing waits for a scroll', () => {
+  assert.doesNotMatch(readFileSync('components/TechSpecsDetails.tsx', 'utf8'), /<Reveal\b/);
+});
