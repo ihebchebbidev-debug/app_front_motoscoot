@@ -19,8 +19,8 @@ test('the Suivant / Publier buttons reach 4.5:1 in both themes', () => {
   assert.equal(src.split(cls).length - 1, 2);
 });
 
-test('labels and hints of the price and location steps are not gray-400', () => {
-  for (const f of ['components/deposit/StepPublish.tsx', 'components/deposit/StepLocation.tsx']) {
+test('labels and hints of the price and recap steps are not gray-400', () => {
+  for (const f of ['components/deposit/StepPublish.tsx', 'components/deposit/StepRecap.tsx']) {
     const src = read(f);
     assert.doesNotMatch(src, /Label: ["'][^"']*text-gray-400/, f);
     assert.doesNotMatch(src, /text-\[11px\] font-medium text-gray-400/, f);

@@ -4,7 +4,11 @@ import { UseFormRegister, FieldErrors, Control, useWatch, UseFormSetValue, UseFo
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { ListingFormData } from '../../types/listing';
-import { useConditions, useModelsByBrand, useAccessoryTypes } from '../../hooks/useReferenceData';
+import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategoriesRich } from '../../hooks/useReferenceData';
+import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
+
+// Backend category names that differ from the form's values.
+const CATEGORY_ALIASES: Record<string, string> = { Accesoires: 'Accessoires', Accessoire: 'Accessoires' };
 
 interface StepTechnicalProps {
   register: UseFormRegister<ListingFormData>;
@@ -62,6 +66,15 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
   const { data: conditionList = [] }       = useConditions();
   const { names: referenceModels = [] }    = useModelsByBrand(brand || undefined, accessoryTypeForModels);
   const { data: accessoryTypesData = [] }  = useAccessoryTypes();
+  const { data: backendCategories }        = useVehicleCategoriesRich();
+  // The admin's category list, limited to what the listing form accepts.
+  const categoryOptions = useMemo(() => {
+    const allowed = new Set<string>(DEPOSIT_CATEGORIES);
+    const names = (backendCategories || [])
+      .map((c) => CATEGORY_ALIASES[c.name] || c.name)
+      .filter((n) => allowed.has(n));
+    return names.length > 0 ? Array.from(new Set(names)) : [...DEPOSIT_CATEGORIES];
+  }, [backendCategories]);
   const accessoryTypeNames = useMemo(() => accessoryTypesData.map((t) => t.name), [accessoryTypesData]);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -99,6 +112,13 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       </div>
       <div className={S.GridFields}>
 
+        {/* CATÉGORIE: the other fields depend on it (brands, accessory fields). */}
+        <Select label="CATÉGORIE" {...register('category')} error={errors.category?.message}>
+          <option value="">Choisir une catégorie</option>
+          {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+        </Select>
+
+        {category && (<>
         {category === 'Accessoires' && (
           <Select
             label="TYPE D'ACCESSOIRE"
@@ -275,6 +295,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             </Select>
           </>
         )}
+        </>)}
       </div>
     </div>
   );
