@@ -6,9 +6,10 @@ import { useToast } from '../../context/ToastContext';
 import { AdminTable } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import { CategoryImagePicker } from './CategoryImagePicker';
+import { AdminImageUpload } from './AdminImageUpload';
 
 
-type FieldType = 'text' | 'number' | 'checkbox' | 'brand' | 'categories' | 'accessory_types' | 'accessory_type_single' | 'image';
+type FieldType = 'text' | 'number' | 'checkbox' | 'brand' | 'categories' | 'accessory_types' | 'accessory_type_single' | 'image' | 'logo';
 type Resource = {
   key: string;
   label: string;
@@ -18,7 +19,8 @@ type Resource = {
 const RESOURCES: Resource[] = [
   { key: 'brands', label: 'Marques', fields: [
     { name: 'name', label: 'Nom', required: true },
-    { name: 'logo_url', label: 'Logo URL' },
+    // Upload (click, drag-and-drop) or a pasted URL; shown whole, never cropped.
+    { name: 'logo_url', label: 'Logo', type: 'logo' },
     // Multi-select linking the brand to one or more vehicle categories.
     // Powers the "intelligent" filter: when a buyer picks "Moto", only
     // brands flagged with that category appear in the brand dropdown.
@@ -273,6 +275,15 @@ export const ReferenceTab: React.FC = () => {
                 value={Array.isArray(form[f.name]) ? form[f.name] : []}
                 onChange={(next) => setForm({ ...form, [f.name]: next })}
               />
+            ) : f.type === 'logo' ? (
+              <div key={f.name} className="md:col-span-3">
+                <AdminImageUpload
+                  label={f.label}
+                  fit="contain"
+                  value={form[f.name] ?? ''}
+                  onChange={(url) => setForm({ ...form, [f.name]: url })}
+                />
+              </div>
             ) : f.type === 'image' ? (
               <CategoryImagePicker
                 key={f.name}
@@ -353,6 +364,13 @@ export const ReferenceTab: React.FC = () => {
                       value={Array.isArray(editForm[f.name]) ? editForm[f.name] : []}
                       onChange={(next) => setEditForm({ ...editForm, [f.name]: next })}
                     />
+                  ) : f.type === 'logo' ? (
+                    <AdminImageUpload
+                      label={f.label}
+                      fit="contain"
+                      value={editForm[f.name] ?? ''}
+                      onChange={(url) => setEditForm({ ...editForm, [f.name]: url })}
+                    />
                   ) : f.type === 'image' ? (
                     <CategoryImagePicker
                       label={f.label}
@@ -401,6 +419,10 @@ export const ReferenceTab: React.FC = () => {
                         ))}
                       </div>
                     ) : <span className="text-gray-400">—</span>
+                  ) : f.type === 'logo' ? (
+                    r[f.name]
+                      ? <img src={r[f.name]} alt={`Logo ${r.name ?? ''}`.trim()} className="w-12 h-12 object-contain p-1 bg-white rounded-lg border border-gray-200" />
+                      : <span className="text-gray-400">—</span>
                   ) : f.type === 'image' ? (
                     r[f.name]
                       ? <img src={r[f.name]} alt="" className="w-12 h-12 object-cover rounded-lg border border-gray-200" />

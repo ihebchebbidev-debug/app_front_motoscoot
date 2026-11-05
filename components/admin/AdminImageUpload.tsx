@@ -33,6 +33,8 @@ interface Props {
   allowUrl?: boolean;
   /** Show a "Recadrer" button on the current image. Defaults to false. */
   crop?: boolean;
+  /** Preview fit: "contain" shows a logo whole on white instead of cropping it. */
+  fit?: 'cover' | 'contain';
 }
 
 const MAX_RAW_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -44,6 +46,7 @@ export const AdminImageUpload: React.FC<Props> = ({
   label = 'Image',
   allowUrl = true,
   crop = false,
+  fit = 'cover',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -177,7 +180,7 @@ export const AdminImageUpload: React.FC<Props> = ({
             <img
               src={previewSrc}
               alt="Aperçu"
-              className={`w-28 h-28 object-cover rounded-lg border border-slate-200 bg-slate-50 ${
+              className={`w-28 h-28 rounded-lg border border-slate-200 ${fit === 'contain' ? 'object-contain p-2 bg-white' : 'object-cover bg-slate-50'} ${
                 busy ? 'opacity-60' : ''
               }`}
             />
