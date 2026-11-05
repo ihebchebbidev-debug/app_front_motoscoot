@@ -10,7 +10,7 @@ export const ListingDetailsSkeleton: React.FC = () => {
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
           {/* Gallery Skeleton */}
           <div className="space-y-4">
-            <Skeleton className="aspect-[4/3] md:aspect-video rounded-2xl w-full" />
+            <Skeleton className="aspect-[4/3] rounded-2xl w-full" />
             <div className="flex gap-3 overflow-hidden">
                {[...Array(4)].map((_, i) => (
                  <Skeleton key={i} className="w-24 h-18 md:w-32 md:h-24 rounded-xl shrink-0" />
