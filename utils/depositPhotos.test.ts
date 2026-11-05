@@ -65,3 +65,10 @@ test('spec-sheet admin uploads offer cropping with the shared crop window', () =
   const tab = readFileSync('components/admin/TechSpecsTab.tsx', 'utf8');
   assert.equal((tab.match(/\n\s+crop\n/g) || []).length, 2);
 });
+
+test('brand logos in reference data can be uploaded and are shown whole', () => {
+  const tab = readFileSync('components/admin/ReferenceTab.tsx', 'utf8');
+  assert.match(tab, /\{ name: 'logo_url', label: 'Logo', type: 'logo' \}/);
+  assert.equal((tab.match(/fit="contain"/g) || []).length, 2); // add form + inline edit
+  assert.match(readFileSync('components/admin/AdminImageUpload.tsx', 'utf8'), /fit === 'contain' \? 'object-contain/);
+});
