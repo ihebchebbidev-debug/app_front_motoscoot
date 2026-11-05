@@ -26,6 +26,7 @@ import { StepEquipment } from './deposit/StepEquipment';
 import { StepMedia } from './deposit/StepMedia';
 import { StepPublish } from './deposit/StepPublish';
 import { StepRecap } from './deposit/StepRecap';
+import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
 
 import { listingService } from '../services/listingService';
@@ -161,12 +162,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   }, [searchParams]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // `publishSuccess` drives the post-publish transition: a fullcard success
-  // overlay appears, the stepper is dimmed/locked, and after ~1.2s we reset
-  // the form and navigate. This guarantees the user sees a clear confirmation
-  // before the UI snaps back to step 1 (which would otherwise look like the
-  // submit "did nothing").
-  const [publishSuccess, setPublishSuccess] = useState(false);
+  // Once the listing is sent, the wizard gives way to the success screen
+  // ("Voir mon annonce", "Partager", "Déposer une autre").
+  const [published, setPublished] = useState<PublishedListing | null>(null);
   const [priceEstimate, setPriceEstimate] = useState<PriceEstimate | null>(null);
   const estimateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const estimateCtrlRef = useRef<AbortController | null>(null);
@@ -467,6 +465,19 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
 
   const handleBack = () => setStep(prev => prev - 1);
 
+  const handleViewPublished = () => {
+    if (!published) return;
+    onNavigate?.('listing-details', { id: published.id, title: published.title, listingNumber: published.listingNumber } as any);
+  };
+
+  const handleDepositAnother = () => {
+    clearDraft();
+    reset();
+    setMediaList([]);
+    setStep(1);
+    setPublished(null);
+  };
+
   const handleEditStep = useCallback((id: DepositStepId) => {
     const n = depositStepNumber(id, allValues.category === 'Accessoires');
     if (n > 0) setStep(n);
@@ -485,24 +496,18 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     setIsSubmitting(true);
 
     try {
-      // Utilisation du service centralisé au lieu d'une simulation locale
-      await listingService.publishListing(data);
+      const created = await listingService.publishListing(data);
 
-      // CAS SUCCÈS — affiche l'overlay de confirmation puis renvoie l'utilisateur
-      // sur la landing page. On ne ré-initialise PAS le formulaire ici : le
-      // composant est démonté par la navigation, donc remettre setStep(1) /
-      // reset() avant `onNavigate` faisait apparaître brièvement l'étape 1 à
-      // l'écran avant le changement de route. On se contente de nettoyer le
-      // brouillon persistant pour éviter qu'il ne réapparaisse au prochain
-      // dépôt.
-      setIsSubmitting(false);
-      setPublishSuccess(true);
-      addToast("Annonce publiée avec succès !", "success");
+      // The draft is done: remove it so it does not come back on the next deposit.
       clearDraft();
-
-      window.setTimeout(() => {
-        onNavigate?.('home');
-      }, 1200);
+      setIsSubmitting(false);
+      setPublished({
+        id: created.id,
+        listingNumber: created.listingNumber,
+        title: created.title,
+        image: created.image,
+        subtitle: [data.year, data.price ? `${data.price} DT` : '', data.city].filter(Boolean).join(' • '),
+      });
     } catch (error: any) {
       // CAS ÉCHEC
       setIsSubmitting(false);
@@ -566,15 +571,15 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 space-y-6">
             <div className={`${S.MainCard} relative`}>
+              {published ? (
+                <DepositSuccess listing={published} onView={handleViewPublished} onDepositAnother={handleDepositAnother} />
+              ) : (<>
               <StepProgress
                 step={step}
                 totalSteps={totalSteps}
-                disabled={publishSuccess}
               />
               <form
                 onSubmit={(e) => { e.preventDefault(); handlePublish(); }}
-                className={`transition-opacity duration-300 ${publishSuccess ? 'opacity-30 pointer-events-none' : ''}`}
-                aria-busy={publishSuccess || undefined}
               >
                 <div
                   className={S.StepWrapper}
@@ -666,28 +671,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                 </div>
               </form>
 
-              {/* Post-publish transition overlay — sits on top of the dimmed
-                  form/stepper until we reset and navigate. role="status" so
-                  screen readers announce the success state. */}
-              {publishSuccess && (
-                <div
-                  className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-card/85 backdrop-blur-sm rounded-2xl md:rounded-[2.5rem] animate-fade-in"
-                  role="status"
-                  aria-live="assertive"
-                >
-                  <div className="w-16 h-16 rounded-full bg-success-50 flex items-center justify-center shadow-sm">
-                    <CheckCircle2 size={36} className="text-success-600" strokeWidth={2.5} />
-                  </div>
-                  <div className="text-center px-6">
-                    <p className="text-[18px] font-extrabold text-gray-900 tracking-tight">
-                      Annonce publiée !
-                    </p>
-                    <p className="text-[13px] font-semibold text-gray-500 mt-1">
-                      Redirection en cours…
-                    </p>
-                  </div>
-                </div>
-              )}
+              </>)}
             </div>
           </div>
           <div className="hidden lg:block lg:col-span-4 sticky top-32 space-y-6">
