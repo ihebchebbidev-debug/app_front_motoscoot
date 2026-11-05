@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Eye, Plus, Share2 } from 'lucide-react';
+import { Eye, Plus, Share2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { getUrlFromState } from '../../utils/urlUtils';
 import SocialShareModal, { shareNatively, type ShareContent } from '../common/SocialShareModal';
+import { SentEnvelope } from './SentEnvelope';
+import { playSentSound } from '../../utils/successSound';
 
 export interface PublishedListing {
   id: string | number;
@@ -31,9 +33,16 @@ export const DepositSuccess: React.FC<DepositSuccessProps> = ({ listing, onView,
   const [shareOpen, setShareOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
+  const soundPlayed = useRef(false);
+
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Once per publish (StrictMode runs effects twice in development).
+    if (!soundPlayed.current) {
+      soundPlayed.current = true;
+      playSentSound();
+    }
   }, []);
 
   const shareContent: ShareContent = {
@@ -50,9 +59,9 @@ export const DepositSuccess: React.FC<DepositSuccessProps> = ({ listing, onView,
   };
 
   return (
-    <div className="px-6 py-12 md:px-12 md:py-16 flex flex-col items-center text-center animate-fade-in-up" role="status">
-      <div className="w-16 h-16 rounded-full bg-success-50 flex items-center justify-center mb-6">
-        <CheckCircle2 size={36} className="text-success-600" strokeWidth={2.5} aria-hidden="true" />
+    <div className="px-6 py-10 md:px-12 md:py-14 flex flex-col items-center text-center" role="status">
+      <div className="mb-4">
+        <SentEnvelope photo={listing.image} />
       </div>
       <h2
         ref={headingRef}
