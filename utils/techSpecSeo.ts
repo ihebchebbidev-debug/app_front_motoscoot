@@ -267,3 +267,12 @@ export function techSpecProperties(s: TechSpecPropertyInput): Array<Record<strin
 export function techSpecShareImage(s: { image?: string | null; gallery?: Array<string | null | undefined> | null }): string | null {
   return (s.gallery || []).find((g): g is string => !!g) || s.image || null;
 }
+
+/**
+ * Title the sheet gallery gives its photos ("/m/<slug of this>/<file>").
+ * Shared with the crawler HTML so its preload asks for the very URL the
+ * gallery then shows, and the photo is fetched once, before the JavaScript.
+ */
+export function techSpecGalleryTitle(s: { brand?: unknown; model?: unknown; year?: unknown }): string {
+  return `${s.brand} ${s.model} ${s.year}`;
+}

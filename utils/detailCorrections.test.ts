@@ -365,3 +365,18 @@ test('listing share image and structured-data photos carry the cache version', a
     assert.ok(result.body.includes('"https://www.moto-scoot.tn/m/kymco-dink-r-2026/b.webp?v=2"'));
   } finally { globalThis.fetch = original; }
 });
+
+test('a technical sheet preloads the first gallery photo at the URL the gallery shows', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'kymco-people-s-125', brand: 'Kymco', model: 'People S 125', year: 2025, price_new: 8500, image: 'https://www.moto-scoot.tn/uploads/card.webp', gallery: ['https://www.moto-scoot.tn/uploads/g1.webp', 'https://www.moto-scoot.tn/uploads/g2.webp'] });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'kymco-people-s-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    const { seoImagePath } = await import('./seoImagePath');
+    const { techSpecGalleryTitle } = await import('./techSpecSeo');
+    const expected = seoImagePath('https://www.moto-scoot.tn/uploads/g1.webp', techSpecGalleryTitle({ brand: 'Kymco', model: 'People S 125', year: 2025 }));
+    assert.equal(expected, '/m/kymco-people-s-125-2025/g1.webp');
+    assert.ok(result.body.includes(`<link rel="preload" as="image" href="${expected}" fetchpriority="high" />`));
+    assert.equal((result.body.match(/rel="preload" as="image"/g) || []).length, 1);
+  } finally { globalThis.fetch = original; }
+});

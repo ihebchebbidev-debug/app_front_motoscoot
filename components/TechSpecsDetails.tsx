@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -551,7 +551,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
               <div className="flex flex-col gap-3">
                 <ListingGallery
                   images={images}
-                  title={`${spec.brand} ${spec.model} ${spec.year}`}
+                  title={techSpecGalleryTitle(spec)}
                   brand={spec.brand}
                   model={spec.model}
                   favorited={specFavorited}
