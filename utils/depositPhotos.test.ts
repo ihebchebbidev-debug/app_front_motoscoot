@@ -34,3 +34,24 @@ test('the deposit gallery wires reorder, main photo and crop (no more empty crop
   const deposit = readFileSync('components/DepositAd.tsx', 'utf8');
   for (const prop of ['onReorder', 'onSetMain', 'onCropDone']) assert.match(deposit, new RegExp(prop));
 });
+
+test('the line under the gallery never hides a failed photo', async () => {
+  const { gallerySummary } = await import('./depositPhotos.ts');
+  const ok = { status: 'success' as const }, up = { status: 'uploading' as const }, ko = { status: 'error' as const };
+  assert.equal(gallerySummary([]), null);
+  assert.deepEqual(gallerySummary([ok]), { text: '1 photo prête.', failed: 0 });
+  assert.deepEqual(gallerySummary([ok, ok, ok, ok, up, ko]), { text: "4 photos prêtes, 1 en cours d'envoi, 1 en échec. Réessayez ou supprimez la photo en échec.", failed: 1 });
+  assert.deepEqual(gallerySummary([ko, ko]), { text: '2 en échec. Réessayez ou supprimez les photos en échec.', failed: 2 });
+});
+
+test('the crop window is rendered at the page root and closes only on a real backdrop click', () => {
+  const dialog = readFileSync('components/deposit/PhotoCropDialog.tsx', 'utf8');
+  assert.match(dialog, /createPortal\(/);
+  assert.match(dialog, /pressedOnBackdrop\.current && e\.target === e\.currentTarget/);
+  assert.doesNotMatch(dialog, /backdrop-blur/);
+});
+
+test('the gallery keeps the app-screen rules: no gradient, blur, tiny text or tracked capitals', () => {
+  const src = readFileSync('components/deposit/MediaUploader.tsx', 'utf8');
+  assert.doesNotMatch(src, /bg-gradient-|backdrop-blur|text-\[(7|8|9|10)px\]|tracking-widest|shadow-(sm|md|lg)/);
+});

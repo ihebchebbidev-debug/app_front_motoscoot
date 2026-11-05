@@ -39,3 +39,21 @@ export function cropOutputSize(area: CropArea, maxEdge = 2000): { width: number;
   const scale = Math.min(1, maxEdge / Math.max(w, h));
   return { width: Math.max(1, Math.round(w * scale)), height: Math.max(1, Math.round(h * scale)) };
 }
+
+/**
+ * Line under the gallery: what is ready, still sending or failed, so a failed
+ * photo is never hidden behind "Excellent !".
+ */
+export function gallerySummary(list: ReadonlyArray<{ status: 'uploading' | 'success' | 'error' }>): { text: string; failed: number } | null {
+  if (list.length === 0) return null;
+  const count = (s: string) => list.filter((m) => m.status === s).length;
+  const ready = count('success'), sending = count('uploading'), failed = count('error');
+  const s = (n: number) => (n > 1 ? 's' : '');
+  const parts = [
+    ready ? `${ready} photo${s(ready)} prête${s(ready)}` : '',
+    sending ? `${sending} en cours d'envoi` : '',
+    failed ? `${failed} en échec` : '',
+  ].filter(Boolean);
+  const advice = failed ? (failed > 1 ? ' Réessayez ou supprimez les photos en échec.' : ' Réessayez ou supprimez la photo en échec.') : '';
+  return { text: `${parts.join(', ')}.${advice}`, failed };
+}

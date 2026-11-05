@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Cropper, { type Area, type MediaSize } from 'react-easy-crop';
 import { X, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 import { CROP_RATIOS, type CropRatioId, cropOutputSize } from '../../utils/depositPhotos';
@@ -49,6 +50,9 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const applyRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // Closes on a click that starts and ends on the backdrop, not on a crop drag released outside.
+  const pressedOnBackdrop = useRef(false);
 
   useEffect(() => () => { if (typeof source !== 'string') URL.revokeObjectURL(src); }, [source, src]);
 
@@ -61,7 +65,17 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
     applyRef.current?.focus();
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cancelRef.current(); };
+    // Escape closes; Tab stays inside the window.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { cancelRef.current(); return; }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const items = [...dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex="0"]')];
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      else if (!dialogRef.current.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
@@ -88,21 +102,24 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
     }
   };
 
-  return (
+  // Rendered at the root of the page: the deposit step's entrance animation
+  // keeps a transform, which would trap a fixed window inside the step.
+  return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-stretch md:items-center justify-center bg-black/80 backdrop-blur-sm md:p-4"
-      onClick={onCancel}
+      className="fixed inset-0 z-[200] flex items-stretch md:items-center justify-center bg-black/80 md:p-4"
+      onPointerDown={(e) => { pressedOnBackdrop.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (pressedOnBackdrop.current && e.target === e.currentTarget) onCancel(); }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="crop-title"
-        className="flex flex-col w-full md:max-w-2xl bg-card md:rounded-3xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        className="flex flex-col w-full h-full md:h-auto md:max-w-2xl bg-card md:rounded-3xl overflow-hidden"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 id="crop-title" className="text-lg font-black text-gray-900">Recadrer la photo</h2>
-          <button type="button" onClick={onCancel} className="p-2 -mr-2 rounded-full text-gray-500 hover:bg-neutral-100" aria-label="Fermer">
+          <button type="button" onClick={onCancel} className="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-gray-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900" aria-label="Fermer">
             <X size={20} />
           </button>
         </div>
@@ -133,7 +150,7 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
                 type="button"
                 aria-pressed={ratioId === r.id}
                 onClick={() => setRatioId(r.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                className={`h-11 px-4 rounded-full text-sm font-bold border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 ${
                   ratioId === r.id
                     ? 'bg-primary-600 border-primary-600 text-white'
                     : 'bg-card border-neutral-200 text-gray-700 hover:border-primary-400'
@@ -165,7 +182,7 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-gray-700 hover:bg-neutral-50"
+              className="flex-1 h-12 rounded-full border border-neutral-300 text-sm font-bold text-gray-800 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
             >
               Annuler
             </button>
@@ -174,7 +191,7 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
               type="button"
               onClick={apply}
               disabled={!area || busy}
-              className="flex-1 h-12 rounded-2xl bg-primary-600 text-white text-sm font-black hover:bg-primary-700 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="flex-1 h-12 rounded-full bg-primary-600 text-white text-sm font-black hover:bg-primary-700 disabled:opacity-60 flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
             >
               {busy && <Loader2 size={16} className="animate-spin" />}
               Appliquer
@@ -182,7 +199,8 @@ const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onC
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
