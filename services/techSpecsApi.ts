@@ -162,6 +162,7 @@ export function mapBackendTechSpec(b: BackendTechSpec): TechSpec {
     year: typeof b.year === 'string' ? parseInt(b.year, 10) : b.year,
     category: normalizeCategory(b.category),
     priceNew: fmtPrice(b.price_new),
+    availableInTunisia: typeof (b as any).available_in_tunisia === 'boolean' ? (b as any).available_in_tunisia : undefined,
     image: b.cover_image || b.image || FALLBACK_IMAGE,
     gallery: b.gallery,
     engine,

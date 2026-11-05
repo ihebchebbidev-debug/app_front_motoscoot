@@ -288,11 +288,22 @@ test('fiche summary: whole-number displacement is not repeated, missing parts ar
   assert.equal(techSpecSummary({ brand: 'Voge', model: '625', categoryLabel: 'Moto', cc: '581.2 cc' }), 'Voge 625 : moto 581 cm³ équipée d’un moteur de 581,2 cm³.');
   assert.ok(techSpecSummary({ brand: 'KTM', model: '390 Duke', categoryLabel: 'Roadster', cc: '398.7', price: 55000, importerName: 'SIMCC' }).endsWith('Le modèle est distribué en Tunisie par SIMCC.'));
 });
-test('fiche spec table starts with the dated new price (crawler HTML), and has no price row without a price', async () => {
+test('fiche opens with the dated new price block before the spec table (crawler HTML), none without price/availability/dealer', async () => {
   const { renderFicheBody } = await import('../api/og-prerender');
-  const priced = renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', price_new: '9000', updated_at: '2026-11-01T19:54:01Z', engine: { cc: '124.7 cc' } } as any);
-  const firstRow = priced.match(/<tr>.*?<\/tr>/)?.[0];
-  assert.equal(firstRow, `<tr><th scope="row">Prix neuf en Tunisie</th><td>${(9000).toLocaleString('fr-FR')} DT (relevé en novembre 2026)</td></tr>`);
+  const priced = renderFicheBody({
+    brand: 'SYM', model: 'Jet 14 EVO 125', category: 'Scooter', price_new: '9000', updated_at: '2026-11-01T19:54:01Z',
+    available_in_tunisia: true, importer: { name: 'Megacycle', city: 'Sousse' }, engine: { cc: '124.7 cc' },
+  } as any);
+  const block = priced.slice(priced.indexOf('<h2>Prix neuf en Tunisie</h2>'), priced.indexOf('</section>'));
+  assert.ok(priced.indexOf('<h1>') < priced.indexOf('<h2>Prix neuf en Tunisie</h2>'), 'price block right under the h1');
+  assert.ok(priced.indexOf('</section>') < priced.indexOf('<h2>Caractéristiques</h2>'), 'then the spec table');
+  assert.ok(block.includes('<tr><th scope="row">Prix (Novembre 2026)</th><td>9 000 DT TTC</td></tr>'));
+  assert.ok(block.includes('<tr><th scope="row">Disponibilité</th><td>Commercialisé en Tunisie</td></tr>'));
+  assert.ok(block.includes('<tr><th scope="row">Concessionnaire</th><td>Megacycle (Sousse)</td></tr>'));
+  assert.equal(block.includes('/comparateur'), false, 'the page has its own compare button');
+  const link = priced.indexOf('href="https://www.moto-scoot.tn/prix/scooter-125-tunisie">Prix des scooters 125 neufs en Tunisie</a>');
+  assert.ok(link > priced.lastIndexOf('</table>'), '125 prices link under the spec table');
+  assert.equal(/<th scope="row">Prix<\/th>/.test(priced.slice(priced.indexOf('<h2>Caractéristiques</h2>'))), false, 'price not repeated in the spec table');
   const unpriced = renderFicheBody({ brand: 'Honda', model: 'X-ADV', engine: { cc: '745 cc' } } as any);
   assert.equal(unpriced.includes('Prix neuf en Tunisie'), false);
 });

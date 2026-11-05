@@ -17,7 +17,7 @@ import { useTechSpec } from '../hooks/useTechSpecs';
 import { techSpecsApi } from '../services/techSpecsApi';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
-import { BasePageProps, Importer } from '../types';
+import { BasePageProps, Importer, TechSpec } from '../types';
 import { Reveal } from './ui/Reveal';
 import { Section } from './ui/Section';
 import { Button } from './ui/Button';
@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -48,6 +48,31 @@ const WhatsAppIcon = ({ size = 20, className }: { size?: number, className?: str
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
+
+/** "Prix neuf en Tunisie" block under the header: dated price, availability, dealer, as spec rows. */
+const PriceBlock: React.FC<{ block: TechSpecPriceBlock }> = ({ block }) => {
+  if (!block.price && !block.availability && !block.dealer) return null;
+  return (
+    <section aria-labelledby="prix-neuf" className={`${S.ContentBlock} mb-6`}>
+      {/* Orange underline, like the spec groups (Motorisation…). */}
+      <div className="px-6 md:px-8 pt-5">
+        <h2 id="prix-neuf" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground border-b-2 border-primary-600 pb-2">
+          {TECH_SPEC_PRICE_LABEL}
+        </h2>
+      </div>
+      <div className="px-6 md:px-8 pb-2">
+        <table className="w-full border-collapse">
+          <caption className="sr-only">{TECH_SPEC_PRICE_LABEL}</caption>
+          <tbody>
+            <SpecRow label={block.priceLabel} value={block.price || undefined} />
+            <SpecRow label="Disponibilité" value={block.availability || undefined} />
+            <SpecRow label="Concessionnaire" value={block.dealer || undefined} />
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+};
 
 /**
  * Renders the importer/distributor contact card on the tech-spec details
@@ -404,6 +429,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   // Indicative monthly installment (price spread over 60 months, no interest).
   // Purely informational — not a financing offer.
   const priceRaw = (spec.priceNew || '').replace(/[^\d]/g, '');
+  const priceBlock = techSpecPriceBlock({
+    brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, cc: spec.engine?.cc,
+    price: spec.priceNew, updatedAt: spec.updatedAt, availableInTunisia: spec.availableInTunisia,
+    importerName: spec.importer?.name, importerCity: spec.importer?.city,
+  });
   const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
@@ -487,6 +517,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
               </div>
             </div>
 
+            {/* "Prix neuf en Tunisie": same block as the crawler HTML (api/og-prerender.ts). */}
+            <PriceBlock block={priceBlock} />
+
             {/* DETAILED SPECS */}
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
                 one card, multiple section groups separated by uppercase
@@ -500,11 +533,6 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 </div>
                 <br></br>
                 <div className="px-6 md:px-8 pb-6 md:pb-8 divide-y divide-transparent">
-                  {/* Dated new price first: same row as the crawler HTML (api/og-prerender.ts). */}
-                  <SpecGroup title={TECH_SPEC_PRICE_LABEL}>
-                    <SpecRow label="Prix" value={techSpecPriceValue(spec.priceNew, spec.updatedAt)} />
-                  </SpecGroup>
-
                   <SpecGroup title="Motorisation">                   
                     <SpecRow label="Type moteur" value={spec.engine.type} />
                     <SpecRow label="Cylindrée" value={spec.engine.cc} />
@@ -567,6 +595,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 </div>
               </div>
             </Reveal>
+
+            {/* Below the spec card, outside it: link to the 125 cm³ scooter prices page. */}
+            {priceBlock.pricesLink && (
+              <p className="mt-4 px-2 text-sm font-semibold">
+                <Link to={priceBlock.pricesLink.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">
+                  {priceBlock.pricesLink.label}
+                </Link>
+              </p>
+            )}
           </div>
 
           {/* RIGHT COLUMN (SIDEBAR) */}
