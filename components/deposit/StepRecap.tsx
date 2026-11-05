@@ -12,7 +12,7 @@ interface StepRecapProps {
 }
 
 const S = {
-  HeaderSection: 'text-center md:text-left mb-8',
+  HeaderSection: 'mb-8',
   Title: 'text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]',
   Subtitle: 'text-base leading-relaxed text-gray-600',
   Section: 'py-6 first:pt-0 last:pb-0',
