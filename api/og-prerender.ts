@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -364,10 +364,10 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 // Fiche technique body for crawlers that do not run JavaScript, in the same
 // order as the page: the "Prix neuf en Tunisie" rows (dated price,
 // availability, dealer), the full spec table and the 125 scooter prices link,
-// then the summary (price with the date
+// the "Modèles similaires" (closest price, same family and displacement), then the summary (price with the date
 // it was checked, importer), then links to the brand, the catalogue and the
 // comparator.
-export function renderFicheBody(d: Doc): string {
+export function renderFicheBody(d: Doc, similar: SimilarModel[] = []): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
   const block = techSpecPriceBlock({
     brand: d.brand, model: d.model, category: d.category, cc: d.engine?.cc, price: d.price_new, updatedAt: d.updated_at,
@@ -399,6 +399,7 @@ ${priceRows}
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
 ${block.pricesLink ? `<p><a href="${SITE}${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
+${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${SITE}${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
 <p>${escapeHtml(summary)}</p>
 <ul>
 ${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
@@ -517,7 +518,9 @@ ${items}
 
 // /prix/scooter-125-tunisie: the price guide generated from the sheets
 // (utils/scooter125Guide.ts, same rows and text as the React page).
-async function renderScooter125(req: any, res: any) {
+// Every sheet sold in Tunisia (brand list, then each brand's models), as the
+// React pages load it (useCatalogTechSpecs({ availableInTunisia: true })).
+async function fetchTunisiaCatalogue(): Promise<Doc[]> {
   const visible = 'available_in_tunisia=true';
   const brandsRes = await fetch(`${API_BASE}/tech-specs/brands?${visible}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
   if (!brandsRes.ok) throw new Error('Content service unavailable');
@@ -530,8 +533,23 @@ async function renderScooter125(req: any, res: any) {
     const data = await r.json();
     return (Array.isArray(data) ? data : data.models || []) as Doc[];
   }));
+  return lists.flat();
+}
+
+// "Modèles similaires" of a sheet; none (section left out) when the catalogue is unavailable.
+async function similarModelsFor(d: Doc): Promise<SimilarModel[]> {
+  try {
+    const catalogue = await fetchTunisiaCatalogue();
+    const source = (m: Doc) => ({ id: m.id, slug: (m as any).slug, brand: m.brand, model: m.model, category: m.category, cc: m.engine?.cc, price: m.price_new });
+    return similarTechSpecs(source(d), catalogue.map(source));
+  } catch {
+    return [];
+  }
+}
+
+async function renderScooter125(req: any, res: any) {
   const now = new Date();
-  const rows = scooter125Rows(lists.flat().map(scooter125SourceFromApi));
+  const rows = scooter125Rows((await fetchTunisiaCatalogue()).map(scooter125SourceFromApi));
   const canonical = `${SITE}${SCOOTER_125_PATH}`;
   const title = `${scooter125Title(now)} | Moto-Scoot.tn`;
   const description = scooter125Description(rows, now);
@@ -732,6 +750,7 @@ export default async function handler(req: any, res: any) {
 
     const thin = (kind === 'article' || kind === 'guide') && isThinContent(String(doc.content || doc.body || ''));
     const related = kind === 'article' || kind === 'guide' ? await relatedLinksHtml(kind, doc) : '';
+    const similar = kind === 'fiche-technique' ? await similarModelsFor(doc) : [];
     const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS
       : thin ? THIN_CONTENT_ROBOTS
       : 'index, follow, max-image-preview:large, max-snippet:-1';
@@ -775,7 +794,7 @@ ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</sc
 </head>
 <body>
 ${kind === 'article' || kind === 'guide' ? `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/${kind === 'article' ? 'actualites' : 'conseils'}">${kind === 'article' ? 'Actualités' : 'Conseils'}</a> › ${escapeHtml(heading)}</nav>` : ''}
-${kind === 'fiche-technique' ? renderFicheBody(doc) : `<h1>${escapeHtml(heading)}</h1>
+${kind === 'fiche-technique' ? renderFicheBody(doc, similar) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
 ${(() => {
   const body = crawlerBodyHtml(String(doc.content || doc.body || doc.description || ''));

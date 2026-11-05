@@ -13,7 +13,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
-import { useTechSpec } from '../hooks/useTechSpecs';
+import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
 import { techSpecsApi } from '../services/techSpecsApi';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, type SimilarModelSource } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -67,6 +67,37 @@ const PriceBlock: React.FC<{ block: TechSpecPriceBlock }> = ({ block }) => {
             <SpecRow label={block.priceLabel} value={block.price || undefined} />
             <SpecRow label="Disponibilité" value={block.availability || undefined} />
             <SpecRow label="Concessionnaire" value={block.dealer || undefined} />
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+};
+
+/** "Modèles similaires": linked model name | price, same table style as the specs. */
+const SimilarModels: React.FC<{ models: SimilarModel[] }> = ({ models }) => {
+  if (!models.length) return null;
+  return (
+    <section aria-labelledby="modeles-similaires" className={`${S.ContentBlock} mt-6`}>
+      <div className="px-6 md:px-8 pt-5">
+        <h2 id="modeles-similaires" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground border-b-2 border-primary-600 pb-2">
+          {SIMILAR_MODELS_HEADING}
+        </h2>
+      </div>
+      <div className="px-6 md:px-8 pb-2">
+        <table className="w-full border-collapse">
+          <caption className="sr-only">{SIMILAR_MODELS_HEADING}</caption>
+          <tbody>
+            {models.map((m) => (
+              <tr key={m.href} className={S.SpecRow}>
+                <th scope="row" className={S.SpecLabel}>
+                  <Link to={m.href} className="text-primary-600 hover:text-primary-700 font-semibold underline-offset-4 hover:underline">{m.name}</Link>
+                </th>
+                <td className="py-3 md:py-4 align-middle text-right">
+                  <span className={S.SpecValue}>{m.price}</span>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -214,6 +245,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     refetch,
   } = useTechSpec(specId);
   const spec = fetchedSpec;
+  // Models sold in Tunisia, for "Modèles similaires" (cached, shared with the comparator and price guides).
+  const { data: catalogue = [] } = useCatalogTechSpecs({ availableInTunisia: true });
+  const similar = useMemo<SimilarModel[]>(() => {
+    if (!spec) return [];
+    const source = (m: TechSpec): SimilarModelSource => ({
+      id: m.id, slug: m.slug, brand: m.brand, model: m.model, category: m.categoryLabel || m.category, cc: m.engine?.cc, price: m.priceNew,
+    });
+    return similarTechSpecs(source(spec), catalogue.map(source));
+  }, [spec, catalogue]);
   const [shareOpen, setShareOpen] = useState(false);
 
 
@@ -604,6 +644,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 </Link>
               </p>
             )}
+
+            {/* Same models as the crawler HTML (api/og-prerender.ts). */}
+            <SimilarModels models={similar} />
           </div>
 
           {/* RIGHT COLUMN (SIDEBAR) */}
