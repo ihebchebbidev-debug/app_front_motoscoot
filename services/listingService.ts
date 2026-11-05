@@ -33,7 +33,7 @@ class ListingService {
    * Publishes a new listing through the real backend API.
    * Throws on network / validation / server errors so the caller can show a toast.
    */
-  async publishListing(data: ListingFormData): Promise<{ success: true; id: string | number; publishedAt: string }> {
+  async publishListing(data: ListingFormData): Promise<{ success: true; id: string | number; listingNumber?: number; title: string; image?: string; publishedAt: string }> {
     // Persist the seller phone on the user profile so it shows up on the
     // listing card (the backend joins users.phone as seller_phone). Best-effort
     // — we don't fail the publish if this update fails.
@@ -99,6 +99,10 @@ class ListingService {
     return {
       success: true,
       id: created.id, // UUID string from backend; do NOT coerce to Number (would yield NaN)
+      // For the success screen's "Voir mon annonce" / "Partager" links.
+      listingNumber: (created as any).listingNumber,
+      title: created.title || payload.title || '',
+      image: Array.isArray(payload.images) ? payload.images[0] : undefined,
       publishedAt: new Date().toISOString(),
     };
   }
