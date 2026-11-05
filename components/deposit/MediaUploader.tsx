@@ -1,166 +1,292 @@
-import React, { useRef } from 'react';
-import { Camera, Crop as CropIcon, Trash2, Image as ImageIcon, CheckCircle2, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
+import React, { Suspense, lazy, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Camera, Crop as CropIcon, Trash2, RefreshCw, AlertCircle, Loader2, Star } from 'lucide-react';
+import {
+  DndContext, closestCenter, pointerWithin, MouseSensor, TouchSensor, KeyboardSensor,
+  useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, type CollisionDetection,
+} from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { getOptimizedImageUrl } from '../../utils/urlUtils';
+import { gallerySummary } from '../../utils/depositPhotos';
 import { UploadedMedia } from '../../types/listing';
+
+// react-easy-crop is only downloaded when a seller opens the crop window.
+const PhotoCropDialog = lazy(() => import('./PhotoCropDialog'));
 
 interface MediaUploaderProps {
   mediaList: UploadedMedia[];
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onRetryUpload: (id: string) => void;
-  onCropImage: (index: number) => void;
+  onReorder: (from: number, to: number) => void;
+  onSetMain: (index: number) => void;
+  onCropDone: (id: string, file: File) => void;
   maxImages?: number;
 }
+
+// The main photo is twice as large, so "closest centre" alone misses it:
+// the photo under the pointer wins, closest centre for the keyboard.
+const collisionDetection: CollisionDetection = (args) => {
+  const under = pointerWithin(args);
+  return under.length ? under : closestCenter(args);
+};
+
+const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900';
+const iconBtn = `w-11 h-11 flex items-center justify-center rounded-full transition-colors ${focusRing}`;
+
+interface PhotoTileProps {
+  media: UploadedMedia;
+  index: number;
+  total: number;
+  onRemove: (index: number) => void;
+  onRetry: (id: string) => void;
+  onSetMain: (index: number) => void;
+  onCrop: (index: number) => void;
+}
+
+/**
+ * One gallery photo: the photo itself is the drag handle (mouse drag, long
+ * press on a phone, Space + arrows on the keyboard); its actions sit in a bar
+ * under it so they never cover the picture. The first photo is the main one,
+ * shown twice as large.
+ */
+const PhotoTile: React.FC<PhotoTileProps> = ({ media, index, total, onRemove, onRetry, onSetMain, onCrop }) => {
+  const ready = media.status === 'success';
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: media.id, disabled: !ready });
+  const isMain = index === 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      className={`flex flex-col rounded-2xl overflow-hidden bg-card animate-fade-in ${
+        isMain ? 'col-span-2 sm:row-span-2 border-2 border-primary-600' : 'border border-neutral-200'
+      }`}
+    >
+      <div
+        ref={setActivatorNodeRef}
+        {...(ready ? attributes : {})}
+        {...(ready ? listeners : {})}
+        aria-label={ready ? `Photo ${index + 1} sur ${total}${isMain ? ', photo principale' : ''}. Faites-la glisser pour changer l'ordre.` : undefined}
+        className={`relative aspect-[4/3] ${isMain ? 'sm:aspect-auto sm:flex-1 sm:min-h-0' : ''} bg-neutral-100 select-none [-webkit-touch-callout:none] [touch-action:manipulation] ${
+          ready ? `cursor-grab active:cursor-grabbing ${focusRing} focus-visible:outline-offset-[-2px]` : ''
+        }`}
+      >
+        <img
+          src={getOptimizedImageUrl(media.url, isMain ? 800 : 400, isMain ? 600 : 300, 75)}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${ready ? '' : 'opacity-40'}`}
+        />
+
+        {isMain && ready && (
+          <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gray-900 text-white text-xs font-bold">
+            Principale
+          </span>
+        )}
+
+        {media.status === 'uploading' && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-gray-900 animate-spin" aria-hidden="true" />
+          </div>
+        )}
+
+        {media.status === 'error' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-red-50 px-3 text-center">
+            <AlertCircle className="w-6 h-6 text-red-700 shrink-0" aria-hidden="true" />
+            <p role="alert" className="text-xs font-semibold leading-snug text-red-800 line-clamp-4">{media.error || "L'envoi a échoué."}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-1 px-1 h-12 shrink-0">
+        {media.status === 'uploading' && (
+          <p className="mr-auto pl-2 text-xs font-semibold text-gray-700" role="status">Envoi en cours…</p>
+        )}
+        {media.status === 'error' && (
+          <button
+            type="button"
+            onClick={() => onRetry(media.id)}
+            className={`mr-auto h-11 px-3 flex items-center gap-1.5 rounded-full text-xs font-bold text-gray-900 hover:bg-neutral-100 transition-colors ${focusRing}`}
+          >
+            <RefreshCw size={15} aria-hidden="true" /> Réessayer
+          </button>
+        )}
+        {ready && !isMain && (
+          <button
+            type="button"
+            onClick={() => onSetMain(index)}
+            className={`${iconBtn} text-gray-800 hover:bg-neutral-100`}
+            title="Mettre en photo principale"
+            aria-label={`Mettre la photo ${index + 1} en photo principale`}
+          >
+            <Star size={18} />
+          </button>
+        )}
+        {ready && (
+          <button
+            type="button"
+            onClick={() => onCrop(index)}
+            className={`${iconBtn} text-gray-800 hover:bg-neutral-100`}
+            title="Recadrer"
+            aria-label={`Recadrer la photo ${index + 1}`}
+          >
+            <CropIcon size={18} />
+          </button>
+        )}
+        {media.status !== 'uploading' && (
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            className={`${iconBtn} text-red-700 hover:bg-red-50`}
+            title="Supprimer"
+            aria-label={`Supprimer la photo ${index + 1}`}
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const MediaUploader: React.FC<MediaUploaderProps> = ({
   mediaList,
   onImageChange,
   onRemoveImage,
   onRetryUpload,
-  onCropImage,
+  onReorder,
+  onSetMain,
+  onCropDone,
   maxImages = 10
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropping, setCropping] = useState<UploadedMedia | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-  const successfulCount = mediaList.filter(m => m.status === 'success').length;
-  const isUploading = mediaList.some(m => m.status === 'uploading');
+  // Mouse and touch are separate sensors so a finger can still scroll the
+  // page over the photos: a drag only starts after a long press.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id));
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+    const from = mediaList.findIndex((m) => m.id === active.id);
+    const to = mediaList.findIndex((m) => m.id === over.id);
+    if (from >= 0 && to >= 0) onReorder(from, to);
+  };
+  const activeMedia = activeId ? mediaList.find((m) => m.id === activeId) : undefined;
+  const position = (id: unknown) => mediaList.findIndex((m) => m.id === id) + 1;
+
+  const summary = gallerySummary(mediaList);
+  const canAdd = mediaList.length < maxImages;
 
   return (
     <div className="space-y-6">
-      <div className="text-center md:text-left flex items-center justify-between">
-        <div>
+      <div className="text-center md:text-left">
+        <div className="flex items-baseline justify-center md:justify-between gap-3">
           <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Galerie Photos</h2>
-          <p className="text-sm text-gray-500 font-medium mt-1">Optimisez vos chances de vente avec de belles photos.</p>
+          <span className="text-sm font-semibold text-gray-600 tabular-nums">{mediaList.length} sur {maxImages}</span>
         </div>
-        <div className="bg-primary-50 px-4 py-2 rounded-2xl border border-primary-100 hidden sm:block">
-          <span className="text-xs font-black text-primary-600 uppercase tracking-widest">{mediaList.length} / {maxImages}</span>
-        </div>
+        <p className="text-sm text-gray-600 font-medium mt-1">
+          {mediaList.length > 1
+            ? "La première photo est la photo principale. Faites glisser une photo pour changer l'ordre (appui long sur téléphone)."
+            : 'Optimisez vos chances de vente avec de belles photos.'}
+        </p>
       </div>
-      
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={onImageChange} 
-        className="hidden" 
-        accept="image/*" 
-        multiple 
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onImageChange}
+        className="hidden"
+        accept="image/*"
+        multiple
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6">
-        {mediaList.length < maxImages && (
-          <button 
-            type="button"
-            onClick={() => fileInputRef.current?.click()} 
-            className="flex flex-col items-center justify-center gap-2 aspect-square rounded-[1.5rem] md:rounded-[2rem] border-2 border-dashed border-neutral-200 bg-neutral-50 group hover:border-primary-400 hover:bg-primary-50/30 transition-all shadow-none"
-          >
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-card rounded-2xl flex items-center justify-center text-primary-600 border border-neutral-100 group-hover:scale-110 transition-transform shadow-sm">
-              <Camera className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <div className="text-center px-2">
-              <span className="block text-[12px] font-black text-gray-900 leading-tight">Ajouter</span>
-              <span className="hidden xs:block text-[8px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">4:3 Recommandé</span>
-            </div>
-          </button>
-        )}
-
+      <DndContext
+        sensors={sensors}
+        collisionDetection={collisionDetection}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveId(null)}
+        accessibility={{
+          screenReaderInstructions: { draggable: "Appuyez sur Espace pour saisir la photo, utilisez les flèches pour la déplacer, puis Espace pour la déposer ou Échap pour annuler." },
+          announcements: {
+            onDragStart: ({ active }) => `Photo ${position(active.id)} saisie.`,
+            onDragOver: ({ over }) => (over ? `Position ${position(over.id)}.` : ''),
+            onDragEnd: ({ over }) => (over ? `Photo déposée en position ${position(over.id)}.` : 'Déplacement annulé.'),
+            onDragCancel: () => 'Déplacement annulé.',
+          },
+        }}
+      >
+      <SortableContext items={mediaList.map((m) => m.id)} strategy={rectSortingStrategy}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 [grid-auto-flow:dense]">
         {mediaList.map((media, idx) => (
-          <div key={media.id} className="group relative aspect-square rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-neutral-100 bg-card shadow-sm animate-fade-in-up">
-            <img 
-                src={getOptimizedImageUrl(media.url, 300, 300, 70)} 
-                alt="" 
-                loading="lazy"
-                className={`w-full h-full object-cover transition-all duration-500 ${media.status === 'uploading' ? 'blur-sm grayscale opacity-50' : 'group-hover:scale-110'}`} 
-            />
-            
-            {/* Overlay d'uploading */}
-            {media.status === 'uploading' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 backdrop-blur-[1px]">
-                 <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-                 <span className="mt-2 text-[8px] font-black text-primary-800 uppercase tracking-widest bg-card/80 px-2 py-0.5 rounded-full">Envoi...</span>
-              </div>
-            )}
-
-            {/* Overlay d'erreur */}
-            {media.status === 'error' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50/90 backdrop-blur-[2px]">
-                 <AlertCircle className="w-8 h-8 text-red-600 mb-1" />
-                 <span className="text-[8px] font-black text-red-600 uppercase tracking-widest mb-3">{media.error || "Échec"}</span>
-                 <div className="flex gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => onRetryUpload(media.id)} 
-                      className="p-2 bg-card text-primary-600 rounded-full shadow-md hover:bg-primary-50 transition-all active:scale-90"
-                      title="Réessayer"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => onRemoveImage(idx)} 
-                      className="p-2 bg-card text-red-600 rounded-full shadow-md hover:bg-red-50 transition-all active:scale-90"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                 </div>
-              </div>
-            )}
-            
-            {/* Actions Standard (Success) */}
-            {media.status === 'success' && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-[2px]">
-                <button 
-                  type="button"
-                  onClick={() => onCropImage(idx)} 
-                  className="p-2 bg-card text-gray-700 rounded-full hover:bg-primary-600 hover:text-white transition-all active:scale-90"
-                  title="Recadrer"
-                >
-                  <CropIcon size={16} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => onRemoveImage(idx)} 
-                  className="p-2 bg-card text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all active:scale-90"
-                  title="Supprimer"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            )}
-
-            {idx === 0 && media.status === 'success' && (
-              <div className="absolute top-2 left-2 bg-primary-600 text-white text-[7px] font-black px-2 py-0.5 rounded-full uppercase shadow-lg border border-white/20">
-                Principale
-              </div>
-            )}
-
-            {media.status === 'success' && (
-              <div className="absolute top-2 right-2 p-1 bg-emerald-500 text-white rounded-full shadow-lg">
-                <CheckCircle2 size={10} />
-              </div>
-            )}
-          </div>
+          <PhotoTile
+            key={media.id}
+            media={media}
+            index={idx}
+            total={mediaList.length}
+            onRemove={onRemoveImage}
+            onRetry={onRetryUpload}
+            onSetMain={onSetMain}
+            onCrop={(i) => setCropping(mediaList[i] ?? null)}
+          />
         ))}
 
-        {mediaList.length === 0 && (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={`placeholder-${i}`} className="hidden sm:flex aspect-square rounded-[2rem] border border-neutral-100 bg-neutral-50/50 items-center justify-center opacity-40">
-              <ImageIcon size={24} className="text-gray-300" />
-            </div>
-          ))
+        {canAdd && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex flex-col self-start rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 text-gray-900 hover:border-primary-600 hover:bg-primary-50 transition-colors ${focusRing} ${
+              mediaList.length === 0 ? 'col-span-full' : ''
+            }`}
+          >
+            {/* Same shape as a photo tile: a 4:3 area and a 48px bar. */}
+            <span className={`flex flex-col items-center justify-center gap-2 w-full ${mediaList.length === 0 ? 'py-10' : 'aspect-[4/3]'}`}>
+              <Camera className="w-7 h-7 text-primary-600" aria-hidden="true" />
+              <span className="text-sm font-bold">{mediaList.length === 0 ? 'Ajouter des photos' : 'Ajouter'}</span>
+            </span>
+            <span className="h-12 w-full flex items-center justify-center px-2 text-xs font-medium text-gray-600 text-center">
+              {mediaList.length === 0 ? `Jusqu'à ${maxImages} photos · format 4:3 conseillé` : `Encore ${maxImages - mediaList.length}`}
+            </span>
+          </button>
         )}
       </div>
-
-      {successfulCount > 0 && (
-        <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100 flex items-center gap-4 animate-fade-in-up">
-          <div className="w-10 h-10 bg-card rounded-2xl flex items-center justify-center text-primary-600 shadow-sm shrink-0 border border-gray-100">
-            <CheckCircle2 size={20} />
+      </SortableContext>
+      <DragOverlay>
+        {activeMedia ? (
+          <div className="w-40 aspect-[4/3] rounded-2xl overflow-hidden border-2 border-primary-600 shadow-2xl">
+            <img src={getOptimizedImageUrl(activeMedia.url, 400, 300, 75)} alt="" className="w-full h-full object-cover" />
           </div>
-          <p className="text-xs font-bold text-gray-600">
-            <strong>Excellent !</strong> Vous avez {successfulCount} photo{successfulCount > 1 ? 's' : ''} prête{successfulCount > 1 ? 's' : ''}. 
-            {isUploading && " Les autres sont en cours de téléchargement..."}
-          </p>
-        </div>
+        ) : null}
+      </DragOverlay>
+      </DndContext>
+
+      {summary && (
+        <p className={`rounded-2xl px-4 py-3 text-sm font-semibold ${summary.failed ? 'bg-red-50 text-red-800' : 'bg-neutral-50 text-gray-800'}`} role="status">
+          {summary.text}
+        </p>
+      )}
+      {cropping && (
+        <Suspense fallback={createPortal(<div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80"><Loader2 className="w-8 h-8 text-white animate-spin" /></div>, document.body)}>
+          <PhotoCropDialog
+            source={cropping.file ?? cropping.url}
+            onCancel={() => setCropping(null)}
+            onConfirm={(file) => {
+              const id = cropping.id;
+              setCropping(null);
+              onCropDone(id, file);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );
