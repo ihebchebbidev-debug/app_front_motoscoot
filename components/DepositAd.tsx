@@ -28,6 +28,7 @@ import { StepPublish } from './deposit/StepPublish';
 import { StepRecap } from './deposit/StepRecap';
 import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess';
 import { primeSuccessSound } from '../utils/successSound';
+import { revealBelowHeader, scrollBelowHeader } from '../utils/scrollBelowHeader';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
 
 import { listingService } from '../services/listingService';
@@ -116,6 +117,11 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
   );
 });
 
+/** Fields that open the phone keyboard (selects open a picker instead). */
+const isTypingField = (el: Element | null): boolean =>
+  !!el && (el.tagName === 'TEXTAREA' ||
+    (el.tagName === 'INPUT' && !['checkbox', 'radio', 'file', 'button', 'submit'].includes((el as HTMLInputElement).type)));
+
 const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // Step is mirrored to the URL as `?step=N` so a refresh on step 4 stays on
   // step 4 (and the step is shareable / linkable). The form data itself is
@@ -130,28 +136,19 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   })();
   const [step, setStepState] = useState<number>(initialStepFromUrl);
 
-  // Keep ?step=N in sync with internal step state. Use replace so the wizard
-  // doesn't pollute browser history with one entry per step (back button
-  // should leave the wizard, not walk through every previous step).
-  const setStep = useCallback((next: number | ((prev: number) => number)) => {
-    setStepState((prev) => {
-      const resolved = typeof next === 'function' ? (next as (p: number) => number)(prev) : next;
-      const params = new URLSearchParams(window.location.search);
-      if (resolved <= 1) {
-        params.delete('step');
-      } else {
-        params.set('step', String(resolved));
-      }
-      const qs = params.toString();
-      // setSearchParams is the react-router-dom way; replace=true avoids
-      // history bloat. Wrap in try/catch in case we're called outside a
-      // router context (defensive — should never happen here).
-      try {
-        setSearchParams(qs ? params : new URLSearchParams(), { replace: true });
-      } catch { /* noop */ }
-      return resolved;
-    });
-  }, [setSearchParams]);
+  const setStep = setStepState;
+
+  // Keep ?step=N in sync with the step, after render (updating the router
+  // from inside a state updater warned "Cannot update a component while
+  // rendering"). Replace, so Back leaves the wizard instead of walking steps.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const current = params.get('step');
+    const wanted = step <= 1 ? null : String(step);
+    if (current === wanted) return;
+    if (wanted) params.set('step', wanted); else params.delete('step');
+    setSearchParams(params, { replace: true });
+  }, [step, setSearchParams]);
 
   // If the URL `?step=` changes from outside (back/forward, manual edit), pull
   // it into state. We compare to current step to avoid an infinite loop with
@@ -171,6 +168,10 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const estimateCtrlRef = useRef<AbortController | null>(null);
   const { addToast } = useToast();
   const stepWrapperRef = useRef<HTMLDivElement>(null);
+  const mainCardRef = useRef<HTMLDivElement>(null);
+  // Phones: the fixed Retour/Suivant bar would sit on the keyboard while a
+  // text field is being typed in; hide it until the field loses focus.
+  const [typing, setTyping] = useState(false);
 
   // Hook 1 : Gestion des médias
   const { 
@@ -221,14 +222,16 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     reset
   );
 
-  // Gestion du focus lors du changement d'étape (Accessibilité)
+  // New step: focus it for screen readers WITHOUT scrolling (focus() and
+  // scrollIntoView({ block: 'start' }) put the step under the fixed header
+  // on phones), then bring the card's top — progress bar included — just
+  // below the header if it is hidden. Not on first load: the page is already
+  // at the top.
+  const firstStepRender = useRef(true);
   useEffect(() => {
-    if (stepWrapperRef.current) {
-      stepWrapperRef.current.focus();
-      if (window.innerWidth < 768) {
-        stepWrapperRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+    if (firstStepRender.current) { firstStepRender.current = false; return; }
+    stepWrapperRef.current?.focus({ preventScroll: true });
+    revealBelowHeader(mainCardRef.current);
   }, [step]);
 
   // There is no map step any more: the position saved on the seller's
@@ -423,11 +426,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         ) as HTMLElement | null;
         const target = firstError || stepWrapperRef.current;
         if (target) {
-          const rect = target.getBoundingClientRect();
-          const isMobile = window.innerWidth < 768;
-          const offset = isMobile ? 120 : 80;
-          const top = window.scrollY + rect.top - offset;
-          window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+          // Below the fixed header, with room for the field's label above it.
+          scrollBelowHeader(target, 44);
           if (firstError && typeof firstError.focus === 'function') {
             try { firstError.focus({ preventScroll: true }); } catch { /* noop */ }
           }
@@ -573,7 +573,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
       <div className={S.Container}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 space-y-6">
-            <div className={`${S.MainCard} relative`}>
+            <div ref={mainCardRef} className={`${S.MainCard} relative scroll-mt-24`}>
               {published ? (
                 <DepositSuccess listing={published} onView={handleViewPublished} onDepositAnother={handleDepositAnother} />
               ) : (<>
@@ -583,6 +583,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
               />
               <form
                 onSubmit={(e) => { e.preventDefault(); handlePublish(); }}
+                onFocus={(e) => setTyping(isTypingField(e.target))}
+                onBlur={(e) => { if (!isTypingField(e.relatedTarget as Element | null)) setTyping(false); }}
               >
                 <div
                   className={S.StepWrapper}
@@ -639,7 +641,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                     />
                   )}
                 </div>
-                <div className={S.ActionNav}>
+                <div className={`${S.ActionNav} transition-transform duration-200 ease-out ${typing ? 'max-md:translate-y-full max-md:pointer-events-none' : ''}`}>
                   <Button 
                     type="button" 
                     variant="ghost" 

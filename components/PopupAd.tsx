@@ -41,7 +41,8 @@ export const PopupAd: React.FC = () => {
     'garage-details',
     'tech-specs-details',
     'comparator',
-    'deposit'
+    // Not 'deposit': scrolling up is constant while filling a form on a
+    // phone, and an ad over the form interrupts the seller mid-listing.
   ].includes(currentView);
 
   // Only enable scroll-up intent on detail pages, and if it hasn't been shown yet
