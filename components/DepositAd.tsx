@@ -169,6 +169,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const { addToast } = useToast();
   const stepWrapperRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
+  const lastStep = useRef(initialStepFromUrl);
+  const stepDirection = useRef<'forward' | 'back'>('forward');
   // Phones: the fixed Retour/Suivant bar would sit on the keyboard while a
   // text field is being typed in; hide it until the field loses focus.
   const [typing, setTyping] = useState(false);
@@ -564,6 +566,13 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     handleSubmit(onSubmit)();
   };
 
+  // Direction of the last step change, fixed when the step changes so that
+  // re-renders (typing) never swap the class and replay the entrance.
+  if (lastStep.current !== step) {
+    stepDirection.current = step < lastStep.current ? 'back' : 'forward';
+    lastStep.current = step;
+  }
+
   const totalSteps = depositSteps(category === 'Accessoires').length;
   const stepId = depositStepAt(step, category === 'Accessoires');
 
@@ -594,6 +603,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   role="region"
                   aria-label={`Dépôt d'annonce - Étape ${step} sur ${totalSteps}`}
                 >
+                  {/* Keyed by step: each new step plays its entrance once. */}
+                  <div key={step} className={stepDirection.current === 'back' ? 'ms-step-back' : 'ms-step-forward'}>
                   {stepId === 'technical' && (
                     <StepTechnical 
                       register={register} 
@@ -640,6 +651,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       onEdit={handleEditStep}
                     />
                   )}
+                  </div>
                 </div>
                 <div className={`${S.ActionNav} transition-transform duration-200 ease-out ${typing ? 'max-md:translate-y-full max-md:pointer-events-none' : ''}`}>
                   <Button 

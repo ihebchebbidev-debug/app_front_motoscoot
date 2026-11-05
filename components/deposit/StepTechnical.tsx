@@ -105,7 +105,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
   };
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8">
       <div className={S.HeaderSection}>
         <h2 className={S.Title}>Données techniques</h2>
         <p className={S.Subtitle}>Renseignez les caractéristiques principales de votre annonce.</p>

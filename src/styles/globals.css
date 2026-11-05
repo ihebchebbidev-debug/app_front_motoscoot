@@ -151,6 +151,18 @@
 }
 
 @layer utilities {
+  /* Deposit wizard: "Suivant" brings the next step in from the right,
+     "Retour" (or "Modifier" from the recap) from the left — the direction
+     tells where you are going. Short and decisive: it repeats at every step. */
+  .ms-step-forward { animation: ms-step-in-right 220ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  .ms-step-back { animation: ms-step-in-left 220ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  @keyframes ms-step-in-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @keyframes ms-step-in-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes ms-step-fade { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-step-forward, .ms-step-back { animation: ms-step-fade 150ms ease-out both; }
+  }
+
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }

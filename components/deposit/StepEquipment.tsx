@@ -46,7 +46,7 @@ export const StepEquipment = memo(({ selectedEquipment, onToggle, accessoryType 
   }, [equipmentData]);
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8">
       <div className={S.HeaderSection}>
         <h2 className={S.Title}>Options & Équipements</h2>
         <p className={S.Subtitle}>Valorisez votre véhicule en cochant les options incluses.</p>

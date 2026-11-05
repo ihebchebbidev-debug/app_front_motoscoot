@@ -16,7 +16,7 @@ interface StepMediaProps {
 
 export const StepMedia = memo(({ mediaList, onImageChange, onRemoveImage, onRetryUpload, onReorder, onSetMain, onCropDone, errors }: StepMediaProps) => {
   return (
-    <div className="animate-fade-in-up">
+    <div>
       <MediaUploader 
         mediaList={mediaList} 
         onImageChange={onImageChange}
