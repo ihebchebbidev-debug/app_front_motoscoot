@@ -47,6 +47,7 @@ import iconNews from '../../src/assets/sidebar/icon-news-3d.webp';
 import iconProfile from '../../src/assets/sidebar/icon-profile-3d.webp';
 import iconDashboard from '../../src/assets/sidebar/icon-dashboard-3d.webp';
 import iconLogout from '../../src/assets/sidebar/icon-logout.png';
+import { rememberAfterLogin, DEPOSIT_PATH } from '../../utils/afterLogin';
 
 /**
  * Compute up to 2-letter uppercase initials from a user profile.
@@ -246,6 +247,13 @@ const Header: React.FC<HeaderProps> = ({
     );
   };
 
+  // Signed-out visitors sign in first, then land on the deposit form.
+  const openDeposit = () => {
+    if (isLoggedIn) { handleNavClick('deposit'); return; }
+    rememberAfterLogin(DEPOSIT_PATH);
+    triggerLogin();
+  };
+
   return (
     <>
       {/* Admin top bar — visible only to admins/moderators (or the canonical
@@ -434,7 +442,7 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               ) : currentView !== 'deposit' ? (
                 <button
-                  onClick={() => isLoggedIn ? handleNavClick('deposit') : triggerLogin()}
+                  onClick={openDeposit}
                   className={`flex items-center justify-center gap-2 px-6 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${
                     isScrolled ? 'h-9 px-5' : 'h-11'
                   } ${
@@ -453,7 +461,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="lg:hidden flex items-center gap-2">
              {currentView !== 'deposit' && (
              <button
-                onClick={() => isLoggedIn ? handleNavClick('deposit') : triggerLogin()}
+                onClick={openDeposit}
                 className={`flex items-center justify-center gap-1 h-[34px] max-[360px]:h-8 px-2.5 max-[360px]:px-2 rounded-lg text-[12px] max-[360px]:text-[11px] font-bold transition-all active:scale-95 ${
                   !isSolid
                     ? 'bg-white/10 hover:bg-white/20 border border-white/25 text-white backdrop-blur-sm'
@@ -556,7 +564,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="mt-4">
               <span className="px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest block mb-1">Marché</span>
               <MenuLink image={iconSearch} label="Acheter" to={getUrlFromState('search')} />
-              <MenuLink image={iconSell} label="Vendre" tag="Gratuit" variant="primary" onClick={() => isLoggedIn ? handleNavClick('deposit') : triggerLogin()} />
+              <MenuLink image={iconSell} label="Vendre" tag="Gratuit" variant="primary" onClick={openDeposit} />
               <MenuLink image={iconSpecs} label="Fiches techniques" to={getUrlFromState('tech-specs-brands')} />
               <MenuLink image={iconSpecs} label="Prix scooters 125" to={getUrlFromState('scooter-125-prices')} />
               <MenuLink image={iconCompare} label="Comparateur" to={getUrlFromState('comparator')} />

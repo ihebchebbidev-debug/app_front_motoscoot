@@ -25,6 +25,8 @@ import { ROUTES } from './config/routes';
 import SEO from './components/common/SEO';
 import { HOME_SEO } from './src/seo/snapshots';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { rememberAfterLogin, takeAfterLogin, forgetAfterLogin } from './utils/afterLogin';
+import { getStateFromUrl } from './utils/urlUtils';
 import { SearchFilters, BasePageProps, NavigationParams } from './types';
 
 const queryClient = new QueryClient({
@@ -90,6 +92,8 @@ const AppContent: React.FC = () => {
   // calls (which previously caused a flood of 401s and a flashed admin shell).
   React.useEffect(() => {
     if ((route.isProtected || route.isAdminOnly) && !isLoggedIn) {
+      // Come back here once signed in (e.g. "Déposer une annonce").
+      rememberAfterLogin(window.location.pathname + window.location.search);
       triggerLogin();
       navigateTo('home');
     }
@@ -104,6 +108,21 @@ const AppContent: React.FC = () => {
     // Source of truth is `tokenStorage` (auth_token in localStorage). The legacy
     // `motoscoot_auth_session` flag was a duplicate that never got cleared on
     // logout, causing isLoggedIn to desync. Removed.
+    closeLoginModal();
+    // Google sign-in finishes on /sso-callback, where ClerkAuthBridge
+    // sends the visitor on with a replace.
+    if (window.location.pathname === '/sso-callback') return;
+    const next = takeAfterLogin();
+    if (next) {
+      const url = new URL(next, window.location.origin);
+      const { view, ...rest } = getStateFromUrl(url.pathname, url.search) as any;
+      if (view) navigateTo(view, rest);
+    }
+  };
+
+  // Closing the sign-in window without signing in drops the pending destination.
+  const handleLoginClose = () => {
+    forgetAfterLogin();
     closeLoginModal();
   };
 
@@ -164,7 +183,7 @@ const AppContent: React.FC = () => {
         <Suspense fallback={null}>
           <ClerkIsland
             isOpen={isLoginModalOpen}
-            onClose={closeLoginModal}
+            onClose={handleLoginClose}
             onLogin={handleLoginSuccess}
           />
         </Suspense>

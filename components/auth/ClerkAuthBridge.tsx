@@ -18,6 +18,7 @@ import { authApi } from '../../services/authApi';
 import { useAppNavigation } from '../../context/NavigationContext';
 import SsoLoadingOverlay from './SsoLoadingOverlay';
 import { getClerkPublishableKey } from '../../utils/clerkConfig';
+import { takeAfterLogin, peekAfterLogin } from '../../utils/afterLogin';
 
 interface Props {
   onLogin: () => void;
@@ -45,7 +46,7 @@ const ClerkAuthBridgeInner: React.FC<Props> = ({ onLogin }) => {
   useEffect(() => {
     if (!isFinalising) return;
     const t = window.setTimeout(() => {
-      window.location.replace('/');
+      window.location.replace(peekAfterLogin() ?? '/');
     }, 3000);
     return () => window.clearTimeout(t);
   }, [isFinalising]);
@@ -94,7 +95,8 @@ const ClerkAuthBridgeInner: React.FC<Props> = ({ onLogin }) => {
           queryClient.setQueryData(['auth', 'me'], data.user);
           exchangedRef.current = true;
           onLogin();
-          if (isSsoCallback) navigate('/', { replace: true });
+          // Back to where signing in was asked (e.g. the deposit form), else home.
+          if (isSsoCallback) navigate(takeAfterLogin() ?? '/', { replace: true });
         } else {
           // eslint-disable-next-line no-console
           console.warn('[ClerkAuthBridge] /auth/clerk returned no token', data);
