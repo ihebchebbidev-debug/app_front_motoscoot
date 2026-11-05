@@ -36,6 +36,7 @@
     "postcss": "8.4.49",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-easy-crop": "^6.2.4",
     "react-hook-form": "^7.55.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.10.1",

@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useToast } from '../context/ToastContext';
 import { uploadsApi } from '../services/uploadsApi';
 import { UploadedMedia, MAX_IMAGES } from '../types/listing';
+import { movePhoto, makeMainPhoto } from '../utils/depositPhotos';
 
 // Backend (Express + Multer + nginx) is hardcoded to accept up to 25 MB per
 // upload. We still compress aggressively client-side to keep mobile uploads
@@ -324,11 +325,40 @@ export const useMediaUpload = () => {
     [mediaList, addToast, uploadFile],
   );
 
+  /** Drag and drop in the gallery: the first photo is the main one. */
+  const handleReorder = useCallback((from: number, to: number) => {
+    setMediaList((prev) => movePhoto(prev, from, to));
+  }, []);
+
+  const handleSetMain = useCallback((idx: number) => {
+    setMediaList((prev) => makeMainPhoto(prev, idx));
+  }, []);
+
+  /**
+   * A cropped photo replaces the original at the same place: local preview
+   * first, then compressed and uploaded like a picked photo (retry included).
+   */
+  const handleCropDone = useCallback(
+    async (id: string, cropped: File) => {
+      const preview = URL.createObjectURL(cropped);
+      setMediaList((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, url: preview, status: 'uploading', error: undefined, file: cropped } : m)),
+      );
+      const file = await compressIfLarge(cropped);
+      setMediaList((prev) => prev.map((m) => (m.id === id ? { ...m, file } : m)));
+      await uploadFile(id, file);
+    },
+    [uploadFile],
+  );
+
   return {
     mediaList,
     setMediaList,
     handleImageChange,
     handleRemoveImage,
     handleRetryUpload,
+    handleReorder,
+    handleSetMain,
+    handleCropDone,
   };
 };

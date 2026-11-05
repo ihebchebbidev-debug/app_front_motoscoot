@@ -172,7 +172,10 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     setMediaList, 
     handleImageChange, 
     handleRemoveImage, 
-    handleRetryUpload 
+    handleRetryUpload,
+    handleReorder,
+    handleSetMain,
+    handleCropDone,
   } = useMediaUpload();
 
   const { register, handleSubmit, setValue, watch, trigger, reset, clearErrors, control, formState: { errors } } = useForm<ListingFormData>({
@@ -588,6 +591,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       onImageChange={handleImageChange} 
                       onRemoveImage={handleRemoveImage} 
                       onRetryUpload={handleRetryUpload}
+                      onReorder={handleReorder}
+                      onSetMain={handleSetMain}
+                      onCropDone={handleCropDone}
                       errors={errors} 
                     />
                   )}

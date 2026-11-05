@@ -8,10 +8,13 @@ interface StepMediaProps {
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onRetryUpload: (id: string) => void;
+  onReorder: (from: number, to: number) => void;
+  onSetMain: (index: number) => void;
+  onCropDone: (id: string, file: File) => void;
   errors: FieldErrors<ListingFormData>;
 }
 
-export const StepMedia = memo(({ mediaList, onImageChange, onRemoveImage, onRetryUpload, errors }: StepMediaProps) => {
+export const StepMedia = memo(({ mediaList, onImageChange, onRemoveImage, onRetryUpload, onReorder, onSetMain, onCropDone, errors }: StepMediaProps) => {
   return (
     <div className="animate-fade-in-up">
       <MediaUploader 
@@ -19,7 +22,9 @@ export const StepMedia = memo(({ mediaList, onImageChange, onRemoveImage, onRetr
         onImageChange={onImageChange}
         onRemoveImage={onRemoveImage}
         onRetryUpload={onRetryUpload}
-        onCropImage={() => {}}
+        onReorder={onReorder}
+        onSetMain={onSetMain}
+        onCropDone={onCropDone}
       />
       {errors.images && <p className="text-red-500 text-xs font-bold mt-4">{errors.images.message}</p>}
     </div>
