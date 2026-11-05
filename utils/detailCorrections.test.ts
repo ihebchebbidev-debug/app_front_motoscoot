@@ -354,3 +354,14 @@ test('sheet Product JSON-LD: model (not mpn) and numeric spec properties with un
     assert.equal(props['Réservoir'].value, 16);
   } finally { globalThis.fetch = original; }
 });
+
+test('listing share image and structured-data photos carry the cache version', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ listing: { id: 'x', listing_number: 3, title: 'Kymco DINK-R 2026', brand: 'Kymco', model: 'DINK-R', year: 2026, price: 10000, images: ['https://www.moto-scoot.tn/uploads/a.webp', 'https://motoscoot.ihebchebbi.pro/uploads/b.webp'] } });
+    const result = responseCapture();
+    await listingHandler({ query: { slugid: 'kymco-dink-r-2026-3' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.ok(result.body.includes('<meta property="og:image" content="https://www.moto-scoot.tn/m/kymco-dink-r-2026/a.webp?v=2"'));
+    assert.ok(result.body.includes('"https://www.moto-scoot.tn/m/kymco-dink-r-2026/b.webp?v=2"'));
+  } finally { globalThis.fetch = original; }
+});
