@@ -63,6 +63,11 @@ const slugify = (s: string): string =>
 // listing slug so the image URL exposed to Google is
 //   https://www.moto-scoot.tn/m/<slug>/<file>.webp
 // (vercel.json proxies /m/<slug>/<file> back to the real upload).
+// Bumped when the CDN holds a bad copy of the bare photo URLs (5 Nov 2026:
+// partial "Range" replies cached as the whole photo for 30 days). A new value
+// is a new cache key, so share previews and Google fetch the full photo again.
+const IMAGE_CACHE_VERSION = '2';
+
 const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!url) return url;
   let out = toHttps(url);
@@ -73,9 +78,9 @@ const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!m) return out;
   const rest = m[1];
   if (rest.startsWith('thumbnails/')) {
-    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}`;
+    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}?v=${IMAGE_CACHE_VERSION}`;
   }
-  return `${SITE}/m/${cleanSlug}/${rest}`;
+  return `${SITE}/m/${cleanSlug}/${rest}?v=${IMAGE_CACHE_VERSION}`;
 };
 
 const formatPrice = (n: number | null | undefined) =>
