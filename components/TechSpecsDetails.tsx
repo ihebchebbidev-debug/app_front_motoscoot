@@ -30,7 +30,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties } from '../utils/techSpecSeo';
+import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage } from '../utils/techSpecSeo';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -314,6 +314,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     const all = extras.length > 0 ? extras : [spec.image].filter(Boolean) as string[];
     return Array.from(new Set(all));
   }, [spec]);
+  // Shared preview = the photo the page opens on (first gallery photo).
+  const shareImage = spec ? techSpecShareImage(spec) || undefined : undefined;
 
   // Model favourites are kept on this device (the account favourites API
   // only covers listings and garages).
@@ -518,7 +520,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         title={techSpecTitle({ brand: spec.brand, model: spec.model })}
         rawTitle
         description={techSpecDescription({ brand: spec.brand, model: spec.model, category: spec.category, price: spec.priceNew, cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight })}
-        image={spec.image}
+        image={shareImage}
         type="product"
         url={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand} ${spec.model}` })}
         schema={productSchema || undefined}
@@ -794,7 +796,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             id: spec.id,
             title: `${spec.brand} ${spec.model} ${spec.year || ''}`.trim(),
             subtitle: [spec.engine?.cc, spec.engine?.power, spec.priceNew].filter(Boolean).join(' • '),
-            image: spec.image,
+            image: shareImage,
           }}
         />
       )}

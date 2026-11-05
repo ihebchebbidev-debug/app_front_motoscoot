@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -717,7 +717,11 @@ export default async function handler(req: any, res: any) {
     const slug = pickSlug(kind, doc);
     const title = pickTitle(kind, doc);
     const description = pickDescription(kind, doc);
-    const image = pickImage(doc, slug);
+    // A shared technical sheet previews its first gallery photo (the one the
+    // page opens on), not the brand-page card picture.
+    const image = kind === 'fiche-technique'
+      ? rewriteImageHost(techSpecShareImage(doc) || DEFAULT_OG, slug)
+      : pickImage(doc, slug);
     const ogType = KIND_CONFIG[kind].ogType;
     const ld = buildJsonLd(kind, doc, canonical, image, title, description);
 

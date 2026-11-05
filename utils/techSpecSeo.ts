@@ -257,3 +257,13 @@ export function techSpecProperties(s: TechSpecPropertyInput): Array<Record<strin
     row('Réservoir', firstNumber(s.tank), 'LTR', 'L'),
   ].filter((r): r is NonNullable<typeof r> => r !== null);
 }
+
+/**
+ * Picture of a technical sheet when it is shared (og:image, twitter:image and
+ * the share window): the first photo of the sheet's own gallery, the one the
+ * page opens on. The admin "image principale" is the brand-page card picture
+ * and is only the fallback for a sheet without a gallery.
+ */
+export function techSpecShareImage(s: { image?: string | null; gallery?: Array<string | null | undefined> | null }): string | null {
+  return (s.gallery || []).find((g): g is string => !!g) || s.image || null;
+}
