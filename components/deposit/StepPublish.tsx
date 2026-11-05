@@ -69,9 +69,7 @@ export const StepPublish = memo(({ register, errors, control, setValue }: StepPu
 État : ${condition}
 
 Informations complémentaires :
-L'article est en très bon état général.
-Prix légèrement négociable.
-Curieux s'abstenir.`;
+L'article est en très bon état général.`;
     } else {
       template = `À VENDRE : ${brand} ${model} (${year})
 
@@ -86,9 +84,7 @@ ${equipment && equipment.length > 0
   : '- Équipement standard'}
 
 Informations complémentaires :
-Le véhicule est en très bon état général. Entretien à jour.
-Prix légèrement négociable devant le véhicule.
-Curieux s'abstenir.`;
+Le véhicule est en très bon état général. Entretien à jour.`;
     }
 
     setValue('description', template, { shouldDirty: true, shouldValidate: true });
