@@ -94,18 +94,69 @@ export function techSpecSummary(s: TechSpecSummaryInput): string {
   ].filter(Boolean).join(' ');
 }
 
+/** "9 000 DT", no-break spaces (U+00A0) inside and before "DT"; null without a price. */
+export function formatDinars(price: unknown): string | null {
+  const p = priceNumber(price);
+  return p === null ? null : `${p.toLocaleString('fr-FR').replace(/[\s ]/g, ' ')} DT`;
+}
+
+export interface TechSpecPriceBlockInput {
+  brand?: string | null;
+  model?: string | null;
+  /** Category as typed in the admin ("Scooter", "Maxi Scooter"…). */
+  category?: string | null;
+  cc?: string | null;
+  /** Raw API value: 9000, "10 350", "En arrivage". */
+  price?: number | string | null;
+  updatedAt?: string | null;
+  /** tech_specs.available_in_tunisia: the model is sold in Tunisia (not a stock level). */
+  availableInTunisia?: boolean | null;
+  importerName?: string | null;
+  importerCity?: string | null;
+}
+
+export interface TechSpecPriceBlock {
+  /** "9 000 DT TTC" */
+  price: string | null;
+  /** Month the price was checked: "novembre 2026". */
+  checked: string | null;
+  availability: string | null;
+  /** "Megacycle (Sousse)" */
+  dealer: string | null;
+  /** Site-relative links: 125 cm³ scooter prices (125 scooters only), comparator. */
+  links: Array<{ href: string; label: string }>;
+}
+
 /**
- * First row of the spec table: "9 000 DT (relevé en novembre 2026)", or ''
- * without a price. Puts the price in the first lines of the page for AI
- * answers while the full summary sentence stays at the bottom.
+ * "Prix neuf en Tunisie" block, right under the H1 of a technical sheet.
+ * Shared by the React page and the crawler HTML (api/og-prerender.ts) so both
+ * show the same price, availability, dealer and links. Availability only says
+ * whether the model is sold in Tunisia: the data has no stock level.
  */
 export const TECH_SPEC_PRICE_LABEL = 'Prix neuf en Tunisie';
-export function techSpecPriceValue(price: unknown, updatedAt?: string | null): string {
-  const p = priceNumber(price);
-  if (p === null) return '';
-  const checked = updatedAt ? new Date(updatedAt) : null;
-  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
-  return `${fmt(p)} DT${checkedLabel ? ` (relevé en ${checkedLabel})` : ''}`;
+export function techSpecPriceBlock(s: TechSpecPriceBlockInput): TechSpecPriceBlock {
+  const name = [s.brand, s.model].filter(Boolean).join(' ').trim();
+  const price = formatDinars(s.price);
+  const checked = s.updatedAt ? new Date(s.updatedAt) : null;
+  const cc = firstNumber(s.cc);
+  const availability =
+    price === null && /arrivage/i.test(String(s.price ?? '')) ? 'En arrivage en Tunisie'
+    : s.availableInTunisia === true ? 'Commercialisé en Tunisie'
+    : s.availableInTunisia === false ? 'Non commercialisé en Tunisie'
+    : null;
+  const scooter = /scooter/i.test(String(s.category ?? ''));
+  const links: TechSpecPriceBlock['links'] = [];
+  if (scooter && cc !== null && cc >= 110 && cc <= 130) {
+    links.push({ href: '/prix/scooter-125-tunisie', label: 'Prix des scooters 125 neufs en Tunisie' });
+  }
+  links.push({ href: '/comparateur', label: name ? `Comparer ${scooter ? 'le' : 'la'} ${name} avec un autre modèle` : 'Comparer avec un autre modèle' });
+  return {
+    price: price ? `${price} TTC` : null,
+    checked: price && checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : null,
+    availability,
+    dealer: s.importerName ? `${s.importerName}${s.importerCity ? ` (${s.importerCity})` : ''}` : null,
+    links,
+  };
 }
 
 export function techSpecTitle({ brand, model }: TechSpecSeoInput): string {

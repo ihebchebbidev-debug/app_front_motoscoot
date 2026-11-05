@@ -228,6 +228,8 @@ export interface TechSpec {
   year: number;
   category: 'Roadster' | 'Sportive' | 'Trail' | 'Scooter' | 'Custom' | 'Off-road';
   priceNew: string;
+  /** tech_specs.available_in_tunisia: the model is sold in Tunisia (no stock level). */
+  availableInTunisia?: boolean;
   image: string;
   gallery?: string[];
   engine: {

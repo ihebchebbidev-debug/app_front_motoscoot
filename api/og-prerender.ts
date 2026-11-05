@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceValue, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -338,7 +338,6 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
 }
 
 const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
-  [TECH_SPEC_PRICE_LABEL, (d) => techSpecPriceValue(d.price_new, d.updated_at)],
   ['Cylindrée', (d) => d.engine?.cc],
   ['Moteur', (d) => d.engine?.type],
   ['Puissance', (d) => d.engine?.power],
@@ -363,11 +362,26 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 ];
 
 // Fiche technique body for crawlers that do not run JavaScript, in the same
-// order as the page: the full spec table, then the summary (price with the
-// date it was checked, importer), then links to the brand, the catalogue and
-// the comparator.
+// order as the page: the "Prix neuf en Tunisie" block (price, availability,
+// dealer, links), the full spec table, then the summary (price with the date
+// it was checked, importer), then links to the brand, the catalogue and the
+// comparator.
 export function renderFicheBody(d: Doc): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
+  const block = techSpecPriceBlock({
+    brand: d.brand, model: d.model, category: d.category, cc: d.engine?.cc, price: d.price_new, updatedAt: d.updated_at,
+    availableInTunisia: d.available_in_tunisia, importerName: d.importer?.name, importerCity: d.importer?.city,
+  });
+  const facts = [
+    block.availability ? `<li>Disponibilité : ${escapeHtml(block.availability)}</li>` : '',
+    block.dealer ? `<li>Concessionnaire : ${escapeHtml(block.dealer)}</li>` : '',
+  ].filter(Boolean).join('\n');
+  const priceSection = block.price || block.availability || block.dealer ? `<section>
+<h2>${TECH_SPEC_PRICE_LABEL}</h2>
+${block.price ? `<p><strong>${escapeHtml(block.price)}</strong>${block.checked ? `, prix relevé en ${escapeHtml(block.checked)}` : ''}.</p>` : ''}
+${facts ? `<ul>\n${facts}\n</ul>` : ''}
+<p>${block.links.map((l) => `<a href="${SITE}${l.href}">${escapeHtml(l.label)}</a>`).join(' · ')}</p>
+</section>` : '';
   const summary = techSpecSummary({
     brand: d.brand, model: d.model, year: d.year, categoryLabel: d.category, cc: d.engine?.cc, power: d.engine?.power,
     price: d.price_new, updatedAt: d.updated_at, importerName: d.importer?.name, importerCity: d.importer?.city,
@@ -380,7 +394,8 @@ export function renderFicheBody(d: Doc): string {
   const brandSlug = d.brand ? slugify(d.brand) : '';
   return `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="${SITE}/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
-${rows ? `<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
+${priceSection}
+${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
 <p>${escapeHtml(summary)}</p>
 <ul>
 ${brandSlug ? `<li><a href="${SITE}/fiches-techniques/${brandSlug}">Tous les modèles ${escapeHtml(String(d.brand))}</a></li>` : ''}
