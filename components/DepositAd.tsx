@@ -33,6 +33,13 @@ import { listingsApi, PriceEstimate } from '../services/listingsApi';
 import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
 
+/** Step fields that show their own error message under the field. */
+const FIELDS_WITH_INLINE_ERROR = new Set([
+  'brand', 'model', 'condition', 'year', 'mileage', 'cc', 'accessoryType', 'helmetType', 'visorType',
+  'size', 'gender', 'shoeSize', 'antiTheftType', 'intercomFeatures', 'images',
+  'price', 'governorate', 'city', 'phone', 'description',
+]);
+
 interface DepositAdProps {
   onNavigate?: (view: ViewStateName, params?: NavigationParams) => void;
 }
@@ -178,13 +185,18 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     handleCropDone,
   } = useMediaUpload();
 
-  const { register, handleSubmit, setValue, watch, trigger, reset, clearErrors, control, formState: { errors } } = useForm<ListingFormData>({
+  const { register, handleSubmit, setValue, watch, trigger, reset, clearErrors, control, getFieldState, formState: { errors } } = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
       category: undefined as any, brand: '', model: '', year: '', mileage: '', cc: '', condition: '', equipment: [], price: '', city: '', governorate: '', phone: '', description: '', images: [], accessoryType: '', helmetType: '', visorType: [],
       address: '', latitude: undefined as any, longitude: undefined as any,
     }
   });
+
+  // react-hook-form clears an error by mutating the same `errors` object, so
+  // the memoised steps would keep showing a fixed field's message: give them
+  // a new object whenever the form re-renders.
+  const stepErrors = { ...errors };
 
   const allValues = watch();
 
@@ -227,6 +239,17 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
       .map(m => m.url);
     setValue('images', successfulUrls);
   }, [mediaList, setValue]);
+
+  // Errors are raised by "Suivant" (trigger), and react-hook-form only
+  // re-checks fields by itself after a real submit: re-check a field as soon
+  // as it changes, so a fixed field loses its message right away.
+  useEffect(() => {
+    const subscription = watch((_value, { name }) => {
+      const field = name?.split('.')[0];
+      if (field && getFieldState(field as any).error) void trigger(field as any);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, trigger, getFieldState]);
 
   // Reset brand/model quand la catégorie change
   useEffect(() => {
@@ -434,14 +457,12 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
       return;
     }
 
-    const labels = (missing.length > 0 ? missing : fields).map((f) => fieldLabels[f] || f);
-    addToast(
-      labels.length > 0
-        ? `Champs requis manquants : ${labels.join(', ')}`
-        : 'Veuillez remplir tous les champs obligatoires avant de continuer.',
-      'error',
-      6000,
-    );
+    // Each field shows its own message under it: a toast repeating them only
+    // covered the fields on phones. Keep one for what has no message on screen.
+    const unseen = missing.length > 0 ? missing.filter((f) => !FIELDS_WITH_INLINE_ERROR.has(f)) : fields;
+    if (unseen.length > 0) {
+      addToast(`Champs requis manquants : ${unseen.map((f) => fieldLabels[f] || f).join(', ')}`, 'error', 6000);
+    }
     scrollToFirstError();
   };
 
@@ -512,13 +533,17 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     for (let s = 1; s <= lastStep; s++) {
       const { valid, missing, fields } = await validateStep(s, isAccessory);
       if (!valid) {
-        const offending = (missing.length > 0 ? missing : fields)
-          .map((f) => fieldLabels[f] || f);
-        addToast(
-          `Étape ${s} (${labels[s]}) — champs manquants : ${offending.join(', ')}`,
-          'error',
-          6500,
-        );
+        // On the current step the messages are already under the fields;
+        // when we jump back to another step, say where and why.
+        if (s !== step || missing.some((f) => !FIELDS_WITH_INLINE_ERROR.has(f))) {
+          const offending = (missing.length > 0 ? missing : fields)
+            .map((f) => fieldLabels[f] || f);
+          addToast(
+            `Étape ${s} (${labels[s]}) — champs manquants : ${offending.join(', ')}`,
+            'error',
+            6500,
+          );
+        }
         if (s !== step) setStep(s);
         // Wait a tick so the new step is mounted before scrolling.
         setTimeout(scrollToFirstError, 50);
@@ -571,7 +596,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   {step === 2 && (
                     <StepTechnical 
                       register={register} 
-                      errors={errors} 
+                      errors={stepErrors} 
                       control={control}
                       setValue={setValue}
                       clearErrors={clearErrors}
@@ -594,13 +619,13 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       onReorder={handleReorder}
                       onSetMain={handleSetMain}
                       onCropDone={handleCropDone}
-                      errors={errors} 
+                      errors={stepErrors} 
                     />
                   )}
                   {((step === 4 && category === 'Accessoires') || (step === 5 && category !== 'Accessoires')) && (
                     <StepPublish 
                       register={register} 
-                      errors={errors} 
+                      errors={stepErrors} 
                       control={control}
                       setValue={setValue}
                     />
@@ -608,7 +633,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   {((step === 5 && category === 'Accessoires') || (step === 6 && category !== 'Accessoires')) && (
                     <StepLocation
                       register={register}
-                      errors={errors}
+                      errors={stepErrors}
                       control={control}
                       setValue={setValue}
                     />

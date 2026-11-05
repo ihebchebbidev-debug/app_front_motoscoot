@@ -32,6 +32,7 @@ export const StepPublish = memo(({ register, errors, control, setValue }: StepPu
   const formData            = useWatch({ control });
   const selectedGovernorate = useWatch({ control, name: 'governorate' }) as string | undefined;
   const currentPhone        = useWatch({ control, name: 'phone' }) as string | undefined;
+  const descriptionLength   = ((useWatch({ control, name: 'description' }) as string | undefined) || '').trim().length;
 
   // --- API reference data ---
   const { data: governorates = [] }   = useGovernorates();
@@ -168,11 +169,19 @@ Curieux s'abstenir.`;
           </div>
           <textarea
             rows={10}
-            className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none focus:bg-card focus:border-primary-600 transition-all font-medium text-sm leading-relaxed"
+            className={`w-full px-5 py-4 rounded-2xl bg-gray-50 border outline-none focus:bg-card focus:border-primary-600 transition-all font-medium text-sm leading-relaxed ${errors.description ? 'border-red-500' : 'border-gray-200'}`}
             placeholder="Détaillez l'entretien, les options, les éventuels défauts... (Cliquez sur 'Utiliser un modèle' pour gagner du temps !)"
+            aria-invalid={!!errors.description}
+            aria-describedby="description-count"
             {...register('description')}
           />
-          {errors.description && <p className="text-red-500 text-[12px] font-bold">{errors.description.message}</p>}
+          {/* The 20-character minimum is shown before it becomes an error. */}
+          <div className="flex items-start justify-between gap-3">
+            {errors.description ? <p className="text-red-600 text-[12px] font-bold">{errors.description.message}</p> : <span />}
+            <p id="description-count" className="text-xs font-medium text-gray-600 tabular-nums shrink-0">
+              {descriptionLength < 20 ? `${descriptionLength} / 20 caractères minimum` : `${descriptionLength} caractères`}
+            </p>
+          </div>
         </div>
       </div>
     </div>
