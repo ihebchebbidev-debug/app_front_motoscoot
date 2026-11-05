@@ -1,5 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { BUTTON_TYPE, useTypeTone } from './TypeScale';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'dark' | 'outline' | 'outline-primary' | 'ghost' | 'success' | 'danger';
@@ -22,7 +23,8 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = "inline-flex items-center justify-center font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
+  const tone = useTypeTone();
+  const baseStyles = `inline-flex items-center justify-center ${BUTTON_TYPE[tone]} transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100`;
   
   const variants = {
     primary: "bg-primary-600 text-white hover:bg-orange-700 shadow-lg shadow-orange-600/10",
@@ -34,7 +36,13 @@ export const Button: React.FC<ButtonProps> = ({
     danger: "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/10",
   };
 
-  const sizes = {
+  // Calm tone: sentence-case text needs real reading sizes (16 px), not 12 px capitals.
+  const sizes = tone === 'calm' ? {
+    sm: "px-3 py-1.5 text-[14px] rounded-lg gap-1.5",
+    md: "px-5 py-3 text-[16px] rounded-xl gap-2",
+    lg: "px-8 py-4 text-[16px] rounded-2xl gap-2.5",
+    xl: "px-10 py-5 text-[17px] rounded-[1.25rem] gap-3",
+  } : {
     sm: "px-3 py-1.5 text-[12px] rounded-lg gap-1.5",
     md: "px-5 py-3 text-[12px] rounded-xl gap-2",
     lg: "px-8 py-4 text-xs rounded-2xl gap-2.5",

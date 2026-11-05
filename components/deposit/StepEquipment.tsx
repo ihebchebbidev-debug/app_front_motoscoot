@@ -11,8 +11,8 @@ interface StepEquipmentProps {
 
 const S = {
   HeaderSection: "text-center md:text-left mb-10",
-  Title: "text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight",
-  Subtitle: "text-gray-500 font-medium",
+  Title: "text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]",
+  Subtitle: "text-base leading-relaxed text-gray-600",
 };
 
 const CATEGORY_META: Record<string, { title: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
@@ -57,7 +57,7 @@ export const StepEquipment = memo(({ selectedEquipment, onToggle, accessoryType 
           <div key={category} className="space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-gray-50">
               <Icon size={20} className="text-primary-600" />
-              <h3 className="text-[12px] font-[900] text-gray-500 uppercase tracking-[0.1em]">{title}</h3>
+              <h3 className="text-[14px] leading-[1.3] font-semibold text-gray-900">{title}</h3>
             </div>
             <div className="flex flex-wrap gap-2.5">
               {items.map((item) => {
@@ -78,7 +78,7 @@ export const StepEquipment = memo(({ selectedEquipment, onToggle, accessoryType 
                     ) : (
                       <Plus size={16} className="text-gray-300 group-hover:text-primary-400" />
                     )}
-                    <span className="text-xs font-bold tracking-tight">{item}</span>
+                    <span className="text-[14px] font-medium">{item}</span>
                   </button>
                 );
               })}

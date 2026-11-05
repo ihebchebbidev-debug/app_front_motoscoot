@@ -23,12 +23,12 @@ const dt = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} DT`;
 
 const S = {
   HeaderSection: "text-center md:text-left mb-10",
-  Title: "text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight",
-  Subtitle: "text-gray-500 font-medium",
+  Title: "text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]",
+  Subtitle: "text-base leading-relaxed text-gray-600",
   GridFields: "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6",
   LabelWrapper: "flex justify-between items-center mb-2",
-  Label: "text-[12px] font-black text-gray-500 uppercase tracking-widest ml-1",
-  TemplateButton: "flex items-center gap-1.5 text-[12px] font-black text-primary-700 uppercase tracking-tight hover:text-primary-800 transition-colors"
+  Label: "text-[14px] leading-[1.3] font-semibold text-gray-900 ml-1",
+  TemplateButton: "flex items-center gap-1.5 min-h-11 text-[14px] font-semibold text-primary-700 hover:text-primary-800 transition-colors"
 };
 
 export const StepPublish = memo(({ register, errors, control, setValue, priceEstimate }: StepPublishProps) => {
@@ -99,7 +99,7 @@ Le véhicule est en très bon état général. Entretien à jour.`;
         <div className={S.GridFields}>
           <div>
             <Input
-              label="PRIX (DT)"
+              label="Prix (DT)"
               placeholder="Ex: 48500"
               type="number"
               {...register('price')}
@@ -120,7 +120,7 @@ Le véhicule est en très bon état général. Entretien à jour.`;
           </div>
 
           <Select
-            label="GOUVERNORAT"
+            label="Gouvernorat"
             {...register('governorate')}
             error={(errors as any).governorate?.message}
           >
@@ -131,7 +131,7 @@ Le véhicule est en très bon état général. Entretien à jour.`;
 
         <div className={S.GridFields}>
           <Input
-            label="TÉLÉPHONE"
+            label="Téléphone"
             type="tel"
             inputMode="tel"
             autoComplete="tel"
@@ -151,7 +151,7 @@ Le véhicule est en très bon état général. Entretien à jour.`;
 
         <div className="space-y-2">
           <div className={S.LabelWrapper}>
-            <label className={S.Label}>DESCRIPTION <span className="text-red-600 dark:text-red-400">*</span></label>
+            <label className={S.Label}>Description <span className="text-red-600 dark:text-red-400">*</span></label>
             <button
               type="button"
               onClick={handleApplyTemplate}
@@ -171,8 +171,8 @@ Le véhicule est en très bon état général. Entretien à jour.`;
           />
           {/* The 20-character minimum is shown before it becomes an error. */}
           <div className="flex items-start justify-between gap-3">
-            {errors.description ? <p className="text-red-600 text-[12px] font-bold">{errors.description.message}</p> : <span />}
-            <p id="description-count" className="text-xs font-medium text-gray-600 tabular-nums shrink-0">
+            {errors.description ? <p className="text-red-600 text-[13px] font-medium">{errors.description.message}</p> : <span />}
+            <p id="description-count" className="text-[13px] text-gray-600 tabular-nums shrink-0">
               {descriptionLength < 20 ? `${descriptionLength} / 20 caractères minimum` : `${descriptionLength} caractères`}
             </p>
           </div>
@@ -215,7 +215,7 @@ const ContactMethodToggle: React.FC<ToggleProps> = ({ control, setValue }) => {
 
   return (
     <fieldset className="border-t border-gray-100 pt-6">
-      <legend className="float-left w-full text-[12px] font-black text-gray-900 uppercase tracking-widest ml-1 mb-3">
+      <legend className="float-left w-full text-[14px] leading-[1.3] font-semibold text-gray-900 ml-1 mb-3">
         Mode de contact
       </legend>
       <div className="clear-left grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -245,7 +245,7 @@ const ContactMethodToggle: React.FC<ToggleProps> = ({ control, setValue }) => {
                 {selected && <span className="h-2.5 w-2.5 rounded-full bg-primary-700" />}
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">
+                <span className="flex items-center gap-2 text-[16px] font-semibold text-gray-900">
                   <Icon size={16} className="text-primary-700 shrink-0" aria-hidden="true" />
                   {title}
                 </span>

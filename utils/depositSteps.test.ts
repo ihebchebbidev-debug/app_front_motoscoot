@@ -26,7 +26,7 @@ test('the category dropdown offers exactly the categories the form accepts', () 
   const schema = read('types/listing.ts');
   for (const c of DEPOSIT_CATEGORIES) assert.match(schema, new RegExp(`'${c}'`));
   const tech = read('components/deposit/StepTechnical.tsx');
-  assert.match(tech, /<Select label="CATÉGORIE" \{\.\.\.register\('category'\)\}/);
+  assert.match(tech, /<Select label="Catégorie" \{\.\.\.register\('category'\)\}/);
 });
 
 test('the wizard renders and validates by step id, without the old category and map steps', () => {

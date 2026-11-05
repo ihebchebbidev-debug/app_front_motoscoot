@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { FIELD_TYPE, useTypeTone } from './TypeScale';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -15,10 +16,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   className = '',
   ...props
 }, ref) => {
+  const type = FIELD_TYPE[useTypeTone()];
   return (
     <div className="space-y-2 w-full group">
       {label && (
-        <label className="block text-[12px] font-extrabold text-foreground uppercase tracking-[1px] ml-1 transition-colors group-focus-within:text-primary-700">
+        <label className={`block ${type.label} ml-1 transition-colors group-focus-within:text-primary-700`}>
           {label}
         </label>
       )}
@@ -31,7 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         <input
           ref={ref}
           className={`
-            w-full py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all font-bold text-gray-900 shadow-none placeholder:text-gray-500
+            w-full py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-gray-900 shadow-none placeholder:text-gray-500
             focus:bg-card focus:border-primary-600 focus:ring-4 focus:ring-primary-50
             ${leftIcon ? 'pl-11' : 'pl-5'}
             ${rightIcon ? 'pr-11' : 'pr-5'}
@@ -46,7 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           </div>
         )}
       </div>
-      {error && <p className="text-[12px] font-bold text-red-600 ml-1 animate-scale-in">{error}</p>}
+      {error && <p className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
     </div>
   );
 });

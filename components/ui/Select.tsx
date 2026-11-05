@@ -1,5 +1,6 @@
 import React, { forwardRef, useId } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { FIELD_TYPE, useTypeTone } from './TypeScale';
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -16,10 +17,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   // Tie the visible label to the select so it is its accessible name.
   const autoId = useId();
   const id = props.id ?? autoId;
+  const type = FIELD_TYPE[useTypeTone()];
   return (
     <div className="space-y-2 w-full group">
       {label && (
-        <label htmlFor={id} className="block text-[12px] font-extrabold text-foreground uppercase tracking-[1px] ml-1 transition-colors group-focus-within:text-primary-700">
+        <label htmlFor={id} className={`block ${type.label} ml-1 transition-colors group-focus-within:text-primary-700`}>
           {label}
         </label>
       )}
@@ -28,7 +30,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           ref={ref}
           id={id}
           className={`
-            w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all font-bold text-gray-900 shadow-none
+            w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-gray-900 shadow-none
             focus:bg-card focus:border-primary-600 focus:ring-4 focus:ring-primary-50
             appearance-none cursor-pointer
             ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-50' : ''}
@@ -42,7 +44,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           <ChevronDown size={20} />
         </div>
       </div>
-      {error && <p className="text-[12px] font-bold text-red-600 ml-1 animate-scale-in">{error}</p>}
+      {error && <p className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
     </div>
   );
 });
