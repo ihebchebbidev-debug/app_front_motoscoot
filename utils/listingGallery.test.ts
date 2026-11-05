@@ -31,3 +31,11 @@ test('near-4:3 photos fill the frame, portrait and very wide ones are shown whol
   assert.equal(photoFit(1920, 1080), 'contain'); // 16:9
   assert.equal(photoFit(0, 0), 'cover');
 });
+
+test('photo arrows are plain white buttons with an orange arrow, no glass', () => {
+  const btn = gallery.match(/GalleryBtn: "([^"]+)"/)![1];
+  assert.match(btn, /\bbg-white\b/);
+  assert.match(btn, /\btext-primary-600\b/);
+  assert.doesNotMatch(btn, /backdrop-blur|bg-card\/|text-gray-900/);
+  assert.doesNotMatch(gallery, /<Button variant="ghost" aria-label="Photo (précédente|suivante)"/);
+});

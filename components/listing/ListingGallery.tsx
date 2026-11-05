@@ -21,7 +21,7 @@ interface ListingGalleryProps {
 const S = {
   GalleryMain: "relative aspect-[4/3] rounded-2xl overflow-hidden bg-card md:bg-neutral-100 group shadow-md select-none md:cursor-zoom-in transition-transform active:scale-[0.99] touch-pan-y",
   GalleryNav: "absolute inset-y-0 hidden md:flex items-center justify-between px-3 w-full pointer-events-none z-20",
-  GalleryBtn: "w-10 h-10 md:w-12 md:h-12 bg-card/90 backdrop-blur-md rounded-full text-gray-900 shadow-xl pointer-events-auto active:scale-90 transition-all hover:bg-card flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100",
+  GalleryBtn: "w-10 h-10 md:w-12 md:h-12 bg-white hover:bg-white active:bg-white rounded-full text-primary-600 shadow-xl pointer-events-auto active:scale-90 transition-[opacity,transform] flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600",
   Counter: "absolute bottom-4 right-4 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-lg text-white text-[12px] font-extrabold uppercase tracking-widest border border-white/10 z-20",
   DotPagination: "absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 md:hidden",
   Dot: (active: boolean) => `w-1.5 h-1.5 rounded-full transition-all duration-300 ${active ? 'bg-card w-4' : 'bg-white/40'}`,
@@ -182,8 +182,8 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
           
           <div className={S.Counter}>{images.length ? activeIndex + 1 : 0} / {images.length}</div>
           {images.length > 1 && <div className={S.GalleryNav}>
-            <Button variant="ghost" aria-label="Photo précédente" className={S.GalleryBtn} onClick={prevImg}><ChevronLeft /></Button>
-            <Button variant="ghost" aria-label="Photo suivante" className={S.GalleryBtn} onClick={nextImg}><ChevronRight /></Button>
+            <button type="button" aria-label="Photo précédente" className={S.GalleryBtn} onClick={prevImg}><ChevronLeft strokeWidth={2.5} /></button>
+            <button type="button" aria-label="Photo suivante" className={S.GalleryBtn} onClick={nextImg}><ChevronRight strokeWidth={2.5} /></button>
           </div>}
           
           {images.length > 1 && (
