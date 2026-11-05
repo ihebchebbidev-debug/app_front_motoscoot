@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties } from '../utils/techSpecSeo.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -265,6 +265,10 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
       ? { '@type': 'Brand', name: d.brand, ...(brandLogo ? { logo: brandLogo } : {}) }
       : undefined;
     const engineDisplacement = parseCc(d.engine?.cc);
+    const properties = techSpecProperties({
+      cc: d.engine?.cc, power: d.engine?.power, torque: d.engine?.torque, topSpeed: d.top_speed,
+      consumption: d.consumption, weight: d.dimensions?.weight, tank: d.dimensions?.tank,
+    });
 
     // Google requires Product to expose offers/review/aggregateRating.
     // When we know the price we emit a valid Offer; otherwise we fall back
@@ -279,7 +283,8 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
         description,
         image: gallery.length ? gallery : [image],
         sku: d.id ? `MS-${d.id}` : undefined,
-        mpn: d.model || undefined,
+        // The model name, not a manufacturer part number (mpn).
+        model: d.model || undefined,
         category: d.category || 'Motorcycle',
         brand: brandNode,
         url: canonical,
@@ -290,14 +295,7 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
           itemCondition: 'https://schema.org/NewCondition',
           url: canonical,
         },
-        ...(engineDisplacement ? {
-          additionalProperty: [
-            { '@type': 'PropertyValue', name: 'Cylindrée', value: engineDisplacement, unitCode: 'CMQ' },
-            ...(d.engine?.power ? [{ '@type': 'PropertyValue', name: 'Puissance', value: String(d.engine.power) }] : []),
-            ...(d.top_speed ? [{ '@type': 'PropertyValue', name: 'Vitesse max', value: String(d.top_speed) }] : []),
-            ...(d.consumption ? [{ '@type': 'PropertyValue', name: 'Consommation', value: String(d.consumption) }] : []),
-          ],
-        } : {}),
+        ...(properties.length ? { additionalProperty: properties } : {}),
       };
     }
     return {
