@@ -90,7 +90,7 @@ Le véhicule est en très bon état général. Entretien à jour.`;
   };
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8">
       <div className={S.HeaderSection}>
         <h2 className={S.Title}>Prix et description</h2>
         <p className={S.Subtitle}>Fixez votre prix et décrivez votre véhicule.</p>

@@ -104,7 +104,7 @@ export const StepRecap = memo(({ values: v, mediaList, isAccessory, onEdit }: St
   const equipment: string[] = Array.isArray(v.equipment) ? v.equipment : [];
 
   return (
-    <div className="animate-fade-in-up">
+    <div>
       <div className={S.HeaderSection}>
         <h2 className={S.Title}>Vérifiez votre annonce</h2>
         <p className={S.Subtitle}>Relisez avant de publier. Vous pouvez encore modifier chaque partie.</p>
