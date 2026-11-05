@@ -1,11 +1,11 @@
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect } from 'react';
 import { BadgeEuro, FileText, Phone, MessageCircle } from 'lucide-react';
 import { UseFormRegister, FieldErrors, Control, useWatch, UseFormSetValue } from 'react-hook-form';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { ListingFormData } from '../../types/listing';
 import { useToast } from '../../context/ToastContext';
-import { useGovernorates, useCities } from '../../hooks/useReferenceData';
+import { useGovernorates } from '../../hooks/useReferenceData';
 import { useUser } from '../../context/UserContext';
 import { cleanPhoneInput } from '../../utils/phoneUtils';
 import type { PriceEstimate } from '../../services/listingsApi';
@@ -36,21 +36,13 @@ export const StepPublish = memo(({ register, errors, control, setValue, priceEst
   const { addToast } = useToast();
   const { user } = useUser();
   const formData            = useWatch({ control });
-  const selectedGovernorate = useWatch({ control, name: 'governorate' }) as string | undefined;
   const currentPhone        = useWatch({ control, name: 'phone' }) as string | undefined;
   const descriptionLength   = ((useWatch({ control, name: 'description' }) as string | undefined) || '').trim().length;
 
   // --- API reference data ---
+  // Only the governorate is asked (no city: one field less). Listings show
+  // the governorate when there is no city (services/listingsApi.ts).
   const { data: governorates = [] }   = useGovernorates();
-  const { data: citiesData   = [] }   = useCities(selectedGovernorate || undefined);
-  const cityNames = citiesData.map((c) => c.name);
-
-  // Reset city whenever the governorate changes (skip initial render)
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
-    setValue('city', '', { shouldValidate: false });
-  }, [selectedGovernorate, setValue]);
 
   // Prefill phone from the user's profile the first time we see one and the
   // form's phone is still empty. Subsequent edits stay sticky.
@@ -127,7 +119,6 @@ Le véhicule est en très bon état général. Entretien à jour.`;
             )}
           </div>
 
-          {/* GOUVERNORAT first, then VILLE filtered by it */}
           <Select
             label="GOUVERNORAT"
             {...register('governorate')}
@@ -139,18 +130,6 @@ Le véhicule est en très bon état général. Entretien à jour.`;
         </div>
 
         <div className={S.GridFields}>
-          <Select
-            label="VILLE"
-            {...register('city')}
-            error={errors.city?.message}
-            disabled={!selectedGovernorate}
-          >
-            <option value="">
-              {selectedGovernorate ? '— Sélectionner une ville —' : '— Choisir un gouvernorat d\'abord —'}
-            </option>
-            {cityNames.map((c) => <option key={c} value={c}>{c}</option>)}
-          </Select>
-
           <Input
             label="TÉLÉPHONE"
             type="tel"

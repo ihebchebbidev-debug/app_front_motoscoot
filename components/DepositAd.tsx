@@ -38,7 +38,7 @@ import SEO from './common/SEO';
 const FIELDS_WITH_INLINE_ERROR = new Set([
   'category', 'brand', 'model', 'condition', 'year', 'mileage', 'cc', 'accessoryType', 'helmetType', 'visorType',
   'size', 'gender', 'shoeSize', 'antiTheftType', 'intercomFeatures', 'images',
-  'price', 'governorate', 'city', 'phone', 'description',
+  'price', 'governorate', 'phone', 'description',
 ]);
 
 interface DepositAdProps {
@@ -100,7 +100,7 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
         )}
 
         <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mb-5 text-[12px] font-semibold text-gray-500 tracking-tight">
-           <div className="flex items-center gap-1.5"><MapPin size={13} className="text-gray-400" /><span className="truncate">{city}</span></div>
+           <div className="flex items-center gap-1.5"><MapPin size={13} className="text-gray-400" /><span className="truncate">{city || data.governorate}</span></div>
            <div className="flex items-center gap-1.5"><SearchCheck size={13} className="text-gray-400" /><span className="truncate">{condition || 'État'}</span></div>
         </div>
         <div className="flex items-center gap-3 pt-4 border-t border-gray-100/80">
@@ -376,7 +376,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         return f;
       }
       case 'details':
-        return ['price', 'governorate', 'city', 'phone', 'description'];
+        return ['price', 'governorate', 'phone', 'description'];
       // Equipment is optional; the recap has no field of its own.
       default:
         return [];
@@ -506,7 +506,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         listingNumber: created.listingNumber,
         title: created.title,
         image: created.image,
-        subtitle: [data.year, data.price ? `${data.price} DT` : '', data.city].filter(Boolean).join(' • '),
+        subtitle: [data.year, data.price ? `${data.price} DT` : '', data.governorate].filter(Boolean).join(' • '),
       });
     } catch (error: any) {
       // CAS ÉCHEC

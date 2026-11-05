@@ -77,9 +77,9 @@ class ListingService {
       year: toNumber(data.year) ?? null,
       mileage: toNumber(data.mileage) ?? null,
       cc: toNumber(data.cc) ?? null,
-      city: data.city,
-      // Governorate is now collected explicitly by StepPublish; fall back to city only
-      // if it's a known governorate name (city dropdown also lists governorate names).
+      // The deposit form only asks for the governorate; city stays empty
+      // (cards and search fall back to / also match the governorate).
+      city: (data.city && String(data.city).trim()) || null,
       governorate: (data.governorate && String(data.governorate).trim()) || data.city || null,
       // Localisation step (last step of the wizard). The backend whitelists
       // these fields in `LISTING_FIELDS` (controllers/listingsController.js)
