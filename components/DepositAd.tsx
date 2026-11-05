@@ -106,7 +106,7 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
            <div className="flex items-center gap-1.5"><SearchCheck size={13} className="text-gray-400" /><span className="truncate">{condition || 'État'}</span></div>
         </div>
         <div className="flex items-center gap-3 pt-4 border-t border-gray-100/80">
-          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-[12px] shadow-sm shrink-0 uppercase">{previewInitials}</div>
+          <div className="w-8 h-8 rounded-full bg-primary-700 text-white flex items-center justify-center font-black text-[12px] shadow-sm shrink-0 uppercase">{previewInitials}</div>
           <div className="flex flex-col min-w-0">
              <span className="text-[12px] font-extrabold text-gray-700 truncate uppercase tracking-wider">{previewName}</span>
              <span className="text-[12px] font-medium text-gray-500 leading-tight">{previewRole}</span>
@@ -654,23 +654,25 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   </div>
                 </div>
                 <div className={`${S.ActionNav} transition-transform duration-200 ease-out ${typing ? 'max-md:translate-y-full max-md:pointer-events-none' : ''}`}>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    onClick={handleBack} 
-                    disabled={step === 1} 
-                    leftIcon={<ChevronLeft size={20}/>}
-                    className="flex-1 md:flex-initial md:bg-card md:border md:border-neutral-200 md:hover:bg-neutral-50 font-bold"
-                  >
-                    Retour
-                  </Button>
+                  {/* Step 1 has nowhere to go back to: no greyed-out button. */}
+                  {step > 1 && (
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      onClick={handleBack} 
+                      leftIcon={<ChevronLeft size={20}/>}
+                      className="flex-1 md:flex-initial md:bg-card md:border md:border-neutral-200 md:hover:bg-neutral-50 font-bold"
+                    >
+                      Retour
+                    </Button>
+                  )}
                   {step < totalSteps ? (
                     <Button 
                       type="button" 
                       variant="primary" 
                       onClick={handleNext} 
                       rightIcon={<ChevronRight size={20}/>}
-                      className="flex-[2] md:flex-initial bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
+                      className="flex-[2] md:flex-initial md:ml-auto bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
                     >
                       Suivant
                     </Button>
@@ -681,7 +683,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       onClick={handlePublish}
                       isLoading={isSubmitting}
                       rightIcon={<CheckCircle2 size={20}/>}
-                      className="flex-[2] md:flex-initial bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
+                      className="flex-[2] md:flex-initial md:ml-auto bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
                     >
                       Publier
                     </Button>
