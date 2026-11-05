@@ -191,77 +191,70 @@ interface ToggleProps {
   setValue: UseFormSetValue<ListingFormData>;
 }
 
+const CONTACT_OPTIONS = [
+  {
+    value: 'phone' as const,
+    Icon: Phone,
+    title: 'Afficher mon numéro',
+    text: "Votre numéro est affiché sur l'annonce. Les acheteurs peuvent vous appeler directement.",
+  },
+  {
+    value: 'callback' as const,
+    Icon: MessageCircle,
+    title: 'Garder mon numéro privé',
+    text: 'Les acheteurs vous contactent par message ou demande de rappel.',
+  },
+];
+
+/**
+ * One exclusive choice (native radio buttons): before, a switch and two
+ * buttons changed the same setting.
+ */
 const ContactMethodToggle: React.FC<ToggleProps> = ({ control, setValue }) => {
   const value = (useWatch({ control, name: 'contactMethod' }) as 'phone' | 'callback' | undefined) ?? 'phone';
-  const isCallback = value === 'callback';
-
-  const setMethod = (next: 'phone' | 'callback') => {
-    setValue('contactMethod', next, { shouldDirty: true, shouldValidate: false });
-  };
 
   return (
-    <div className="border-t border-gray-100 pt-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            {isCallback ? (
-              <MessageCircle size={16} className="text-primary-600" />
-            ) : (
-              <Phone size={16} className="text-primary-600" />
-            )}
-            <span className="text-[12px] font-black text-gray-900 uppercase tracking-widest">
-              Mode de contact
-            </span>
-          </div>
-          <p className="mt-1 text-[13px] text-gray-600 leading-snug">
-            {isCallback
-              ? "Votre numéro reste privé. Les acheteurs vous contactent par message ou demande de rappel."
-              : "Votre numéro est affiché sur l'annonce. Les acheteurs peuvent vous appeler directement."}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isCallback}
-          aria-label="Garder mon numéro privé"
-          onClick={() => setMethod(isCallback ? 'phone' : 'callback')}
-          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-            isCallback ? 'bg-primary-600' : 'bg-gray-300'
-          }`}
-        >
-          <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-card shadow transition-transform duration-200 ${
-              isCallback ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
+    <fieldset className="border-t border-gray-100 pt-6">
+      <legend className="float-left w-full text-[12px] font-black text-gray-900 uppercase tracking-widest ml-1 mb-3">
+        Mode de contact
+      </legend>
+      <div className="clear-left grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {CONTACT_OPTIONS.map(({ value: option, Icon, title, text }) => {
+          const selected = value === option;
+          return (
+            <label
+              key={option}
+              className={`relative flex items-start gap-3 min-h-11 rounded-2xl border-2 p-4 cursor-pointer transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gray-900 ${
+                selected ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-card hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="contactMethod"
+                value={option}
+                checked={selected}
+                onChange={() => setValue('contactMethod', option, { shouldDirty: true, shouldValidate: false })}
+                className="sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  selected ? 'border-primary-700' : 'border-gray-400'
+                }`}
+              >
+                {selected && <span className="h-2.5 w-2.5 rounded-full bg-primary-700" />}
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">
+                  <Icon size={16} className="text-primary-700 shrink-0" aria-hidden="true" />
+                  {title}
+                </span>
+                <span className="mt-1 block text-[13px] leading-snug text-gray-600">{text}</span>
+              </span>
+            </label>
+          );
+        })}
       </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setMethod('phone')}
-          className={`rounded-xl border px-3 py-2 text-[12px] font-bold transition-all ${
-            !isCallback
-              ? 'border-primary-600 bg-primary-50 text-primary-700'
-              : 'border-gray-200 bg-card text-gray-500 hover:bg-gray-50'
-          }`}
-        >
-          Afficher le numéro
-        </button>
-        <button
-          type="button"
-          onClick={() => setMethod('callback')}
-          className={`rounded-xl border px-3 py-2 text-[12px] font-bold transition-all ${
-            isCallback
-              ? 'border-primary-600 bg-primary-50 text-primary-700'
-              : 'border-gray-200 bg-card text-gray-500 hover:bg-gray-50'
-          }`}
-        >
-          Garder privé (rappel)
-        </button>
-      </div>
-    </div>
+    </fieldset>
   );
 };
