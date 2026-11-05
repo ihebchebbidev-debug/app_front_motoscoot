@@ -98,8 +98,8 @@ Curieux s'abstenir.`;
   return (
     <div className="space-y-8 animate-fade-in-up">
       <div className={S.HeaderSection}>
-        <h2 className={S.Title}>Publication de l'annonce</h2>
-        <p className={S.Subtitle}>Fixez votre prix et décrivez votre véhicule pour finaliser le dépôt.</p>
+        <h2 className={S.Title}>Prix et description</h2>
+        <p className={S.Subtitle}>Fixez votre prix et décrivez votre véhicule.</p>
       </div>
       <div className="space-y-6">
         <div className={S.GridFields}>

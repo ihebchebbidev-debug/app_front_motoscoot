@@ -15,7 +15,8 @@ export interface UploadedMedia {
 export const MAX_IMAGES = 10;
 
 export const listingSchema = z.object({
-  category: z.enum(['Moto', 'Scooter', 'Quad', 'Accessoires']).refine(val => val !== undefined, "Veuillez choisir une catégorie"),
+  // errorMap: an empty choice must not show zod's English "Invalid enum value".
+  category: z.enum(['Moto', 'Scooter', 'Quad', 'Accessoires'], { errorMap: () => ({ message: 'Veuillez choisir une catégorie' }) }),
   brand: z.string().min(1, "Veuillez choisir une marque"),
   model: z.string().min(1, "Veuillez choisir un modèle"),
   condition: z.string().min(1, "État requis"),

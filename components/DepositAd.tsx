@@ -21,13 +21,12 @@ import { useBrands } from '../hooks/useReferenceData';
 import { UploadedMedia, ListingFormData, listingSchema, MAX_IMAGES } from '../types/listing';
 
 // Import des sous-composants d'étape
-import { StepCategory } from './deposit/StepCategory';
 import { StepTechnical } from './deposit/StepTechnical';
 import { StepEquipment } from './deposit/StepEquipment';
 import { StepMedia } from './deposit/StepMedia';
 import { StepPublish } from './deposit/StepPublish';
-import { StepLocation } from './deposit/StepLocation';
-import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS } from '../utils/depositSteps';
+import { StepRecap } from './deposit/StepRecap';
+import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
 
 import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
@@ -36,7 +35,7 @@ import SEO from './common/SEO';
 
 /** Step fields that show their own error message under the field. */
 const FIELDS_WITH_INLINE_ERROR = new Set([
-  'brand', 'model', 'condition', 'year', 'mileage', 'cc', 'accessoryType', 'helmetType', 'visorType',
+  'category', 'brand', 'model', 'condition', 'year', 'mileage', 'cc', 'accessoryType', 'helmetType', 'visorType',
   'size', 'gender', 'shoeSize', 'antiTheftType', 'intercomFeatures', 'images',
   'price', 'governorate', 'city', 'phone', 'description',
 ]);
@@ -233,6 +232,19 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     }
   }, [step]);
 
+  // There is no map step any more: the position saved on the seller's
+  // profile keeps the listing in the "près de moi" search (the backend skips
+  // listings without coordinates). Nothing is shown or asked.
+  const { user } = useUser();
+  useEffect(() => {
+    if (!user || user.latitude == null || user.longitude == null) return;
+    if (allValues.latitude == null || allValues.longitude == null) {
+      setValue('latitude', user.latitude, { shouldDirty: false });
+      setValue('longitude', user.longitude, { shouldDirty: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.latitude, user?.longitude]);
+
   // Synchronisation de mediaList vers le champ 'images' de react-hook-form
   useEffect(() => {
     const successfulUrls = mediaList
@@ -352,9 +364,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     switch (depositStepAt(targetStep, isAccessory)) {
       case 'photos':
         return ['images'];
-      case 'category':
-        return ['category'];
       case 'technical': {
+        // The other fields only appear once a category is chosen.
+        if (!allValues.category) return ['category'];
         if (!isAccessory) return ['brand', 'model', 'condition', 'year', 'mileage', 'cc'];
         const f: string[] = ['brand', 'model', 'condition', 'accessoryType'];
         if (allValues.accessoryType === 'Casque') f.push('helmetType', 'visorType');
@@ -365,9 +377,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         if (allValues.accessoryType === 'Intercom') f.push('intercomFeatures');
         return f;
       }
-      case 'publish':
+      case 'details':
         return ['price', 'governorate', 'city', 'phone', 'description'];
-      // Equipment and location (address only) are optional.
+      // Equipment is optional; the recap has no field of its own.
       default:
         return [];
     }
@@ -455,14 +467,10 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
 
   const handleBack = () => setStep(prev => prev - 1);
 
-  const handleCategorySelect = useCallback(async (id: string) => {
-    setValue('category', id as any);
-    // On déclenche la validation de la catégorie et on passe à la suite si OK
-    const isValid = await trigger('category');
-    if (isValid) {
-      setStep(depositStepNumber('category', id === 'Accessoires') + 1);
-    }
-  }, [setValue, trigger]);
+  const handleEditStep = useCallback((id: DepositStepId) => {
+    const n = depositStepNumber(id, allValues.category === 'Accessoires');
+    if (n > 0) setStep(n);
+  }, [allValues.category, setStep]);
 
   const toggleEquipment = useCallback((item: string) => {
     const current = selectedEquipment || [];
@@ -576,13 +584,6 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   role="region"
                   aria-label={`Dépôt d'annonce - Étape ${step} sur ${totalSteps}`}
                 >
-                  {stepId === 'category' && (
-                    <StepCategory 
-                      category={category} 
-                      onSelect={handleCategorySelect} 
-                      hasError={!!errors.category} 
-                    />
-                  )}
                   {stepId === 'technical' && (
                     <StepTechnical 
                       register={register} 
@@ -612,7 +613,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       errors={stepErrors} 
                     />
                   )}
-                  {stepId === 'publish' && (
+                  {stepId === 'details' && (
                     <StepPublish 
                       register={register} 
                       errors={stepErrors} 
@@ -620,12 +621,12 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       setValue={setValue}
                     />
                   )}
-                  {stepId === 'location' && (
-                    <StepLocation
-                      register={register}
-                      errors={stepErrors}
-                      control={control}
-                      setValue={setValue}
+                  {stepId === 'recap' && (
+                    <StepRecap
+                      values={allValues}
+                      mediaList={mediaList}
+                      isAccessory={category === 'Accessoires'}
+                      onEdit={handleEditStep}
                     />
                   )}
                 </div>
