@@ -51,6 +51,24 @@ export const useListingsCount = () => {
   });
 };
 
+/**
+ * Number of listings matching a filter set (one-row request, total only).
+ * Keeps the previous number while the next one loads, so a counter does not
+ * flicker between choices.
+ */
+export const useListingsTotal = (params: ListingsListParams | null) => {
+  return useQuery<number>({
+    queryKey: ['listings', 'total', params],
+    queryFn: async ({ signal }) => {
+      const { pagination } = await listingsApi.list({ ...(params || {}), page: 1, limit: 1 }, signal);
+      return pagination?.total ?? 0;
+    },
+    enabled: params !== null,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
 /** Featured / popular listings for the home page. */
 export const usePopularListings = () => {
   return useQuery<Listing[]>({
