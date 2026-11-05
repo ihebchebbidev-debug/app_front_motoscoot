@@ -189,8 +189,8 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="text-center md:text-left">
-        <div className="flex items-baseline justify-center md:justify-between gap-3">
+      <div>
+        <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 tracking-[-0.02em]">Galerie Photos</h2>
           <span className="text-[13px] font-medium text-gray-600 tabular-nums">{mediaList.length} sur {maxImages}</span>
         </div>

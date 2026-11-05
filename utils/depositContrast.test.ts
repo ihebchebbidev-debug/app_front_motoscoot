@@ -6,10 +6,10 @@ import { readFileSync } from 'node:fs';
 // primary-600 on white 3.74, gray-400 on white 2.97, primary-700 5.04, gray-500 4.85.
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
-test('the step counter uses the darker orange and themed greys', () => {
+test('the step header is readable: dark text, no percentage, themed greys', () => {
   const src = read('components/deposit/StepProgress.tsx');
-  assert.match(src, /font-black text-primary-700 uppercase tracking-\[0\.2em\]/);
-  // neutral-* is not themed: in dark mode the header stayed light and "83%" vanished.
+  assert.match(src, /font-semibold text-gray-900 tabular-nums">Étape \{step\} sur \{total\}/);
+  assert.doesNotMatch(src, /\{percentage\}%/);
   assert.doesNotMatch(src, /neutral-/);
 });
 
