@@ -43,43 +43,48 @@ export const StepProgress = memo(({ step, steps, onStepClick }: StepProgressProp
         </div>
       </div>
 
-      {/* Wide screens: named steps, one column each (circle, name below), so
-          long names wrap instead of colliding. */}
-      <ol className="hidden xl:grid" style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}>
+      {/* Wide screens: named steps. The first step sits on the content's left
+          edge and the last on its right edge (like the title and the fields
+          below); the others are evenly spaced between, so every name stays on
+          one line. Circle 24 px, connectors 8 px from each circle. */}
+      <ol className="hidden xl:block relative h-[52px]">
         {steps.map((name, i) => {
           const n = i + 1;
           const done = n < step;
           const current = n === step;
+          const first = i === 0;
+          const last = i === total - 1;
+          // Centre of circle i, as a fraction of the track between the outer circles.
+          const at = total > 1 ? i / (total - 1) : 0;
+          const position: React.CSSProperties = first
+            ? { left: 0 }
+            : last
+              ? { right: 0 }
+              : { left: `calc(${at} * (100% - 24px) + 12px)`, transform: 'translateX(-50%)' };
+          const align = first ? 'items-start text-left' : last ? 'items-end text-right' : 'items-center text-center';
           const marker = (
             <span
-              className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold tabular-nums ${
-                done ? 'bg-primary-600 text-white' : current ? 'bg-card border-2 border-primary-600 text-primary-700' : 'bg-card border border-gray-300 text-gray-500'
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums ${
+                done ? 'bg-primary-600 text-white' : current ? 'bg-card ring-2 ring-inset ring-primary-600 text-primary-700' : 'bg-card ring-1 ring-inset ring-gray-300 text-gray-500'
               }`}
               aria-hidden="true"
             >
-              {done ? <Check size={14} strokeWidth={3} /> : n}
+              {done ? <Check size={13} strokeWidth={3} /> : n}
             </span>
           );
           const label = (
-            <span className={`mt-2 block text-[13px] leading-snug text-center ${current ? 'font-semibold text-gray-900' : done ? 'font-medium text-gray-900' : 'font-medium text-gray-500'}`}>
+            <span className={`mt-2 block whitespace-nowrap text-[13px] leading-[18px] ${current ? 'font-semibold text-gray-900' : done ? 'font-medium text-gray-700' : 'font-medium text-gray-500'}`}>
               {name}
             </span>
           );
           return (
-            <li key={name} className="relative flex flex-col items-center px-1" aria-current={current ? 'step' : undefined}>
-              {/* Connector to the next step, from circle edge to circle edge. */}
-              {n < total && (
-                <span
-                  aria-hidden="true"
-                  className={`absolute top-3.5 left-[calc(50%+18px)] right-[calc(-50%+18px)] h-px ${done ? 'bg-primary-600' : 'bg-gray-200'}`}
-                />
-              )}
+            <li key={name} className={`absolute top-0 flex flex-col ${align}`} style={position} aria-current={current ? 'step' : undefined}>
               {done && onStepClick ? (
                 <button
                   type="button"
                   onClick={() => onStepClick(n)}
                   aria-label={`Revenir à l'étape ${n} : ${name}`}
-                  className="flex flex-col items-center rounded-xl px-1 hover:text-primary-700 [&>span:last-child]:hover:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
+                  className={`flex flex-col ${align} rounded-lg [&>span:last-child]:hover:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gray-900`}
                 >
                   {marker}
                   {label}
@@ -94,6 +99,18 @@ export const StepProgress = memo(({ step, steps, onStepClick }: StepProgressProp
             </li>
           );
         })}
+        {/* Connectors between circles i and i+1, 8 px clear of each circle. */}
+        {steps.slice(0, -1).map((name, i) => (
+          <span
+            key={`line-${name}`}
+            aria-hidden="true"
+            className={`absolute top-[11px] h-0.5 rounded-full ${i + 1 < step ? 'bg-primary-600' : 'bg-gray-200'}`}
+            style={{
+              left: `calc(${i / (total - 1)} * (100% - 24px) + 32px)`,
+              width: `calc((100% - 24px) / ${total - 1} - 40px)`,
+            }}
+          />
+        ))}
       </ol>
     </nav>
   );
