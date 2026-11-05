@@ -17,7 +17,7 @@ const S = {
   HeaderSection: 'text-center md:text-left mb-10',
   Title: 'text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight',
   Subtitle: 'text-gray-500 font-medium',
-  Label: 'text-[12px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block',
+  Label: 'text-[12px] font-black text-gray-500 uppercase tracking-widest ml-1 mb-2 block',
 };
 
 /**
@@ -85,7 +85,7 @@ export const StepLocation = memo(({ register, errors, control, setValue }: StepL
           error={(errors as any).address?.message}
           leftIcon={<MapPin size={18} />}
         />
-        <p className="text-[11px] font-medium text-gray-400 mt-2 ml-1">
+        <p className="text-[12px] font-medium text-gray-500 mt-2 ml-1">
           L'adresse exacte n'est jamais affichée publiquement — seul un repère approximatif
           apparaît sur la carte de l'annonce.
         </p>

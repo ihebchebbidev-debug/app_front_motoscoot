@@ -631,7 +631,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       variant="primary" 
                       onClick={handleNext} 
                       rightIcon={<ChevronRight size={20}/>}
-                      className="flex-[2] md:flex-initial shadow-primary/20"
+                      className="flex-[2] md:flex-initial bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
                     >
                       Suivant
                     </Button>
@@ -642,7 +642,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       onClick={handlePublish}
                       isLoading={isSubmitting}
                       rightIcon={<CheckCircle2 size={20}/>}
-                      className="flex-[2] md:flex-initial shadow-primary/20"
+                      className="flex-[2] md:flex-initial bg-primary-700 dark:text-gray-50 dark:hover:bg-primary-600 shadow-primary/20"
                     >
                       Publier
                     </Button>
