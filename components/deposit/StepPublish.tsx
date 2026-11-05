@@ -22,8 +22,8 @@ const S = {
   Subtitle: "text-gray-500 font-medium",
   GridFields: "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6",
   LabelWrapper: "flex justify-between items-center mb-2",
-  Label: "text-[12px] font-black text-gray-400 uppercase tracking-widest ml-1",
-  TemplateButton: "flex items-center gap-1.5 text-[12px] font-black text-primary-600 uppercase tracking-tight hover:text-primary-700 transition-colors"
+  Label: "text-[12px] font-black text-gray-500 uppercase tracking-widest ml-1",
+  TemplateButton: "flex items-center gap-1.5 text-[12px] font-black text-primary-700 uppercase tracking-tight hover:text-primary-800 transition-colors"
 };
 
 export const StepPublish = memo(({ register, errors, control, setValue }: StepPublishProps) => {
@@ -157,7 +157,7 @@ Curieux s'abstenir.`;
 
         <div className="space-y-2">
           <div className={S.LabelWrapper}>
-            <label className={S.Label}>DESCRIPTION <span className="text-red-500">*</span></label>
+            <label className={S.Label}>DESCRIPTION <span className="text-red-600 dark:text-red-400">*</span></label>
             <button
               type="button"
               onClick={handleApplyTemplate}

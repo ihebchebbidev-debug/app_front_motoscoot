@@ -14,16 +14,16 @@ export const StepProgress = memo(({ step, totalSteps = 5, disabled = false }: St
 
   return (
     <div
-      className={`px-8 md:px-10 pt-10 pb-4 bg-neutral-50 border-b border-neutral-100 shadow-none transition-opacity duration-300 ${disabled ? 'opacity-50 pointer-events-none select-none' : ''}`}
+      className={`px-8 md:px-10 pt-10 pb-4 bg-gray-50 border-b border-gray-100 shadow-none transition-opacity duration-300 ${disabled ? 'opacity-50 pointer-events-none select-none' : ''}`}
       aria-disabled={disabled || undefined}
     >
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[12px] font-black text-primary-600 uppercase tracking-[0.2em]">
+        <span className="text-[12px] font-black text-primary-700 uppercase tracking-[0.2em]">
           Étape {step} / {totalSteps}
         </span>
         <span className="text-xl font-black text-gray-900">{percentage}%</span>
       </div>
-      <div className="w-full h-2 bg-neutral-200 rounded-full shadow-none">
+      <div className="w-full h-2 bg-gray-200 rounded-full shadow-none">
         <div
           className="h-full bg-primary-600 transition-all duration-700 ease-out rounded-full shadow-none"
           style={{ width: `${percentage}%` }}
