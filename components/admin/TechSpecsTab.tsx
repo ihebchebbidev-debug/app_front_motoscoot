@@ -451,12 +451,14 @@ export const TechSpecsTab: React.FC = () => {
           <Section title="Médias">
             <AdminImageUpload
               label="Image principale (cover)"
+              crop
               value={form.image}
               onChange={(url) => setForm({ ...form, image: url })}
             />
             <div className="mt-4">
               <AdminGalleryUpload
                 label="Galerie (images supplémentaires)"
+                crop
                 value={form.gallery}
                 onChange={(gallery) => setForm({ ...form, gallery })}
               />

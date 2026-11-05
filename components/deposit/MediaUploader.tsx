@@ -12,7 +12,7 @@ import { gallerySummary } from '../../utils/depositPhotos';
 import { UploadedMedia } from '../../types/listing';
 
 // react-easy-crop is only downloaded when a seller opens the crop window.
-const PhotoCropDialog = lazy(() => import('./PhotoCropDialog'));
+const PhotoCropDialog = lazy(() => import('../common/PhotoCropDialog'));
 
 interface MediaUploaderProps {
   mediaList: UploadedMedia[];
