@@ -28,8 +28,8 @@ const S = {
   AutocompleteWrapper: "relative w-full",
   SuggestionList: "absolute top-[calc(100%+8px)] left-0 w-full bg-card border border-neutral-200 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] z-[100] overflow-hidden py-2 animate-scale-in origin-top",
   SuggestionItem: "w-full text-left px-5 py-3 text-[13px] font-bold text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors flex items-center justify-between group",
-  NoResult: "px-5 py-3.5 text-xs font-bold text-gray-400 italic",
-  LabelBadge: "text-[9px] font-black text-gray-300 uppercase tracking-widest px-5 py-2 border-b border-gray-50 mb-1",
+  NoResult: "px-5 py-3.5 text-xs font-bold text-gray-500 italic",
+  LabelBadge: "text-[11px] font-black text-gray-500 uppercase tracking-widest px-5 py-2 border-b border-gray-100 mb-1",
 };
 
 const displacementOptions = [

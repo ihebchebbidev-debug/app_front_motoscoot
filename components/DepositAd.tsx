@@ -68,12 +68,12 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
         {images && images.length > 0 ? (
           <img src={getOptimizedImageUrl(images[0], 400, 300)} className="w-full h-full object-cover" alt="Preview" />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-2">
-            <Camera size={32} strokeWidth={1.5} />
-            <span className="text-[12px] font-black uppercase tracking-widest">Aperçu Photo</span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <Camera size={32} strokeWidth={1.5} aria-hidden="true" />
+            <span className="text-[12px] font-black uppercase tracking-widest text-gray-500">Aperçu Photo</span>
           </div>
         )}
-        <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[12px] font-black text-foreground border border-border/50 shadow-sm uppercase tracking-tighter">
+        <div className="absolute top-3 left-3 bg-card px-2.5 py-1 rounded-lg text-[12px] font-black text-gray-900 border border-gray-200 shadow-sm uppercase tracking-tighter">
           {category || 'Catégorie'}
         </div>
       </div>
@@ -81,7 +81,7 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
         <h3 className="text-[17px] font-extrabold text-gray-900 line-clamp-1 leading-snug tracking-tight mb-1">
           {brand && model ? `${brand} ${model}` : (brand || model || 'Marque & Modèle')}
         </h3>
-        <p className="text-[16px] font-[900] text-primary-600 leading-none mb-4 tracking-tighter">
+        <p className="text-[16px] font-[900] text-primary-700 leading-none mb-4 tracking-tighter">
           {price ? `${parseInt(price).toLocaleString()} DT` : '0 DT'}
         </p>
         
@@ -107,7 +107,7 @@ const LivePreviewCard = memo(({ data }: { data: any }) => {
           <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-[12px] shadow-sm shrink-0 uppercase">{previewInitials}</div>
           <div className="flex flex-col min-w-0">
              <span className="text-[12px] font-extrabold text-gray-700 truncate uppercase tracking-wider">{previewName}</span>
-             <span className="text-[12px] font-medium text-gray-400 leading-tight">{previewRole}</span>
+             <span className="text-[12px] font-medium text-gray-500 leading-tight">{previewRole}</span>
           </div>
         </div>
       </div>

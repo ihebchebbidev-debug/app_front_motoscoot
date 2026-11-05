@@ -169,7 +169,7 @@ Curieux s'abstenir.`;
           </div>
           <textarea
             rows={10}
-            className={`w-full px-5 py-4 rounded-2xl bg-gray-50 border outline-none focus:bg-card focus:border-primary-600 transition-all font-medium text-sm leading-relaxed ${errors.description ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full px-5 py-4 rounded-2xl bg-gray-50 border outline-none focus:bg-card focus:border-primary-600 transition-all font-medium text-sm leading-relaxed placeholder:text-gray-500 ${errors.description ? 'border-red-500' : 'border-gray-200'}`}
             placeholder="Détaillez l'entretien, les options, les éventuels défauts... (Cliquez sur 'Utiliser un modèle' pour gagner du temps !)"
             aria-invalid={!!errors.description}
             aria-describedby="description-count"
@@ -206,7 +206,7 @@ const ContactMethodToggle: React.FC<ToggleProps> = ({ control, setValue }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50/60 p-4 md:p-5">
+    <div className="border-t border-gray-100 pt-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
