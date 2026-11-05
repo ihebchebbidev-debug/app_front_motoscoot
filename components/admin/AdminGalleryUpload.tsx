@@ -8,12 +8,14 @@
  *   - Optionally paste a URL (when allowUrl=true)
  *   - Remove an image
  *   - Reorder by clicking the chevrons (◀ ▶) on a thumbnail
+ *   - Optionally (`crop`) crop an image: the shared crop window, then the
+ *     cropped photo is uploaded in its place
  *
  * The component is fully controlled — pass `value` (string[]) and listen on
  * `onChange`. It never owns the gallery state itself, so the parent form
  * stays the single source of truth.
  */
-import React, { useRef, useState, useCallback } from 'react';
+import React, { Suspense, lazy, useRef, useState, useCallback } from 'react';
 import {
   ImagePlus,
   Loader2,
@@ -22,9 +24,13 @@ import {
   ChevronLeft,
   ChevronRight,
   UploadCloud,
+  Crop as CropIcon,
 } from 'lucide-react';
 import { uploadsApi } from '../../services/uploadsApi';
 import { useToast } from '../../context/ToastContext';
+import { compressImage } from '../../utils/imageCompression';
+
+const PhotoCropDialog = lazy(() => import('../common/PhotoCropDialog'));
 
 interface Props {
   value: string[];
@@ -34,6 +40,8 @@ interface Props {
   maxFiles?: number;
   /** Show the "paste a URL" fallback. Defaults to true. */
   allowUrl?: boolean;
+  /** Show a "Recadrer" button on each image. Defaults to false. */
+  crop?: boolean;
 }
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB per file (matches single uploader)
@@ -44,12 +52,18 @@ export const AdminGalleryUpload: React.FC<Props> = ({
   label = 'Galerie',
   maxFiles = 10,
   allowUrl = true,
+  crop = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [urlDraft, setUrlDraft] = useState('');
+  const [cropIdx, setCropIdx] = useState<number | null>(null);
+  const [croppingUrl, setCroppingUrl] = useState<string | null>(null);
   const { addToast } = useToast();
+  // The upload of a cropped image ends after a re-render: read the gallery as it is then.
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
   const remaining = Math.max(0, maxFiles - value.length);
 
@@ -113,6 +127,23 @@ export const AdminGalleryUpload: React.FC<Props> = ({
     const next = value.slice();
     [next[idx], next[target]] = [next[target], next[idx]];
     onChange(next);
+  };
+
+  // Cropped image replaces the one it came from, wherever it now sits.
+  const onCropped = async (sourceUrl: string, cropped: File) => {
+    setCropIdx(null);
+    setCroppingUrl(sourceUrl);
+    try {
+      const res = await uploadsApi.single(await compressImage(cropped));
+      const list = valueRef.current;
+      const at = list.indexOf(sourceUrl);
+      if (at >= 0) onChange(list.map((u, i) => (i === at ? res.url : u)));
+      addToast('Image recadrée', 'success');
+    } catch (e: any) {
+      addToast(e?.message || 'Échec de l\'upload', 'error');
+    } finally {
+      setCroppingUrl(null);
+    }
   };
 
   const addUrl = () => {
@@ -199,6 +230,21 @@ export const AdminGalleryUpload: React.FC<Props> = ({
                 className="w-full h-full object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3'; }}
               />
+              {croppingUrl === url && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <Loader2 size={18} className="animate-spin text-white" />
+                </div>
+              )}
+              {crop && croppingUrl !== url && !/\.svg(\?|$)/i.test(url) && (
+                <button
+                  type="button"
+                  onClick={() => setCropIdx(idx)}
+                  className="absolute bottom-1 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white text-slate-800 text-[11px] font-bold hover:bg-slate-100"
+                  aria-label={`Recadrer l'image ${idx + 1}`}
+                >
+                  <CropIcon size={11} /> Recadrer
+                </button>
+              )}
               {/* Index badge — first image is the gallery default. */}
               <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-black">
                 {idx + 1}
@@ -257,6 +303,15 @@ export const AdminGalleryUpload: React.FC<Props> = ({
             Ajouter
           </button>
         </div>
+      )}
+      {cropIdx !== null && value[cropIdx] && (
+        <Suspense fallback={null}>
+          <PhotoCropDialog
+            source={value[cropIdx]}
+            onCancel={() => setCropIdx(null)}
+            onConfirm={(file) => onCropped(value[cropIdx], file)}
+          />
+        </Suspense>
       )}
     </div>
   );

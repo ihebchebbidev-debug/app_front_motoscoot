@@ -45,7 +45,7 @@ test('the line under the gallery never hides a failed photo', async () => {
 });
 
 test('the crop window is rendered at the page root and closes only on a real backdrop click', () => {
-  const dialog = readFileSync('components/deposit/PhotoCropDialog.tsx', 'utf8');
+  const dialog = readFileSync('components/common/PhotoCropDialog.tsx', 'utf8');
   assert.match(dialog, /createPortal\(/);
   assert.match(dialog, /pressedOnBackdrop\.current && e\.target === e\.currentTarget/);
   assert.doesNotMatch(dialog, /backdrop-blur/);
@@ -54,4 +54,14 @@ test('the crop window is rendered at the page root and closes only on a real bac
 test('the gallery keeps the app-screen rules: no gradient, blur, tiny text or tracked capitals', () => {
   const src = readFileSync('components/deposit/MediaUploader.tsx', 'utf8');
   assert.doesNotMatch(src, /bg-gradient-|backdrop-blur|text-\[(7|8|9|10)px\]|tracking-widest|shadow-(sm|md|lg)/);
+});
+
+test('spec-sheet admin uploads offer cropping with the shared crop window', () => {
+  for (const f of ['components/admin/AdminImageUpload.tsx', 'components/admin/AdminGalleryUpload.tsx']) {
+    const src = readFileSync(f, 'utf8');
+    assert.match(src, /import\('\.\.\/common\/PhotoCropDialog'\)/);
+    assert.match(src, /crop = false/);
+  }
+  const tab = readFileSync('components/admin/TechSpecsTab.tsx', 'utf8');
+  assert.equal((tab.match(/\n\s+crop\n/g) || []).length, 2);
 });

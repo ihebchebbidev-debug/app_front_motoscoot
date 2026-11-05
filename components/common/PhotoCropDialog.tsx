@@ -37,7 +37,7 @@ async function cropToFile(src: string, area: Area): Promise<File> {
 }
 
 /**
- * Crop window of the deposit gallery (lazy-loaded with react-easy-crop):
+ * Crop window shared by the deposit gallery and the admin uploads (lazy-loaded with react-easy-crop):
  * drag to frame, pinch / slider to zoom, 4:3 by default (listing-card format).
  */
 const PhotoCropDialog: React.FC<PhotoCropDialogProps> = ({ source, onCancel, onConfirm }) => {

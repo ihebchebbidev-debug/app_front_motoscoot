@@ -14,12 +14,16 @@
  *     the icon visually before the round-trip completes.
  *   - Drag-and-drop support, plus optional "paste a URL" fallback.
  *   - 10 MB hard ceiling (raw file), revoke the blob URL on unmount.
+ *   - Optional "Recadrer" (`crop`): the shared crop window, then the cropped
+ *     photo is compressed and uploaded in place of the current one.
  */
-import React, { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Loader2, Trash2, Link as LinkIcon, UploadCloud } from 'lucide-react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { ImagePlus, Loader2, Trash2, Link as LinkIcon, UploadCloud, Crop as CropIcon } from 'lucide-react';
 import { uploadsApi } from '../../services/uploadsApi';
 import { useToast } from '../../context/ToastContext';
 import { compressImage } from '../../utils/imageCompression';
+
+const PhotoCropDialog = lazy(() => import('../common/PhotoCropDialog'));
 
 interface Props {
   value?: string;
@@ -27,6 +31,8 @@ interface Props {
   label?: string;
   /** Optional: also let the admin paste a URL manually. Defaults to true. */
   allowUrl?: boolean;
+  /** Show a "Recadrer" button on the current image. Defaults to false. */
+  crop?: boolean;
 }
 
 const MAX_RAW_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -37,6 +43,7 @@ export const AdminImageUpload: React.FC<Props> = ({
   onChange,
   label = 'Image',
   allowUrl = true,
+  crop = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -44,6 +51,10 @@ export const AdminImageUpload: React.FC<Props> = ({
   // Local blob URL used as an OPTIMISTIC preview while the upload runs.
   // Cleared as soon as the server returns the canonical URL (or on error).
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  // Last picked file and the URL it became: the crop window uses the file
+  // while it is still the current image (no need to fetch it back).
+  const [picked, setPicked] = useState<{ url: string; file: File } | null>(null);
+  const [cropping, setCropping] = useState(false);
   const { addToast } = useToast();
 
   // Always revoke any pending blob URL when the component unmounts so we
@@ -102,6 +113,7 @@ export const AdminImageUpload: React.FC<Props> = ({
       // 3) Upload via the same endpoint every other admin upload uses.
       const res = await uploadsApi.single(file);
       onChange(res.url);
+      setPicked(isSvg ? null : { url: res.url, file });
       addToast('Image téléversée.', 'success');
     } catch (e: any) {
       addToast(e?.message || "Échec de l'upload.", 'error');
@@ -114,6 +126,27 @@ export const AdminImageUpload: React.FC<Props> = ({
       if (inputRef.current) inputRef.current.value = '';
     }
   };
+
+  // Cropped photo: same compression and endpoint, replaces the current image.
+  const onCropped = async (cropped: File) => {
+    setCropping(false);
+    setBusy(true);
+    const previewUrl = URL.createObjectURL(cropped);
+    setLocalPreview(previewUrl);
+    try {
+      const res = await uploadsApi.single(await compressImage(cropped));
+      onChange(res.url);
+      setPicked({ url: res.url, file: cropped });
+      addToast('Image recadrée.', 'success');
+    } catch (e: any) {
+      addToast(e?.message || "Échec de l'upload.", 'error');
+    } finally {
+      setBusy(false);
+      URL.revokeObjectURL(previewUrl);
+      setLocalPreview(null);
+    }
+  };
+  const canCrop = crop && !!value && !busy && !/\.svg(\?|$)/i.test(value);
 
   // The preview shown to the admin: while uploading, prefer the freshly-picked
   // local file so they see their own image instantly; otherwise show the
@@ -205,6 +238,15 @@ export const AdminImageUpload: React.FC<Props> = ({
             {busy ? <Loader2 size={12} className="animate-spin" /> : <ImagePlus size={12} />}
             {previewSrc ? 'Remplacer' : 'Téléverser'}
           </button>
+          {canCrop && (
+            <button
+              type="button"
+              onClick={() => setCropping(true)}
+              className="ml-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+            >
+              <CropIcon size={12} /> Recadrer
+            </button>
+          )}
           <p className="text-[10px] text-slate-400">
             JPG, PNG, WebP, SVG ou HEIC. 10 Mo max — l'image est compressée avant l'envoi.
           </p>
@@ -222,6 +264,11 @@ export const AdminImageUpload: React.FC<Props> = ({
           )}
         </div>
       </div>
+      {cropping && value && (
+        <Suspense fallback={null}>
+          <PhotoCropDialog source={picked?.url === value ? picked.file : value} onCancel={() => setCropping(false)} onConfirm={onCropped} />
+        </Suspense>
+      )}
     </div>
   );
 };
