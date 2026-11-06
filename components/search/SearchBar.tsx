@@ -71,26 +71,26 @@ const Field: React.FC<FieldProps> = ({
         className={`flex items-center gap-1.5 h-12 md:h-14 px-3 max-[359px]:px-2.5 md:px-3.5 rounded-lg border transition-all ${
           isOpen
             ? 'border-primary-600 ring-2 ring-primary-600/15 md:shadow-sm'
-            : 'border-gray-200 md:hover:border-gray-300'
-        } ${isDisabled ? 'opacity-50 bg-gray-50' : 'bg-card'}`}
+            : 'border-gray-300 md:hover:border-gray-400'
+        } ${isDisabled ? 'opacity-50 bg-gray-50' : 'bg-card'} has-[button:focus-visible]:outline has-[button:focus-visible]:outline-2 has-[button:focus-visible]:outline-offset-2 has-[button:focus-visible]:outline-gray-900`}
       >
-        {Icon && <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />}
+        {Icon && <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />}
         <button
           type="button"
           onClick={() => { if (!isDisabled) { onToggle(); onFocus?.(); } }}
           disabled={isDisabled}
           aria-label={label}
           title={display || undefined}
-          className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-[#1f2937] truncate disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-gray-900 truncate disabled:cursor-not-allowed focus:outline-none"
         >
-          {display || <span className="text-[#1f2937] font-medium">{placeholder || label}</span>}
+          {display || <span className="text-gray-500 font-normal">{placeholder || label}</span>}
         </button>
         {hasValue && onClear && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onClear(); }}
             aria-label={`Effacer ${label}`}
-            className="p-0.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+            className="p-0.5 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100"
           >
             <X size={14} />
           </button>
@@ -104,7 +104,7 @@ const Field: React.FC<FieldProps> = ({
             aria-label={isOpen ? `Fermer ${label}` : `Ouvrir ${label}`}
             aria-expanded={isOpen}
             disabled={isDisabled}
-            className="p-0.5 text-gray-400 hover:text-gray-700 disabled:cursor-not-allowed"
+            className="p-0.5 text-gray-500 hover:text-gray-900 disabled:cursor-not-allowed"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -147,7 +147,7 @@ const Field: React.FC<FieldProps> = ({
                   autoFocus
                   autoComplete="off"
                   onChange={(e) => onSearchChange?.(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-gray-200 text-[14px] text-gray-700 placeholder:text-gray-400 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
+                  className="w-full h-11 px-3 rounded-lg border border-gray-300 text-[16px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
                 />
               </div>
             )}
@@ -164,8 +164,8 @@ const Field: React.FC<FieldProps> = ({
 };
 
 const ITEM = 'w-full text-left px-4 py-2.5 text-[14px] font-medium transition-colors';
-const ACTIVE = 'bg-primary-50 text-primary-600';
-const DEFAULT = 'text-gray-600 hover:bg-gray-50';
+const ACTIVE = 'bg-primary-50 text-primary-700 font-semibold';
+const DEFAULT = 'text-gray-900 hover:bg-gray-50';
 
 export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) => {
   const [tab, setTab] = useState<'occasion' | 'neuf'>('occasion');
@@ -314,8 +314,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
           role="tab"
           aria-selected={tab === 'occasion'}
           onClick={() => handleTab('occasion')}
-          className={`flex-1 pb-3 text-[15px] font-bold transition-colors relative ${
-            tab === 'occasion' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-700'
+          className={`flex-1 pb-3 text-[15px] font-semibold transition-colors relative ${
+            tab === 'occasion' ? 'text-primary-700' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           Occasion
@@ -328,7 +328,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
           role="tab"
           aria-selected={tab === 'neuf'}
           onClick={() => handleTab('neuf')}
-          className="flex-1 pb-3 text-[15px] font-bold text-gray-500 hover:text-gray-700 transition-colors"
+          className="flex-1 pb-3 text-[15px] font-semibold text-gray-600 hover:text-gray-900 transition-colors"
         >
           Neuf
         </button>
@@ -413,7 +413,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
             const matches = filteredBrandNames.filter((b) => b.toLowerCase().includes(brandSearch.toLowerCase()));
             if (!matches.length) {
               return (
-                <div className="px-4 py-3 text-[13px] text-gray-400 italic">
+                <div className="px-4 py-3 text-[14px] text-gray-600">
                   Aucune marque disponible{type ? ` pour ${type}` : ''}
                 </div>
               );
@@ -428,7 +428,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
                 >
                   <span className="truncate">{b}</span>
                   {typeof count === 'number' && (
-                    <span className="text-[11px] font-semibold text-gray-400 tabular-nums">{count}</span>
+                    <span className="text-[12px] font-medium text-gray-500 tabular-nums">{count}</span>
                   )}
                 </button>
               );
@@ -475,7 +475,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
             const matches = availableModels.filter((m) => m.toLowerCase().includes(modelSearch.toLowerCase()));
             if (!matches.length) {
               return (
-                <div className="px-4 py-3 text-[13px] text-gray-400 italic">
+                <div className="px-4 py-3 text-[14px] text-gray-600">
                   {brand ? `Aucun modèle disponible pour ${brand}` : 'Choisissez d’abord une marque'}
                 </div>
               );
@@ -547,14 +547,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         <button
           onClick={handleLocationRequest}
           disabled={isLocating}
-          className={`${ITEM} text-primary-600 flex items-center gap-2 hover:bg-primary-50`}
+          className={`${ITEM} text-primary-700 flex items-center gap-2 hover:bg-primary-50`}
         >
           <Navigation size={14} className="fill-current" />
           {isLocating ? 'Localisation…' : 'Autour de moi'}
         </button>
         <div className="mx-4 my-1 border-t border-gray-100" />
         {filteredCityNames.length === 0 ? (
-          <div className="px-4 py-3 text-[13px] text-gray-400 italic">Aucune ville disponible</div>
+          <div className="px-4 py-3 text-[14px] text-gray-600">Aucune ville disponible</div>
         ) : (
           filteredCityNames.map((city) => (
             <button
@@ -570,7 +570,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <button
         type="button"
         onClick={handleSearchClick}
-        className="w-full xl:w-auto mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:flex-none md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
+        className="w-full xl:w-auto mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:flex-none md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-gray-900 hover:bg-black active:scale-[0.98] text-white font-semibold py-4 rounded-lg transition-all text-[15px] flex items-center justify-center gap-2"
       >
         <Search size={16} strokeWidth={2.5} />
         {/* Full-width button (phones, tablets): room for the result count. */}
