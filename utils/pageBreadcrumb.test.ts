@@ -23,14 +23,24 @@ test('one breadcrumb for the whole site: no page keeps its own copy', () => {
   }
 });
 
-test('phones: a single « ← Parent » link, 44 px tall, readable', () => {
-  assert.match(comp, /className="md:hidden flex w-fit items-center gap-1\.5 min-h-11 -my-\[13px\] [^"]*text-\[14px\] font-semibold text-gray-700/);
+test('every screen: back button + full trail (owner: « comme sur le desktop »)', () => {
+  // One markup for all widths: no phone-only « ← Parent » link any more.
+  assert.doesNotMatch(comp, /md:hidden flex w-fit/);
   assert.match(comp, /aria-label=\{`Retour à \$\{parent\.label\}`\}/);
+  // Button: 44 px on phones, 40 px from 768 px.
+  assert.match(comp, /w-11 h-11 md:w-10 md:h-10 rounded-xl border/);
+  // Links 44 px tall to the finger without moving the layout.
+  assert.match(comp, /className=\{`py-3 rounded transition-colors/);
+  // Long trails on phones: middle steps fold into « … » under 640 px.
+  assert.match(comp, /<li aria-hidden="true" className="sm:hidden shrink-0">…<\/li>/);
+  assert.match(comp, /middle \? 'hidden sm:block' : ''/);
+  // The orange header look starts at 768 px; phones keep the light one.
+  assert.match(comp, /md:bg-white\/10 md:border-white\/25 md:text-white/);
 });
 
-test('from 768 px: real links in an ordered list, readable grey, current page announced', () => {
+test('real links in an ordered list, readable grey, current page announced', () => {
   assert.match(comp, /<nav aria-label="Fil d'Ariane"/);
-  assert.match(comp, /<ol className=\{`flex items-center gap-2 min-w-0 text-\[13px\][^`]*text-gray-600/);
+  assert.match(comp, /<ol className=\{`flex items-center gap-1\.5 md:gap-2 min-w-0 text-\[13px\][^`]*text-gray-600/);
   assert.match(comp, /<li aria-current="page"/);
   assert.match(comp, /<a\s+href=\{crumb\.href\}/);
   // Cmd/Ctrl/middle click open the real URL; a plain click stays in the app.
@@ -56,9 +66,8 @@ test('the hero pages show their title on phones (the trail no longer does it)', 
   assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /titleOnMobile = true,/);
 });
 
-// Spacing (phones): the 44 px tap zone overflows 13 px above and below, so the
-// layout box is the visible 18 px; pages then set 24 px under the header and
-// 12 px to what follows.
+// Spacing (phones): the pages set 24 px under the header and 12 px between the
+// breadcrumb row (button 44 px) and what follows.
 test('phones: 24 px under the header and 12 px to the title, on every page', () => {
   assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /className="mb-1 md:mb-3 w-full"/); // + gap-2 = 12
   for (const p of ['components/SearchResults.tsx', 'components/Garages.tsx']) {

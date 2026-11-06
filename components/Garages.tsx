@@ -223,7 +223,7 @@ const Garages: React.FC<BasePageProps> = ({ onNavigate }) => {
             </p>
             
             <div className="flex items-center justify-between mt-6 md:mt-9 gap-4">
-              <PageBreadcrumb className="hidden md:block" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
+              <PageBreadcrumb className="hidden md:flex" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
 
               <div className="flex items-center gap-2 md:hidden">
                 <button 
