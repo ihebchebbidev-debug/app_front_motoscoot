@@ -62,3 +62,10 @@ test('model cards: the comparator grey behind the bike (5 % black veil over the 
   assert.match(card, /<div className="absolute inset-0 bg-black\/5 pointer-events-none" aria-hidden="true" \/>/);
   assert.match(readFileSync(new URL('../components/home/ModelCard.tsx', import.meta.url), 'utf8'), /absolute inset-0 bg-black\/5/);
 });
+
+test('no grey band between the orange header and the white cards (brand page, brands list)', () => {
+  for (const p of ['../components/TechSpecsModels.tsx', '../components/TechSpecsBrands.tsx']) {
+    const src = readFileSync(new URL(p, import.meta.url), 'utf8');
+    assert.match(src, /Wrapper: "min-h-screen bg-\[#F8F9F9\] md:bg-card font-sans"/, p);
+  }
+});
