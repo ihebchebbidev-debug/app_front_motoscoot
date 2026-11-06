@@ -20,8 +20,9 @@ test('tablet spans: 4/4/4, then 4/3/5 + full-width button (md), 3/2/4/3 (lg)', (
   ]) assert.ok(src.includes(cls), cls);
   // Fields may shrink in the tablet grid, keep their natural width on the one-row toolbar.
   assert.match(src, /className=\{`relative min-w-0 \$\{className\}`\}/);
-  // Full-width button (phones, tablets) carries the result count.
-  assert.match(src, /<span className="lg:hidden">Rechercher/);
+  // The result count shows at every width, desktop included (one span, no lg:hidden twin).
+  assert.match(src, /<span className="tabular-nums">Rechercher\{typeof matchCount === 'number' && countParams \?/);
+  assert.doesNotMatch(src, /<span className="hidden lg:inline">Rechercher<\/span>/);
   // On the one-row toolbar the button keeps its own width (w-full would push it out).
   assert.match(src, /className="w-full xl:w-auto mt-3/);
 });

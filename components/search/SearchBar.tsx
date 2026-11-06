@@ -537,9 +537,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         className="w-full xl:w-auto mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:flex-none md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-gray-900 hover:bg-black active:scale-[0.98] text-white font-semibold py-4 rounded-lg transition-all text-[15px] flex items-center justify-center gap-2"
       >
         <Search size={16} strokeWidth={2.5} />
-        {/* Full-width button (phones, tablets): room for the result count. */}
-        <span className="lg:hidden">Rechercher{typeof matchCount === 'number' && countParams ? ` (${matchCount.toLocaleString('fr-FR')})` : ''}</span>
-        <span className="hidden lg:inline">Rechercher</span>
+        {/* The result count at every width (it used to be phones and tablets
+            only). Tabular figures: the button does not twitch as it changes. */}
+        <span className="tabular-nums">Rechercher{typeof matchCount === 'number' && countParams ? ` (${matchCount.toLocaleString('fr-FR')})` : ''}</span>
       </button>
       </div>
     </div>
