@@ -8,27 +8,29 @@ import { useHeroTexts } from '../hooks/useHeroTexts';
 
 // --- STYLES (Pattern "S") ---
 const S = {
-  // Mobile: Utilisation de --vh pour éviter les sauts de hauteur liés à la barre d'adresse
-  // Tablette: 50vh | Desktop: 80vh
-  Wrapper: "relative w-full flex flex-col font-sans bg-primary-50 overflow-hidden h-[calc(var(--vh,1vh)*100)] md:h-[50vh] lg:h-[80vh]",
+  // Minimum heights: phone one screen (--vh avoids address-bar jumps),
+  // tablet 50vh, desktop 80vh. Minimums, not fixed heights: when the content
+  // is taller (search card on 3 rows at 768–1023 px, small phones) the hero
+  // grows instead of cutting « Rechercher » off (overflow-hidden).
+  Wrapper: "relative w-full flex flex-col font-sans bg-primary-50 overflow-hidden min-h-[calc(var(--vh,1vh)*100)] md:min-h-[50vh] lg:min-h-[80vh]",
   BgContainer: "absolute inset-0 overflow-hidden z-0",
   Overlay: "absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply",
   BgImage: "absolute inset-0 w-full h-full object-cover",
   
   // ContentWrapper : h-full pour permettre la distribution verticale
   // Padding latéral constant pour l'alignement gauche
-  ContentWrapper: "relative z-10 flex flex-col w-full max-w-7xl mx-auto px-6 md:px-16 lg:px-24 h-full",
+  ContentWrapper: "relative z-10 flex-1 flex flex-col w-full max-w-7xl mx-auto px-6 md:px-16 lg:px-24",
   
   // TextSection : Utilisation de flex-1 sur le conteneur du texte pour le centrer verticalement
-  // pt-24 : Dégagement pour le header fixe sur mobile
-  // pb-8 : Marge de sécurité sous la barre de recherche
-  TextSection: "w-full flex-1 flex flex-col items-start pt-24 pb-8 md:pb-0 md:pt-0 md:justify-center md:space-y-10",
+  // pt-24 : clears the fixed header (72 px) at every width
+  // pb-8 / md:pb-12 : room under the search card / the category icons
+  TextSection: "w-full flex-1 flex flex-col items-start pt-24 pb-8 md:pb-12 md:justify-center md:space-y-10",
   
   // TitleGroup : Bloc regroupé avec espacement vertical minimal
   TitleGroup: "w-full flex flex-col items-start text-left gap-1.5 md:gap-4 flex-shrink-0",
   
   // Badge : Taille fixée à 10px pour mobile, 12px desktop
-  Badge: "inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white text-[10px] md:text-[12px] font-bold uppercase tracking-wide mb-1 md:mt-10 lg:mt-14 animate-fade-in-up",
+  Badge: "inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white text-[10px] md:text-[12px] font-bold uppercase tracking-wide mb-1 animate-fade-in-up",
   
   // H1: Taille ajustée pour mobile à 32px (2rem), titre sur deux lignes
   // Desktop/Tablette : font-800 (extrabold) et 40px
@@ -98,7 +100,11 @@ const Hero: React.FC<HeroProps> = ({ onSearch, onNavigate }) => {
         <div className={S.TextSection}>
           <div className="flex-1 md:flex-none flex flex-col justify-center w-full">
             <div className={S.TitleGroup}>
-              {liveCount && liveCount > 0 ? (
+              {/* Space kept while the count loads: the hero now grows with its
+                  content, so a late badge would push the page down (CLS). */}
+              {liveCount === undefined ? (
+                <div className={`${S.Badge} invisible`} aria-hidden="true">&nbsp;</div>
+              ) : liveCount > 0 ? (
                 <div className={S.Badge}>
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-500 opacity-75"></span>
