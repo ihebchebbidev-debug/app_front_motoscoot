@@ -7,6 +7,8 @@ export interface FilterOption {
   options: string[];
   value: string;
   onChange: (val: string) => void;
+  /** Models each option would show (other filters kept). 0 = greyed out. */
+  counts?: Record<string, number>;
 }
 
 export interface FilterBarProps {
@@ -28,6 +30,14 @@ export interface FilterBarProps {
   sortOptions?: { value: string; label: string }[];
   sortValue?: string;
   onSortValueChange?: (value: string) => void;
+  /** Counts for the category options (same meaning as FilterOption.counts). */
+  categoryCounts?: Record<string, number>;
+  /** Filters in use: shown on the phone « Filtres » button. */
+  activeFilterCount?: number;
+  /** Label of the phone panel's closing button (e.g. « Voir 9 modèles »). */
+  applyLabel?: string;
+  /** Clears every filter (link in the phone panel). */
+  onReset?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -47,7 +57,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   sortOptions,
   sortValue,
   onSortValueChange,
+  categoryCounts,
+  activeFilterCount = 0,
+  applyLabel = 'Appliquer',
+  onReset,
 }) => {
+  // « Scooter 6 » / greyed when nothing would show (the selected one stays usable).
+  const countOf = (counts: Record<string, number> | undefined, opt: string) =>
+    counts && opt !== 'Tout' ? counts[opt] : undefined;
+  const chip = (active: boolean, empty: boolean) =>
+    `min-h-11 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all border inline-flex items-center gap-1.5 ${
+      active ? 'bg-primary-600 text-white border-primary-600 shadow-md'
+      : empty ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed'
+      : 'bg-card text-gray-700 border-gray-200'}`;
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
 
@@ -72,9 +94,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [isSortSheetOpen]);
 
+  // Choosing a chip no longer closes the panel (year and cylinder chips never
+  // did): the visitor sees the count change and closes with « Voir N … ».
   const handleCategoryChange = (cat: string) => {
     onCategoryChange(cat);
-    setIsSortMenuOpen(false);
   };
 
   return (
@@ -106,6 +129,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           >
             <SlidersHorizontal size={18} />
             <span>Filtres</span>
+            {activeFilterCount > 0 && (
+              <span className="min-w-5 h-5 px-1.5 rounded-full bg-white text-gray-900 text-[12px] font-bold leading-5 text-center tabular-nums" aria-label={`${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}`}>
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -162,7 +190,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <div className="w-full bg-card rounded-t-[32px] p-8 pb-12 shadow-2xl animate-fade-in-up border-t border-gray-100 overflow-y-auto max-h-[90vh]">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-black text-gray-900 tracking-tight">Trier et Filtrer</h3>
-                <button onClick={() => setIsSortMenuOpen(false)} className="p-2 bg-gray-100 rounded-full text-gray-500"><X size={20}/></button>
+                <div className="flex items-center gap-2">
+                  {onReset && activeFilterCount > 0 && (
+                    <button onClick={onReset} className="min-h-11 px-3 text-[14px] font-semibold text-primary-700">Réinitialiser</button>
+                  )}
+                  <button onClick={() => setIsSortMenuOpen(false)} aria-label="Fermer" className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full text-gray-600"><X size={20}/></button>
+                </div>
               </div>
 
               <div className="space-y-8">
@@ -183,15 +216,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   <div>
                     <label className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-4 block">Catégories</label>
                     <div className="flex flex-wrap gap-2">
-                      {categories.map(cat => (
-                        <button 
-                          key={cat} 
-                          onClick={() => handleCategoryChange(cat)}
-                          className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border ${activeCategory === cat ? 'bg-primary-600 text-white border-primary-600 shadow-md' : 'bg-card text-gray-600 border-gray-100'}`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
+                      {categories.map(cat => {
+                        const n = countOf(categoryCounts, cat);
+                        const empty = n === 0 && activeCategory !== cat;
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => handleCategoryChange(cat)}
+                            disabled={empty}
+                            aria-pressed={activeCategory === cat}
+                            className={chip(activeCategory === cat, empty)}
+                          >
+                            {cat}
+                            {n !== undefined && <span className="font-medium opacity-80 tabular-nums">{n}</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -200,15 +240,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   <div key={filter.id}>
                     <label className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-4 block">{filter.label}</label>
                     <div className="flex flex-wrap gap-2">
-                      {filter.options.map(opt => (
-                        <button 
-                          key={opt} 
-                          onClick={() => filter.onChange(opt)}
-                          className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border ${filter.value === opt ? 'bg-primary-600 text-white border-primary-600 shadow-md' : 'bg-card text-gray-600 border-gray-100'}`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                      {filter.options.map(opt => {
+                        const n = countOf(filter.counts, opt);
+                        const empty = n === 0 && filter.value !== opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => filter.onChange(opt)}
+                            disabled={empty}
+                            aria-pressed={filter.value === opt}
+                            className={chip(filter.value === opt, empty)}
+                          >
+                            {opt}
+                            {n !== undefined && <span className="font-medium opacity-80 tabular-nums">{n}</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -237,7 +284,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onClick={() => setIsSortMenuOpen(false)}
                   className="w-full py-4 bg-gray-900 text-white font-black rounded-2xl text-sm uppercase tracking-widest shadow-xl mt-4"
                 >
-                  Appliquer
+                  {applyLabel}
                 </button>
               </div>
             </div>
@@ -254,15 +301,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   {categoriesVariant === 'dropdown' ? (
                     <div className="flex items-center gap-2 px-1">
                       <select
+                        aria-label={categoryLabel}
                         value={activeCategory}
                         onChange={(e) => onCategoryChange(e.target.value)}
                         className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[200px]"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
                       >
                         <option value="Tout">{categoryLabel}</option>
-                        {categories.filter(c => c !== 'Tout').map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
+                        {categories.filter(c => c !== 'Tout').map(cat => {
+                          const n = countOf(categoryCounts, cat);
+                          return (
+                            <option key={cat} value={cat} disabled={n === 0 && activeCategory !== cat}>
+                              {n !== undefined ? `${cat} (${n})` : cat}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                   ) : (
@@ -287,14 +340,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   {extraFilters.map(filter => (
                     <div key={filter.id} className="relative">
                       <select
+                        aria-label={filter.label}
                         value={filter.value}
                         onChange={(e) => filter.onChange(e.target.value)}
                         className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[140px]"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
                       >
-                        {filter.options.map(opt => (
-                          <option key={opt} value={opt}>{opt === 'Tout' ? filter.label : opt}</option>
-                        ))}
+                        {filter.options.map(opt => {
+                          const n = countOf(filter.counts, opt);
+                          return (
+                            <option key={opt} value={opt} disabled={n === 0 && filter.value !== opt}>
+                              {opt === 'Tout' ? filter.label : n !== undefined ? `${opt} (${n})` : opt}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                   ))}
