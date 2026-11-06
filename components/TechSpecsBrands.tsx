@@ -46,10 +46,13 @@ const S = {
   
   // Unified Grid & Cards
   Grid: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6",
-  Card: "group relative flex flex-col items-center justify-center w-full max-w-[211px] h-[155px] mx-auto bg-transparent cursor-pointer gap-3",
-  LogoWrapper: "flex items-center justify-center w-[115px] h-[115px] transition-transform duration-300 group-hover:scale-105 shrink-0",
+  // Feedback as soon as the finger lands (the site turns the browser tap
+  // highlight off): the tile presses in and darkens; hover effects are for
+  // mice only, they used to stay stuck after a tap.
+  Card: "group relative flex flex-col items-center justify-center w-full max-w-[211px] h-[155px] mx-auto bg-transparent cursor-pointer gap-3 rounded-2xl transition-[transform,background-color] duration-100 ease-out active:scale-[0.97] active:bg-gray-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900",
+  LogoWrapper: "flex items-center justify-center w-[115px] h-[115px] transition-transform duration-300 [@media(hover:hover)]:group-hover:scale-105 shrink-0",
   LogoImage: "max-w-full max-h-full object-contain",
-  BrandName: "text-[13px] font-black text-slate-900 uppercase tracking-wider group-hover:text-orange-600 transition-colors text-center w-full truncate px-2",
+  BrandName: "text-[13px] font-black text-slate-900 uppercase tracking-wider [@media(hover:hover)]:group-hover:text-orange-600 transition-colors text-center w-full truncate px-2",
   
   // Filter Styles
   FilterGroup: "flex-1 flex items-center gap-2 px-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors group relative border-none appearance-none cursor-pointer font-bold text-slate-900 text-sm md:text-base outline-none",
@@ -297,7 +300,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           searchQuery={brandSearch}
           onSearchChange={setBrandSearch}
           showSort={false}
-          searchPlaceholder="Rechercher une marque, modèle, CC…"
+          searchPlaceholder="Marque ou modèle…"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
         />
       </div>
@@ -431,10 +434,17 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
               ))}
             </div>
           ) : (
-            <div className="py-32 text-center bg-card rounded-[40px] border border-dashed border-slate-200">
-              <Search size={48} className="mx-auto text-slate-200 mb-6" />
-              <h3 className="text-xl font-black text-slate-400 uppercase">Aucune marque trouvée</h3>
-              <p className="text-slate-400 text-sm mt-2">Essayez une autre recherche ou lettre.</p>
+            <div className="py-16 md:py-24 px-6 text-center bg-card rounded-3xl border border-dashed border-slate-200">
+              <Search size={40} className="mx-auto text-slate-300 mb-4" aria-hidden="true" />
+              <h3 className="text-[18px] font-bold text-gray-900">Aucune marque pour « {brandSearch} »</h3>
+              <p className="text-gray-600 text-[14px] mt-2">Vérifiez l'orthographe, ou cherchez un modèle (ex. « Jet 14 », « 125 cc »).</p>
+              <button
+                type="button"
+                onClick={() => setBrandSearch('')}
+                className="mt-6 inline-flex items-center justify-center min-h-11 px-5 rounded-xl bg-gray-900 text-white text-[15px] font-semibold active:scale-[0.97] transition-transform duration-100"
+              >
+                Effacer la recherche
+              </button>
             </div>
           )}
       </Section>
