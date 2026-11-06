@@ -41,13 +41,15 @@ interface FieldProps {
   fullWidth?: boolean;
   icon?: React.ElementType;
   innerRef?: React.Ref<HTMLDivElement>;
+  /** Grid placement (tablet two-row layout). */
+  className?: string;
   children?: React.ReactNode;
 }
 
 const Field: React.FC<FieldProps> = ({
   label, value, placeholder, isOpen, onToggle, onClear, isCombobox,
   searchValue = '', onSearchChange, onFocus, isDisabled, icon: Icon,
-  innerRef, children,
+  innerRef, className = '', children,
 }) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -64,9 +66,9 @@ const Field: React.FC<FieldProps> = ({
   const display = isCombobox ? (searchValue || value) : value;
 
   return (
-    <div ref={innerRef} className="relative">
+    <div ref={innerRef} className={`relative max-xl:min-w-0 ${className}`}>
       <div
-        className={`flex items-center gap-1.5 h-12 md:h-14 px-3 md:px-3.5 rounded-lg border transition-all ${
+        className={`flex items-center gap-1.5 h-12 md:h-14 px-3 max-[359px]:px-2.5 md:px-3.5 rounded-lg border transition-all ${
           isOpen
             ? 'border-primary-600 ring-2 ring-primary-600/15 md:shadow-sm'
             : 'border-gray-200 md:hover:border-gray-300'
@@ -327,14 +329,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         </button>
       </div>
 
-      {/* Fields wrapper — stacked on mobile, single horizontal row on desktop.
+      {/* Fields wrapper — stacked on phones; 12-column grid on tablets
+          (3 rows at md, 2 rows at lg) where the one-row toolbar did not fit
+          and pushed « Rechercher » out of the card; one row from xl (1280 px).
           md:contents flattens inner wrappers so each Field becomes a direct
           grid item, giving us one clean toolbar row at md+. */}
-      <div className="md:grid md:grid-cols-[1.5fr_1.05fr_1.05fr_0.9fr_0.9fr_1.4fr_auto] md:gap-2.5 md:items-stretch">
+      <div className="md:grid md:grid-cols-12 xl:grid-cols-[1.5fr_1.05fr_1.05fr_0.9fr_0.9fr_1.4fr_auto] md:gap-2.5 md:items-stretch">
       {/* Que cherchez-vous ? — full-width category select */}
       <div className="mb-2 md:mb-0 md:contents">
         <Field
           innerRef={refs.type}
+          className="md:col-span-4 xl:col-span-1"
           label="Que cherchez-vous ?"
           placeholder="Catégorie"
           value={type}
@@ -359,6 +364,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <div className="grid grid-cols-2 gap-2 mb-2 md:gap-0 md:mb-0 md:contents">
         <Field
           innerRef={refs.brand}
+          className="md:col-span-4 xl:col-span-1"
           label={type === 'Accessoires' ? 'Articles' : 'Marque'}
           placeholder={type === 'Accessoires' ? 'Articles' : 'Marque'}
           value={type === 'Accessoires' ? accessoryCategory : brand}
@@ -423,6 +429,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
 
         <Field
           innerRef={refs.model}
+          className="md:col-span-4 xl:col-span-1"
           label={type === 'Accessoires' ? 'Marque' : 'Modèle'}
           placeholder={type === 'Accessoires' ? (accessoryCategory ? 'Marque' : '—') : 'Modèle'}
           value={type === 'Accessoires' ? brand : model}
@@ -475,6 +482,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <div className="grid grid-cols-2 gap-2 mb-2 md:gap-0 md:mb-0 md:contents">
         <Field
           innerRef={refs.price}
+          className="md:col-span-4 lg:col-span-3 xl:col-span-1"
           label="Prix max"
           placeholder="Prix max"
           value={maxPrice ? `${Number(maxPrice).toLocaleString('fr-FR')} TND` : ''}
@@ -495,6 +503,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         </Field>
         <Field
           innerRef={refs.year}
+          className="md:col-span-3 lg:col-span-2 xl:col-span-1"
           label="Année min."
           placeholder="Année"
           value={minYear}
@@ -518,6 +527,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       {/* Où ça ? — full width */}
       <Field
         innerRef={refs.location}
+        className="md:col-span-5 lg:col-span-4 xl:col-span-1"
         label="Où ça ?"
         placeholder="Où ça ? (Ville, région...)"
         value={location}
@@ -551,11 +561,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <button
         type="button"
         onClick={handleSearchClick}
-        className="w-full mt-3 md:mt-0 md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
+        className="w-full mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:col-span-1 md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
       >
         <Search size={16} strokeWidth={2.5} />
-        <span className="md:hidden">Rechercher{typeof matchCount === 'number' && countParams ? ` (${matchCount.toLocaleString('fr-FR')})` : ''}</span>
-        <span className="hidden md:inline">Rechercher</span>
+        {/* Full-width button (phones, tablets): room for the result count. */}
+        <span className="lg:hidden">Rechercher{typeof matchCount === 'number' && countParams ? ` (${matchCount.toLocaleString('fr-FR')})` : ''}</span>
+        <span className="hidden lg:inline">Rechercher</span>
       </button>
       </div>
     </div>
