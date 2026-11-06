@@ -122,7 +122,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         />
       </div>
 
-      <div className="pt-4 md:pt-8">
+      <div className="pt-0 md:pt-8">
         {/* Header Section */}
         <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-8">
             <Reveal animation="fade-in-up">
@@ -132,6 +132,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
                   { label: 'Conseils', href: '/conseils', onClick: () => onNavigate?.('tips') },
                 ]}
                 current={tip.title}
+                className="mb-3 md:mb-8"
               />
 
               {/* Titre Mobile */}

@@ -24,7 +24,7 @@ test('one breadcrumb for the whole site: no page keeps its own copy', () => {
 });
 
 test('phones: a single « ← Parent » link, 44 px tall, readable', () => {
-  assert.match(comp, /className="md:hidden inline-flex items-center gap-1\.5 min-h-11 [^"]*text-\[14px\] font-semibold text-gray-700/);
+  assert.match(comp, /className="md:hidden flex w-fit items-center gap-1\.5 min-h-11 -my-\[13px\] [^"]*text-\[14px\] font-semibold text-gray-700/);
   assert.match(comp, /aria-label=\{`Retour à \$\{parent\.label\}`\}/);
 });
 
@@ -54,4 +54,24 @@ test('the trail names real pages', () => {
 
 test('the hero pages show their title on phones (the trail no longer does it)', () => {
   assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /titleOnMobile = true,/);
+});
+
+// Spacing (phones): the 44 px tap zone overflows 13 px above and below, so the
+// layout box is the visible 18 px; pages then set 24 px under the header and
+// 12 px to what follows.
+test('phones: 24 px under the header and 12 px to the title, on every page', () => {
+  assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /className="mb-1 md:mb-3 w-full"/); // + gap-2 = 12
+  for (const p of ['components/SearchResults.tsx', 'components/Garages.tsx']) {
+    const src = read(p);
+    assert.match(src, /Header: "flex flex-col md:flex-row md:items-end justify-between pt-0 pb-10 md:pt-6/, p);
+    assert.match(src, /<PageBreadcrumb className="md:hidden mb-3"/, p);
+  }
+  assert.match(read('components/ListingDetails.tsx'), /Header: "flex items-center justify-between mb-3 md:mb-6"/);
+  assert.match(read('components/TechSpecsDetails.tsx'), /Header: "flex items-center justify-between mb-3 md:mb-6"/);
+  for (const p of ['components/ArticleDetails.tsx', 'components/TipDetails.tsx']) {
+    const src = read(p);
+    assert.match(src, /<div className="pt-0 md:pt-8">/, p);
+    assert.match(src, /className="mb-3 md:mb-8"/, p);
+  }
+  assert.match(read('components/GarageDetails.tsx'), /pt-0 md:pt-6">[\s\S]*?<header className="flex items-center justify-between mb-3 md:mb-6">/);
 });

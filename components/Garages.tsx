@@ -37,7 +37,7 @@ import { PageBreadcrumb } from './ui/PageBreadcrumb';
 const S = {
   Page: "min-h-screen bg-muted font-sans pb-20",
   Container: "max-w-[1360px] mx-auto px-6 md:px-16 lg:px-24 w-full",
-  Header: "flex flex-col md:flex-row md:items-end justify-between pt-4 pb-10 md:pt-6 md:pb-12 gap-6",
+  Header: "flex flex-col md:flex-row md:items-end justify-between pt-0 pb-10 md:pt-6 md:pb-12 gap-6",
   Title: "text-[30px] md:text-[46px] font-bold text-gray-700 tracking-tighter mb-0",
   Count: "text-primary-600 text-[18px] font-semibold leading-normal tracking-normal font-sans",
   MainLayout: "flex flex-col lg:flex-row gap-10 items-start",
@@ -216,7 +216,7 @@ const Garages: React.FC<BasePageProps> = ({ onNavigate }) => {
         <header className={S.Header}>
           <div className="flex flex-col w-full">
             {/* Phones: « ← Accueil » first, right under the header, before the title. */}
-            <PageBreadcrumb className="md:hidden mb-1" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
+            <PageBreadcrumb className="md:hidden mb-3" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
             <h1 className={S.Title}>Garages & Experts</h1>
             <p className={S.Count}>
               {isFiltering ? 'Calcul en cours...' : `${filteredAndSortedGarages.length} ${filteredAndSortedGarages.length > 1 ? 'experts disponibles' : 'expert disponible'}`}

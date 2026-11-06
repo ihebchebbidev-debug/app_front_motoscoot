@@ -77,7 +77,7 @@ export const TechSpecsHero = memo(({
             // place on every page (phones: « ← Parent »; from 768 px: trail).
             <PageBreadcrumb
               tone="hero"
-              className="mb-2 md:mb-3 w-full"
+              className="mb-1 md:mb-3 w-full"
               parents={[
                 { label: 'Accueil', href: '/', onClick: onNavigateHome },
                 ...(breadcrumbParents ?? []),

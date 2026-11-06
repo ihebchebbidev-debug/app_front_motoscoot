@@ -7,6 +7,10 @@ import { ArrowLeft, ChevronRight } from 'lucide-react';
  * different heights).
  *
  * - Phones: a single « ← Parent » link, 44 px tall, right under the header.
+ *   Its 44 px tap zone overflows 13 px above and below (negative margins):
+ *   in the layout it is only as tall as what is seen (18 px), so the pages'
+ *   spacing is the visible spacing — 24 px under the header, 12 px to the
+ *   title, on every page.
  *   The arrow and « Accueil » no longer sit side by side doing the same thing;
  *   the system back gesture already covers the browsing history.
  * - From 768 px: back button + the full trail « Accueil › … › page ».
@@ -53,7 +57,7 @@ export const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ parents, current
           href={parent.href}
           onClick={follow(parent)}
           aria-label={`Retour à ${parent.label}`}
-          className="md:hidden inline-flex items-center gap-1.5 min-h-11 -ml-2 pl-2 pr-3 rounded-xl text-[14px] font-semibold text-gray-700 active:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
+          className="md:hidden flex w-fit items-center gap-1.5 min-h-11 -my-[13px] -ml-2 pl-2 pr-3 rounded-xl text-[14px] font-semibold text-gray-700 active:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
         >
           <ArrowLeft size={18} aria-hidden="true" className="shrink-0" />
           <span className="truncate">{parent.label}</span>
