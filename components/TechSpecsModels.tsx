@@ -23,8 +23,8 @@ import { FilterBar, FilterOption } from './ui/FilterBar';
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
-import {  } from 'react-router-dom';
 import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
+import { sortTechSpecs, TECH_SPEC_SORTS, type TechSpecSort } from '../utils/techSpecSort';
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
@@ -50,6 +50,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
   const [activeType, setActiveType] = useState('Tout');
   const [activeYear, setActiveYear] = useState('Tout');
   const [activeCC, setActiveCC] = useState('Tout');
+  const [sort, setSort] = useState<TechSpecSort>('recent');
 
   const techCategories = useMemo(() => [
     'Tout', 
@@ -143,6 +144,10 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
     });
   }, [brandModels, deferredModelSearch, activeType, activeYear, activeCC]);
 
+  // Price first: the buyer's first criterion. Models without a readable value
+  // (« En arrivage », missing cylinder…) go last.
+  const sortedModels = useMemo(() => sortTechSpecs(filteredModels, sort), [filteredModels, sort]);
+
   const highlightTerms = useMemo(
     () => getHighlightTerms(deferredModelSearch),
     [deferredModelSearch],
@@ -227,6 +232,9 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           categoriesVariant="dropdown"
           categoryLabel="Type de moto"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
+          sortOptions={TECH_SPEC_SORTS}
+          sortValue={sort}
+          onSortValueChange={(v) => setSort(v as TechSpecSort)}
         />
       </div>
 
@@ -243,8 +251,28 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
             {Array.from({ length: 6 }).map((_, idx) => <ModelCardSkeleton key={idx} />)}
           </div>
         ) : filteredModels.length > 0 ? (
+          <>
+          {/* Count + sort (the phone sort is the button in the filter bar). */}
+          <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
+            <p className="text-[14px] font-medium text-gray-600 tabular-nums" aria-live="polite">
+              {filteredModels.length === brandModels.length
+                ? `${brandModels.length} modèle${brandModels.length > 1 ? 's' : ''}`
+                : `${filteredModels.length} modèle${filteredModels.length > 1 ? 's' : ''} sur ${brandModels.length}`}
+            </p>
+            <label className="hidden md:flex items-center gap-2 text-[14px] font-medium text-gray-600">
+              Trier par
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as TechSpecSort)}
+                className="h-10 pl-3 pr-9 rounded-xl border border-gray-200 bg-card text-[14px] font-semibold text-gray-900 cursor-pointer appearance-none outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+              >
+                {TECH_SPEC_SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+          </div>
           <div className={S.Grid}>
-              {filteredModels.map((spec, idx) => (
+              {sortedModels.map((spec, idx) => (
                 <Reveal key={spec.id} animation="fade-in-up" delay={idx % 6 * 50}>
                   <ModelCard 
                     spec={spec} 
@@ -253,6 +281,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
                 </Reveal>
               ))}
             </div>
+          </>
           ) : (
             <EmptyState
               variant="card"
