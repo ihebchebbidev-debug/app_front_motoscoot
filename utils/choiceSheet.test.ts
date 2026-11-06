@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { rubberband, shouldCloseSheet } from '../components/search/ChoiceSheet';
+import { placeMenu, rubberband, shouldCloseSheet } from '../components/search/ChoiceSheet';
 
 const sheet = readFileSync(new URL('../components/search/ChoiceSheet.tsx', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../src/styles/globals.css', import.meta.url), 'utf8');
@@ -59,9 +59,58 @@ test('the finger moves the sheet: the opening animation does not hold its transf
 
 test('the scroll lock is taken once per opening, not on every render', () => {
   assert.match(sheet, /onCloseRef\.current = onClose;/);
-  assert.match(sheet, /return \(\) => \{ document\.removeEventListener\('keydown', onKey\); unlock\(\); \};\n  \}, \[mounted\]\);/);
+  assert.match(sheet, /return \(\) => \{ document\.removeEventListener\('keydown', onKey\); unlock\(\); \};\n    \/\/ eslint-disable-next-line react-hooks\/exhaustive-deps\n  \}, \[mounted, menu\]\);/);
 });
 
 test('a flick is judged on how the finger left (last 100 ms)', () => {
   assert.match(sheet, /d\.samples\.find\(\(s\) => last\.t - s\.t <= 100\)/);
+});
+
+// ── From 768 px: a menu under the field (Apple analysis, priority 2) ──
+
+const VIEW = { width: 1440, height: 900 };
+
+test('the menu opens right under its field, left edges aligned, at least 240 px wide', () => {
+  const m = placeMenu({ top: 300, bottom: 356, left: 400, width: 150 }, VIEW);
+  assert.equal(m.side, 'bottom');
+  assert.equal(m.top, 362); // 6 px under the field
+  assert.equal(m.left, 400);
+  assert.equal(m.width, 240);
+  assert.equal(m.maxHeight, 360);
+  // A wide field: the menu is as wide as the field.
+  assert.equal(placeMenu({ top: 300, bottom: 356, left: 100, width: 300 }, VIEW).width, 300);
+});
+
+test('the menu goes above the field only when the room below is cramped', () => {
+  const low = placeMenu({ top: 700, bottom: 756, left: 400, width: 200 }, VIEW);
+  assert.equal(low.side, 'top');
+  assert.equal(low.bottom, 900 - 700 + 6);
+  assert.equal(low.top, undefined);
+  // 250 px below is enough: stays below, shorter.
+  const mid = placeMenu({ top: 572, bottom: 628, left: 400, width: 200 }, VIEW);
+  assert.equal(mid.side, 'bottom');
+  assert.equal(mid.maxHeight, 900 - 628 - 6 - 16);
+});
+
+test('the menu never leaves the window', () => {
+  const right = placeMenu({ top: 300, bottom: 356, left: 1300, width: 120 }, VIEW);
+  assert.equal(right.left + right.width, 1440 - 16);
+  const narrow = placeMenu({ top: 300, bottom: 356, left: 0, width: 900 }, { width: 800, height: 900 });
+  assert.equal(narrow.left, 16);
+  assert.equal(narrow.width, 800 - 32);
+});
+
+test('the menu has no scrim and does not hold the page; Escape gives the focus back to the field', () => {
+  const menuBlock = sheet.slice(sheet.indexOf('if (menu) {\n    if (!place) return null;'), sheet.indexOf('return createPortal(\n    <div\n      ref={scrimRef}'));
+  assert.ok(menuBlock.length > 0);
+  assert.doesNotMatch(menuBlock, /bg-black|backdrop-blur|aria-modal/);
+  assert.match(sheet, /const unlock = menu \? \(\) => \{\} : lockScroll\(\);/);
+  assert.match(sheet, /if \(menu\) anchor\?\.current\?\.querySelector<HTMLElement>\('button'\)\?\.focus\(\);/);
+  assert.match(readFileSync(new URL('../components/search/SearchBar.tsx', import.meta.url), 'utf8'), /anchor=\{boxRef\}/);
+});
+
+test('the menu opens from its field, and only fades under reduced motion', () => {
+  assert.match(css, /\.ms-menu \{ transform-origin: top center; \}/);
+  assert.match(css, /\.ms-menu\[data-side=top\] \{ transform-origin: bottom center; \}/);
+  assert.match(css, /\.ms-menu\[data-state=open\], \.ms-menu\[data-side=top\]\[data-state=open\] \{ animation: ms-fade-in 120ms/);
 });

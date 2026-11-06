@@ -51,12 +51,14 @@ const Field: React.FC<FieldProps> = ({
   searchValue = '', onSearchChange, onFocus, isDisabled, icon: Icon,
   innerRef, className = '', children,
 }) => {
+  const boxRef = useRef<HTMLDivElement>(null);
   const hasValue = !!value || (isCombobox && !!searchValue);
   const display = isCombobox ? (searchValue || value) : value;
 
   return (
     <div ref={innerRef} className={`relative min-w-0 ${className}`}>
       <div
+        ref={boxRef}
         className={`flex items-center gap-1.5 h-12 md:h-14 px-3 max-[359px]:px-2.5 md:px-3.5 rounded-lg border transition-all ${
           isOpen
             ? 'border-primary-600 ring-2 ring-primary-600/15 md:shadow-sm'
@@ -100,9 +102,11 @@ const Field: React.FC<FieldProps> = ({
         )}
       </div>
       {/* Rendered at the page level (portal): inside the search card
-          (relative z-20) the list sat under the header and the cookie banner. */}
+          (relative z-20) the list sat under the header and the cookie banner.
+          Phones: a sheet from the bottom; from 768 px: a menu under the field. */}
       <ChoiceSheet
         open={isOpen && !isDisabled}
+        anchor={boxRef}
         label={label}
         onClose={onToggle}
         search={isCombobox ? { value: searchValue, placeholder: `Rechercher ${label.toLowerCase()}…`, onChange: (v) => onSearchChange?.(v) } : undefined}
