@@ -52,6 +52,11 @@ const S = {
   Card: "group relative flex flex-col items-center justify-center w-full max-w-[211px] h-[155px] mx-auto bg-transparent cursor-pointer gap-3 rounded-2xl transition-[transform,background-color] duration-100 ease-out active:scale-[0.97] active:bg-gray-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900",
   LogoWrapper: "flex items-center justify-center w-[115px] h-[115px] transition-transform duration-300 [@media(hover:hover)]:group-hover:scale-105 shrink-0",
   LogoImage: "max-w-full max-h-full object-contain",
+  // Popular brands on phones: 3 columns × 2 rows (the 6 brands on one
+  // screen). Smaller tile and logo under 640 px; the regular tile from there.
+  PopularGrid: "grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+  CardCompact: "h-[112px] sm:h-[155px] gap-2 sm:gap-3",
+  LogoCompact: "w-16 h-16 sm:w-[115px] sm:h-[115px]",
   BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full truncate px-2",
   
   // Filter Styles
@@ -69,9 +74,14 @@ const COUNTRIES: Record<string, string[]> = {
   "France": ["Peugeot Motorcycles"]
 };
 
-const BrandCard = memo(({ brand, href, onClick, logoMap }: { brand: string; href: string; onClick: (brand: string) => void; logoMap: Record<string, string> }) => (
-  <Link to={href} onClick={() => onClick(brand)} className={S.Card} aria-label={`Voir les modèles ${brand}`}>
-    <div className={S.LogoWrapper}>
+const BrandCard = memo(({ brand, href, onClick, logoMap, compact = false }: { brand: string; href: string; onClick: (brand: string) => void; logoMap: Record<string, string>; compact?: boolean }) => (
+  <Link
+    to={href}
+    onClick={() => onClick(brand)}
+    className={compact ? S.Card.replace('h-[155px]', '').replace('gap-3', '') + ' ' + S.CardCompact : S.Card}
+    aria-label={`Voir les modèles ${brand}`}
+  >
+    <div className={compact ? S.LogoWrapper.replace('w-[115px] h-[115px]', S.LogoCompact) : S.LogoWrapper}>
       {logoMap[brand] ? (
         <img src={logoMap[brand]} alt={brand} className={S.LogoImage} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
       ) : (
@@ -380,18 +390,18 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
 
         {/* POPULAR BRANDS - Only show when no search/filter */}
         {!brandSearch && (
-            <div className="mb-24">
-              <div className="flex items-center justify-between mb-10">
+            <div className="mb-12 md:mb-24">
+              <div className="flex items-center justify-between mb-5 md:mb-10">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
                   {availableInTunisia ? 'Marques populaires en Tunisie' : 'Marques populaires'}
                 </h2>
                 <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
               </div>
-              <div className={`${S.Grid} mb-12 md:mb-16`}>
+              <div className={`${S.PopularGrid} md:mb-16`}>
                 {isLoading ? (
-                  Array.from({ length: 6 }).map((_, idx) => <BrandCardSkeleton key={idx} />)
+                  Array.from({ length: 6 }).map((_, idx) => <BrandCardSkeleton key={idx} compact />)
                 ) : !popularReady ? (
-                  Array.from({ length: 6 }).map((_, idx) => <BrandCardSkeleton key={`pop-${idx}`} />)
+                  Array.from({ length: 6 }).map((_, idx) => <BrandCardSkeleton key={`pop-${idx}`} compact />)
                 ) : (
                   popularBrands.map((brand, idx) => (
                     <Reveal key={brand} animation="fade-in-up" delay={idx * 40}>
@@ -400,6 +410,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                         href={brandHref(brand)}
                         onClick={handleBrandClick}
                         logoMap={logoMap}
+                        compact
                       />
                     </Reveal>
                   ))
@@ -409,7 +420,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           )}
 
           {/* ALL BRANDS GRID */}
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center justify-between mb-5 md:mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
               {brandSearch ? `Résultats pour « ${brandSearch} »` : availableInTunisia ? "Toutes les marques en Tunisie" : "Toutes les marques"}
             </h2>

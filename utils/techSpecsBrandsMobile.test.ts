@@ -36,3 +36,13 @@ test('type scale: sentence-case titles, readable counts and names, no 9-11 px te
   assert.doesNotMatch(page, /text-\[9px\]|text-\[11px\] text-slate-500|text-slate-400 italic/);
   assert.match(page, /text-\[0\.9375rem\] leading-5 font-semibold/); // model name 15 px, rem
 });
+
+test('phones: popular brands in 3 columns × 2 rows (6 brands, smaller logos under 640 px)', () => {
+  assert.match(page, /PopularGrid: "grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"/);
+  assert.match(page, /<div className=\{`\$\{S\.PopularGrid\} md:mb-16`\}>/);
+  assert.match(page, /<div className="mb-12 md:mb-24">/); // tighter on phones
+  assert.match(page, /LogoCompact: "w-16 h-16 sm:w-\[115px\] sm:h-\[115px\]"/);
+  assert.match(page, /const limit = 6;/);
+  // « Toutes les marques » keeps its own grid.
+  assert.match(page, /Grid: "grid grid-cols-2 sm:grid-cols-3/);
+});
