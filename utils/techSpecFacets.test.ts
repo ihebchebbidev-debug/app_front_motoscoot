@@ -56,3 +56,9 @@ test('a filter with a single choice is not shown (SYM: « Scooter » only)', () 
   assert.match(page, /const showTypes = typeOptions\.length > 1 \|\| activeType !== ALL;/);
   assert.match(page, /categoriesVariant=\{showTypes \? 'dropdown' : 'list'\}/);
 });
+
+test('model cards: the comparator grey behind the bike (5 % black veil over the photo)', () => {
+  const card = readFileSync(new URL('../components/tech-specs/TechSpecModelCard.tsx', import.meta.url), 'utf8');
+  assert.match(card, /<div className="absolute inset-0 bg-black\/5 pointer-events-none" aria-hidden="true" \/>/);
+  assert.match(readFileSync(new URL('../components/home/ModelCard.tsx', import.meta.url), 'utf8'), /absolute inset-0 bg-black\/5/);
+});
