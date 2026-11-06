@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -9,9 +9,11 @@ import { X } from 'lucide-react';
  * down there; a grabber and the title row can be dragged down to close it,
  * 1:1 with the finger (dragging up resists), and a flick closes it even when
  * short. Released early, it springs back.
- * Larger screens: the centred window, unchanged.
+ * From 768 px, with an anchor: a menu attached under the field it came
+ * from (above it when there is more room there), no scrim, the page stays
+ * usable; it opens from the field and closes on Escape or a click outside.
  * Reduced motion: a short fade, no movement.
- * The page behind does not scroll, iPhone included (body fixed in place).
+ * Phones: the page behind does not scroll, iPhone included (body fixed).
  */
 
 const EXIT_MS = 220;
@@ -25,6 +27,30 @@ export const rubberband = (overshoot: number, dimension: number, c = 0.55) =>
 /** Whether a released drag closes the sheet (distance or flick). */
 export const shouldCloseSheet = (dy: number, height: number, velocity: number) =>
   dy > height * CLOSE_RATIO || velocity > CLOSE_VELOCITY;
+
+const MENU_GAP = 6; // px between the field and its menu
+const MENU_EDGE = 16; // px kept clear of the window edges
+const MENU_MIN_W = 240;
+const MENU_MAX_H = 360;
+
+export interface MenuPlacement { side: 'bottom' | 'top'; top?: number; bottom?: number; left: number; width: number; maxHeight: number }
+
+/** Where the menu goes for a field box (viewport coordinates). */
+export function placeMenu(
+  field: { top: number; bottom: number; left: number; width: number },
+  viewport: { width: number; height: number },
+): MenuPlacement {
+  const below = viewport.height - field.bottom - MENU_GAP - MENU_EDGE;
+  const above = field.top - MENU_GAP - MENU_EDGE;
+  // Below by default; above only when below is cramped and above has more room.
+  const side = below < 240 && above > below ? 'top' : 'bottom';
+  const width = Math.min(Math.max(field.width, MENU_MIN_W), viewport.width - 2 * MENU_EDGE);
+  const left = Math.max(MENU_EDGE, Math.min(field.left, viewport.width - MENU_EDGE - width));
+  const maxHeight = Math.max(120, Math.min(MENU_MAX_H, side === 'bottom' ? below : above));
+  return side === 'bottom'
+    ? { side, top: field.bottom + MENU_GAP, left, width, maxHeight }
+    : { side, bottom: viewport.height - field.top + MENU_GAP, left, width, maxHeight };
+}
 
 const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 const finePointer = () => typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
@@ -53,10 +79,12 @@ interface ChoiceSheetProps {
   onClose: () => void;
   /** Optional search field (brand, model). */
   search?: { value: string; placeholder: string; onChange: (v: string) => void };
+  /** The field box: from 768 px the list opens as a menu under it. */
+  anchor?: React.RefObject<HTMLElement | null>;
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, children }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, children }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -64,6 +92,16 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
   const scrimRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ startY: number; dy: number; samples: { y: number; t: number }[]; id: number } | null>(null);
   const draggedShut = useRef(false);
+  // Phone sheet or anchored menu; follows the window crossing 768 px.
+  const [phone, setPhone] = useState(isPhone);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const on = () => setPhone(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  const menu = !!anchor && !phone;
+  const [place, setPlace] = useState<MenuPlacement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -86,11 +124,41 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
 
   useEffect(() => {
     if (!mounted) return;
-    const unlock = lockScroll();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
+    // A menu leaves the page usable; only the phone sheet holds it still.
+    const unlock = menu ? () => {} : lockScroll();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      onCloseRef.current();
+      // Back to the field the menu came from.
+      if (menu) anchor?.current?.querySelector<HTMLElement>('button')?.focus();
+    };
     document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('keydown', onKey); unlock(); };
-  }, [mounted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, menu]);
+
+  // Menu: measured before paint, and kept on its field while the page
+  // scrolls or the window changes size.
+  useLayoutEffect(() => {
+    if (!mounted || !menu) return;
+    let frame = 0;
+    const measure = () => {
+      const el = anchor?.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setPlace(placeMenu(r, { width: document.documentElement.clientWidth, height: window.innerHeight }));
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener('scroll', schedule, { capture: true, passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule, { capture: true });
+      window.removeEventListener('resize', schedule);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, menu]);
 
   // Sheet follows the finger; the scrim lightens with it (as on iOS).
   const setY = (y: number, transition = '') => {
@@ -142,6 +210,41 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
   }, []);
 
   if (!mounted) return null;
+
+  if (menu) {
+    if (!place) return null;
+    return createPortal(
+      <div
+        data-searchbar-sheet=""
+        data-state={state}
+        data-side={place.side}
+        role="dialog"
+        aria-label={label}
+        className="ms-menu fixed z-[1000] bg-card rounded-xl shadow-xl ring-1 ring-black/[0.08] flex flex-col overflow-hidden"
+        style={{ top: place.top, bottom: place.bottom, left: place.left, width: place.width, maxHeight: place.maxHeight }}
+      >
+        {search && (
+          <div className="p-2 border-b border-gray-100">
+            <input
+              type="text"
+              aria-label={search.placeholder}
+              placeholder={search.placeholder}
+              value={search.value}
+              // Mouse: type at once. Touch tablets: no keyboard over the list.
+              autoFocus={finePointer()}
+              autoComplete="off"
+              onChange={(e) => search.onChange(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-gray-300 text-[16px] md:text-[14.5px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
+            />
+          </div>
+        )}
+        <div role="listbox" aria-label={label} className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-1.5">
+          {children}
+        </div>
+      </div>,
+      document.body,
+    );
+  }
 
   return createPortal(
     <div
