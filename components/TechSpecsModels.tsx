@@ -25,6 +25,7 @@ import SEO from './common/SEO';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
 import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
 import { sortTechSpecs, TECH_SPEC_SORTS, type TechSpecSort } from '../utils/techSpecSort';
+import { ALL, facetOptions, matchesFacets, activeFacetCount, MIN_MODELS_FOR_FILTERS } from '../utils/techSpecFacets';
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
@@ -52,16 +53,6 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
   const [activeCC, setActiveCC] = useState('Tout');
   const [sort, setSort] = useState<TechSpecSort>('recent');
 
-  const techCategories = useMemo(() => [
-    'Tout', 
-    'Naked / Roadster', 
-    'Sport', 
-    'Adventure / Trail', 
-    'Scooter', 
-    'Maxi Scooter', 
-    'Off-Road / Enduro'
-  ], []);
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [brandSlug]);
@@ -88,61 +79,25 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
   // even when models were already cached (e.g. browser back navigation).
   const isLoading = modelsLoading;
 
-  const availableYears = useMemo(() => {
-    const years = Array.from(
-      new Set(brandModels.map(m => (m.year != null ? String(m.year) : '')).filter(Boolean)),
-    ).sort((a: string, b: string) => parseInt(b) - parseInt(a));
-    return ['Tout', ...years];
-  }, [brandModels]);
+  // Filters built from this brand's models, each option with its count
+  // (other filters kept): no choice leads to « Aucun modèle » by surprise.
+  const facetState = useMemo(() => ({ type: activeType, year: activeYear, cc: activeCC }), [activeType, activeYear, activeCC]);
+  const typeOptions = useMemo(() => facetOptions(brandModels, facetState, 'type'), [brandModels, facetState]);
+  const yearOptions = useMemo(() => facetOptions(brandModels, facetState, 'year'), [brandModels, facetState]);
+  const ccOptions = useMemo(() => facetOptions(brandModels, facetState, 'cc'), [brandModels, facetState]);
+  const toCounts = (opts: { value: string; count: number }[]) => Object.fromEntries(opts.map((o) => [o.value, o.count]));
 
-  const parseCC = (ccStr?: string) => {
-    const match = (ccStr || '').match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
-  };
+  const filteredModels = useMemo(
+    () => brandModels.filter((m) =>
+      // Cross-field search: model name, cylindrée, puissance, catégorie, ABS…
+      (!deferredModelSearch || matchesTechSpec(m, deferredModelSearch)) && matchesFacets(m, facetState)),
+    [brandModels, deferredModelSearch, facetState],
+  );
 
-  const filteredModels = useMemo(() => {
-    return brandModels.filter(m => {
-      // Cross-field search: matches model name, cylindrée, puissance,
-      // catégorie, transmission, ABS/TCS, modes de conduite, etc.
-      const matchesSearch = !deferredModelSearch || matchesTechSpec(m, deferredModelSearch);
-      
-      // Type filter mapping
-      let matchesType = true;
-      if (activeType !== 'Tout') {
-        const cc = parseCC(m.engine?.cc);
-        const cat = m.category as string;
-        if (activeType === 'Naked / Roadster') {
-          matchesType = cat === 'Roadster';
-        } else if (activeType === 'Sport') {
-          matchesType = cat === 'Sport' || cat === 'Sportive';
-        } else if (activeType === 'Adventure / Trail') {
-          matchesType = cat === 'Trail' || cat === 'Adventure';
-        } else if (activeType === 'Scooter') {
-          matchesType = cat === 'Scooter' && cc < 400;
-        } else if (activeType === 'Maxi Scooter') {
-          matchesType = cat === 'Scooter' && cc >= 400;
-        } else if (activeType === 'Off-Road / Enduro') {
-          matchesType = cat === 'Off-road' || cat === 'Enduro';
-        } else {
-          matchesType = cat === activeType;
-        }
-      }
-
-      // Year filter
-      const matchesYear = activeYear === 'Tout' || String(m.year ?? '') === activeYear;
-
-      // CC filter
-      let matchesCC = true;
-      if (activeCC !== 'Tout') {
-        const cc = parseCC(m.engine?.cc);
-        if (activeCC === '50-125') matchesCC = cc >= 50 && cc <= 125;
-        else if (activeCC === '125-560') matchesCC = cc > 125 && cc <= 560;
-        else if (activeCC === '560-1300') matchesCC = cc > 560 && cc <= 1300;
-      }
-
-      return matchesSearch && matchesType && matchesYear && matchesCC;
-    });
-  }, [brandModels, deferredModelSearch, activeType, activeYear, activeCC]);
+  const activeCount = activeFacetCount(facetState) + (modelSearch ? 1 : 0);
+  const resetFilters = () => { setActiveType(ALL); setActiveYear(ALL); setActiveCC(ALL); setModelSearch(''); };
+  // A brand with a handful of models: show them, no filter or sort chrome.
+  const showFilters = brandModels.length >= MIN_MODELS_FOR_FILTERS;
 
   // Price first: the buyer's first criterion. Models without a readable value
   // (« En arrivage », missing cylinder…) go last.
@@ -158,22 +113,26 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
     [allBrands, brandName]
   );
 
-  const extraFilters: FilterOption[] = [
+  // A filter with a single choice (SYM: « Scooter » only) is left out.
+  const extraFilters: FilterOption[] = ([
     {
       id: 'year',
       label: 'Année',
-      options: availableYears,
+      options: [ALL, ...yearOptions.map((o) => o.value)],
+      counts: toCounts(yearOptions),
       value: activeYear,
       onChange: setActiveYear
     },
     {
       id: 'cc',
-      label: 'Cylindrée (CC)',
-      options: ['Tout', '50-125', '125-560', '560-1300'],
+      label: 'Cylindrée',
+      options: [ALL, ...ccOptions.map((o) => o.value)],
+      counts: toCounts(ccOptions),
       value: activeCC,
       onChange: setActiveCC
     }
-  ];
+  ] as FilterOption[]).filter((f) => f.options.length > 2 || f.value !== ALL);
+  const showTypes = typeOptions.length > 1 || activeType !== ALL;
 
   const breadcrumbSchema = useMemo(() => ({
     "@context": "https://schema.org",
@@ -219,9 +178,11 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         breadcrumbCurrent={brandName}
       />
 
+      {showFilters && (
       <div className="md:pt-0">
         <FilterBar
-          categories={techCategories}
+          categories={showTypes ? [ALL, ...typeOptions.map((o) => o.value)] : []}
+          categoryCounts={toCounts(typeOptions)}
           activeCategory={activeType}
           onCategoryChange={setActiveType}
           searchQuery={modelSearch}
@@ -229,14 +190,18 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           showSort={false}
           searchPlaceholder={`Rechercher ${brandName} (modèle, CC, puissance, catégorie…)`}
           extraFilters={extraFilters}
-          categoriesVariant="dropdown"
+          categoriesVariant={showTypes ? 'dropdown' : 'list'}
           categoryLabel="Type de moto"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
           sortOptions={TECH_SPEC_SORTS}
           sortValue={sort}
           onSortValueChange={(v) => setSort(v as TechSpecSort)}
+          activeFilterCount={activeCount}
+          onReset={resetFilters}
+          applyLabel={`Voir ${filteredModels.length} modèle${filteredModels.length > 1 ? 's' : ''}`}
         />
       </div>
+      )}
 
       <Section variant="none" className="bg-[#F8F9F9] md:bg-card pb-32 pt-4 md:pt-20">
         {modelsError && brandModels.length === 0 ? (
@@ -254,11 +219,17 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           <>
           {/* Count + sort (the phone sort is the button in the filter bar). */}
           <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
-            <p className="text-[14px] font-medium text-gray-600 tabular-nums" aria-live="polite">
+            <p className="flex items-center gap-3 text-[14px] font-medium text-gray-600 tabular-nums" aria-live="polite">
               {filteredModels.length === brandModels.length
                 ? `${brandModels.length} modèle${brandModels.length > 1 ? 's' : ''}`
                 : `${filteredModels.length} modèle${filteredModels.length > 1 ? 's' : ''} sur ${brandModels.length}`}
+              {activeCount > 0 && (
+                <button type="button" onClick={resetFilters} className="font-semibold text-primary-700 underline underline-offset-2 hover:text-primary-800">
+                  Réinitialiser
+                </button>
+              )}
             </p>
+            {showFilters && (
             <label className="hidden md:flex items-center gap-2 text-[14px] font-medium text-gray-600">
               Trier par
               <select
@@ -270,6 +241,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
                 {TECH_SPEC_SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </label>
+            )}
           </div>
           <div className={S.Grid}>
               {sortedModels.map((spec, idx) => (
@@ -288,6 +260,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
               icon={Layers}
               title="Aucun modèle trouvé"
               description="Aucun modèle ne correspond à vos filtres pour cette marque. Essayez de modifier votre recherche."
+              action={activeCount > 0 ? { label: 'Réinitialiser les filtres', onClick: resetFilters } : undefined}
             />
           )}
       </Section>
