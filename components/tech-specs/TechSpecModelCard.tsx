@@ -33,6 +33,9 @@ export const TechSpecModelCard = memo(({ spec, highlightTerms = [] }: { spec: an
         loading="lazy"
         decoding="async"
       />
+      {/* Same veil as the comparator cards (home/ModelCard): white or
+          transparent photo backgrounds read as a light grey (#F2F2F2). */}
+      <div className="absolute inset-0 bg-black/5 pointer-events-none" aria-hidden="true" />
       <div className="absolute top-2 left-2 md:top-4 md:left-4">
         <Badge variant="primary" className="border-none shadow-sm px-2 py-0.5 md:px-3 md:py-1 text-[9px] md:text-[10px]">
           {highlightText(spec.year, highlightTerms)}
