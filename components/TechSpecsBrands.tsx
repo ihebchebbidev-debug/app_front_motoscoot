@@ -30,7 +30,9 @@ import { Importer } from '../types';
 import { getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
+  // White from 768 px like the cards section: the filter bar sticks out 18 px
+  // under the orange header, and a grey page background showed there as a band.
+  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-card font-sans",
   Hero: "relative w-full flex flex-col font-sans overflow-hidden h-[calc(var(--vh,1vh)*48)] md:h-[45vh] justify-center items-start text-left",
   BgContainer: "absolute inset-0 overflow-hidden z-0",
   Overlay: "absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply",
