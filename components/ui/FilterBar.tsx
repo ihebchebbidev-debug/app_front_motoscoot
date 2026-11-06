@@ -295,7 +295,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {/* Barre de Filtres Secondaire Desktop - Alignée sur max-w-[1440px] */}
       <div className="hidden md:block">
         <div className="max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 relative z-[60]">
-          <div className="bg-card rounded-2xl md:rounded-[24px] p-2 shadow-xl border border-gray-100 flex items-center w-full -mt-10 relative z-30">
+          {/* With a sort (fiches-techniques brand page): the sort sits in the bar
+              and the search is shorter. Under 1280 px the search goes to a
+              second line, so the bar never runs off the screen (tablets). */}
+          <div className={`bg-card rounded-2xl md:rounded-[24px] p-2 shadow-xl border border-gray-100 flex items-center w-full -mt-10 relative z-30 ${hasCustomSort ? 'flex-wrap xl:flex-nowrap gap-2 xl:gap-0' : ''}`}>
               {(categories.length > 0 || categoriesVariant === 'dropdown') && (
                 <>
                   {categoriesVariant === 'dropdown' ? (
@@ -304,7 +307,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         aria-label={categoryLabel}
                         value={activeCategory}
                         onChange={(e) => onCategoryChange(e.target.value)}
-                        className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[200px]"
+                        className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[160px] xl:min-w-[200px]"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
                       >
                         <option value="Tout">{categoryLabel}</option>
@@ -331,7 +334,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       ))}
                     </div>
                   )}
-                  <div className="h-8 w-px bg-gray-100 mx-3 hidden md:block"></div>
+                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${hasCustomSort ? 'xl:block' : 'md:block'}`}></div>
                 </>
               )}
 
@@ -343,7 +346,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         aria-label={filter.label}
                         value={filter.value}
                         onChange={(e) => filter.onChange(e.target.value)}
-                        className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[140px]"
+                        className="bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none min-w-[120px] xl:min-w-[140px]"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
                       >
                         {filter.options.map(opt => {
@@ -357,11 +360,30 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       </select>
                     </div>
                   ))}
-                  <div className="h-8 w-px bg-gray-100 mx-3 hidden md:block"></div>
+                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${hasCustomSort ? 'xl:block' : 'md:block'}`}></div>
                 </div>
               )}
 
-              <div className={`relative hidden md:block ${searchWidth} ml-auto mr-2 group flex-shrink-0`}>
+              {/* Under 1280 px: filters on line 1, search + sort on line 2. */}
+              {hasCustomSort && <div className="basis-full h-0 order-10 xl:hidden" aria-hidden="true" />}
+              {hasCustomSort && (
+                <div className="flex items-center gap-2 order-12 xl:order-last pl-2 xl:pl-4 pr-1">
+                  <ArrowUpDown size={16} className="text-gray-500 shrink-0" aria-hidden="true" />
+                  <select
+                    aria-label="Trier par"
+                    value={sortValue}
+                    onChange={(e) => onSortValueChange!(e.target.value)}
+                    className="bg-gray-50 border border-transparent rounded-xl pl-3 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
+                  >
+                    {sortOptions!.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div className={hasCustomSort
+                ? 'relative group flex-1 min-w-0 xl:max-w-[360px] xl:ml-auto order-11 xl:order-none pl-1 xl:pl-0'
+                : `relative hidden md:block ${searchWidth} ml-auto mr-2 group flex-shrink-0`}>
                  <input 
                    type="text" 
                    placeholder={searchPlaceholder}
