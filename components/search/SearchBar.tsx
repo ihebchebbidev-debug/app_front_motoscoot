@@ -66,7 +66,7 @@ const Field: React.FC<FieldProps> = ({
   const display = isCombobox ? (searchValue || value) : value;
 
   return (
-    <div ref={innerRef} className={`relative max-xl:min-w-0 ${className}`}>
+    <div ref={innerRef} className={`relative min-w-0 ${className}`}>
       <div
         className={`flex items-center gap-1.5 h-12 md:h-14 px-3 max-[359px]:px-2.5 md:px-3.5 rounded-lg border transition-all ${
           isOpen
@@ -80,6 +80,7 @@ const Field: React.FC<FieldProps> = ({
           onClick={() => { if (!isDisabled) { onToggle(); onFocus?.(); } }}
           disabled={isDisabled}
           aria-label={label}
+          title={display || undefined}
           className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-[#1f2937] truncate disabled:cursor-not-allowed"
         >
           {display || <span className="text-[#1f2937] font-medium">{placeholder || label}</span>}
@@ -94,16 +95,20 @@ const Field: React.FC<FieldProps> = ({
             <X size={14} />
           </button>
         )}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); if (!isDisabled) onToggle(); }}
-          aria-label={isOpen ? `Fermer ${label}` : `Ouvrir ${label}`}
-          aria-expanded={isOpen}
-          disabled={isDisabled}
-          className="p-0.5 text-gray-400 hover:text-gray-700 disabled:cursor-not-allowed"
-        >
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
+        {/* Once a value is chosen the clear cross takes the arrow's place
+            (the field itself still opens the list): room for the value. */}
+        {!(hasValue && onClear) && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); if (!isDisabled) onToggle(); }}
+            aria-label={isOpen ? `Fermer ${label}` : `Ouvrir ${label}`}
+            aria-expanded={isOpen}
+            disabled={isDisabled}
+            className="p-0.5 text-gray-400 hover:text-gray-700 disabled:cursor-not-allowed"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
       </div>
       {/* Rendered at the page level: inside the search card (relative z-20)
           the sheet sat under the site header and the cookie banner. */}
@@ -332,14 +337,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       {/* Fields wrapper — stacked on phones; 12-column grid on tablets
           (3 rows at md, 2 rows at lg) where the one-row toolbar did not fit
           and pushed « Rechercher » out of the card; one row from xl (1280 px).
+          On that row (flex) short fields keep their natural width; the model
+          field takes the room left and is the one cut with an ellipsis when
+          a name is too long (full text in the tooltip); « Où ça ? » grows too
+          and caps at 260 px. Nothing can push « Rechercher » out of the card.
           md:contents flattens inner wrappers so each Field becomes a direct
           grid item, giving us one clean toolbar row at md+. */}
-      <div className="md:grid md:grid-cols-12 xl:grid-cols-[1.5fr_1.05fr_1.05fr_0.9fr_0.9fr_1.4fr_auto] md:gap-2.5 md:items-stretch">
+      <div className="md:grid md:grid-cols-12 md:gap-2.5 xl:flex xl:gap-2 md:items-stretch">
       {/* Que cherchez-vous ? — full-width category select */}
       <div className="mb-2 md:mb-0 md:contents">
         <Field
           innerRef={refs.type}
-          className="md:col-span-4 xl:col-span-1"
+          className="md:col-span-4 xl:flex-none"
           label="Que cherchez-vous ?"
           placeholder="Catégorie"
           value={type}
@@ -364,7 +373,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <div className="grid grid-cols-2 gap-2 mb-2 md:gap-0 md:mb-0 md:contents">
         <Field
           innerRef={refs.brand}
-          className="md:col-span-4 xl:col-span-1"
+          className="md:col-span-4 xl:flex-none xl:max-w-[176px]"
           label={type === 'Accessoires' ? 'Articles' : 'Marque'}
           placeholder={type === 'Accessoires' ? 'Articles' : 'Marque'}
           value={type === 'Accessoires' ? accessoryCategory : brand}
@@ -429,7 +438,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
 
         <Field
           innerRef={refs.model}
-          className="md:col-span-4 xl:col-span-1"
+          className="md:col-span-4 xl:flex-[1_1_auto] xl:min-w-[110px]"
           label={type === 'Accessoires' ? 'Marque' : 'Modèle'}
           placeholder={type === 'Accessoires' ? (accessoryCategory ? 'Marque' : '—') : 'Modèle'}
           value={type === 'Accessoires' ? brand : model}
@@ -482,7 +491,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <div className="grid grid-cols-2 gap-2 mb-2 md:gap-0 md:mb-0 md:contents">
         <Field
           innerRef={refs.price}
-          className="md:col-span-4 lg:col-span-3 xl:col-span-1"
+          className="md:col-span-4 lg:col-span-3 xl:flex-none"
           label="Prix max"
           placeholder="Prix max"
           value={maxPrice ? `${Number(maxPrice).toLocaleString('fr-FR')} TND` : ''}
@@ -503,7 +512,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
         </Field>
         <Field
           innerRef={refs.year}
-          className="md:col-span-3 lg:col-span-2 xl:col-span-1"
+          className="md:col-span-3 lg:col-span-2 xl:flex-none"
           label="Année min."
           placeholder="Année"
           value={minYear}
@@ -527,7 +536,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       {/* Où ça ? — full width */}
       <Field
         innerRef={refs.location}
-        className="md:col-span-5 lg:col-span-4 xl:col-span-1"
+        className="md:col-span-5 lg:col-span-4 xl:flex-[1_0_auto] xl:max-w-[260px]"
         label="Où ça ?"
         placeholder="Où ça ? (Ville, région...)"
         value={location}
@@ -561,7 +570,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
       <button
         type="button"
         onClick={handleSearchClick}
-        className="w-full mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:col-span-1 md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
+        className="w-full xl:w-auto mt-3 md:mt-0 md:col-span-12 lg:col-span-3 xl:flex-none md:h-14 md:py-0 md:px-7 md:rounded-lg md:whitespace-nowrap bg-[#1f2937] hover:bg-[#111827] active:scale-[0.98] text-white font-bold py-4 rounded-lg transition-all text-[14px] uppercase tracking-wider flex items-center justify-center gap-2"
       >
         <Search size={16} strokeWidth={2.5} />
         {/* Full-width button (phones, tablets): room for the result count. */}
