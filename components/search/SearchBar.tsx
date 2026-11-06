@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { ChoiceSheet } from './ChoiceSheet';
 import { ChevronDown, Navigation, X, Search } from 'lucide-react';
 import {
   useBrands,
@@ -51,17 +51,6 @@ const Field: React.FC<FieldProps> = ({
   searchValue = '', onSearchChange, onFocus, isDisabled, icon: Icon,
   innerRef, className = '', children,
 }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onToggle(); };
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [isOpen, onToggle]);
-
   const hasValue = !!value || (isCombobox && !!searchValue);
   const display = isCombobox ? (searchValue || value) : value;
 
@@ -110,55 +99,16 @@ const Field: React.FC<FieldProps> = ({
           </button>
         )}
       </div>
-      {/* Rendered at the page level: inside the search card (relative z-20)
-          the sheet sat under the site header and the cookie banner. */}
-      {isOpen && !isDisabled && createPortal(
-        <div
-          data-searchbar-sheet=""
-          className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
-          onClick={onToggle}
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-        >
-          <div
-            className="bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col shadow-2xl animate-fade-in-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">{label}</h3>
-              <button
-                type="button"
-                onClick={onToggle}
-                aria-label="Fermer"
-                className="p-1.5 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {/* Optional search input for comboboxes */}
-            {isCombobox && (
-              <div className="px-5 pt-3 pb-2 border-b border-gray-100">
-                <input
-                  type="text"
-                  placeholder={`Rechercher ${label.toLowerCase()}…`}
-                  value={searchValue}
-                  autoFocus
-                  autoComplete="off"
-                  onChange={(e) => onSearchChange?.(e.target.value)}
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 text-[16px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
-                />
-              </div>
-            )}
-            {/* Options */}
-            <div role="listbox" className="flex-1 overflow-y-auto py-2">
-              {children}
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+      {/* Rendered at the page level (portal): inside the search card
+          (relative z-20) the list sat under the header and the cookie banner. */}
+      <ChoiceSheet
+        open={isOpen && !isDisabled}
+        label={label}
+        onClose={onToggle}
+        search={isCombobox ? { value: searchValue, placeholder: `Rechercher ${label.toLowerCase()}…`, onChange: (v) => onSearchChange?.(v) } : undefined}
+      >
+        {children}
+      </ChoiceSheet>
     </div>
   );
 };
