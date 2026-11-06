@@ -190,7 +190,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           searchQuery={modelSearch}
           onSearchChange={setModelSearch}
           showSort={false}
-          searchPlaceholder={`Rechercher ${brandName} (modèle, CC, puissance, catégorie…)`}
+          searchPlaceholder="Rechercher un modèle…"
           extraFilters={extraFilters}
           categoriesVariant={showTypes ? 'dropdown' : 'list'}
           categoryLabel="Type de moto"
@@ -219,7 +219,8 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           </div>
         ) : filteredModels.length > 0 ? (
           <>
-          {/* Count + sort (the phone sort is the button in the filter bar). */}
+          {/* Count (+ reset). The sort lives in the filter bar: a button on
+              phones, a menu in the bar from 768 px. */}
           <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
             <p className="flex items-center gap-3 text-[14px] font-medium text-gray-600 tabular-nums" aria-live="polite">
               {filteredModels.length === brandModels.length
@@ -231,19 +232,6 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
                 </button>
               )}
             </p>
-            {showFilters && (
-            <label className="hidden md:flex items-center gap-2 text-[14px] font-medium text-gray-600">
-              Trier par
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as TechSpecSort)}
-                className="h-10 pl-3 pr-9 rounded-xl border border-gray-200 bg-card text-[14px] font-semibold text-gray-900 cursor-pointer appearance-none outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
-              >
-                {TECH_SPEC_SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </label>
-            )}
           </div>
           <div className={S.Grid}>
               {sortedModels.map((spec, idx) => (

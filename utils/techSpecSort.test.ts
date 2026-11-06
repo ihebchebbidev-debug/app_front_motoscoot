@@ -65,3 +65,14 @@ test('the phone sort button exists only when something can be sorted', () => {
   assert.match(page, /sortTechSpecs\(filteredModels, sort\)/);
   assert.doesNotMatch(page, /import \{\s*\} from 'react-router-dom'/);
 });
+
+test('tablet and desktop: the sort sits in the filter bar, the search is shorter, nothing runs off the screen', () => {
+  const bar = readFileSync(new URL('../components/ui/FilterBar.tsx', import.meta.url), 'utf8');
+  assert.match(bar, /<select\s+aria-label="Trier par"\s+value=\{sortValue\}/);
+  // ≥ 1280 px one line, search capped at 360 px; below, line 2 = search + sort.
+  assert.match(bar, /flex-1 min-w-0 xl:max-w-\[360px\] xl:ml-auto order-11 xl:order-none/);
+  assert.match(bar, /basis-full h-0 order-10 xl:hidden/);
+  assert.match(bar, /flex-wrap xl:flex-nowrap/);
+  const page = readFileSync(new URL('../components/TechSpecsModels.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(page, /Trier par/); // no second sort above the cards
+});
