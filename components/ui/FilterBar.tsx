@@ -77,6 +77,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // used to show « Plus récentes » on every page, sorting nothing.
   const hasCustomSort = !!(sortOptions?.length && onSortValueChange);
   const hasSort = hasCustomSort || (showSort && !!onSortChange);
+  // Nothing to filter or sort, only a search (fiches-techniques brands list):
+  // the phone shows the search field itself, not a « Filtres » button that
+  // opened a « Trier et Filtrer » panel holding just that field.
+  const onlySearch = categories.length === 0 && extraFilters.length === 0 && !hasSort;
   const sortLabel = hasCustomSort
     ? sortOptions!.find((o) => o.value === sortValue)?.label ?? sortOptions![0].label
     : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
@@ -107,6 +111,30 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           input lives inside the modal so the row stays clean and matches
           the rest of the app. */}
       <div className="md:hidden flex flex-col w-full px-6 mt-1 mb-4 relative z-40">
+        {onlySearch ? (
+          <div className="relative" role="search">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-[18px] h-[18px] pointer-events-none" aria-hidden="true" />
+            <input
+              type="search"
+              enterKeyHint="search"
+              aria-label={searchPlaceholder}
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full h-12 pl-11 pr-12 bg-card border border-gray-200 rounded-2xl shadow-sm text-[16px] font-medium text-gray-900 placeholder:text-gray-500 outline-none focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-900/10 transition-colors [&::-webkit-search-cancel-button]:appearance-none"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                aria-label="Effacer la recherche"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-gray-500 active:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="flex gap-2">
           {hasSort && (
             <button
@@ -136,6 +164,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             )}
           </button>
         </div>
+        )}
       </div>
       <div className="md:hidden">
         {/* Sort panel (phones): one tap chooses and closes. */}
