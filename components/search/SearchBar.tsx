@@ -38,6 +38,8 @@ interface FieldProps {
   onSearchChange?: (v: string) => void;
   onFocus?: () => void;
   isDisabled?: boolean;
+  /** Why the field is inactive (tooltip and screen readers). */
+  disabledHint?: string;
   fullWidth?: boolean;
   icon?: React.ElementType;
   innerRef?: React.Ref<HTMLDivElement>;
@@ -48,7 +50,7 @@ interface FieldProps {
 
 const Field: React.FC<FieldProps> = ({
   label, value, placeholder, isOpen, onToggle, onClear, isCombobox,
-  searchValue = '', onSearchChange, onFocus, isDisabled, icon: Icon,
+  searchValue = '', onSearchChange, onFocus, isDisabled, disabledHint, icon: Icon,
   innerRef, className = '', children,
 }) => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -59,11 +61,13 @@ const Field: React.FC<FieldProps> = ({
     <div ref={innerRef} className={`relative min-w-0 ${className}`}>
       <div
         ref={boxRef}
+        // A disabled button shows no tooltip: the frame carries the hint.
+        title={isDisabled ? disabledHint : undefined}
         className={`flex items-center gap-1.5 h-12 md:h-14 px-3 max-[359px]:px-2.5 md:px-3.5 rounded-lg border transition-all ${
           isOpen
             ? 'border-primary-600 ring-2 ring-primary-600/15 md:shadow-sm'
             : 'border-gray-300 md:hover:border-gray-400'
-        } ${isDisabled ? 'opacity-50 bg-gray-50' : 'bg-card'} has-[button:focus-visible]:outline has-[button:focus-visible]:outline-2 has-[button:focus-visible]:outline-offset-2 has-[button:focus-visible]:outline-gray-900`}
+        } ${isDisabled ? 'opacity-50 bg-gray-50 cursor-not-allowed' : 'bg-card'} has-[button:focus-visible]:outline has-[button:focus-visible]:outline-2 has-[button:focus-visible]:outline-offset-2 has-[button:focus-visible]:outline-gray-900`}
       >
         {Icon && <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />}
         <button
@@ -71,8 +75,9 @@ const Field: React.FC<FieldProps> = ({
           onClick={() => { if (!isDisabled) { onToggle(); onFocus?.(); } }}
           disabled={isDisabled}
           aria-label={label}
-          title={display || undefined}
-          className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-gray-900 truncate disabled:cursor-not-allowed focus:outline-none"
+          aria-description={isDisabled ? disabledHint : undefined}
+          title={isDisabled ? undefined : display || undefined}
+          className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-gray-900 truncate disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none"
         >
           {display || <span className="text-gray-500 font-normal">{placeholder || label}</span>}
         </button>
@@ -95,7 +100,7 @@ const Field: React.FC<FieldProps> = ({
             aria-label={isOpen ? `Fermer ${label}` : `Ouvrir ${label}`}
             aria-expanded={isOpen}
             disabled={isDisabled}
-            className="p-0.5 text-gray-500 hover:text-gray-900 disabled:cursor-not-allowed"
+            className="p-0.5 text-gray-500 hover:text-gray-900 disabled:pointer-events-none"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -214,7 +219,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
   const activeBrandCategory = type && type !== 'Accessoires' ? type : undefined;
   const activeAccessoryType = type === 'Accessoires' && accessoryCategory ? accessoryCategory : undefined;
   const { data: brandsData = [] } = useBrands(activeBrandCategory, activeAccessoryType);
-  const { names: modelNames } = useModelsByBrand(brand || undefined, activeAccessoryType);
+  // Models are asked for a chosen brand only: without one, « Modèle » is
+  // inactive (it used to list the whole catalogue, 138 models of every brand
+  // and category, nearly none with a listing).
+  const { names: modelNames } = useModelsByBrand(brand || undefined, activeAccessoryType, !!brand || !!activeAccessoryType);
   const { data: cityRows = [], names: cityNames } = useCityNames();
   const { data: accessoryTypesData = [] } = useAccessoryTypes();
   const { data: vehicleCategories = [] } = useVehicleCategoriesRich();
@@ -399,7 +407,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
           isOpen={openMenu === 'model'}
           onToggle={() => setOpenMenu(openMenu === 'model' ? null : 'model')}
           isCombobox
-          isDisabled={type === 'Accessoires' ? !accessoryCategory : false}
+          // Needs a brand first (accessories: an article first).
+          isDisabled={type === 'Accessoires' ? !accessoryCategory : !brand}
+          disabledHint={type === 'Accessoires' ? 'Choisissez d’abord un article' : 'Choisissez d’abord une marque'}
           searchValue={type === 'Accessoires' ? brandSearch : modelSearch}
           onSearchChange={(v) => {
             if (type === 'Accessoires') { setBrandSearch(v); setOpenMenu('model'); }
@@ -430,7 +440,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
             if (!matches.length) {
               return (
                 <div className="px-4 py-3 text-[14px] text-gray-600">
-                  {brand ? `Aucun modèle disponible pour ${brand}` : 'Choisissez d’abord une marque'}
+                  {`Aucun modèle disponible pour ${brand}`}
                 </div>
               );
             }

@@ -33,10 +33,13 @@ export const useBrands = (category?: string, accessoryType?: string) =>
     ...CACHE,
   });
 
-export const useModels = (brand?: string, accessoryType?: string) =>
+/** `enabled: false` skips the request (e.g. no brand chosen yet: the whole
+ *  catalogue — 138 models — is not worth downloading). */
+export const useModels = (brand?: string, accessoryType?: string, enabled = true) =>
   useQuery<ModelRef[]>({
     queryKey: ['reference', 'models', brand || 'all', accessoryType || 'any'],
     queryFn: ({ signal }) => referenceApi.getModels(brand, signal, accessoryType),
+    enabled,
     ...CACHE,
   });
 
@@ -139,8 +142,8 @@ export const useConditions = () =>
 
 /** Returns the model names for a given brand (server-side filtered).
  *  `accessoryType` further narrows to models tagged with that type. */
-export const useModelsByBrand = (brand?: string, accessoryType?: string) => {
-  const { data: models = [], ...rest } = useModels(brand, accessoryType);
+export const useModelsByBrand = (brand?: string, accessoryType?: string, enabled = true) => {
+  const { data: models = [], ...rest } = useModels(brand, accessoryType, enabled);
   const names = useMemo(() => models.map((m) => m.name), [models]);
   return { ...rest, data: models, names };
 };

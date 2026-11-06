@@ -27,7 +27,7 @@ test('tablet spans: 4/4/4, then 4/3/5 + full-width button (md), 3/2/4/3 (lg)', (
 });
 
 test('a long chosen value is cut with an ellipsis (full text in the tooltip), never widening the row', () => {
-  assert.match(src, /title=\{display \|\| undefined\}/);
+  assert.match(src, /title=\{isDisabled \? undefined : display \|\| undefined\}/);
   assert.match(src, /className=\{`relative min-w-0 \$\{className\}`\}/);
   // The clear cross replaces the arrow once a value is chosen.
   assert.match(src, /\{!\(hasValue && onClear\) && \(\s*<button/);
