@@ -288,6 +288,23 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     intro:
       "Nous utilisons des cookies pour améliorer votre expérience. Détail des cookies déposés et de la manière dont vous pouvez gérer vos préférences.",
   },
+  {
+    // vercel.json serves /plan-du-site from /plan-du-site/index.html: without
+    // this entry the file was never built and the page answered 404.
+    path: '/plan-du-site',
+    title: "Plan du site | Moto-Scoot.tn",
+    description:
+      "Plan du site moto-scoot.tn : annonces de motos et scooters, dépôt d'annonce, garages, actualités, conseils, fiches techniques et pages d'information.",
+    h1: "Plan du site",
+    intro:
+      "Toutes les rubriques de moto-scoot.tn : le marché (annonces, vendre), les services (garages, contact), l'information (actualités, conseils, fiches techniques) et votre espace.",
+    schemas: [
+      breadcrumb([
+        { name: 'Accueil', path: '/' },
+        { name: 'Plan du site', path: '/plan-du-site' },
+      ]),
+    ],
+  },
 ];
 
 export const DEFAULT_OG = DEFAULT_OG_IMAGE;
