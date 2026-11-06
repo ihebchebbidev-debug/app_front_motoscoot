@@ -52,7 +52,7 @@ const S = {
   Card: "group relative flex flex-col items-center justify-center w-full max-w-[211px] h-[155px] mx-auto bg-transparent cursor-pointer gap-3 rounded-2xl transition-[transform,background-color] duration-100 ease-out active:scale-[0.97] active:bg-gray-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900",
   LogoWrapper: "flex items-center justify-center w-[115px] h-[115px] transition-transform duration-300 [@media(hover:hover)]:group-hover:scale-105 shrink-0",
   LogoImage: "max-w-full max-h-full object-contain",
-  BrandName: "text-[13px] font-black text-slate-900 uppercase tracking-wider [@media(hover:hover)]:group-hover:text-orange-600 transition-colors text-center w-full truncate px-2",
+  BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full truncate px-2",
   
   // Filter Styles
   FilterGroup: "flex-1 flex items-center gap-2 px-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors group relative border-none appearance-none cursor-pointer font-bold text-slate-900 text-sm md:text-base outline-none",
@@ -311,10 +311,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
       {deferredBrandSearch.trim().length >= 2 && (
         <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-10 md:pt-14 pb-0">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg md:text-xl font-[900] text-slate-900 uppercase tracking-tighter">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
               Modèles correspondants
             </h2>
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+            <span className="shrink-0 text-sm font-medium text-gray-600 tabular-nums">
               {searchingSpecs ? '…' : `${matchingSpecs.length} fiche${matchingSpecs.length > 1 ? 's' : ''}`}
             </span>
           </div>
@@ -336,14 +336,14 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                       decoding="async"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-black text-slate-900 truncate group-hover:text-primary-600 transition-colors">
+                      <p className="text-[0.9375rem] leading-5 font-semibold text-gray-900 truncate [@media(hover:hover)]:group-hover:text-primary-700 transition-colors">
                         {highlightText(`${spec.brand} ${spec.model}`, highlightTerms)}
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate">
+                      <p className="text-[0.8125rem] leading-5 text-gray-600 truncate">
                         {highlightText(spec.year, highlightTerms)} · {highlightText(spec.engine?.cc || '—', highlightTerms)} · {highlightText(spec.engine?.power || '—', highlightTerms)}
                       </p>
                       {spec.category && (
-                        <Badge variant="primary" className="mt-1 text-[9px] px-1.5 py-0">
+                        <Badge variant="primary" className="mt-1 text-[0.6875rem] px-1.5 py-0 !font-semibold !normal-case !tracking-normal">
                           {highlightText(spec.category, highlightTerms)}
                         </Badge>
                       )}
@@ -354,10 +354,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
               ))}
             </div>
           ) : !searchingSpecs ? (
-            <p className="text-sm text-slate-400 italic">Aucun modèle ne correspond à « {deferredBrandSearch} ».</p>
+            <p className="text-sm text-gray-600">Aucun modèle ne correspond à « {deferredBrandSearch} ».</p>
           ) : null}
           {matchingSpecs.length > 12 && (
-            <p className="text-xs text-slate-500 mt-3 text-center">
+            <p className="text-[0.8125rem] text-gray-600 mt-3 text-center">
               Affichage des 12 premiers résultats — affinez votre recherche pour voir le reste.
             </p>
           )}
@@ -382,8 +382,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         {!brandSearch && (
             <div className="mb-24">
               <div className="flex items-center justify-between mb-10">
-                <h2 className="text-2xl font-[900] text-slate-900 uppercase tracking-tighter">
-                  {availableInTunisia ? 'Marques Populaires Tunisie' : 'Marques Populaires'}
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
+                  {availableInTunisia ? 'Marques populaires en Tunisie' : 'Marques populaires'}
                 </h2>
                 <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
               </div>
@@ -410,10 +410,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
 
           {/* ALL BRANDS GRID */}
           <div className="flex items-center justify-between mb-10">
-            <h2 className="text-2xl font-[900] text-slate-900 uppercase tracking-tighter">
-              {brandSearch ? `Résultats pour "${brandSearch}"` : availableInTunisia ? "Toutes les marques Tunisie" : "Toutes les marques"}
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
+              {brandSearch ? `Résultats pour « ${brandSearch} »` : availableInTunisia ? "Toutes les marques en Tunisie" : "Toutes les marques"}
             </h2>
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">{filteredBrands.length} Marques</span>
+            <span className="shrink-0 text-sm font-medium text-gray-600 tabular-nums">{filteredBrands.length} marque{filteredBrands.length > 1 ? 's' : ''}</span>
           </div>
 
           {isLoading ? (
