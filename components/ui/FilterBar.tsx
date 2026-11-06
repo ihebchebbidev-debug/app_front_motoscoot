@@ -23,6 +23,11 @@ export interface FilterBarProps {
   categoriesVariant?: 'list' | 'dropdown';
   categoryLabel?: string;
   searchWidth?: string;
+  /** A real sort with any options (e.g. price, cylinder). When given, the
+   *  phone sort button opens a sort panel with these options. */
+  sortOptions?: { value: string; label: string }[];
+  sortValue?: string;
+  onSortValueChange?: (value: string) => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -38,15 +43,34 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   extraFilters = [],
   categoriesVariant = 'list',
   categoryLabel = "Toutes les catégories",
-  searchWidth = "w-64"
+  searchWidth = "w-64",
+  sortOptions,
+  sortValue,
+  onSortValueChange,
 }) => {
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const [isSortSheetOpen, setIsSortSheetOpen] = useState(false);
+
+  // The phone sort button only exists when there is something to sort: it
+  // used to show « Plus récentes » on every page, sorting nothing.
+  const hasCustomSort = !!(sortOptions?.length && onSortValueChange);
+  const hasSort = hasCustomSort || (showSort && !!onSortChange);
+  const sortLabel = hasCustomSort
+    ? sortOptions!.find((o) => o.value === sortValue)?.label ?? sortOptions![0].label
+    : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
 
   useEffect(() => {
-    if (isSortMenuOpen) document.body.style.overflow = 'hidden';
+    if (isSortMenuOpen || isSortSheetOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isSortMenuOpen]);
+  }, [isSortMenuOpen, isSortSheetOpen]);
+
+  useEffect(() => {
+    if (!isSortSheetOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsSortSheetOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isSortSheetOpen]);
 
   const handleCategoryChange = (cat: string) => {
     onCategoryChange(cat);
@@ -61,20 +85,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           the rest of the app. */}
       <div className="md:hidden flex flex-col w-full px-6 mt-1 mb-4 relative z-40">
         <div className="flex gap-2">
+          {hasSort && (
+            <button
+              onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
+              className="flex-1 min-w-0 flex items-center justify-between gap-2 h-12 px-4 bg-card border border-gray-100 rounded-2xl shadow-sm active:scale-[0.98] transition-all font-bold text-[15px] text-gray-900"
+              aria-label={`Trier : ${sortLabel}`}
+              aria-haspopup="dialog"
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <ArrowUpDown size={16} className="text-gray-700 shrink-0" />
+                <span className="truncate">{sortLabel}</span>
+              </span>
+              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+            </button>
+          )}
           <button
             onClick={() => setIsSortMenuOpen(true)}
-            className="flex-1 min-w-0 flex items-center justify-between gap-2 h-12 px-4 bg-card border border-gray-100 rounded-2xl shadow-sm active:scale-[0.98] transition-all font-bold text-[15px] text-gray-900"
-            aria-label="Trier"
-          >
-            <span className="flex items-center gap-2 min-w-0">
-              <ArrowUpDown size={16} className="text-gray-700 shrink-0" />
-              <span className="truncate">{sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes'}</span>
-            </span>
-            <ChevronDown size={16} className="text-gray-400 shrink-0" />
-          </button>
-          <button
-            onClick={() => setIsSortMenuOpen(true)}
-            className="shrink-0 flex items-center justify-center gap-2 h-12 px-6 bg-gray-900 text-white rounded-2xl shadow-md active:scale-[0.98] transition-all font-bold text-[15px]"
+            className={`${hasSort ? 'shrink-0' : 'flex-1'} flex items-center justify-center gap-2 h-12 px-6 bg-gray-900 text-white rounded-2xl shadow-md active:scale-[0.98] transition-all font-bold text-[15px]`}
             aria-label="Filtres"
           >
             <SlidersHorizontal size={18} />
@@ -83,6 +110,51 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
       <div className="md:hidden">
+        {/* Sort panel (phones): one tap chooses and closes. */}
+        {isSortSheetOpen && hasCustomSort && (
+          <div
+            className="fixed inset-0 z-[150] flex items-end justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setIsSortSheetOpen(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Trier"
+              className="w-full bg-card rounded-t-[32px] px-6 pt-6 pb-10 shadow-2xl animate-fade-in-up border-t border-gray-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Trier par</h3>
+                <button
+                  onClick={() => setIsSortSheetOpen(false)}
+                  aria-label="Fermer"
+                  className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {sortOptions!.map((opt) => {
+                  const active = opt.value === sortValue;
+                  return (
+                    <li key={opt.value}>
+                      <button
+                        autoFocus={active}
+                        aria-pressed={active}
+                        onClick={() => { onSortValueChange!(opt.value); setIsSortSheetOpen(false); }}
+                        className={`w-full min-h-12 flex items-center justify-between gap-3 py-3 text-left text-[16px] ${active ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
+                      >
+                        {opt.label}
+                        {active && <Check size={18} className="text-primary-700 shrink-0" aria-hidden="true" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* Hidden search input retained inside modal via categories/sort UI below. */}
 
         {isSortMenuOpen && (
