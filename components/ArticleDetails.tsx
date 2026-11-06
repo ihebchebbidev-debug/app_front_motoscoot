@@ -174,7 +174,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         />
       </div>
 
-      <div className="pt-4 md:pt-8">
+      <div className="pt-0 md:pt-8">
         {/* Header Section */}
         <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-10">
             <Reveal animation="fade-in-up">
@@ -184,6 +184,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                   { label: 'Actualités', href: '/actualites', onClick: () => onNavigate?.('news') },
                 ]}
                 current={article.title}
+                className="mb-3 md:mb-8"
               />
 
               {/* Titre Mobile */}

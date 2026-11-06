@@ -27,7 +27,7 @@ const ITEMS_PER_PAGE = 12;
 const S = {
   Page: "min-h-screen bg-muted font-sans pb-20",
   Container: "max-w-[1360px] mx-auto px-6 md:px-16 lg:px-24 w-full",
-  Header: "flex flex-col md:flex-row md:items-end justify-between pt-4 pb-10 md:pt-6 md:pb-12 gap-6",
+  Header: "flex flex-col md:flex-row md:items-end justify-between pt-0 pb-10 md:pt-6 md:pb-12 gap-6",
   Title: "text-[30px] md:text-[46px] font-bold text-gray-700 tracking-tighter mb-0 leading-[1.1] md:leading-tight",
   Count: "text-primary-600 text-[18px] font-semibold leading-normal tracking-normal font-sans",
   MainLayout: "flex flex-col lg:flex-row gap-10 items-start",
@@ -266,7 +266,7 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
         <header className={S.Header}>
           <div className="flex flex-col w-full">
             {/* Phones: « ← Accueil » first, right under the header, before the title. */}
-            <PageBreadcrumb className="md:hidden mb-1" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Annonces" />
+            <PageBreadcrumb className="md:hidden mb-3" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Annonces" />
             <h1 className={S.Title}>{seoInfo.displayTitle}</h1>
             <p className={S.Count}>{isLoading ? 'Chargement...' : `${totalResults} annonces disponibles`}</p>
 

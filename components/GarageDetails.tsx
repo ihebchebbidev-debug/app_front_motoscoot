@@ -197,9 +197,9 @@ const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTrig
         } : undefined}
       />
       
-      <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-6">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-0 md:pt-6">
         {/* Navigation Header */}
-        <header className="flex items-center justify-between mb-4 md:mb-6">
+        <header className="flex items-center justify-between mb-3 md:mb-6">
            <PageBreadcrumb
              parents={[
                { label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') },

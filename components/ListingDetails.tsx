@@ -52,7 +52,7 @@ const listingSeoInput = (l: Listing) => ({ brand: l.brand, model: l.model, year:
 const S = {
   Wrapper: "min-h-screen bg-muted font-sans pb-32 md:pb-20",
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-4",
-  Header: "flex items-center justify-between mb-4 md:mb-6",
+  Header: "flex items-center justify-between mb-3 md:mb-6",
   
   MainGrid: "grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10",
   ContentCol: "md:col-span-7 xl:col-span-8 space-y-6",
