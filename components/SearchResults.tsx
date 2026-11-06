@@ -271,7 +271,7 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
             <p className={S.Count}>{isLoading ? 'Chargement...' : `${totalResults} annonces disponibles`}</p>
 
             <div className="mt-6 md:mt-9">
-              <PageBreadcrumb className="hidden md:block" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Annonces" />
+              <PageBreadcrumb className="hidden md:flex" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Annonces" />
 
               <div className={S.MobileActions}>
                 <div className="w-full">
