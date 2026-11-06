@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  Star, 
-  ShieldCheck, 
+import {
+  MapPin,
+  Phone,
+  Star,
+  ShieldCheck,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -14,9 +14,7 @@ import {
   Map,
   ThumbsUp,
   MoreVertical,
-  User,
-  ArrowLeft,
-  Home
+  User
 } from 'lucide-react';
 import { useGarage, useGarageReviews, useSubmitGarageReview } from '../hooks/useGarages';
 import { useReplyToGarageReview } from '../hooks/useAdmin';
@@ -31,6 +29,7 @@ import { useNativeShare } from '../hooks/useNativeShare';
 import { ReviewModal } from './ReviewModal';
 import { Button } from './ui/Button';
 import { publishedReviewAverage, verifiedReviewMarkup } from '../utils/reviewUtils';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTriggerLogin }) => {
   const { data: fetchedGarage, isLoading: garageLoading, error: garageError, refetch: reloadGarage } = useGarage(garageId);
@@ -201,20 +200,13 @@ const GarageDetails: React.FC<any> = ({ garageId, onNavigate, isLoggedIn, onTrig
       <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-6">
         {/* Navigation Header */}
         <header className="flex items-center justify-between mb-4 md:mb-6">
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={() => onNavigate?.('garages')} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-              <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                 <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('home')}>
-                   <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('garages')}>Garages</span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="hover:text-primary-600 cursor-pointer">Tunisie</span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">{garage.name}</span>
-              </nav>
-           </div>
+           <PageBreadcrumb
+             parents={[
+               { label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') },
+               { label: 'Garages', href: '/garages', onClick: () => onNavigate?.('garages') },
+             ]}
+             current={garage.name}
+           />
         </header>
 
         {/* Header */}

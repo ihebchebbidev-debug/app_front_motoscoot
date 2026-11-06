@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  Share2, 
-  Facebook, 
+import {
+  Calendar,
+  Clock,
+  Share2,
+  Facebook,
   Linkedin,
   Tag,
-  ChevronRight,
   ArrowRight,
   ThumbsUp,
   MessageSquare,
@@ -17,8 +15,7 @@ import {
   TrendingUp,
   User,
   UserCircle,
-  X,
-  Home
+  X
 } from 'lucide-react';
 import { sanitizeRichHtml } from './admin/RichTextEditor';
 import Header from './layout/Header';
@@ -33,6 +30,7 @@ import { Reveal } from './ui/Reveal';
 import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, shareTo, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -180,24 +178,13 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         {/* Header Section */}
         <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-10">
             <Reveal animation="fade-in-up">
-              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-                <button 
-                  onClick={onBack} 
-                  className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" 
-                  aria-label="Retour"
-                >
-                  <ArrowLeft size={16} className="md:w-5 md:h-5"/>
-                </button>
-                <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                  <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('home')}>
-                    <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                  </span>
-                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                  <span className="hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('news')}>Mag'</span>
-                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                  <span className="text-gray-900 font-extrabold truncate max-w-[150px] md:max-w-none">{article.title}</span>
-                </nav>
-              </div>
+              <PageBreadcrumb
+                parents={[
+                  { label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') },
+                  { label: 'Actualités', href: '/actualites', onClick: () => onNavigate?.('news') },
+                ]}
+                current={article.title}
+              />
 
               {/* Titre Mobile */}
               <div className="md:hidden text-[30px] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-6">

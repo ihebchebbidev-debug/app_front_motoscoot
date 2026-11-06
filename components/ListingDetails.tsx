@@ -1,7 +1,19 @@
 import { displayPhone } from '../utils/phoneUtils';
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  Heart, Share2, Phone, FileText, ArrowLeft, ChevronRight, ShieldCheck, AlertCircle, Home, Clock, Cog, AlertTriangle, X, CheckCircle2, ShieldAlert
+import {
+  Heart,
+  Share2,
+  Phone,
+  FileText,
+  ShieldCheck,
+  AlertCircle,
+  Home,
+  Clock,
+  Cog,
+  AlertTriangle,
+  X,
+  CheckCircle2,
+  ShieldAlert
 } from 'lucide-react';
 import { Badge } from './ui/Badge';
 import { BasePageProps, Listing } from '../types';
@@ -33,6 +45,7 @@ import { tokenStorage } from '../services/apiClient';
 import { trackRecentlyViewed } from '../utils/recentSearches';
 import { tracker } from '../services/trackingService';
 import { listingTitle, listingDescription } from '../utils/listingSeo';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 const listingSeoInput = (l: Listing) => ({ brand: l.brand, model: l.model, year: l.year, city: l.location, price: l.price, mileage: l.mileage, cc: l.cc, condition: l.condition, type: l.type });
 
@@ -40,8 +53,6 @@ const S = {
   Wrapper: "min-h-screen bg-muted font-sans pb-32 md:pb-20",
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-4",
   Header: "flex items-center justify-between mb-4 md:mb-6",
-  Breadcrumb: "flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400",
-  BackBtn: "p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95",
   
   MainGrid: "grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10",
   ContentCol: "md:col-span-7 xl:col-span-8 space-y-6",
@@ -265,18 +276,15 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
       <div className={S.Container}>
         {/* Navigation Header */}
         <header className={S.Header}>
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={goBack} className={S.BackBtn} aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-              <nav className={S.Breadcrumb}>
-                 <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={() => navigateTo('home')}>
-                   <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="hover:text-primary-600 cursor-pointer" onClick={() => navigateTo('search')}>Annonces</span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">{isLoading ? '...' : listing?.brand}</span>
-              </nav>
-           </div>
+           <PageBreadcrumb
+             parents={[
+               { label: 'Accueil', href: '/', onClick: () => navigateTo('home') },
+               { label: 'Annonces', href: '/annonces', onClick: () => navigateTo('search') },
+             ]}
+             current={isLoading ? '…' : listing?.title || [listing?.brand, listing?.model].filter(Boolean).join(' ')}
+             // « ← Annonces » goes back to the search the visitor came from (filters, page).
+             back={{ label: 'Annonces', href: '/annonces', onClick: goBack }}
+           />
         </header>
 
         {isLoading ? (

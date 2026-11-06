@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect, memo, useDeferredValue } from 'react';
-import { 
-  Layers, 
-  ArrowRight, 
-  Zap, 
-  Gauge, 
+import {
+  Layers,
+  ArrowRight,
+  Zap,
+  Gauge,
   ChevronDown,
-  ArrowLeft,
   Search,
   Filter,
   Activity
@@ -24,7 +23,7 @@ import { FilterBar, FilterOption } from './ui/FilterBar';
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
-import { Link } from 'react-router-dom';
+import {  } from 'react-router-dom';
 import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
 
 const S = {
@@ -210,7 +209,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         titleOnMobile
         subtitle={`Retrouvez la fiche technique de toute la gamme ${brandName}.`}
         onBack={() => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined })}
-        backText="Retour au catalogue"
+        breadcrumbParents={[{ label: 'Fiches techniques', href: '/fiches-techniques', onClick: () => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined }) }]}
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent={brandName}
       />

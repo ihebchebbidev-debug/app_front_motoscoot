@@ -1,20 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { 
-  Home, 
-  ChevronRight, 
-  Search, 
-  HelpCircle, 
-  ShoppingBag, 
-  ShieldCheck, 
+import {
+  Search,
+  HelpCircle,
+  ShoppingBag,
+  ShieldCheck,
   Wrench,
   Zap,
   MessageCircle,
-  Plus,
-  ArrowLeft
+  Plus
 } from 'lucide-react';
 import { useFaq } from '../hooks/useFaq';
 import { Skeleton } from './ui/Skeleton';
 import SEO from './common/SEO';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 interface FAQProps {
   onGoHome?: () => void;
@@ -103,16 +101,12 @@ const FAQ: React.FC<FAQProps> = ({ onGoHome, onNavigate }) => {
       <div className="max-w-7xl mx-auto px-6 md:px-20 lg:px-32 py-8 md:py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <header className="flex items-center justify-between">
-             <div className="flex items-center gap-3 md:gap-4">
-                <button onClick={onGoHome} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-                <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                   <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={onGoHome}>
-                     <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                   </span>
-                   <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                   <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">FAQ</span>
-                </nav>
-             </div>
+             <PageBreadcrumb
+               parents={[
+                 { label: 'Accueil', href: '/', onClick: onGoHome },
+               ]}
+               current={'FAQ'}
+             />
           </header>
           <div className="relative w-full md:w-80">
              <input type="text" placeholder="Chercher une réponse..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-card text-sm outline-none" />

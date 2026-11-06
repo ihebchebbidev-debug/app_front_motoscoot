@@ -168,7 +168,7 @@ const Scooter125Prices: React.FC<BasePageProps> = ({ onNavigate }) => {
         titleOnMobile
         subtitle="Prix du neuf, puissance et poids des scooters 125 vendus en Tunisie, comparés modèle par modèle."
         onBack={() => onNavigate?.('tech-specs-brands')}
-        backText="Retour au catalogue"
+        breadcrumbParents={[{ label: 'Fiches techniques', href: '/fiches-techniques', onClick: () => onNavigate?.('tech-specs-brands') }]}
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent={SCOOTER_125_BREADCRUMB}
       />
