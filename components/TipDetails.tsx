@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, Calendar, ThumbsUp, ThumbsDown, CheckCircle2, Wrench, Lightbulb, Share2, AlertTriangle, Home, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, ThumbsUp, ThumbsDown, CheckCircle2, Wrench, Lightbulb, Share2, AlertTriangle, ChevronRight } from 'lucide-react';
 import { sanitizeRichHtml } from './admin/RichTextEditor';
 import { useTip, useTips, useRelatedTips } from '../hooks/useTips';
 import Header from './layout/Header';
@@ -10,6 +10,7 @@ import SocialShareModal, { shareNatively, type ShareContent } from './common/Soc
 import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -125,18 +126,13 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         {/* Header Section */}
         <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-8">
             <Reveal animation="fade-in-up">
-              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-                <button onClick={onBack} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-                <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                  <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('home')}>
-                    <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                  </span>
-                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                  <span className="hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('tips')}>Conseils</span>
-                  <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                  <span className="text-gray-900 font-extrabold truncate max-w-[150px] md:max-w-none">{tip.title}</span>
-                </nav>
-              </div>
+              <PageBreadcrumb
+                parents={[
+                  { label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') },
+                  { label: 'Conseils', href: '/conseils', onClick: () => onNavigate?.('tips') },
+                ]}
+                current={tip.title}
+              />
 
               {/* Titre Mobile */}
               <div className="md:hidden text-[2rem] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-4">

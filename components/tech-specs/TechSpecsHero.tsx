@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { ArrowLeft, Layers, Home, ChevronRight } from 'lucide-react';
+import { Layers } from 'lucide-react';
+import { PageBreadcrumb, type Crumb } from '../ui/PageBreadcrumb';
 import { Reveal } from '../ui/Reveal';
 import { Badge } from '../ui/Badge';
 import { useHeroImages } from '../../hooks/useHeroImages';
@@ -10,10 +11,15 @@ interface TechSpecsHeroProps {
   badgeText?: string;
   badgeIcon?: React.ReactNode;
   onBack?: () => void;
-  backText?: string;
   onNavigateHome?: () => void;
   breadcrumbCurrent?: string;
-  /** Show the H1 on mobile too (it is desktop-only by default). */
+  /** Steps between « Accueil » and the current page (e.g. « Fiches techniques »). */
+  breadcrumbParents?: Crumb[];
+  /** Name and URL of the page « ← » goes to (default: the last step above). */
+  backLabel?: string;
+  backHref?: string;
+  /** Show the H1 on phones. Default true: the phone breadcrumb is now only
+   *  « ← Parent », so the title must name the page. */
   titleOnMobile?: boolean;
 }
 
@@ -42,7 +48,10 @@ export const TechSpecsHero = memo(({
   onBack,
   onNavigateHome,
   breadcrumbCurrent,
-  titleOnMobile = false,
+  breadcrumbParents,
+  backLabel,
+  backHref,
+  titleOnMobile = true,
 }: TechSpecsHeroProps) => {
   const { desktopUrl, backgroundColor } = useHeroImages();
   return (
@@ -64,33 +73,18 @@ export const TechSpecsHero = memo(({
       <div className={S.ContentWrapper}>
         <div className={S.TitleGroup}>
           {onNavigateHome && (
-            <Reveal animation="fade-in-up">
-              <header className="flex items-center justify-between mb-2 md:mb-3 w-full">
-                <div className="flex items-center gap-3 md:gap-4">
-                  {onBack && (
-                    <button
-                      onClick={onBack}
-                      className="p-2.5 md:p-2 [@media(pointer:coarse)]:min-w-11 [@media(pointer:coarse)]:min-h-11 flex items-center justify-center bg-card md:bg-white/10 border border-gray-100 md:border-white/20 md:backdrop-blur-sm rounded-2xl md:rounded-xl text-gray-700 md:text-white hover:bg-gray-50 md:hover:bg-white/20 hover:border-gray-200 md:hover:border-white/30 shadow-sm transition-all active:scale-95"
-                      aria-label="Retour"
-                    >
-                      <ArrowLeft size={18} className="md:w-5 md:h-5" />
-                    </button>
-                  )}
-                  <nav className="flex items-center gap-2 text-[12px] md:text-[13px] font-medium text-gray-400 md:text-white/70">
-                    <span
-                      className="flex items-center gap-1.5 hover:text-primary-600 md:hover:text-white cursor-pointer transition-colors"
-                      onClick={onNavigateHome}
-                    >
-                      <Home size={14} className="md:w-3.5 md:h-3.5" /> Accueil
-                    </span>
-                    <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300 md:text-white/50" />
-                    <span className="text-foreground md:text-white font-extrabold truncate max-w-[160px] md:max-w-none">
-                      {breadcrumbCurrent || 'Fiches Techniques'}
-                    </span>
-                  </nav>
-                </div>
-              </header>
-            </Reveal>
+            // Navigation does not animate in: it is there at once, at the same
+            // place on every page (phones: « ← Parent »; from 768 px: trail).
+            <PageBreadcrumb
+              tone="hero"
+              className="mb-2 md:mb-3 w-full"
+              parents={[
+                { label: 'Accueil', href: '/', onClick: onNavigateHome },
+                ...(breadcrumbParents ?? []),
+              ]}
+              current={breadcrumbCurrent || 'Fiches techniques'}
+              back={onBack ? { label: backLabel ?? breadcrumbParents?.[breadcrumbParents.length - 1]?.label ?? 'Accueil', href: backHref ?? breadcrumbParents?.[breadcrumbParents.length - 1]?.href ?? '/', onClick: onBack } : undefined}
+            />
           )}
           {badgeText && (
             <Reveal animation="fade-in-up">

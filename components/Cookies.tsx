@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, ChevronRight, Cookie, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Home, Cookie, ShieldCheck } from 'lucide-react';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 const Cookies: React.FC<any> = ({ onGoHome }) => {
   return (
@@ -15,16 +16,12 @@ const Cookies: React.FC<any> = ({ onGoHome }) => {
       </div>
       <div className="max-w-[1280px] mx-auto px-6 py-12 md:py-16">
         <header className="flex items-center justify-between mb-8 md:mb-12">
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={onGoHome} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-              <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                 <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={onGoHome}>
-                   <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">Cookies</span>
-              </nav>
-           </div>
+           <PageBreadcrumb
+             parents={[
+               { label: 'Accueil', href: '/', onClick: onGoHome },
+             ]}
+             current={'Cookies'}
+           />
         </header>
         <article className="bg-card p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-12 max-w-4xl">
             <section className="space-y-4"><div className="flex items-center gap-3 text-primary-600 mb-2"><Cookie size={24} /><h2 className="text-2xl font-black m-0 text-gray-900">Utilisation</h2></div><p className="text-gray-600">Nous utilisons des cookies essentiels au fonctionnement du site et de vos favoris.</p></section>

@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { 
-  MapPin, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  Home, 
-  ChevronRight, 
+import {
+  MapPin,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronRight,
   ChevronLeft,
   SlidersHorizontal,
   ShieldCheck,
@@ -15,8 +14,7 @@ import {
   Clock,
   Wrench,
   Settings2,
-  Navigation,
-  ArrowLeft
+  Navigation
 } from 'lucide-react';
 import { useCityNames, useGarageSpecialties, useGarageServices } from '../hooks/useReferenceData';
 import { useGaragesInfinite } from '../hooks/useGarages';
@@ -34,6 +32,7 @@ import { SortDropdown } from './ui/SortDropdown';
 import AdBanner from './common/AdBanner';
 import SEO from './common/SEO';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 const S = {
   Page: "min-h-screen bg-muted font-sans pb-20",
@@ -216,22 +215,15 @@ const Garages: React.FC<BasePageProps> = ({ onNavigate }) => {
       <div className={S.Container}>
         <header className={S.Header}>
           <div className="flex flex-col w-full">
+            {/* Phones: « ← Accueil » first, right under the header, before the title. */}
+            <PageBreadcrumb className="md:hidden mb-1" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
             <h1 className={S.Title}>Garages & Experts</h1>
             <p className={S.Count}>
               {isFiltering ? 'Calcul en cours...' : `${filteredAndSortedGarages.length} ${filteredAndSortedGarages.length > 1 ? 'experts disponibles' : 'expert disponible'}`}
             </p>
             
             <div className="flex items-center justify-between mt-6 md:mt-9 gap-4">
-              <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400" aria-label="Fil d'ariane">
-                 <button onClick={() => onNavigate?.('home')} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour">
-                    <ArrowLeft size={16} className="md:w-5 md:h-5"/>
-                 </button>
-                 <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={() => onNavigate?.('home')}>
-                    <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300" />
-                 <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">Garages</span>
-              </nav>
+              <PageBreadcrumb className="hidden md:block" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Garages" />
 
               <div className="flex items-center gap-2 md:hidden">
                 <button 

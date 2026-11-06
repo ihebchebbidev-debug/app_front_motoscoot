@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, ChevronRight, AlertTriangle, UserCheck, Smartphone, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Home, AlertTriangle, UserCheck, Smartphone, Mail, ShieldCheck } from 'lucide-react';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 const Security: React.FC<any> = ({ onGoHome, onNavigate }) => {
   return (
@@ -19,16 +20,12 @@ const Security: React.FC<any> = ({ onGoHome, onNavigate }) => {
 
       <div className="max-w-[1280px] mx-auto px-6 py-12 md:py-16">
         <header className="flex items-center justify-between mb-8 md:mb-12">
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={onGoHome} className="p-1.5 md:p-2 bg-card border border-gray-100 rounded-lg md:rounded-xl text-gray-700 hover:text-primary-600 shadow-sm transition-all active:scale-95" aria-label="Retour"><ArrowLeft size={16} className="md:w-5 md:h-5"/></button>
-              <nav className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] font-medium text-gray-400">
-                 <span className="flex items-center gap-1 hover:text-primary-600 cursor-pointer" onClick={onGoHome}>
-                   <Home size={12} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </span>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <span className="text-gray-900 font-extrabold truncate max-w-[100px] md:max-w-none">Sécurité</span>
-              </nav>
-           </div>
+           <PageBreadcrumb
+             parents={[
+               { label: 'Accueil', href: '/', onClick: onGoHome },
+             ]}
+             current={'Sécurité'}
+           />
         </header>
         <div className="space-y-8 max-w-4xl">
             <div className="bg-card p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">

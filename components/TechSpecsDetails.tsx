@@ -1,14 +1,12 @@
 import { displayPhone } from '../utils/phoneUtils';
 import React, { useEffect, useMemo, useState, memo, useCallback, useRef } from 'react';
-import { 
-  ChevronLeft, 
-  Share2, 
+import {
+  ChevronLeft,
+  Share2,
   Heart,
   MapPin,
   Star,
   ArrowRight,
-  ArrowLeft,
-  Home,
   ChevronRight,
   Phone,
   Mail
@@ -30,6 +28,7 @@ import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
 import { techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo';
+import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -205,9 +204,6 @@ const S = {
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   Header: "flex items-center justify-between mb-3 md:mb-6",
-  Breadcrumb: "flex items-center gap-2 text-[12px] md:text-[13px] font-medium text-gray-400 md:text-muted-foreground",
-  // Same size as the brand page button: 44px tap target on touch screens.
-  BackBtn: "p-2.5 md:p-2 [@media(pointer:coarse)]:min-w-11 [@media(pointer:coarse)]:min-h-11 flex items-center justify-center bg-card border border-gray-100 md:border-border rounded-2xl md:rounded-xl text-gray-700 md:text-foreground hover:bg-gray-50 hover:text-primary shadow-sm transition-all active:scale-95",
   ContentBlock: "bg-card rounded-2xl border border-border overflow-hidden shadow-sm",
   BlockBody: "px-6 md:px-8 pt-3 pb-6 md:pt-4 md:pb-8 animate-fade-in",
   SpecRow: "border-b border-border/50 last:border-0",
@@ -528,19 +524,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
       <article className={S.Container}>
         {/* Navigation Header */}
         <header className={S.Header}>
-           <div className="flex items-center gap-3 md:gap-4">
-              <button onClick={handleBack} className={S.BackBtn} aria-label="Retour"><ArrowLeft size={18} className="md:w-5 md:h-5"/></button>
-              <nav className={S.Breadcrumb}>
-                 {/* Real links (crawlable), same targets as the prerendered breadcrumb. */}
-                 <Link to={getUrlFromState('home')} className="flex items-center gap-1.5 hover:text-primary-600 transition-colors">
-                   <Home size={14} className="md:w-3.5 md:h-3.5" /> Accueil
-                 </Link>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <Link to={getUrlFromState('tech-specs-brands')} className="hover:text-primary-600 transition-colors">Fiches Techniques</Link>
-                 <ChevronRight size={12} className="md:w-3.5 md:h-3.5 text-gray-300"/>
-                 <Link to={getUrlFromState('tech-specs-models', { brand: spec.brand })} className="text-foreground font-extrabold truncate max-w-[100px] md:max-w-none hover:text-primary-600 transition-colors">{spec.brand}</Link>
-              </nav>
-           </div>
+           {/* Real links (crawlable), same targets as the prerendered breadcrumb. */}
+           <PageBreadcrumb
+             parents={[
+               { label: 'Accueil', href: getUrlFromState('home'), onClick: () => onNavigate?.('home') },
+               { label: 'Fiches techniques', href: getUrlFromState('tech-specs-brands'), onClick: () => onNavigate?.('tech-specs-brands') },
+               { label: spec.brand, href: getUrlFromState('tech-specs-models', { brand: spec.brand }), onClick: handleBack },
+             ]}
+             current={`${spec.model}${spec.year ? ` ${spec.year}` : ''}`}
+           />
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
