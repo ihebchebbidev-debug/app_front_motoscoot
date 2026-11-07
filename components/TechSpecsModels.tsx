@@ -26,6 +26,7 @@ import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/tech
 import { sortTechSpecs, TECH_SPEC_SORTS, type TechSpecSort } from '../utils/techSpecSort';
 import { ALL, facetOptions, matchesFacets, activeFacetCount, MIN_MODELS_FOR_FILTERS } from '../utils/techSpecFacets';
 import { DEFAULT_BRAND_PAGE_STATE, readBrandPageState, saveBrandPageState } from '../utils/techSpecPageState';
+import { brandPageH1, brandSummaryParts } from '../utils/techSpecBrandHeading';
 import { useNavigationType } from 'react-router-dom';
 
 const S = {
@@ -46,7 +47,8 @@ const S = {
   // Grid
   // 3 columns until 1280 px: at 4 the cards were 141-177 px wide and the
   // specs (« Cylindrée », « 124,7 cc ») were cut.
-  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5",
+  // scroll-mt: a card reached with Tab is not hidden under header + bar.
+  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 [&>a]:scroll-mt-32",
 };
 
 const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNavigate, availableInTunisia = false }) => {
@@ -118,6 +120,13 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
 
   const activeCount = activeFacetCount(facetState) + (modelSearch ? 1 : 0);
   const resetFilters = () => { setActiveType(ALL); setActiveYear(ALL); setActiveCC(ALL); setModelSearch(''); };
+  // The line under the bar: filters, search and sort back to the start.
+  const resetAll = () => { resetFilters(); setSort('recent'); };
+  const changed = activeCount > 0 || sort !== 'recent';
+  const summary = useMemo(
+    () => (brandModels.length ? brandSummaryParts(brandModels.map((m) => ({ price: m.priceNew, cc: m.engine?.cc }))) : undefined),
+    [brandModels],
+  );
   // A brand with a handful of models: show them, no filter or sort chrome.
   const showFilters = brandModels.length >= MIN_MODELS_FOR_FILTERS;
 
@@ -190,9 +199,14 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         schema={breadcrumbSchema}
       />
       
-      <TechSpecsHero 
-        title={`Fiches techniques ${brandName}`}
+      {/* « Prix SYM en Tunisie »: what people search (« sym tunisie prix »),
+          one line on a phone. Same title and summary in the crawler HTML
+          (api/og-prerender.ts, utils/techSpecBrandHeading.ts). */}
+      <TechSpecsHero
+        title={brandPageH1(brandName)}
         titleOnMobile
+        titleSize="standard"
+        summary={summary}
         subtitle={`Retrouvez la fiche technique de toute la gamme ${brandName}.`}
         onBack={() => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined })}
         breadcrumbParents={[{ label: 'Fiches techniques', href: '/fiches-techniques', onClick: () => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined }) }]}
@@ -200,8 +214,10 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         breadcrumbCurrent={brandName}
       />
 
+      {/* One box for the bar and the list: the phone bar sticks under the
+          header for as long as the list scrolls. */}
+      <div>
       {showFilters && (
-      <div className="md:pt-0">
         <FilterBar
           categories={showTypes ? [ALL, ...typeOptions.map((o) => o.value)] : []}
           categoryCounts={toCounts(typeOptions)}
@@ -210,8 +226,9 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           searchQuery={modelSearch}
           onSearchChange={setModelSearch}
           showSort={false}
-          searchPlaceholder="Rechercher un modèle…"
-          phoneSearch
+          searchPlaceholder="Rechercher"
+          searchLabel={`Rechercher un modèle ${brandName}`}
+          phoneLayout="inline"
           extraFilters={extraFilters}
           categoriesVariant={showTypes ? 'dropdown' : 'list'}
           categoryLabel="Type de moto"
@@ -223,10 +240,9 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           onReset={resetFilters}
           applyLabel={`Voir ${filteredModels.length} modèle${filteredModels.length > 1 ? 's' : ''}`}
         />
-      </div>
       )}
 
-      <Section variant="none" className="bg-[#F8F9F9] md:bg-card pb-32 pt-4 md:pt-20">
+      <Section variant="none" className="bg-[#F8F9F9] md:bg-card pb-32 pt-3 md:pt-20">
         {modelsError && brandModels.length === 0 ? (
           <TechSpecsErrorRetry
             title="Modèles indisponibles"
@@ -240,20 +256,26 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           </div>
         ) : filteredModels.length > 0 ? (
           <>
-          {/* Count (+ reset). The sort lives in the filter bar: a button on
-              phones, a menu in the bar from 768 px. */}
-          <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
-            <p className="flex items-center gap-3 text-[14px] font-medium text-gray-600 tabular-nums" aria-live="polite">
+          {/* The count is in the summary under the title. This line shows
+              only what the visitor changed (« 3 modèles sur 9 · Prix
+              croissant · Réinitialiser »); otherwise it is read to screen
+              readers only, so result changes are still announced. */}
+          <p
+            className={changed ? 'flex flex-wrap items-center gap-x-2 mb-3 md:mb-6 text-sm font-medium text-gray-600 tabular-nums' : 'sr-only'}
+            aria-live="polite"
+          >
+            <span>
               {filteredModels.length === brandModels.length
                 ? `${brandModels.length} modèle${brandModels.length > 1 ? 's' : ''}`
                 : `${filteredModels.length} modèle${filteredModels.length > 1 ? 's' : ''} sur ${brandModels.length}`}
-              {activeCount > 0 && (
-                <button type="button" onClick={resetFilters} className="font-semibold text-primary-700 underline underline-offset-2 hover:text-primary-800">
-                  Réinitialiser
-                </button>
-              )}
-            </p>
-          </div>
+              {sort !== 'recent' && ` · ${TECH_SPEC_SORTS.find((o) => o.value === sort)?.label}`}
+            </span>
+            {changed && (
+              <button type="button" onClick={resetAll} className="inline-flex items-center min-h-11 -my-3 font-semibold text-primary-700 underline underline-offset-2 hover:text-primary-800">
+                Réinitialiser
+              </button>
+            )}
+          </p>
           {/* No entrance animation: the models are there when the finger
               arrives (they used to slide in over 700 ms, reduced motion too). */}
           <div className={S.Grid}>
@@ -276,6 +298,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
             />
           )}
       </Section>
+      </div>
     </main>
   );
 };

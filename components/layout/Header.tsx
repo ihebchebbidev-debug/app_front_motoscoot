@@ -148,12 +148,17 @@ const Header: React.FC<HeaderProps> = ({
   const showAdminBar = isAdminUser && currentView !== 'admin';
   const ADMIN_BAR_HEIGHT = 36;
   useEffect(() => {
+    // --admin-bar-h: bars that stick under the header (fiches-techniques
+    // brand page) move down by the same height.
+    const root = document.documentElement.style;
     if (showAdminBar) {
       document.body.style.paddingTop = `${ADMIN_BAR_HEIGHT}px`;
+      root.setProperty('--admin-bar-h', `${ADMIN_BAR_HEIGHT}px`);
     } else {
       document.body.style.paddingTop = '';
+      root.removeProperty('--admin-bar-h');
     }
-    return () => { document.body.style.paddingTop = ''; };
+    return () => { document.body.style.paddingTop = ''; root.removeProperty('--admin-bar-h'); };
   }, [showAdminBar]);
 
   useEffect(() => {
