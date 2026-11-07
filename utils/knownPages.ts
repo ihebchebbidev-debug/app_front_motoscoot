@@ -2,7 +2,7 @@
 // Keep in sync with the vercel.json rewrites to /spa.html.
 export const KNOWN_PAGE_RES: RegExp[] = [
   /^\/$/,
-  /^\/(annonces|actualites|garages|conseils|contact|faq|a-propos|fiches-techniques|comparateur|mentions-legales|securite|conditions|cookies|plan-du-site|mes-favoris|deposer-une-annonce|mon-compte|espace-pro|admin|test|reinitialiser-mot-de-passe)\/?$/,
+  /^\/(annonces|actualites|garages|conseils|contact|faq|a-propos|fiches-techniques|comparateur|mentions-legales|securite|conditions|cookies|plan-du-site|mes-favoris|deposer-une-annonce|mon-compte|espace-pro|admin|test|reinitialiser-mot-de-passe|sso-callback)\/?$/,
   /^\/(annonce|article|guide|garage|fiche-technique|fiches-techniques|prix)\/[^/]+\/?$/,
   /^\/(mon-compte|espace-pro|admin)\/.+$/,
 ];
