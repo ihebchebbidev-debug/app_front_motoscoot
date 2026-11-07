@@ -30,7 +30,8 @@ test('the filters panel is named for what it holds', () => {
 
 test('the search inside the panel does not zoom the page on iPhone', () => {
   assert.doesNotMatch(bar, /rounded-2xl text-sm font-bold text-gray-900/);
-  assert.equal((bar.match(/text-\[16px\] font-medium text-gray-900/g) || []).length, 2);
+  // Page field (stacked), inline bar field, panel field: all 16 px.
+  assert.equal((bar.match(/text-\[16px\] font-medium text-gray-900/g) || []).length, 3);
 });
 
 test('the sheet can hold a form, a header action and a footer', () => {
@@ -43,6 +44,7 @@ test('the sheet can hold a form, a header action and a footer', () => {
 });
 
 test('brand page: the model search is on the page, not behind « Filtres »', () => {
-  assert.match(models, /searchPlaceholder="Rechercher un modèle…"\s+phoneSearch/);
-  assert.match(bar, /\{!phoneSearch && \(\s*<div>\s*<h4 className=\{SECTION\}>Recherche<\/h4>/);
+  assert.match(models, /phoneLayout="inline"/);
+  assert.match(bar, /const searchOnPage = phoneSearch \|\| inline;/);
+  assert.match(bar, /\{!searchOnPage && \(\s*<div>\s*<h4 className=\{SECTION\}>Recherche<\/h4>/);
 });

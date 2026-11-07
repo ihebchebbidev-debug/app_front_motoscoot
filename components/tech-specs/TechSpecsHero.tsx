@@ -21,6 +21,12 @@ interface TechSpecsHeroProps {
   /** Show the H1 on phones. Default true: the phone breadcrumb is now only
    *  « ← Parent », so the title must name the page. */
   titleOnMobile?: boolean;
+  /** 'standard': one level below the hub, a 24 px phone title on one line
+   *  (brand pages). 'large' (default): the 32 px hub title. */
+  titleSize?: 'large' | 'standard';
+  /** Facts on one line under the title (« 9 modèles · 5 850 à 24 000 DT »),
+   *  shown at every width; replaces the subtitle. */
+  summary?: string[];
 }
 
 // Clean, image-free header used across Tech Specs, News and Tips listing
@@ -37,6 +43,8 @@ const S = {
   ContentWrapper: "relative z-10 flex flex-col w-full max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32",
   TitleGroup: "w-full flex flex-col items-start text-left gap-2 md:gap-4",
   MainTitle: "max-w-4xl text-[2rem] leading-[1.1] md:text-[42px] font-[900] tracking-tight md:leading-[1.1] text-foreground md:text-white md:drop-shadow-sm",
+  MainTitleStandard: "max-w-4xl text-2xl leading-tight font-extrabold tracking-tight md:text-[42px] md:font-[900] md:leading-[1.1] text-foreground md:text-white md:drop-shadow-sm",
+  Summary: "-mt-1 md:mt-0 text-sm md:text-[18px] leading-5 md:leading-[1.45] font-medium text-gray-600 md:text-white/90 tabular-nums",
   Subtitle: "max-w-3xl text-[15px] md:text-[18px] font-medium leading-snug md:leading-[1.45] text-gray-500 md:text-white/90",
 };
 
@@ -52,6 +60,8 @@ export const TechSpecsHero = memo(({
   backLabel,
   backHref,
   titleOnMobile = true,
+  titleSize = 'large',
+  summary,
 }: TechSpecsHeroProps) => {
   const { desktopUrl, backgroundColor } = useHeroImages();
   return (
@@ -97,13 +107,21 @@ export const TechSpecsHero = memo(({
               </Badge>
             </Reveal>
           )}
-          <Reveal animation="fade-in-up" delay={100}>
-            <h1 className={`${titleOnMobile ? 'block' : 'hidden md:block'} ${S.MainTitle}`}>{title}</h1>
-          </Reveal>
-          {subtitle && (
-            <Reveal animation="fade-in-up" delay={200}>
-              <p className={`hidden md:block ${S.Subtitle}`}>{subtitle}</p>
-            </Reveal>
+          {/* The title is there at once, like the breadcrumb: it used to slide
+              in over 700 ms (reduced motion too), blank for a moment. */}
+          <h1 className={`${titleOnMobile ? 'block' : 'hidden md:block'} ${titleSize === 'standard' ? S.MainTitleStandard : S.MainTitle}`}>{title}</h1>
+          {summary?.length ? (
+            // Each fact stays whole; a narrow screen wraps only between them.
+            <p className={S.Summary}>
+              {summary.map((part, i) => (
+                <React.Fragment key={part}>
+                  {i > 0 && ' · '}
+                  <span className="whitespace-nowrap">{part}</span>
+                </React.Fragment>
+              ))}
+            </p>
+          ) : subtitle && (
+            <p className={`hidden md:block ${S.Subtitle}`}>{subtitle}</p>
           )}
         </div>
       </div>

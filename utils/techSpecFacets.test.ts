@@ -43,7 +43,7 @@ test('the brand page uses them: counts, reset, « Voir N modèles », no filters
   assert.match(page, /categoryCounts=\{toCounts\(typeOptions\)\}/);
   assert.match(page, /applyLabel=\{`Voir \$\{filteredModels\.length\} modèle/);
   assert.match(page, /action=\{activeCount > 0 \? \{ label: 'Réinitialiser les filtres', onClick: resetFilters \}/);
-  assert.match(page, /\{showFilters && \(\s*<div className="md:pt-0">/);
+  assert.match(page, /\{showFilters && \(\s*<FilterBar/);
   const bar = readFileSync(new URL('../components/ui/FilterBar.tsx', import.meta.url), 'utf8');
   assert.match(bar, /min-h-11 px-4 py-2\.5 rounded-xl/); // 44 px chips
   assert.match(bar, /disabled=\{empty\}/);

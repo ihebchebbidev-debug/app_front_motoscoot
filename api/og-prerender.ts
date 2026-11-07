@@ -23,6 +23,7 @@ import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath } from '../utils/seoImagePath.js';
+import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -410,7 +411,7 @@ ${brandSlug ? `<li><a href="/fiches-techniques/${brandSlug}">Tous les modèles $
 </ul>`;
 }
 
-// Brand pages (/fiches-techniques/<marque>): title, factual intro and the
+// Brand pages (/fiches-techniques/<marque>): title, one-line summary and the
 // brand's models as plain links, for crawlers that do not run JavaScript.
 async function renderBrand(req: any, res: any, brandSlug: string) {
   const brandsRes = await fetch(`${API_BASE}/tech-specs/brands`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
@@ -439,17 +440,11 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
   const firstImage = models.find((m) => m.image)?.image;
   const image = firstImage ? rewriteImageHost(firstImage, brand) : DEFAULT_OG;
 
-  // Factual intro built from the data (counts and ranges only, no claims).
-  const ccs = models.map((m) => Math.round(parseCc(m.engine?.cc) || 0)).filter((n) => n > 0);
-  const prices = models.map((m) => parsePrice(m.price_new)).filter((n): n is number => n !== null);
-  const categories = Array.from(new Set(models.map((m) => m.category).filter(Boolean)));
+  // The same one-line summary the visitor sees under the title
+  // (« 9 modèles · 5 850 à 24 000 DT · 125 à 399 cm³ »). It used to be a
+  // longer paragraph that only crawlers received.
+  const summary = brandSummaryText(models.map((m) => ({ price: m.price_new == null ? null : String(m.price_new), cc: m.engine?.cc == null ? null : String(m.engine.cc) })));
   const fmt = (n: number) => n.toLocaleString('fr-FR');
-  const intro = [
-    `${brand} : ${models.length} modèle${models.length > 1 ? 's' : ''} référencé${models.length > 1 ? 's' : ''} sur Moto-Scoot.tn`
-      + (ccs.length ? (Math.min(...ccs) === Math.max(...ccs) ? `, en ${Math.min(...ccs)} cm³` : `, de ${Math.min(...ccs)} à ${Math.max(...ccs)} cm³`) : '') + '.',
-    prices.length ? (Math.min(...prices) === Math.max(...prices) ? `Prix du neuf : ${fmt(prices[0])} DT.` : `Prix du neuf de ${fmt(Math.min(...prices))} à ${fmt(Math.max(...prices))} DT.`) : '',
-    categories.length ? `Catégories : ${categories.join(', ')}.` : '',
-  ].filter(Boolean).join(' ');
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -505,8 +500,8 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 </head>
 <body>
 <nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/fiches-techniques">Fiches techniques</a> › ${escapeHtml(brand)}</nav>
-<h1>Fiches techniques ${escapeHtml(brand)}</h1>
-<p>${escapeHtml(intro)}</p>
+<h1>${escapeHtml(brandPageH1(brand))}</h1>
+<p>${escapeHtml(summary)}</p>
 <ul>
 ${items}
 </ul>

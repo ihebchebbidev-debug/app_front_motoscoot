@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, X, Check, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ChoiceSheet } from '../search/ChoiceSheet';
 
@@ -46,6 +46,12 @@ export interface FilterBarProps {
   /** Phones: the search field sits on the page, above Sort and Filters,
    *  instead of inside the Filters panel. */
   phoneSearch?: boolean;
+  /** Phones. 'stacked' (default): search, then Sort + Filtres on a second row.
+   *  'inline': one row (search field + sort icon + filters icon) that stays
+   *  under the site header while the list scrolls (fiches-techniques brand page). */
+  phoneLayout?: 'stacked' | 'inline';
+  /** Name of the search field for screen readers when the placeholder is short. */
+  searchLabel?: string;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -70,6 +76,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   applyLabel = 'Appliquer',
   onReset,
   phoneSearch = false,
+  phoneLayout = 'stacked',
+  searchLabel,
 }) => {
   // « Scooter 6 » / greyed when nothing would show (the selected one stays usable).
   const countOf = (counts: Record<string, number> | undefined, opt: string) =>
@@ -94,6 +102,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     ? sortOptions!.find((o) => o.value === sortValue)?.label ?? sortOptions![0].label
     : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
 
+  const inline = phoneLayout === 'inline' && !onlySearch;
+  const searchOnPage = phoneSearch || inline;
+  // « Filtres, 2 actifs »: the label used to override the badge, so screen
+  // readers never heard how many filters were on.
+  const filtersLabel = activeFilterCount > 0 ? `Filtres, ${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}` : 'Filtres';
+  // A sort other than the first one (the default) is marked by a dot.
+  const sortChanged = hasCustomSort && !!sortValue && sortValue !== sortOptions![0].value;
+
+  // Inline bar: a hairline under it only once it is stuck under the header.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!inline || !el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < 80),
+      { rootMargin: '-57px 0px 0px 0px', threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [inline]);
+
   // Choosing a chip no longer closes the panel (year and cylinder chips never
   // did): the visitor sees the count change and closes with « Voir N … ».
   const handleCategoryChange = (cat: string) => {
@@ -102,11 +132,77 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <>
+      {/* Phones, inline: search field + sort + filters on one row that stays
+          under the site header (56 px once scrolled, + the admin bar) while
+          the list scrolls, so sorting or filtering never needs a trip back
+          up. It sits on the page colour, a hairline appears once stuck. */}
+      {inline && (
+        <>
+          <div ref={sentinelRef} aria-hidden="true" className="md:hidden h-px -mb-px" />
+          <div
+            data-stuck={stuck ? '' : undefined}
+            className={`md:hidden sticky top-[calc(3.5rem+var(--admin-bar-h,0px))] z-30 w-full px-6 py-1.5 mt-1 bg-[#F8F9F9]/90 backdrop-blur-md border-b transition-colors duration-200 ${stuck ? 'border-gray-200' : 'border-transparent'}`}
+          >
+            <div className="flex gap-2">
+              <div className="relative flex-1 min-w-0" role="search">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 w-[18px] h-[18px] pointer-events-none" aria-hidden="true" />
+                <input
+                  type="search"
+                  enterKeyHint="search"
+                  aria-label={searchLabel || searchPlaceholder}
+                  placeholder={searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="w-full min-h-11 pl-10 pr-11 bg-card border border-gray-200 rounded-xl text-[16px] font-medium text-gray-900 placeholder:text-gray-500 outline-none focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-900/10 transition-colors [&::-webkit-search-cancel-button]:appearance-none"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange('')}
+                    aria-label="Effacer la recherche"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-gray-500 active:bg-gray-100"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+              {hasSort && (
+                <button
+                  type="button"
+                  onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
+                  className="relative shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-gray-200 bg-card text-gray-900 active:scale-[0.97] transition-transform duration-100 ease-out"
+                  aria-label={`Trier : ${sortLabel}`}
+                  aria-haspopup="dialog"
+                >
+                  <ArrowUpDown size={20} aria-hidden="true" />
+                  {sortChanged && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-700" aria-hidden="true" />}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSortMenuOpen(true)}
+                className="relative shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-gray-900 text-white active:scale-[0.97] transition-transform duration-100 ease-out"
+                aria-label={filtersLabel}
+                aria-haspopup="dialog"
+              >
+                <SlidersHorizontal size={20} aria-hidden="true" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-primary-700 text-white text-[12px] font-bold leading-5 text-center tabular-nums ring-2 ring-[#F8F9F9]" aria-hidden="true">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Phone bar: the search field when the page asks for it (or when it is
           the only control), then the sort button and the dark « Filtres »
           button. Both panels are the home search bar's sheet: they rise from
           the bottom, follow the finger, close with a flick down, a tap on the
           scrim or Escape, and fade only under reduced motion. */}
+      {!inline && (
       <div className="md:hidden flex flex-col gap-3 w-full px-6 mt-1 mb-4 relative z-40">
         {(onlySearch || phoneSearch) && (
           <div className="relative" role="search">
@@ -151,10 +247,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <button
             onClick={() => setIsSortMenuOpen(true)}
             className={`${hasSort ? 'shrink-0' : 'flex-1'} flex items-center justify-center gap-2 h-12 px-6 bg-gray-900 text-white rounded-2xl shadow-md active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px]`}
-            aria-label="Filtres"
+            aria-label={filtersLabel}
             aria-haspopup="dialog"
           >
-            <SlidersHorizontal size={18} />
+            <SlidersHorizontal size={18} aria-hidden="true" />
             <span>Filtres</span>
             {activeFilterCount > 0 && (
               <span className="min-w-5 h-5 px-1.5 rounded-full bg-white text-gray-900 text-[12px] font-bold leading-5 text-center tabular-nums" aria-label={`${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}`}>
@@ -165,6 +261,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
         )}
       </div>
+      )}
 
       {/* Sort panel (phones): one tap chooses and closes. */}
       {hasCustomSort && (
@@ -212,7 +309,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         >
           <div className="px-5 pt-2 pb-4 space-y-6">
-            {!phoneSearch && (
+            {!searchOnPage && (
               <div>
                 <h4 className={SECTION}>Recherche</h4>
                 <div className="relative">
