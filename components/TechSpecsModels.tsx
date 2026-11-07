@@ -44,10 +44,9 @@ const S = {
   Subtitle: "max-w-none text-[15px] md:text-[20px] font-medium tracking-[0px] leading-snug md:leading-[27px] text-white",
   
   // Grid
-  // Phones: one line per model (see TechSpecModelCard rowOnPhone).
   // 3 columns until 1280 px: at 4 the cards were 141-177 px wide and the
   // specs (« Cylindrée », « 124,7 cc ») were cut.
-  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5",
+  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5",
 };
 
 const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNavigate, availableInTunisia = false }) => {
@@ -263,7 +262,6 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
                   key={spec.id}
                   spec={spec}
                   highlightTerms={highlightTerms}
-                  rowOnPhone
                 />
               ))}
             </div>

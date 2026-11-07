@@ -26,31 +26,23 @@ const S = {
   SpecValue: "text-sm md:text-[0.6875rem] lg:text-sm font-semibold text-gray-900 truncate tabular-nums",
   DetailsButton: "mt-auto w-full min-h-11 bg-primary-700 text-white text-[0.875rem] md:text-[0.75rem] lg:text-[0.875rem] font-semibold rounded-xl flex items-center justify-center gap-2 [@media(hover:hover)]:group-hover:bg-primary-800 transition-colors duration-100 shadow-sm",
   YearBadge: "border-none shadow-sm px-2 py-0.5 md:px-2.5 md:py-1 !text-[0.6875rem] !font-semibold !tracking-normal !text-primary-700",
-
-  // Phones (< 640 px), brand page only: one line per model, photo on the
-  // left, so 4 to 5 models show at once instead of one.
-  Row: "max-sm:flex-row max-sm:min-h-[9.5rem]",
-  RowImage: "max-sm:w-[7.5rem] max-sm:shrink-0 max-sm:aspect-auto max-sm:rounded-t-none max-sm:rounded-l-[14px]",
-  RowContent: "max-sm:min-w-0 max-sm:p-3 max-sm:pl-3.5",
-  RowSpecs: "sm:hidden mt-1 mb-3 text-sm text-gray-600 tabular-nums truncate",
 };
 
-export const TechSpecModelCard = memo(({ spec, highlightTerms = [], rowOnPhone = false }: { spec: any; highlightTerms?: string[]; rowOnPhone?: boolean }) => {
+export const TechSpecModelCard = memo(({ spec, highlightTerms = [] }: { spec: any; highlightTerms?: string[] }) => {
   const hl = (v: string | number | null | undefined) => highlightText(v, highlightTerms);
   const price = priceLabel(spec.priceNew);
   const cc = ccLabel(spec.engine?.cc);
   const power = powerLabel(spec.engine?.power);
   const torque = torqueLabel(spec.engine?.torque);
-  const row = rowOnPhone;
   return (
     <Link
       to={getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand}-${spec.model}-${spec.year}` })}
-      className={row ? `${S.ModelCard} ${S.Row}` : S.ModelCard}
+      className={S.ModelCard}
     >
-      <div className={row ? `${S.ImageArea} ${S.RowImage}` : S.ImageArea}>
+      <div className={S.ImageArea}>
         <img
           src={getOptimizedImageUrl(spec.image, 600, 400, 80, undefined, `${spec.brand} ${spec.model} ${spec.year}`)}
-          className={`w-full h-full object-cover${row ? ' max-sm:object-contain' : ''}`}
+          className="w-full h-full object-cover"
           alt={spec.model}
           loading="lazy"
           decoding="async"
@@ -58,26 +50,21 @@ export const TechSpecModelCard = memo(({ spec, highlightTerms = [], rowOnPhone =
         {/* Same veil as the comparator cards (home/ModelCard): white or
             transparent photo backgrounds read as a light grey (#F2F2F2). */}
         <div className="absolute inset-0 bg-black/5 pointer-events-none" aria-hidden="true" />
-        <div className={`absolute top-2 left-2 md:top-4 md:left-4${row ? ' max-sm:hidden' : ''}`}>
+        <div className="absolute top-2 left-2 md:top-4 md:left-4">
           <Badge variant="primary" className={S.YearBadge}>
             {hl(spec.year)}
           </Badge>
         </div>
       </div>
 
-      <div className={row ? `${S.ContentArea} ${S.RowContent}` : S.ContentArea}>
+      <div className={S.ContentArea}>
         <h3 className={S.ModelName}>{hl(`${spec.brand} ${spec.model}`)}</h3>
         {price.kind === 'price'
           ? <p className={S.PriceValue}>{hl(price.text)}</p>
           : <p className={S.Status}>{hl(price.text)}</p>}
 
-        {row && (
-          <p className={S.RowSpecs}>
-            {hl(spec.year)} · {hl(cc)} · {hl(power)}
-          </p>
-        )}
 
-        <div className={row ? `${S.SpecsGrid} max-sm:hidden` : S.SpecsGrid}>
+        <div className={S.SpecsGrid}>
           <div className={S.SpecItem}>
             <span className={S.SpecLabel}>Cylindrée</span>
             <span className={S.SpecValue}>{hl(cc)}</span>

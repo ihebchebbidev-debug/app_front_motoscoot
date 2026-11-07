@@ -41,9 +41,12 @@ test('card text is readable and follows the phone text size (rem, no 8-11 px cap
   assert.match(card, /Fiche technique <ArrowRight/);
 });
 
-test('brand page on phones: one line per model, no slide-in', () => {
-  assert.match(page, /highlightTerms=\{highlightTerms\}\s+rowOnPhone/);
+test('brand page: the original vertical card everywhere, no slide-in', () => {
+  // The one-line-per-model phone layout was tried and dropped at the owner's
+  // request: the photo-on-top card stays, with the readability fixes.
+  assert.doesNotMatch(card, /rowOnPhone|max-sm:flex-row/);
+  assert.doesNotMatch(page, /rowOnPhone/);
+  assert.match(card, /ImageArea: "relative w-full aspect-\[4\/3\]/);
   assert.doesNotMatch(page, /<Reveal/);
-  assert.match(card, /Row: "max-sm:flex-row/);
   assert.match(page, /md:grid-cols-3 xl:grid-cols-4/); // no 141 px cards on tablets
 });
