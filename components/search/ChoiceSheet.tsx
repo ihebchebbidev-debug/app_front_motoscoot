@@ -81,10 +81,16 @@ interface ChoiceSheetProps {
   search?: { value: string; placeholder: string; onChange: (v: string) => void };
   /** The field box: from 768 px the list opens as a menu under it. */
   anchor?: React.RefObject<HTMLElement | null>;
+  /** false: the body holds a form (filters), not a list of options. */
+  listbox?: boolean;
+  /** Next to the close button (e.g. « Réinitialiser »). */
+  headerAction?: React.ReactNode;
+  /** Pinned under the scrolling body (e.g. « Voir 9 modèles »). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, children }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -276,14 +282,17 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           </div>
           <div className="flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100">
             <h3 className="text-base font-bold text-gray-900">{label}</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Fermer"
-              className="p-1.5 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-1 -my-2.5 -mr-2.5">
+              {headerAction}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fermer"
+                className="w-11 h-11 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
         </div>
         {search && (
@@ -300,9 +309,10 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
             />
           </div>
         )}
-        <div role="listbox" className="flex-1 overflow-y-auto overscroll-contain py-2">
+        <div role={listbox ? 'listbox' : undefined} aria-label={listbox ? label : undefined} className="flex-1 overflow-y-auto overscroll-contain py-2">
           {children}
         </div>
+        {footer}
       </div>
     </div>,
     document.body,
