@@ -191,6 +191,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           onSearchChange={setModelSearch}
           showSort={false}
           searchPlaceholder="Rechercher un modèle…"
+          phoneSearch
           extraFilters={extraFilters}
           categoriesVariant={showTypes ? 'dropdown' : 'list'}
           categoryLabel="Type de moto"

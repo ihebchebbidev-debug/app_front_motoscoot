@@ -14,7 +14,8 @@ test('brand tiles answer the finger at once; hover effects only for mice', () =>
 
 test('phones: a search-only page shows the search field, not a « Filtres » button', () => {
   assert.match(bar, /const onlySearch = categories\.length === 0 && extraFilters\.length === 0 && !hasSort;/);
-  assert.match(bar, /\{onlySearch \? \(\s*<div className="relative" role="search">/);
+  assert.match(bar, /\{\(onlySearch \|\| phoneSearch\) && \(\s*<div className="relative" role="search">/);
+  assert.match(bar, /\{!onlySearch && \(\s*<div className="flex gap-2">/); // no Filtres button then
   assert.match(bar, /type="search"\s+enterKeyHint="search"/);
   assert.match(bar, /text-\[16px\]/); // no iOS zoom on focus
   assert.match(bar, /aria-label="Effacer la recherche"\s+className="absolute right-1 top-1\/2 -translate-y-1\/2 w-11 h-11/);
