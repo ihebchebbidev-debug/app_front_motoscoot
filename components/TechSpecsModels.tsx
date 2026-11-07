@@ -13,7 +13,6 @@ import { useTechSpecsByBrand } from '../hooks/useTechSpecs';
 import { useBrands } from '../hooks/useReferenceData';
 import { Section } from './ui/Section';
 import { EmptyState } from './ui/EmptyState';
-import { Reveal } from './ui/Reveal';
 import { Badge } from './ui/Badge';
 import { TechSpecsHero } from './tech-specs/TechSpecsHero';
 import { TechSpecModelCard as ModelCard } from './tech-specs/TechSpecModelCard';
@@ -43,7 +42,10 @@ const S = {
   Subtitle: "max-w-none text-[15px] md:text-[20px] font-medium tracking-[0px] leading-snug md:leading-[27px] text-white",
   
   // Grid
-  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5",
+  // Phones: one line per model (see TechSpecModelCard rowOnPhone).
+  // 3 columns until 1280 px: at 4 the cards were 141-177 px wide and the
+  // specs (« Cylindrée », « 124,7 cc ») were cut.
+  Grid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5",
 };
 
 const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNavigate, availableInTunisia = false }) => {
@@ -234,14 +236,16 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
               )}
             </p>
           </div>
+          {/* No entrance animation: the models are there when the finger
+              arrives (they used to slide in over 700 ms, reduced motion too). */}
           <div className={S.Grid}>
-              {sortedModels.map((spec, idx) => (
-                <Reveal key={spec.id} animation="fade-in-up" delay={idx % 6 * 50}>
-                  <ModelCard 
-                    spec={spec} 
-                    highlightTerms={highlightTerms}
-                  />
-                </Reveal>
+              {sortedModels.map((spec) => (
+                <ModelCard
+                  key={spec.id}
+                  spec={spec}
+                  highlightTerms={highlightTerms}
+                  rowOnPhone
+                />
               ))}
             </div>
           </>
