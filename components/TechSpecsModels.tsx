@@ -26,6 +26,8 @@ import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtil
 import { matchesTechSpec, getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
 import { sortTechSpecs, TECH_SPEC_SORTS, type TechSpecSort } from '../utils/techSpecSort';
 import { ALL, facetOptions, matchesFacets, activeFacetCount, MIN_MODELS_FOR_FILTERS } from '../utils/techSpecFacets';
+import { DEFAULT_BRAND_PAGE_STATE, readBrandPageState, saveBrandPageState } from '../utils/techSpecPageState';
+import { useNavigationType } from 'react-router-dom';
 
 const S = {
   // White from 768 px like the cards section: the filter bar sticks out 18 px
@@ -47,17 +49,34 @@ const S = {
 };
 
 const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNavigate, availableInTunisia = false }) => {
-  const [modelSearch, setModelSearch] = useState("");
+  // Back from a model's sheet (browser Back): the sort, filters and search
+  // the visitor had set come back. A new visit from a link starts fresh.
+  const navigationType = useNavigationType();
+  const [initial] = useState(() =>
+    (navigationType === 'POP' && readBrandPageState(brandSlug)) || DEFAULT_BRAND_PAGE_STATE);
+  const [modelSearch, setModelSearch] = useState(initial.q);
   const deferredModelSearch = useDeferredValue(modelSearch);
 
-  const [activeType, setActiveType] = useState('Tout');
-  const [activeYear, setActiveYear] = useState('Tout');
-  const [activeCC, setActiveCC] = useState('Tout');
-  const [sort, setSort] = useState<TechSpecSort>('recent');
+  const [activeType, setActiveType] = useState(initial.type);
+  const [activeYear, setActiveYear] = useState(initial.year);
+  const [activeCC, setActiveCC] = useState(initial.cc);
+  const [sort, setSort] = useState<TechSpecSort>(initial.sort);
+
+  // Another brand in the same page: start from scratch. (No scroll here: the
+  // router puts a new page at the top and gives a page back its position on
+  // Back; this page used to force the top, so Back always lost the place.)
+  const shownBrand = useRef(brandSlug);
+  useEffect(() => {
+    if (shownBrand.current === brandSlug) return;
+    shownBrand.current = brandSlug;
+    const d = DEFAULT_BRAND_PAGE_STATE;
+    setModelSearch(d.q); setActiveType(d.type); setActiveYear(d.year); setActiveCC(d.cc); setSort(d.sort);
+  }, [brandSlug]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [brandSlug]);
+    if (shownBrand.current !== brandSlug) return;
+    saveBrandPageState(brandSlug, { sort, type: activeType, year: activeYear, cc: activeCC, q: modelSearch });
+  }, [brandSlug, sort, activeType, activeYear, activeCC, modelSearch]);
 
   const { data: allBrands = [] } = useBrands();
 
