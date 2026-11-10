@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { monitoring } from '../../utils/monitoring';
+import { isChunkLoadError, reloadForCurrentVersion } from '../../utils/chunkRetry';
 
 interface Props {
   children: ReactNode;
@@ -83,6 +84,11 @@ export class ErrorBoundary extends Component<Props, State> {
     // Custom fallback: the parent component owns the recovery UX, don't touch
     // navigation. (Used by sub-boundaries that render an inline empty state.)
     if (this.props.fallback) return;
+
+    // The page's code could not be loaded (tab opened before a deploy, or a
+    // cached 404): reload the page that was asked for instead of sending the
+    // visitor home. Once per 10 s; then the usual recovery below.
+    if (isChunkLoadError(this.state.error) && reloadForCurrentVersion(this.state.error)) return;
 
     // Dev mode: surface the error visibly so it gets fixed.
     const isDev = (import.meta as any)?.env?.DEV;
