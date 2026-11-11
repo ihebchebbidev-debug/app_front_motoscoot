@@ -207,28 +207,25 @@
   @keyframes ms-fade-in { from { opacity: 0; } to { opacity: 1; } }
   @keyframes ms-fade-out { to { opacity: 0; } }
 
-  /* Fiche, phones: the floating capsule (components/TechSpecsDetails.tsx) is a
-     material, not a bar. One light translucent layer over the page: a strong
-     blur because it is the biggest floating surface, light catching its top
-     edge, a darker bottom edge for thickness, a hairline, a contact shadow and
-     a lift. What sits on it is never a second glass (light on light loses its
-     edges): the price and the call button are quiet tinted wells, the orange
-     « Comparer » a solid layer. It materializes once (blur, scale and opacity
-     together). Under it, a scroll edge: the page dissolves into a soft blur
-     instead of running hard into the capsule. */
+  /* Fiche, phones: the floating capsule (components/TechSpecsDetails.tsx).
+     Dark frosted glass (owner, 2026-11-11: the white one hardly stood out on
+     the white page, 1.03:1). One material over the page: a strong blur and
+     saturation, light catching the top edge, a hairline, a contact shadow and
+     a lift. On it, solid layers only: a lighter disc for the call button and
+     the orange « Comparer » (#C2410C: 5.4:1 with white text). It materializes
+     once. Under it, a scroll edge: the page fades into a soft blur instead of
+     running hard into the capsule. */
   .ms-capsule {
-    background: rgba(255, 255, 255, 0.62);
-    -webkit-backdrop-filter: blur(28px) saturate(1.9);
-    backdrop-filter: blur(28px) saturate(1.9);
+    background: rgba(27, 31, 39, 0.86);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(24px) saturate(1.6);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0 rgba(15, 18, 24, 0.05),
-      0 0 0 0.5px rgba(15, 18, 24, 0.12),
-      0 2px 6px rgba(15, 18, 24, 0.08),
-      0 16px 36px -10px rgba(15, 18, 24, 0.3);
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 0 0.5px rgba(15, 18, 24, 0.5),
+      0 2px 6px rgba(15, 18, 24, 0.16),
+      0 16px 36px -10px rgba(15, 18, 24, 0.45);
     animation: ms-capsule-in 380ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
   }
-  .ms-capsule-well { background: rgba(15, 18, 24, 0.045); }
   .ms-capsule-edge {
     background: linear-gradient(to top, rgba(248, 249, 249, 0.9), rgba(248, 249, 249, 0));
     -webkit-backdrop-filter: blur(6px);
@@ -245,15 +242,14 @@
     }
   }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .ms-capsule { background: rgba(255, 255, 255, 0.96); }
+    .ms-capsule { background: rgba(27, 31, 39, 0.97); }
   }
   @media (prefers-reduced-transparency: reduce) {
-    .ms-capsule { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .ms-capsule { background: #1b1f27; -webkit-backdrop-filter: none; backdrop-filter: none; }
     .ms-capsule-edge { -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
   @media (prefers-contrast: more) {
-    .ms-capsule { background: #fff; box-shadow: 0 0 0 1.5px #161a22, 0 12px 28px -10px rgba(15, 18, 24, 0.35); }
-    .ms-capsule-well { background: transparent; box-shadow: inset 0 0 0 1px rgba(15, 18, 24, 0.45); }
+    .ms-capsule { background: #0e1116; box-shadow: 0 0 0 1.5px #fff, 0 12px 28px -10px rgba(15, 18, 24, 0.45); }
   }
   @media (prefers-reduced-motion: reduce) {
     .ms-capsule { animation: ms-fade-in 150ms ease-out backwards; }
