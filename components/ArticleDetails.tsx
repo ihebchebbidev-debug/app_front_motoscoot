@@ -200,11 +200,15 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
 
         {/* Featured Image */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 md:mb-16">
-            <Reveal animation="scale-in">
+            {/* No fade-in: this photo is the largest element of the first screen
+                (LCP); the 700 ms reveal delayed it by ~800 ms. */}
               <div className="relative aspect-[16/9] md:aspect-[21/9] md:rounded-[2.5rem] overflow-hidden shadow-xl bg-gray-100">
                   <img 
-                    src={article.image} 
-                    alt={article.title} 
+                    src={article.image}
+                    alt={article.title}
+                    // @ts-ignore - React 19 forwards fetchPriority
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
@@ -227,7 +231,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                     <Share2 size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
                   </button>
               </div>
-            </Reveal>
+            
         </div>
 
         {/* Article Core Content */}
