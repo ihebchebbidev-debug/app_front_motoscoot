@@ -28,6 +28,7 @@ import { apiClient } from '../services/apiClient';
 import { importersApi } from '../services/importersApi';
 import { Importer } from '../types';
 import { getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
+import { BRAND_VIEWS, ALL_IMPORTERS, orderBrands, uniqueBrands, importerOptions, importsBrand, type BrandView } from '../utils/brandListView';
 
 const S = {
   // White from 768 px like the cards section: the filter bar sticks out 18 px
@@ -68,14 +69,6 @@ const S = {
 
 const DEFAULT_POPULAR_BRANDS = ["Peugeot Motorcycles", "Piaggio", "SYM", "Voge", "Kymco", "CFMoto"];
 
-const COUNTRIES: Record<string, string[]> = {
-  "Inde": [],
-  "Chine": ["Voge", "SYM", "Kymco", "QJMotor", "Zontes", "Teyin", "CForce", "Novago", "Lifan", "Sanya", "Haojin", "CFMoto", "Letbe", "Yadea", "PISTA HR+", "Ghost", "Blaster", "Dayun Motorcycle", "Senke", "Ki-Motors"],
-  "Japon": ["Suzuki", "Yamaha", "Honda", "Kawasaki"],
-  "Allemagne": ["BMW"],
-  "Italie": ["Piaggio", "Aprilia"],
-  "France": ["Peugeot Motorcycles"]
-};
 
 const BrandCard = memo(({ brand, href, onClick, logoMap, compact = false }: { brand: string; href: string; onClick: (brand: string) => void; logoMap: Record<string, string>; compact?: boolean }) => (
   <Link
@@ -99,16 +92,21 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const [brandSearch, setBrandSearch] = useState("");
   const deferredBrandSearch = useDeferredValue(brandSearch);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeImporter, setActiveImporter] = useState('Tout');
-  const [activeCountry, setActiveCountry] = useState('Tout');
+  const [activeImporter, setActiveImporter] = useState(ALL_IMPORTERS);
+  // « Trier » : all brands A → Z (default), most visited first, or only the
+  // brands sold in Tunisia (also what ?available_in_tunisia=true opens).
+  const [view, setView] = useState<BrandView>(availableInTunisia ? 'tunisia' : 'all');
+  const inTunisia = view === 'tunisia';
 
+  const allBrandsQuery = useTechSpecsBrands({ availableInTunisia: false });
+  const tunisiaBrandsQuery = useTechSpecsBrands({ availableInTunisia: true });
   const {
     data: backendBrands = [],
     isLoading: brandsLoading,
     isError: brandsError,
     isFetching: brandsFetching,
     refetch: refetchBrands,
-  } = useTechSpecsBrands({ availableInTunisia });
+  } = inTunisia ? tunisiaBrandsQuery : allBrandsQuery;
   const { data: brandsWithLogos = [] } = useBrands();
 
   // Importers are fully managed by admin. Each importer carries a list of
@@ -120,13 +118,6 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
     staleTime: 1000 * 60 * 5,
   });
 
-  const importersMap = useMemo<Record<string, string[]>>(() => {
-    const m: Record<string, string[]> = {};
-    for (const imp of importers) {
-      if (imp?.name) m[imp.name] = imp.brands || [];
-    }
-    return m;
-  }, [importers]);
 
   // Community-wide popular brands — fully dynamic, served by the backend.
   // Cached by react-query so subsequent navigations render instantly without
@@ -158,21 +149,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
     setIsLoading(brandsLoading);
   }, [brandsLoading]);
 
-  const sortedBrands = useMemo(() => {
-    const allBrands = new Set<string>(backendBrands);
-    // Normalize and remove duplicates (e.g., "SYM" vs "Sym")
-    const normalizedBrands = Array.from(allBrands)
-      .filter(b => b !== "Autre")
-      .reduce((acc: string[], curr) => {
-        if (!acc.some(b => b.toLowerCase() === curr.toLowerCase())) {
-          acc.push(curr);
-        }
-        return acc;
-      }, [])
-      .sort((a, b) => a.localeCompare(b));
-
-    return normalizedBrands;
-  }, [backendBrands]);
+  // Unique (« SYM » / « Sym »), A → Z.
+  const sortedBrands = useMemo(() => orderBrands(uniqueBrands(backendBrands), 'all'), [backendBrands]);
 
   // Use a primitive key so the effect only fires when the actual brand SET
   // changes (not on every render where useTechSpecsBrands returns a new
@@ -208,52 +186,43 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
 
   const popularReady = !popularLoading && !brandsLoading;
 
+  // Search first; the importer list and its counts follow what is searched.
+  const searchedBrands = useMemo(() => {
+    const q = deferredBrandSearch.trim().toLowerCase();
+    return q ? sortedBrands.filter((b) => b.toLowerCase().includes(q)) : sortedBrands;
+  }, [sortedBrands, deferredBrandSearch]);
+
+  const importerChoices = useMemo(() => importerOptions(importers, searchedBrands), [importers, searchedBrands]);
+
   const filteredBrands = useMemo(() => {
-    let filtered = sortedBrands;
-    
-    if (deferredBrandSearch) {
-      const searchLower = deferredBrandSearch.toLowerCase();
-      filtered = filtered.filter(b => b.toLowerCase().includes(searchLower));
-    }
+    const imp = importers.find((i) => i?.name === activeImporter);
+    const kept = activeImporter === ALL_IMPORTERS ? searchedBrands : searchedBrands.filter((b) => importsBrand(imp, b));
+    return orderBrands(kept, view, popularBrandsData ?? []);
+  }, [searchedBrands, activeImporter, importers, view, popularBrandsData]);
 
-    if (activeImporter !== 'Tout') {
-      const allowedBrands = importersMap[activeImporter] || [];
-      filtered = filtered.filter(b => allowedBrands.some(allowed => b.toLowerCase() === allowed.toLowerCase()));
-    }
-
-    if (activeCountry !== 'Tout') {
-      const allowedBrands = COUNTRIES[activeCountry] || [];
-      filtered = filtered.filter(b => allowedBrands.some(allowed => b.toLowerCase() === allowed.toLowerCase()));
-    }
-
-    return filtered;
-  }, [sortedBrands, deferredBrandSearch, activeImporter, activeCountry, importersMap]);
-
-
-  const extraFilters: FilterOption[] = useMemo(() => [
-    {
-      id: 'importer',
-      label: 'Importateur',
-      options: ['Tout', ...Object.keys(importersMap)],
-      value: activeImporter,
-      onChange: setActiveImporter
-    },
-    {
-      id: 'country',
-      label: 'Pays',
-      options: ['Tout', ...Object.keys(COUNTRIES)],
-      value: activeCountry,
-      onChange: setActiveCountry
-    }
-  ], [activeImporter, activeCountry, importersMap]);
+  // « Filtres » : by importer (the admin assigns each sheet to an importer).
+  // Only importers bringing in at least one of the brands shown, with counts.
+  const extraFilters: FilterOption[] = useMemo(() => [{
+    id: 'importer',
+    label: 'Importateur',
+    options: [ALL_IMPORTERS, ...importerChoices.map((o) => o.value), ...(activeImporter !== ALL_IMPORTERS && !importerChoices.some((o) => o.value === activeImporter) ? [activeImporter] : [])],
+    counts: Object.fromEntries(importerChoices.map((o) => [o.value, o.count])),
+    value: activeImporter,
+    onChange: setActiveImporter,
+  }], [importerChoices, activeImporter]);
+  const resetFilters = useCallback(() => { setActiveImporter(ALL_IMPORTERS); setBrandSearch(''); }, []);
+  const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (brandSearch ? 1 : 0);
+  // The 3 × 2 « Marques populaires » block only on the plain list: with a
+  // sort, a filter or a search the grid below already answers.
+  const showPopular = !brandSearch && view === 'all' && activeImporter === ALL_IMPORTERS;
 
   // Cards are real links (crawlable); the click only records the brand visit.
   const handleBrandClick = useCallback((brand: string) => {
     trackBrandVisit(brand);
   }, []);
   const brandHref = useCallback(
-    (brand: string) => getUrlFromState('tech-specs-models', { brand, available_in_tunisia: availableInTunisia || undefined }),
-    [availableInTunisia],
+    (brand: string) => getUrlFromState('tech-specs-models', { brand, available_in_tunisia: inTunisia || undefined }),
+    [inTunisia],
   );
 
   // Open a spec directly from the cross-search results card.
@@ -304,9 +273,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         onBack={() => onNavigate?.('home')}
       />
 
-      {/* Mobile/desktop unified filter bar — matches Annonces & Blogs (sort
-          pill + dark Filtres button on mobile; search input on desktop). */}
-      <div className="md:pt-0">
+      {/* Same bar as a brand's page: phones get one row (search + sort +
+          filters) that stays under the header while the list scrolls; from
+          768 px the importer menu, the search and the sort sit in the bar.
+          The wrapper holds the whole list, so the phone row can stick. */}
+      <div>
         <FilterBar
           categories={[]}
           activeCategory=""
@@ -314,10 +285,18 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           searchQuery={brandSearch}
           onSearchChange={setBrandSearch}
           showSort={false}
-          searchPlaceholder="Marque ou modèle…"
+          searchPlaceholder="Rechercher"
+          searchLabel="Rechercher une marque ou un modèle"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
+          phoneLayout="inline"
+          sortOptions={BRAND_VIEWS}
+          sortValue={view}
+          onSortValueChange={(v) => setView(v as BrandView)}
+          extraFilters={extraFilters}
+          activeFilterCount={activeFilterCount}
+          onReset={resetFilters}
+          applyLabel={`Voir ${filteredBrands.length} marque${filteredBrands.length > 1 ? 's' : ''}`}
         />
-      </div>
 
       {/* CROSS-FIELD MODEL MATCHES — when the user types a query, surface
           matching models (any brand, any spec field) so they don't have to
@@ -393,11 +372,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         )}
 
         {/* POPULAR BRANDS - Only show when no search/filter */}
-        {!brandSearch && (
+        {showPopular && (
             <div className="mb-12 md:mb-24">
               <div className="flex items-center justify-between mb-5 md:mb-10">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
-                  {availableInTunisia ? 'Marques populaires en Tunisie' : 'Marques populaires'}
+                  Marques populaires
                 </h2>
                 <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
               </div>
@@ -426,7 +405,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           {/* ALL BRANDS GRID */}
           <div className="flex items-center justify-between mb-5 md:mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
-              {brandSearch ? `Résultats pour « ${brandSearch} »` : availableInTunisia ? "Toutes les marques en Tunisie" : "Toutes les marques"}
+              {brandSearch ? `Résultats pour « ${brandSearch} »` : BRAND_VIEWS.find((o) => o.value === view)?.label}
             </h2>
             <span className="shrink-0 text-sm font-medium text-gray-600 tabular-nums">{filteredBrands.length} marque{filteredBrands.length > 1 ? 's' : ''}</span>
           </div>
@@ -463,6 +442,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
             </div>
           )}
       </Section>
+      </div>
     </main>
   );
 };
