@@ -28,7 +28,7 @@ import { apiClient } from '../services/apiClient';
 import { importersApi } from '../services/importersApi';
 import { Importer } from '../types';
 import { getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
-import { BRAND_VIEWS, ALL_IMPORTERS, orderBrands, uniqueBrands, importerOptions, importsBrand, type BrandView } from '../utils/brandListView';
+import { BRAND_VIEWS, brandGridTitle, ALL_IMPORTERS, orderBrands, uniqueBrands, importerOptions, importsBrand, type BrandView } from '../utils/brandListView';
 
 const S = {
   // White from 768 px like the cards section: the filter bar sticks out 18 px
@@ -96,9 +96,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const deferredBrandSearch = useDeferredValue(brandSearch);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImporter, setActiveImporter] = useState(ALL_IMPORTERS);
-  // « Trier » : all brands A → Z (default), most visited first, or only the
-  // brands sold in Tunisia (also what ?available_in_tunisia=true opens).
-  const [view, setView] = useState<BrandView>(availableInTunisia ? 'tunisia' : 'all');
+  // « Trier » : the page opens on its selection (« Marques populaires » +
+  // every brand A → Z); then every brand A → Z (« Toutes les marques » or
+  // « Ordre alphabétique »), most visited first, or only the brands sold in
+  // Tunisia (also what ?available_in_tunisia=true opens).
+  const [view, setView] = useState<BrandView>(availableInTunisia ? 'tunisia' : 'default');
   const inTunisia = view === 'tunisia';
 
   const allBrandsQuery = useTechSpecsBrands({ availableInTunisia: false });
@@ -217,7 +219,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (brandSearch ? 1 : 0);
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
-  const showPopular = !brandSearch && view === 'all' && activeImporter === ALL_IMPORTERS;
+  const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS;
 
   // Cards are real links (crawlable); the click only records the brand visit.
   const handleBrandClick = useCallback((brand: string) => {
@@ -295,6 +297,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           sortOptions={BRAND_VIEWS}
           sortPlacement="withFilters"
           sortValue={view}
+          sortPlaceholder="Trier"
           onSortValueChange={(v) => setView(v as BrandView)}
           extraFilters={extraFilters}
           activeFilterCount={activeFilterCount}
@@ -409,7 +412,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           {/* ALL BRANDS GRID */}
           <div className="flex items-center justify-between mb-5 md:mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
-              {brandSearch ? `Résultats pour « ${brandSearch} »` : BRAND_VIEWS.find((o) => o.value === view)?.label}
+              {brandSearch ? `Résultats pour « ${brandSearch} »` : brandGridTitle(view)}
             </h2>
             <span className="shrink-0 text-sm font-medium text-gray-600 tabular-nums">{filteredBrands.length} marque{filteredBrands.length > 1 ? 's' : ''}</span>
           </div>
