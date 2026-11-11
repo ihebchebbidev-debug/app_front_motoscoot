@@ -97,6 +97,9 @@ const Footer: React.FC<FooterProps> = () => {
               <FooterLink view="legal">Confidentialité</FooterLink>
               <FooterLink view="cookies">Cookies</FooterLink>
               <FooterLink view="faq">FAQ</FooterLink>
+              {/* /securite and /plan-du-site had no link from any page. */}
+              <FooterLink view="security">Sécurité</FooterLink>
+              <FooterLink view="sitemap">Plan du site</FooterLink>
             </ul>
           </div>
 

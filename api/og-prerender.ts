@@ -24,6 +24,7 @@ import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath } from '../utils/seoImagePath.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
+import { ficheSlugCandidates, hasTunisiaParam } from '../utils/legacyRedirects.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
   SCOOTER_125_BREADCRUMB, SCOOTER_125_PATH, Scooter125Row, fmtCh, fmtDt, fmtKg, scooter125Advice, scooter125Bands,
@@ -670,6 +671,14 @@ export default async function handler(req: any, res: any) {
       return;
     }
     if ((kind as string) === 'marque' && /^[a-z0-9-]+$/.test(slugid.replace(/\/$/, ''))) {
+      // One address per brand: the ?available_in_tunisia=true variant is the
+      // same page, and Google indexed it instead of the canonical.
+      if (hasTunisiaParam(req.query, req.url)) {
+        res.setHeader('Location', `${SITE}/fiches-techniques/${slugid.replace(/\/$/, '')}`);
+        res.setHeader('Cache-Control', 'public, s-maxage=86400');
+        res.status(301).end();
+        return;
+      }
       await renderBrand(req, res, slugid.replace(/\/$/, ''));
       return;
     }
@@ -685,6 +694,19 @@ export default async function handler(req: any, res: any) {
 
     const doc = await fetchDoc(kind, id);
     if (!doc || (!doc.id && !doc.title && !doc.name && !doc.model)) {
+      // A renamed sheet, or a legacy address whose record was recreated:
+      // 301 to the sheet that replaced it instead of a 404.
+      if (kind === 'fiche-technique') {
+        for (const candidate of ficheSlugCandidates(cleanSlugid)) {
+          const next = await fetchDoc(kind, candidate).catch(() => null);
+          const slug = next && (next as any).slug;
+          if (slug) {
+            res.setHeader('Location', `${SITE}/fiche-technique/${slug}`);
+            res.status(301).end();
+            return;
+          }
+        }
+      }
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('X-Robots-Tag', 'noindex');
       res.status(404).send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><title>Page introuvable | Moto-Scoot.tn</title><meta name="robots" content="noindex" /></head><body><h1>Page introuvable</h1><p><a href="${SITE}/">Retour à l'accueil</a></p></body></html>`);
