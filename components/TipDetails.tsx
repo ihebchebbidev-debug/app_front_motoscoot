@@ -164,15 +164,19 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
 
         {/* Featured Image */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-12">
-            <Reveal animation="scale-in">
+            {/* No fade-in: this photo is the largest element of the first screen
+                (LCP); the 700 ms reveal delayed it by ~800 ms. */}
               <div className="relative aspect-[16/10] md:aspect-[21/9] rounded-2xl md:rounded-3xl overflow-hidden bg-gray-100">
                   <img 
-                    src={tip.image} 
-                    alt={tip.title} 
+                    src={tip.image}
+                    alt={tip.title}
+                    // @ts-ignore - React 19 forwards fetchPriority
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
               </div>
-            </Reveal>
+            
         </div>
 
         {/* Article Core Content */}

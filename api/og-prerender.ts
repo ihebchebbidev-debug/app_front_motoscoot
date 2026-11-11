@@ -780,7 +780,10 @@ export default async function handler(req: any, res: any) {
     // The sheet gallery's first photo is the LCP element: start it with the
     // HTML, at the exact URL ListingGallery builds (same title, same path).
     const firstPhoto = kind === 'fiche-technique' ? techSpecShareImage(doc) : null;
-    const lcpImage = firstPhoto ? seoImagePath(firstPhoto, techSpecGalleryTitle(doc)) : null;
+    // Articles and guides: the cover photo at the top is the LCP element; the
+    // app shows cover_image || image as is (services/articlesApi, tipsApi).
+    const coverPhoto = kind === 'article' || kind === 'guide' ? String(doc.cover_image || doc.image || '') : '';
+    const lcpImage = firstPhoto ? seoImagePath(firstPhoto, techSpecGalleryTitle(doc)) : /^https?:\/\//.test(coverPhoto) ? escapeHtml(coverPhoto) : null;
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>

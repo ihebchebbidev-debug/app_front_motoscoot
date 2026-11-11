@@ -28,7 +28,7 @@ const S = {
   YearBadge: "border-none shadow-sm px-2 py-0.5 md:px-2.5 md:py-1 !text-[0.6875rem] !font-semibold !tracking-normal !text-primary-700",
 };
 
-export const TechSpecModelCard = memo(({ spec, highlightTerms = [] }: { spec: any; highlightTerms?: string[] }) => {
+export const TechSpecModelCard = memo(({ spec, highlightTerms = [], priority = false }: { spec: any; highlightTerms?: string[]; priority?: boolean }) => {
   const hl = (v: string | number | null | undefined) => highlightText(v, highlightTerms);
   const price = priceLabel(spec.priceNew);
   const cc = ccLabel(spec.engine?.cc);
@@ -44,7 +44,11 @@ export const TechSpecModelCard = memo(({ spec, highlightTerms = [] }: { spec: an
           src={getOptimizedImageUrl(spec.image, 600, 400, 80, undefined, `${spec.brand} ${spec.model} ${spec.year}`)}
           className="w-full h-full object-cover"
           alt={spec.model}
-          loading="lazy"
+          // The first card's photo is the brand page's LCP element: load it
+          // at once and first (it was lazy, found late: 1.7 s load delay).
+          loading={priority ? 'eager' : 'lazy'}
+          // @ts-ignore - React 19 forwards fetchPriority
+          fetchPriority={priority ? 'high' : undefined}
           decoding="async"
         />
         {/* Same veil as the comparator cards (home/ModelCard): white or

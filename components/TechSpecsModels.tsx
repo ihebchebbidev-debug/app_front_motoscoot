@@ -279,11 +279,12 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           {/* No entrance animation: the models are there when the finger
               arrives (they used to slide in over 700 ms, reduced motion too). */}
           <div className={S.Grid}>
-              {sortedModels.map((spec) => (
+              {sortedModels.map((spec, idx) => (
                 <ModelCard
                   key={spec.id}
                   spec={spec}
                   highlightTerms={highlightTerms}
+                  priority={idx === 0}
                 />
               ))}
             </div>
