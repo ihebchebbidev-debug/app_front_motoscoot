@@ -47,3 +47,10 @@ test('phones: popular brands in 3 columns × 2 rows (6 brands, smaller logos und
   // « Toutes les marques » keeps its own grid.
   assert.match(page, /Grid: "grid grid-cols-2 sm:grid-cols-3/);
 });
+
+test('model search results are real links that answer the finger within 100 ms', () => {
+  assert.match(page, /<Link\s+key=\{spec\.id\}\s+to=\{specHref\(spec\)\}/);
+  assert.doesNotMatch(page, /onClick=\{\(\) => handleSpecClick\(spec\)\}/);
+  assert.match(page, /duration-100 ease-out active:scale-\[0\.97\] active:bg-gray-50/);
+  assert.doesNotMatch(page, /delay=\{\(idx % 8\) \* 30\}/); // no slide-in on results
+});

@@ -254,10 +254,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   );
 
   // Open a spec directly from the cross-search results card.
-  const handleSpecClick = useCallback((spec: any) => {
-    const slug = `${spec.brand}-${spec.model}-${spec.year}`;
-    onNavigate?.('tech-specs-details', { id: spec.id, specId: spec.id, slug });
-  }, [onNavigate]);
+  // Same URL as the model cards (TechSpecModelCard).
+  const specHref = useCallback(
+    (spec: any) => getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand}-${spec.model}-${spec.year}` }),
+    [],
+  );
 
   const highlightTerms = useMemo(
     () => getHighlightTerms(deferredBrandSearch),
@@ -330,12 +331,13 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           </div>
           {matchingSpecs.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {matchingSpecs.slice(0, 12).map((spec, idx) => (
-                <Reveal key={spec.id} animation="fade-in-up" delay={(idx % 8) * 30}>
-                  <button
-                    type="button"
-                    onClick={() => handleSpecClick(spec)}
-                    className="group flex items-center gap-3 w-full text-left bg-card border border-slate-100 hover:border-primary-200 hover:shadow-sm rounded-xl p-3 transition-all"
+              {/* Real links (long press, new tab, crawlable), with press
+                  feedback as soon as the finger lands; no slide-in. */}
+              {matchingSpecs.slice(0, 12).map((spec) => (
+                  <Link
+                    key={spec.id}
+                    to={specHref(spec)}
+                    className="group flex items-center gap-3 w-full text-left bg-card border border-slate-100 hover:border-primary-200 hover:shadow-sm rounded-xl p-3 transition-[transform,background-color,border-color,box-shadow] duration-100 ease-out active:scale-[0.97] active:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
                     aria-label={`Voir la fiche ${spec.brand} ${spec.model}`}
                   >
                     <img
@@ -358,9 +360,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                         </Badge>
                       )}
                     </div>
-                    <ChevronRight size={16} className="text-slate-300 group-hover:text-primary-500 shrink-0" />
-                  </button>
-                </Reveal>
+                    <ChevronRight size={16} className="text-gray-400 group-hover:text-primary-700 shrink-0" aria-hidden="true" />
+                  </Link>
               ))}
             </div>
           ) : !searchingSpecs ? (
