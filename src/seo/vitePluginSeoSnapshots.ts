@@ -17,6 +17,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
 import { HERO_DEFAULTS } from '../../config/heroDefaults';
+import { linkBlocksFor, renderLinkBlocks } from './snapshotLinks';
 
 interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
 
@@ -42,6 +43,24 @@ async function fetchHeroImages(): Promise<{ hero: HeroImages; raw: unknown | nul
     return { raw: null, hero: { ...HERO_DEFAULTS } };
   }
 }
+
+// Brands that have technical sheets, read once at build time for the link
+// lists of the entry pages (see snapshotLinks.ts). No brand links when the
+// API is down: the pages still build, with their section links.
+const BRANDS_API = 'https://motoscoot.ihebchebbi.pro/api/tech-specs/brands';
+async function fetchBrands(): Promise<string[]> {
+  try {
+    const res = await fetch(BRANDS_API, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    const rows: unknown[] = Array.isArray(data) ? data : data?.brands || [];
+    return rows.map((b: any) => String(typeof b === 'string' ? b : b?.brand || b?.name || '')).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export interface SnapshotData { brands: string[] }
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -100,7 +119,7 @@ function renderHomeShell(hero: HeroImages): string {
     </div>`;
 }
 
-function renderFallback(snap: SeoSnapshot, hero: HeroImages): string {
+function renderFallback(snap: SeoSnapshot, hero: HeroImages, data: SnapshotData): string {
   // SSR fallback content visible to non-JS crawlers / LLM training bots.
   // React hydration replaces this on mount, so end users never see it.
   return `${snap.path === '/' ? renderHomeShell(hero) : ''}
@@ -111,11 +130,12 @@ function renderFallback(snap: SeoSnapshot, hero: HeroImages): string {
       <h1>${escapeHtml(snap.h1)}</h1>
       <p>${escapeHtml(snap.intro)}</p>
       <p><a href="/">Retour à l'accueil Moto-Scoot.tn</a></p>
+      ${renderLinkBlocks(linkBlocksFor(snap.path, data))}
     </div>
   `;
 }
 
-function injectIntoIndex(indexHtml: string, snap: SeoSnapshot, hero: HeroImages, heroRaw: unknown | null): string {
+function injectIntoIndex(indexHtml: string, snap: SeoSnapshot, hero: HeroImages, heroRaw: unknown | null, data: SnapshotData): string {
   // Replace baseline <title> + <meta description> + canonical with route-
   // specific values, then append the rest of the per-route head block.
   let html = indexHtml;
@@ -156,7 +176,7 @@ function injectIntoIndex(indexHtml: string, snap: SeoSnapshot, hero: HeroImages,
   // alone (it's already inside #root and we just enrich it).
   html = html.replace(
     /<div id="root">[\s\S]*?<\/div>/,
-    `<div id="root">${renderFallback(snap, hero)}</div>`,
+    `<div id="root">${renderFallback(snap, hero, data)}</div>`,
   );
 
   return html;
@@ -197,13 +217,17 @@ export function seoSnapshotsPlugin(): Plugin {
       // eslint-disable-next-line no-console
       console.log(`[seo-snapshots] hero images: ${heroRaw ? 'admin settings' : 'defaults (API unavailable)'}`);
 
+      const data: SnapshotData = { brands: await fetchBrands() };
+      // eslint-disable-next-line no-console
+      console.log(`[seo-snapshots] link lists: ${data.brands.length} brands`);
+
       let written = 0;
       for (const snap of SEO_SNAPSHOTS) {
         // Root snapshot REPLACES dist/index.html so the homepage gets the full
         // home metadata. Every other route writes to <outDir>/<path>/index.html
         // so SPA hosts (Vercel, Netlify, Cloudflare Pages) serve the
         // pre-stamped HTML when a deep URL is requested directly.
-        const html = injectIntoIndex(baseHtml, snap, hero, heroRaw);
+        const html = injectIntoIndex(baseHtml, snap, hero, heroRaw, data);
         const target =
           snap.path === '/'
             ? path.resolve(outDir, 'index.html')
