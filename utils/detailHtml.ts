@@ -3,6 +3,19 @@ export function scriptSafeJson(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 }
 
+/**
+ * Main photo of a fiche or a listing for the first paint (index.html shows it
+ * at once above the title, like the page's gallery; utils/firstPaint.ts). Same
+ * address as the page's preload, so it is downloaded once. Not on articles and
+ * guides: their cover sits under the text, and the text reflowing when the
+ * Inter font arrives moved it (layout shift 0.03 in Lighthouse).
+ */
+export function firstPaintImage(src: string | null | undefined, alt: string): string {
+  if (!src) return '';
+  const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<img data-first-paint="top" src="${esc(src)}" alt="${esc(alt)}" width="1200" height="900" fetchpriority="high" decoding="async" />`;
+}
+
 export function mergeDetailShell(shell: string, detail: string): string {
   const head = detail.match(/<head>([\s\S]*?)<\/head>/i)?.[1] || '';
   const body = detail.match(/<body>([\s\S]*?)<\/body>/i)?.[1] || '';
