@@ -8,10 +8,10 @@ import { Section } from '../ui/Section';
  */
 export const BrandCardSkeleton = ({ compact = false }: { compact?: boolean }) => (
   <div
-    className={`flex flex-col items-center justify-center w-full max-w-[211px] mx-auto bg-transparent ${compact ? 'h-[112px] sm:h-[155px] gap-2 sm:gap-3' : 'h-[155px] gap-3'}`}
+    className={`flex flex-col items-center justify-center w-full max-w-[211px] mx-auto bg-transparent ${compact ? 'h-[132px] sm:h-[155px] gap-2 sm:gap-3' : 'h-[155px] gap-3'}`}
     aria-hidden="true"
   >
-    <Skeleton className={`${compact ? 'w-16 h-16 sm:w-[115px] sm:h-[115px]' : 'w-[115px] h-[115px]'} rounded-2xl shrink-0`} />
+    <Skeleton className={`${compact ? 'w-24 h-24 max-w-full sm:w-[115px] sm:h-[115px]' : 'w-[115px] h-[115px]'} rounded-2xl shrink-0`} />
     <Skeleton className="h-3 w-16" />
   </div>
 );
