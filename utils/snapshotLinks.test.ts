@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SECTION_LINKS, brandLinks, linkBlocksFor, renderLinkBlocks } from '../src/seo/snapshotLinks';
+import { SECTION_LINKS, brandLinks, listingLinks, linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS } from '../src/seo/snapshotLinks';
 import { SEO_SNAPSHOTS } from '../src/seo/snapshots';
 
 const plugin = readFileSync(new URL('../src/seo/vitePluginSeoSnapshots.ts', import.meta.url), 'utf8');
@@ -42,5 +42,27 @@ test('every section link is a page that exists, and the plugin writes the blocks
   const paths = new Set(SEO_SNAPSHOTS.map((s) => s.path));
   for (const l of SECTION_LINKS) assert.ok(paths.has(l.href) || l.href.startsWith('/prix/'), l.href);
   assert.match(plugin, /\$\{renderLinkBlocks\(linkBlocksFor\(snap\.path, data\)\)\}/);
-  assert.match(plugin, /const data: SnapshotData = \{ brands: await fetchBrands\(\) \};/);
+  assert.match(plugin, /const \[brands, listings\] = await Promise\.all\(\[fetchBrands\(\), fetchListings\(\)\]\);/);
+});
+
+test('step 2: /annonces links to the listings online, at the address of their page', () => {
+  const NBSP = String.fromCharCode(0xa0);
+  const rows = [
+    { title: 'Yamaha Tmax 530 Iron 2012', listing_number: '24', price: 33500, status: 'active' },
+    { title: 'Voge 900 Blacknight  2024', listing_number: '1', price: '12000', status: 'active' },
+    { title: 'Yamaha Yamaha Neo’s 2007', listing_number: 6, price: null, status: 'active' },
+    { title: 'Vendue', listing_number: 9, price: 5000, status: 'sold' },
+    { title: '', listing_number: 10, status: 'active' },
+  ];
+  assert.deepEqual(listingLinks(rows), [
+    { href: '/annonce/yamaha-tmax-530-iron-2012-24', label: `Yamaha Tmax 530 Iron 2012 – 33${NBSP}500${NBSP}DT` },
+    { href: '/annonce/voge-900-blacknight-2024-1', label: `Voge 900 Blacknight 2024 – 12${NBSP}000${NBSP}DT` },
+    { href: '/annonce/yamaha-yamaha-neos-2007-6', label: 'Yamaha Yamaha Neo’s 2007' },
+  ]);
+  const blocks = linkBlocksFor('/annonces', { listings: rows });
+  assert.equal(blocks[0].heading, 'Annonces en ligne'); // the listings first
+  assert.equal(blocks[1].heading, 'Rubriques');
+  assert.equal(linkBlocksFor('/actualites', { listings: rows }).length, 1); // only on /annonces
+  assert.equal(linkBlocksFor('/annonces', { listings: [] }).length, 1); // API down: section links only
+  assert.equal(listingLinks(Array.from({ length: 150 }, (_, i) => ({ title: `Moto ${i}`, listing_number: i, status: 'active' }))).length, MAX_LISTING_LINKS);
 });
