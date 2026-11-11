@@ -213,7 +213,9 @@ const S = {
   FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[0.8125rem] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
-  Header: "flex items-center justify-between mb-3 md:mb-6",
+  // Phones: no breadcrumb row (its 44 px go to the photo and the title); « ← » sits on the photo
+  // and the brand above the title links to the brand page. Kept in the DOM for crawlers.
+  Header: "hidden md:flex items-center justify-between mb-3 md:mb-6",
   ContentBlock: "bg-card rounded-2xl border border-border overflow-hidden shadow-sm",
   BlockBody: "px-6 md:px-8 pt-3 pb-6 md:pt-4 md:pb-8 animate-fade-in",
   SpecRow: "border-b border-border/50 last:border-0",
@@ -519,6 +521,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
+  const brandHref = getUrlFromState('tech-specs-models', { brand: spec.brand });
   // Floating capsule: the price as typed in the admin, sorted (utils/capsulePrice.ts),
   // and a call link to the importer's first number (utils/phoneUtils.ts telHref).
   const capsule = capsulePrice(spec.priceNew);
@@ -544,7 +547,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
              parents={[
                { label: 'Accueil', href: getUrlFromState('home'), onClick: () => onNavigate?.('home') },
                { label: 'Fiches techniques', href: getUrlFromState('tech-specs-brands'), onClick: () => onNavigate?.('tech-specs-brands') },
-               { label: spec.brand, href: getUrlFromState('tech-specs-models', { brand: spec.brand }), onClick: handleBack },
+               { label: spec.brand, href: brandHref, onClick: handleBack },
              ]}
              current={`${spec.model}${spec.year ? ` ${spec.year}` : ''}`}
            />
@@ -565,6 +568,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                   onFavoriteToggle={(e) => { e?.stopPropagation?.(); toggleSpecFavorite(); }}
                   onShare={handleShare}
                   showFavorite={false}
+                  backLink={{ href: brandHref, label: spec.brand, onClick: handleBack }}
                   overlayTopLeft={spec.normLogo ? (
                     <img src={spec.normLogo} alt="Norme environnementale" className="h-6 md:h-8 w-auto object-contain" referrerPolicy="no-referrer" />
                   ) : undefined}
@@ -575,9 +579,19 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             {/* MOBILE HEADER INFO (Visible only on mobile/tablet) */}
             <div className="lg:hidden mb-8">
               <div className="flex justify-between items-center mb-1">
-                <span className="font-sans text-[14px] font-bold text-primary-600 tracking-[0px]">
+                {/* The brand is the way up on phones (the breadcrumb row is hidden there). */}
+                <a
+                  href={brandHref}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    handleBack();
+                  }}
+                  className="inline-flex items-center gap-0.5 -my-3 py-3 font-sans text-[14px] font-bold text-primary-600 tracking-[0px] active:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 rounded"
+                >
                   {spec.brand}
-                </span>
+                  <ChevronRight size={15} strokeWidth={2.75} aria-hidden="true" />
+                </a>
               </div>
               <h1 className="font-sans text-[24px] font-extrabold text-foreground leading-tight tracking-[0px] mb-2">
                 <span className="sr-only">{spec.brand} </span>{spec.model}
@@ -764,7 +778,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         )}
       </article>
 
-      {/* Floating action capsule (phones and tablets): dark frosted glass that
+      {/* Floating action capsule (phones and tablets): white frosted glass that
           floats 12 px above the content and the iPhone home indicator. Price,
           call the importer, compare. Price and call are 48 px; « Comparer » is a
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
