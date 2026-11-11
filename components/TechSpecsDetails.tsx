@@ -9,7 +9,8 @@ import {
   ArrowRight,
   ChevronRight,
   Phone,
-  Mail
+  Mail,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
 import { techSpecsApi } from '../services/techSpecsApi';
@@ -200,7 +201,12 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 };
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-32 md:pb-20",
+  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
+  // Floating capsule: 56 px tall, 4 px inset, fully rounded (R 28 outside, R 24 inside).
+  FloatBar: "lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-14 p-1 flex items-center gap-1 rounded-full bg-[rgba(22,26,34,0.8)] backdrop-blur-2xl backdrop-saturate-[1.8] ring-1 ring-inset ring-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_-8px_rgba(15,18,24,0.45),0_2px_8px_rgba(15,18,24,0.18)] supports-[not(backdrop-filter:blur(1px))]:bg-[rgba(22,26,34,0.94)] [@media(prefers-reduced-transparency:reduce)]:bg-[#161a22] [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none",
+  FloatPrice: "flex-1 min-w-0 h-12 px-3 min-[360px]:px-4 flex flex-col justify-center rounded-full bg-white/[0.09] ring-1 ring-inset ring-white/[0.06]",
+  FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/[0.09] ring-1 ring-inset ring-white/[0.06] text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white/[0.18] [@media(hover:hover)]:hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+  FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[13px] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   Header: "flex items-center justify-between mb-3 md:mb-6",
@@ -749,33 +755,35 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         )}
       </article>
 
-      {/* STICKY BOTTOM BAR (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-lg border-t border-gray-200 p-4 z-50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex flex-col min-w-0">
-            <span className="text-lg font-black text-gray-900 leading-none truncate">{spec.priceNew}</span>
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">TTC</span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {spec.importer?.phone && (
-              <a
-                href={`tel:${spec.importer.phone.replace(/\s/g, '')}`}
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-900 text-white shadow-md hover:bg-gray-800 transition-colors shrink-0"
-                aria-label={`Contacter ${spec.importer.name}`}
-                title={`Contacter ${spec.importer.name}`}
-              >
-                <Phone size={18} />
-              </a>
-            )}
-            <Button
-              variant="primary"
-              className="rounded-xl px-6 py-3 text-[13px] font-extrabold uppercase tracking-wider shadow-md shadow-orange-500/20"
-              onClick={handleCompare}
-            >
-              Comparer
-            </Button>
-          </div>
+      {/* Floating action capsule (phones and tablets): dark frosted glass that
+          floats 12 px above the content and the iPhone home indicator. Price,
+          call the importer, compare. Price and call are 48 px; « Comparer » is a
+          smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
+      <div className={S.FloatBar} role="region" aria-label="Prix et actions">
+        <div className={S.FloatPrice}>
+          {spec.priceNew ? (
+            <>
+              <span className="text-[15px] min-[360px]:text-base font-bold text-white leading-tight tabular-nums whitespace-nowrap truncate">{spec.priceNew}</span>
+              <span className="text-[11px] font-medium text-white/70 leading-tight tracking-[0.01em] whitespace-nowrap truncate">Prix neuf TTC</span>
+            </>
+          ) : (
+            <span className="text-sm font-semibold text-white/85 leading-tight truncate">Prix non communiqué</span>
+          )}
         </div>
+        {spec.importer?.phone && (
+          <a
+            href={`tel:${spec.importer.phone.replace(/\s/g, '')}`}
+            className={S.FloatCall}
+            aria-label={`Appeler ${spec.importer.name}`}
+            title={`Appeler ${spec.importer.name}`}
+          >
+            <Phone size={19} strokeWidth={2.2} aria-hidden="true" />
+          </a>
+        )}
+        <button type="button" className={S.FloatCompare} onClick={handleCompare}>
+          <ArrowLeftRight size={15} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
+          Comparer
+        </button>
       </div>
 
       {spec && (
