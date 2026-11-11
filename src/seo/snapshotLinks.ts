@@ -119,6 +119,9 @@ export interface SnapshotLinkData {
   guides?: SnapshotEditorial[];
 }
 
+/** Newest listings and articles linked from the home page. */
+export const HOME_LATEST = 8;
+
 /** The link blocks of one entry page. A page never links to itself. */
 export function linkBlocksFor(path: string, data: SnapshotLinkData = {}): SnapshotLinkBlock[] {
   const blocks: SnapshotLinkBlock[] = [
@@ -133,6 +136,13 @@ export function linkBlocksFor(path: string, data: SnapshotLinkData = {}): Snapsh
   if (articles.length) blocks.unshift({ heading: 'Articles', links: articles });
   const guides = path === '/conseils' ? editorialLinks(data.guides || [], '/guide') : [];
   if (guides.length) blocks.unshift({ heading: 'Guides', links: guides });
+  // Home page: the newest listings and articles too (step 4), as on the page.
+  if (path === '/') {
+    const latestArticles = editorialLinks(data.articles || [], '/article').slice(0, HOME_LATEST);
+    if (latestArticles.length) blocks.unshift({ heading: 'Derniers articles', links: latestArticles });
+    const latestListings = listingLinks(data.listings || []).slice(0, HOME_LATEST);
+    if (latestListings.length) blocks.unshift({ heading: 'Dernières annonces', links: latestListings });
+  }
   const brands = BRAND_PAGES.has(path) ? brandLinks(data.brands || []) : [];
   if (brands.length) blocks.push({ heading: 'Marques', links: brands });
   return blocks;

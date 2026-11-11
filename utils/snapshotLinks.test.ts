@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SECTION_LINKS, brandLinks, listingLinks, editorialLinks, linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS } from '../src/seo/snapshotLinks';
+import { SECTION_LINKS, brandLinks, listingLinks, editorialLinks, linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, HOME_LATEST } from '../src/seo/snapshotLinks';
 import { SEO_SNAPSHOTS } from '../src/seo/snapshots';
 
 const plugin = readFileSync(new URL('../src/seo/vitePluginSeoSnapshots.ts', import.meta.url), 'utf8');
@@ -83,4 +83,15 @@ test('step 3: /actualites links to its articles, /conseils to its guides, never 
   assert.equal(linkBlocksFor('/conseils', { guides })[0].heading, 'Guides');
   assert.equal(linkBlocksFor('/annonces', { articles, guides }).length, 1); // only on their own page
   assert.equal(linkBlocksFor('/actualites', { articles: [] }).length, 1); // API down: section links only
+});
+
+test('step 4: the home page links to the newest listings and articles', () => {
+  const long = 'mot '.repeat(320);
+  const listings = Array.from({ length: 12 }, (_, i) => ({ title: `Moto ${i}`, listing_number: i + 1, status: 'active' }));
+  const articles = [{ id: 'a1', title: 'Essai', content: long }, { id: 'a2', title: 'Brève', content: 'court' }];
+  const blocks = linkBlocksFor('/', { listings, articles, brands: ['SYM'] });
+  assert.deepEqual(blocks.map((b) => b.heading), ['Dernières annonces', 'Derniers articles', 'Rubriques', 'Marques']);
+  assert.equal(blocks[0].links.length, HOME_LATEST);
+  assert.deepEqual(blocks[1].links.map((l) => l.href), ['/article/essai-a1']);
+  assert.equal(linkBlocksFor('/comparateur', { listings, articles }).length, 1);
 });
