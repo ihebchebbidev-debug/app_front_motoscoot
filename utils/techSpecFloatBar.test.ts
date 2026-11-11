@@ -46,7 +46,7 @@ test('call link: always the first number, with +216 for a Tunisian one', () => {
 });
 
 test('the capsule keeps the call button and a smaller « Comparer » (40 px pill)', () => {
-  assert.match(page, /FloatCall: "ms-capsule-well shrink-0 w-12 h-12 /);
+  assert.match(page, /FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-900 text-white /); // dark, so it stands out
   assert.match(page, /FloatCompare: "shrink-0 h-10 /);
   assert.match(page, /onClick=\{handleCompare\}>\s*<ArrowLeftRight[^>]*className="max-\[359px\]:hidden" \/>\s*Comparer/);
   assert.match(page, /pb-\[calc\(7rem\+env\(safe-area-inset-bottom\)\)\] md:pb-20/);
@@ -60,10 +60,9 @@ test('material and depth: one light glass, tinted wells on it, a scroll edge und
   assert.match(capsule, /inset 0 -1px 0 rgba\(15, 18, 24, 0\.05\)/); // thickness
   assert.match(capsule, /animation: ms-capsule-in /); // materializes once
   assert.match(css, /@keyframes ms-capsule-in \{\s*from \{[^}]*backdrop-filter: blur\(0\) saturate\(1\);/);
-  // never light glass on light glass: the price and the call button are tinted wells
+  // never light glass on light glass: the price is a tinted well, the call button and « Comparer » solid layers
   assert.match(css, /\.ms-capsule-well \{ background: rgba\(15, 18, 24, 0\.045\); \}/);
   assert.match(page, /FloatPrice: "ms-capsule-well /);
-  assert.match(page, /FloatCall: "ms-capsule-well /);
   assert.doesNotMatch(page, /bg-white\/60/);
   // the page dissolves under the capsule
   assert.match(page, /FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 /);
