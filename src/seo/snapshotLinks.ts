@@ -43,11 +43,55 @@ export function brandLinks(brands: string[]): SnapshotLink[] {
   return out.sort((a, b) => a.label.localeCompare(b.label, 'fr'));
 }
 
+export interface SnapshotListing {
+  title?: string | null;
+  listing_number?: string | number | null;
+  id?: string | number | null;
+  price?: number | string | null;
+  status?: string | null;
+}
+
+/** At most this many listings in the HTML (newest first, as the API sends them). */
+export const MAX_LISTING_LINKS = 100;
+
+const NBSP = String.fromCharCode(0xa0);
+const dt = (v: unknown) => {
+  const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^\d.]/g, ''));
+  return Number.isFinite(n) && n > 0 ? `${Math.round(n).toLocaleString('fr-FR').replace(/\s/g, NBSP)}${NBSP}DT` : '';
+};
+
+/**
+ * « /annonce/yamaha-tmax-530-iron-2012-24 »: the same address as the listing
+ * cards, the sitemap and the listing page's canonical (slug of the title +
+ * listing number), so no link goes through a redirect.
+ */
+export function listingLinks(listings: SnapshotListing[]): SnapshotLink[] {
+  const out: SnapshotLink[] = [];
+  const seen = new Set<string>();
+  for (const l of listings) {
+    if (!l || (l.status && l.status !== 'active')) continue;
+    const title = String(l.title || '').replace(/\s+/g, ' ').trim();
+    const ref = l.listing_number ?? l.id;
+    if (!title || ref === null || ref === undefined || ref === '') continue;
+    const href = `/annonce/${slugify(title)}-${ref}`;
+    if (seen.has(href)) continue;
+    seen.add(href);
+    const price = dt(l.price);
+    out.push({ href, label: price ? `${title} – ${price}` : title });
+    if (out.length >= MAX_LISTING_LINKS) break;
+  }
+  return out;
+}
+
 /** The link blocks of one entry page. A page never links to itself. */
-export function linkBlocksFor(path: string, data: { brands?: string[] } = {}): SnapshotLinkBlock[] {
+export function linkBlocksFor(path: string, data: { brands?: string[]; listings?: SnapshotListing[] } = {}): SnapshotLinkBlock[] {
   const blocks: SnapshotLinkBlock[] = [
     { heading: 'Rubriques', links: SECTION_LINKS.filter((l) => l.href !== path) },
   ];
+  // /annonces: the listings themselves, first (step 2). Before this, Google
+  // only knew them from the sitemap.
+  const listings = path === '/annonces' ? listingLinks(data.listings || []) : [];
+  if (listings.length) blocks.unshift({ heading: 'Annonces en ligne', links: listings });
   const brands = BRAND_PAGES.has(path) ? brandLinks(data.brands || []) : [];
   if (brands.length) blocks.push({ heading: 'Marques', links: brands });
   return blocks;

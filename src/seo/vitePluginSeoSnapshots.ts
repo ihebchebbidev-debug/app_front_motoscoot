@@ -17,7 +17,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
 import { HERO_DEFAULTS } from '../../config/heroDefaults';
-import { linkBlocksFor, renderLinkBlocks } from './snapshotLinks';
+import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing } from './snapshotLinks';
 
 interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
 
@@ -60,7 +60,29 @@ async function fetchBrands(): Promise<string[]> {
   }
 }
 
-export interface SnapshotData { brands: string[] }
+// Listings online at build time, newest first, for /annonces (step 2). A
+// listing posted after the build reaches this HTML at the next deploy; the
+// sitemap gives it to Google within the hour meanwhile.
+const LISTINGS_API = 'https://motoscoot.ihebchebbi.pro/api/listings';
+async function fetchListings(): Promise<SnapshotListing[]> {
+  const out: SnapshotListing[] = [];
+  try {
+    for (let page = 1; page <= 5 && out.length < MAX_LISTING_LINKS; page++) {
+      const res = await fetch(`${LISTINGS_API}?limit=100&page=${page}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      const rows: SnapshotListing[] = Array.isArray(data) ? data : data?.listings || [];
+      out.push(...rows);
+      const totalPages = Number(data?.pagination?.totalPages || 1);
+      if (!rows.length || page >= totalPages) break;
+    }
+    return out;
+  } catch {
+    return out;
+  }
+}
+
+export interface SnapshotData { brands: string[]; listings: SnapshotListing[] }
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -217,9 +239,10 @@ export function seoSnapshotsPlugin(): Plugin {
       // eslint-disable-next-line no-console
       console.log(`[seo-snapshots] hero images: ${heroRaw ? 'admin settings' : 'defaults (API unavailable)'}`);
 
-      const data: SnapshotData = { brands: await fetchBrands() };
+      const [brands, listings] = await Promise.all([fetchBrands(), fetchListings()]);
+      const data: SnapshotData = { brands, listings };
       // eslint-disable-next-line no-console
-      console.log(`[seo-snapshots] link lists: ${data.brands.length} brands`);
+      console.log(`[seo-snapshots] link lists: ${brands.length} brands, ${listings.length} listings`);
 
       let written = 0;
       for (const snap of SEO_SNAPSHOTS) {
