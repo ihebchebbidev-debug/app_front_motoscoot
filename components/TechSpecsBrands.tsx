@@ -55,8 +55,11 @@ const S = {
   // Popular brands on phones: 3 columns × 2 rows (the 6 brands on one
   // screen). Smaller tile and logo under 640 px; the regular tile from there.
   PopularGrid: "grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
-  CardCompact: "h-[112px] sm:h-[155px] gap-2 sm:gap-3",
-  LogoCompact: "w-16 h-16 sm:w-[115px] sm:h-[115px]",
+  // Phones: 96 px logo boxes (were 64; the logo files carry wide margins, so
+  // the drawing itself goes from ~29 to ~43 px) in a 132 px tile; the name
+  // keeps its size. max-w-full: at 320 px a tile is 85 px wide.
+  CardCompact: "h-[132px] sm:h-[155px] gap-2 sm:gap-3",
+  LogoCompact: "w-24 h-24 max-w-full sm:w-[115px] sm:h-[115px]",
   BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full truncate px-2",
   
   // Filter Styles
