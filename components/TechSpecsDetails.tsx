@@ -1,4 +1,4 @@
-import { displayPhone } from '../utils/phoneUtils';
+import { displayPhone, telHref } from '../utils/phoneUtils';
 import React, { useEffect, useMemo, useState, memo, useCallback, useRef } from 'react';
 import {
   ChevronLeft,
@@ -13,6 +13,7 @@ import {
   ArrowLeftRight
 } from 'lucide-react';
 import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
+import { capsulePrice } from '../utils/capsulePrice';
 import { techSpecsApi } from '../services/techSpecsApi';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
@@ -180,7 +181,7 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
         {importer.phone && (
           <div className="flex items-center gap-3 text-gray-300">
             <Phone size={16} className="shrink-0 text-gray-500" />
-            <a href={`tel:${importer.phone.replace(/\s/g, '')}`} className="text-sm hover:text-white transition-colors">{displayPhone(importer.phone)}</a>
+            <a href={telHref(importer.phone) || undefined} className="text-sm hover:text-white transition-colors">{displayPhone(importer.phone)}</a>
           </div>
         )}
         {importer.email && (
@@ -203,10 +204,10 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 56 px tall, 4 px inset, fully rounded (R 28 outside, R 24 inside).
-  FloatBar: "lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-14 p-1 flex items-center gap-1 rounded-full bg-[rgba(22,26,34,0.8)] backdrop-blur-2xl backdrop-saturate-[1.8] ring-1 ring-inset ring-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_-8px_rgba(15,18,24,0.45),0_2px_8px_rgba(15,18,24,0.18)] supports-[not(backdrop-filter:blur(1px))]:bg-[rgba(22,26,34,0.94)] [@media(prefers-reduced-transparency:reduce)]:bg-[#161a22] [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none",
-  FloatPrice: "flex-1 min-w-0 h-12 px-3 min-[360px]:px-4 flex flex-col justify-center rounded-full bg-white/[0.09] ring-1 ring-inset ring-white/[0.06]",
-  FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/[0.09] ring-1 ring-inset ring-white/[0.06] text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white/[0.18] [@media(hover:hover)]:hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
-  FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[13px] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+  FloatBar: "lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-14 p-1 flex items-center gap-1 rounded-full bg-white/65 backdrop-blur-2xl backdrop-saturate-[1.8] ring-1 ring-inset ring-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_0.5px_rgba(15,18,24,0.10),0_12px_32px_-8px_rgba(15,18,24,0.28),0_2px_8px_rgba(15,18,24,0.08)] supports-[not(backdrop-filter:blur(1px))]:bg-white/95 [@media(prefers-reduced-transparency:reduce)]:bg-white [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none",
+  FloatPrice: "flex-1 min-w-0 h-12 px-3 min-[360px]:px-4 flex flex-col justify-center rounded-full bg-white/60 ring-1 ring-inset ring-[rgba(15,18,24,0.06)]",
+  FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/60 ring-1 ring-inset ring-[rgba(15,18,24,0.06)] text-gray-900 transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white [@media(hover:hover)]:hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
+  FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[0.8125rem] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   Header: "flex items-center justify-between mb-3 md:mb-6",
@@ -515,6 +516,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
+  // Floating capsule: the price as typed in the admin, sorted (utils/capsulePrice.ts),
+  // and a call link to the importer's first number (utils/phoneUtils.ts telHref).
+  const capsule = capsulePrice(spec.priceNew);
+  const callHref = telHref(spec.importer?.phone);
+
   return (
     <main className={S.Wrapper}>
       <SEO 
@@ -760,19 +766,21 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           call the importer, compare. Price and call are 48 px; « Comparer » is a
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
       <div className={S.FloatBar} role="region" aria-label="Prix et actions">
-        <div className={S.FloatPrice}>
-          {spec.priceNew ? (
+        <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
+          {capsule.kind === 'amount' ? (
             <>
-              <span className="text-[15px] min-[360px]:text-base font-bold text-white leading-tight tabular-nums whitespace-nowrap truncate">{spec.priceNew}</span>
-              <span className="text-[11px] font-medium text-white/70 leading-tight tracking-[0.01em] whitespace-nowrap truncate">Prix neuf TTC</span>
+              <span className="text-[0.9375rem] min-[360px]:text-base font-bold text-gray-900 leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[0.6875rem] font-medium text-gray-600 leading-tight tracking-[0.01em] whitespace-nowrap truncate">{capsule.sub}</span>
             </>
+          ) : capsule.kind === 'text' ? (
+            <span className="text-[0.8125rem] font-semibold text-gray-900 leading-[1.2] line-clamp-2 break-words">{capsule.main}</span>
           ) : (
-            <span className="text-sm font-semibold text-white/85 leading-tight truncate">Prix non communiqué</span>
+            <span className="text-sm font-semibold text-gray-700 leading-tight truncate">{capsule.main}</span>
           )}
         </div>
-        {spec.importer?.phone && (
+        {callHref && (
           <a
-            href={`tel:${spec.importer.phone.replace(/\s/g, '')}`}
+            href={callHref}
             className={S.FloatCall}
             aria-label={`Appeler ${spec.importer.name}`}
             title={`Appeler ${spec.importer.name}`}
