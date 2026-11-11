@@ -46,7 +46,10 @@ const S = {
   Subtitle: "max-w-none text-[15px] md:text-[20px] font-medium tracking-[0px] leading-snug md:leading-[27px] text-white",
   
   // Unified Grid & Cards
-  Grid: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6",
+  // Phones: 3 columns for every brand, like « Marques populaires » (the
+  // all-brands grid had 2 big tiles per row). Under 360 px (small phones)
+  // 2 columns, so a tile never drops under ~96 px for its 96 px logo.
+  Grid: "grid grid-cols-2 min-[360px]:grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
   // Feedback as soon as the finger lands (the site turns the browser tap
   // highlight off): the tile presses in and darkens; hover effects are for
   // mice only, they used to stay stuck after a tap.
@@ -55,7 +58,7 @@ const S = {
   LogoImage: "max-w-full max-h-full object-contain",
   // Popular brands on phones: 3 columns × 2 rows (the 6 brands on one
   // screen). Smaller tile and logo under 640 px; the regular tile from there.
-  PopularGrid: "grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+  PopularGrid: "grid grid-cols-2 min-[360px]:grid-cols-3 gap-x-2 gap-y-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
   // Phones: 96 px logo boxes (were 64; the logo files carry wide margins, so
   // the drawing itself goes from ~29 to ~43 px) in a 132 px tile; the name
   // keeps its size. max-w-full: at 320 px a tile is 85 px wide.
@@ -413,7 +416,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
 
           {isLoading ? (
             <div className={S.Grid}>
-              {Array.from({ length: 18 }).map((_, idx) => <BrandCardSkeleton key={idx} />)}
+              {Array.from({ length: 15 }).map((_, idx) => <BrandCardSkeleton key={idx} compact />)}
             </div>
           ) : filteredBrands.length > 0 ? (
             <div className={S.Grid}>
@@ -424,6 +427,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                     href={brandHref(brand)}
                     onClick={handleBrandClick}
                     logoMap={logoMap}
+                    compact
                   />
                 </Reveal>
               ))}
