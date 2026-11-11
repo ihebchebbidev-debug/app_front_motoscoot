@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, X, Heart, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Heart, Share2, ArrowLeft } from 'lucide-react';
 
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
 import { photoFit } from '../../utils/photoFit';
@@ -16,6 +16,10 @@ interface ListingGalleryProps {
   onShare?: () => void;
   showFavorite?: boolean;
   overlayTopLeft?: React.ReactNode;
+  /** Phones only (under 768 px): a « ← » on the photo, top left, mirroring
+   *  « partager » on the right. It stands in for the breadcrumb row, which
+   *  the page hides on phones to give the photo and the title that space. */
+  backLink?: { href: string; label: string; onClick?: () => void };
 }
 
 const S = {
@@ -53,7 +57,8 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
   onFavoriteToggle, 
   onShare,
   showFavorite = true,
-  overlayTopLeft
+  overlayTopLeft,
+  backLink
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -195,8 +200,23 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
           )}
           
 
-          {overlayTopLeft && (
-            <div className="absolute top-4 left-4 z-30">
+          {(overlayTopLeft || backLink) && (
+            <div className="absolute top-4 left-4 z-30 flex items-center gap-3">
+              {backLink && (
+                <a
+                  href={backLink.href}
+                  aria-label={`Retour à ${backLink.label}`}
+                  className={`${S.OverlayActionBtn} md:hidden hover:bg-card/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900`}
+                  onClick={(e) => {
+                    e.stopPropagation(); // not the photo viewer
+                    if (!backLink.onClick || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    backLink.onClick();
+                  }}
+                >
+                  <ArrowLeft size={20} strokeWidth={2.5} className="text-gray-900" aria-hidden="true" />
+                </a>
+              )}
               {overlayTopLeft}
             </div>
           )}

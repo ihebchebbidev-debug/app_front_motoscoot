@@ -76,7 +76,8 @@ test('phones: 24 px under the header and 12 px to the title, on every page', () 
     assert.match(src, /<PageBreadcrumb className="md:hidden mb-3"/, p);
   }
   assert.match(read('components/ListingDetails.tsx'), /Header: "flex items-center justify-between mb-3 md:mb-6"/);
-  assert.match(read('components/TechSpecsDetails.tsx'), /Header: "flex items-center justify-between mb-3 md:mb-6"/);
+  // Fiche: no breadcrumb row on phones (owner, 2026-11-11); « ← » on the photo instead.
+  assert.match(read('components/TechSpecsDetails.tsx'), /Header: "hidden md:flex items-center justify-between mb-3 md:mb-6"/);
   for (const p of ['components/ArticleDetails.tsx', 'components/TipDetails.tsx']) {
     const src = read(p);
     assert.match(src, /<div className="pt-0 md:pt-8">/, p);
