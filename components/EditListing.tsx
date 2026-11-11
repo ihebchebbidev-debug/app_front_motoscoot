@@ -77,7 +77,7 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ url, index, total, onRemo
       <button type="button"
         onClick={(e) => { e.stopPropagation(); onRemove(url); }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition shadow-lg z-10"
+        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 touch:opacity-100 transition shadow-lg z-10"
         aria-label="Supprimer la photo" title="Supprimer">
         <Trash2 size={14} />
       </button>
@@ -85,7 +85,7 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({ url, index, total, onRemo
         <button type="button"
           onClick={(e) => { e.stopPropagation(); onSetCover(index); }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full bg-orange-500 text-white text-[9px] font-extrabold uppercase tracking-wider shadow hover:bg-orange-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition z-10"
+          className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full bg-orange-500 text-white text-[9px] font-extrabold uppercase tracking-wider shadow hover:bg-orange-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 touch:opacity-100 transition z-10"
           title="Définir comme couverture">
           <Star size={10} /> Couverture
         </button>
