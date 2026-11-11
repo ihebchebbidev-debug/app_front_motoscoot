@@ -290,6 +290,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
           phoneLayout="inline"
           sortOptions={BRAND_VIEWS}
+          sortPlacement="withFilters"
           sortValue={view}
           onSortValueChange={(v) => setView(v as BrandView)}
           extraFilters={extraFilters}

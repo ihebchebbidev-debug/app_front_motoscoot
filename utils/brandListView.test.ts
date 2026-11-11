@@ -36,3 +36,11 @@ test('the brand list uses the shared bar: sort, importer filter, sticky phone ro
   assert.match(page, /const showPopular = !brandSearch && view === 'all' && activeImporter === ALL_IMPORTERS;/);
   assert.match(page, /useState<BrandView>\(availableInTunisia \? 'tunisia' : 'all'\)/);
 });
+
+test('from 768 px the brand list puts the sort next to the importer menu, the search on the right', () => {
+  assert.match(page, /sortPlacement="withFilters"/);
+  const bar = readFileSync(new URL('../components/ui/FilterBar.tsx', import.meta.url), 'utf8');
+  assert.match(bar, /\{sortWithFilters && sortSelect\}/);
+  assert.match(bar, /'relative group flex-1 min-w-0 max-w-\[360px\] ml-auto'/);
+  assert.match(bar, /\{wrapBar && sortSelect\}/); // the brand page keeps its sort at the end
+});
