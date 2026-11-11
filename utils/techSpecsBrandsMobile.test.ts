@@ -30,7 +30,7 @@ test('no brand found: say it and offer to clear the search', () => {
 test('type scale: sentence-case titles, readable counts and names, no 9-11 px text', () => {
   assert.equal((page.match(/text-xl md:text-2xl font-bold text-gray-900 tracking-\[-0\.01em\] leading-tight/g) || []).length, 3);
   assert.doesNotMatch(page, /font-\[900\] text-slate-900 uppercase/);
-  assert.match(page, /'Marques populaires'/);
+  assert.match(page, />\s*Marques populaires\s*</);
   assert.match(page, /\{filteredBrands\.length\} marque\{filteredBrands\.length > 1 \? 's' : ''\}/);
   assert.equal((page.match(/shrink-0 text-sm font-medium text-gray-600 tabular-nums/g) || []).length, 2);
   assert.match(page, /BrandName: "text-sm font-semibold text-gray-900 /);

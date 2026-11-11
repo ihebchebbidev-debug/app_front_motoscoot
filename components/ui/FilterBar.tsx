@@ -52,6 +52,10 @@ export interface FilterBarProps {
   phoneLayout?: 'stacked' | 'inline';
   /** Name of the search field for screen readers when the placeholder is short. */
   searchLabel?: string;
+  /** From 768 px: where the sort menu sits. 'end' (default): after the
+   *  search (brand page). 'withFilters': right after the filter menus, the
+   *  search alone on the right (brand list). */
+  sortPlacement?: 'end' | 'withFilters';
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -78,6 +82,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   phoneSearch = false,
   phoneLayout = 'stacked',
   searchLabel,
+  sortPlacement = 'end',
 }) => {
   // « Scooter 6 » / greyed when nothing would show (the selected one stays usable).
   const countOf = (counts: Record<string, number> | undefined, opt: string) =>
@@ -103,6 +108,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
 
   const inline = phoneLayout === 'inline' && !onlySearch;
+  const sortWithFilters = hasCustomSort && sortPlacement === 'withFilters';
+  // At the end of the bar (after the search) the sort makes the bar wrap
+  // under 1280 px; next to the filters everything fits on one line from 768 px.
+  const sortSelect = hasCustomSort ? (
+    <div className={`flex items-center gap-2 ${sortWithFilters ? '' : 'order-12 xl:order-last pl-2 xl:pl-4 pr-1'}`}>
+      <ArrowUpDown size={16} className="text-gray-500 shrink-0" aria-hidden="true" />
+      <select
+        aria-label="Trier par"
+        value={sortValue}
+        onChange={(e) => onSortValueChange!(e.target.value)}
+        className="bg-gray-50 border border-transparent rounded-xl pl-3 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
+      >
+        {sortOptions!.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  ) : null;
+  const wrapBar = hasCustomSort && !sortWithFilters;
   const searchOnPage = phoneSearch || inline;
   // « Filtres, 2 actifs »: the label used to override the badge, so screen
   // readers never heard how many filters were on.
@@ -153,7 +176,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full min-h-11 pl-10 pr-11 bg-card border border-gray-200 rounded-xl text-[16px] font-medium text-gray-900 placeholder:text-gray-500 outline-none focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-900/10 transition-colors [&::-webkit-search-cancel-button]:appearance-none"
+                  className={`w-full min-h-11 pl-10 ${searchQuery ? 'pr-11' : 'pr-3'} bg-card border border-gray-200 rounded-xl text-[16px] font-medium text-gray-900 placeholder:text-gray-500 outline-none focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-gray-900/10 transition-colors [&::-webkit-search-cancel-button]:appearance-none`}
                 />
                 {searchQuery && (
                   <button
@@ -408,7 +431,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           {/* With a sort (fiches-techniques brand page): the sort sits in the bar
               and the search is shorter. Under 1280 px the search goes to a
               second line, so the bar never runs off the screen (tablets). */}
-          <div className={`bg-card rounded-2xl md:rounded-[24px] p-2 shadow-xl border border-gray-100 flex items-center w-full -mt-10 relative z-30 ${hasCustomSort ? 'flex-wrap xl:flex-nowrap gap-2 xl:gap-0' : ''}`}>
+          <div className={`bg-card rounded-2xl md:rounded-[24px] p-2 shadow-xl border border-gray-100 flex items-center w-full -mt-10 relative z-30 ${wrapBar ? 'flex-wrap xl:flex-nowrap gap-2 xl:gap-0' : ''}`}>
               {(categories.length > 0 || categoriesVariant === 'dropdown') && (
                 <>
                   {categoriesVariant === 'dropdown' ? (
@@ -444,11 +467,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       ))}
                     </div>
                   )}
-                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${hasCustomSort ? 'xl:block' : 'md:block'}`}></div>
+                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${wrapBar ? 'xl:block' : 'md:block'}`}></div>
                 </>
               )}
 
-              {extraFilters.length > 0 && (
+              {(extraFilters.length > 0 || sortWithFilters) && (
                 <div className="hidden md:flex items-center gap-2 mr-3">
                   {extraFilters.map(filter => (
                     <div key={filter.id} className="relative">
@@ -470,28 +493,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       </select>
                     </div>
                   ))}
-                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${hasCustomSort ? 'xl:block' : 'md:block'}`}></div>
+                  {sortWithFilters && sortSelect}
+                  <div className={`h-8 w-px bg-gray-100 mx-3 hidden ${wrapBar ? 'xl:block' : 'md:block'}`}></div>
                 </div>
               )}
 
               {/* Under 1280 px: filters on line 1, search + sort on line 2. */}
-              {hasCustomSort && <div className="basis-full h-0 order-10 xl:hidden" aria-hidden="true" />}
-              {hasCustomSort && (
-                <div className="flex items-center gap-2 order-12 xl:order-last pl-2 xl:pl-4 pr-1">
-                  <ArrowUpDown size={16} className="text-gray-500 shrink-0" aria-hidden="true" />
-                  <select
-                    aria-label="Trier par"
-                    value={sortValue}
-                    onChange={(e) => onSortValueChange!(e.target.value)}
-                    className="bg-gray-50 border border-transparent rounded-xl pl-3 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
-                  >
-                    {sortOptions!.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              )}
+              {wrapBar && <div className="basis-full h-0 order-10 xl:hidden" aria-hidden="true" />}
+              {wrapBar && sortSelect}
 
-              <div className={hasCustomSort
+              <div className={sortWithFilters
+                ? 'relative group flex-1 min-w-0 max-w-[360px] ml-auto'
+                : hasCustomSort
                 ? 'relative group flex-1 min-w-0 xl:max-w-[360px] xl:ml-auto order-11 xl:order-none pl-1 xl:pl-0'
                 : `relative hidden md:block ${searchWidth} ml-auto mr-2 group flex-shrink-0`}>
                  <input 
