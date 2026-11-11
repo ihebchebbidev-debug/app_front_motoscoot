@@ -18,7 +18,7 @@
  *   fiche-technique → /api/tech-specs/:id
  */
 
-import { renderWithApp, scriptSafeJson, detailIdentifier, firstPaintImage } from '../utils/detailHtml.js';
+import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
@@ -825,7 +825,6 @@ ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</sc
 </head>
 <body>
 ${kind === 'article' || kind === 'guide' ? `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/${kind === 'article' ? 'actualites' : 'conseils'}">${kind === 'article' ? 'Actualités' : 'Conseils'}</a> › ${escapeHtml(heading)}</nav>` : ''}
-${kind === 'fiche-technique' ? firstPaintImage(lcpImage, heading) : ''}
 ${kind === 'fiche-technique' ? renderFicheBody(doc, similar) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
 ${(() => {

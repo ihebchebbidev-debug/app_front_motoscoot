@@ -19,7 +19,7 @@
  * either get a redirect loop or refuse to index the canonical page.
  */
 
-import { renderWithApp, scriptSafeJson, firstPaintImage } from '../utils/detailHtml.js';
+import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
 import { seoImagePath } from '../utils/seoImagePath.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
@@ -233,7 +233,6 @@ export default async function handler(req: any, res: any) {
       value != null && value !== '' ? `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd>` : '';
 
     const bodyHtml = listing ? `
-${firstPaintImage(lcpImage, listing.title || '')}
 <h1>${escapeHtml(listing.title)}</h1>
 ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.price))}</p>` : ''}
 <dl>

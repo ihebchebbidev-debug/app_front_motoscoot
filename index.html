@@ -89,32 +89,10 @@
          actually committed its first render. This prevents the prerendered SEO
          fallback HTML from flashing for a split second on slower starts. */
       html[data-pre-hydrate] body { visibility: hidden !important; }
-      /* First paint (PageSpeed « délai de rendu », audit 2026-11-11 row 9): the
-         prepared text of the page shows at once, laid out like the top of the
-         real page (72 px header, breadcrumb, title, intro, main photo), instead
-         of a white screen until the app and the API answer. utils/firstPaint.ts
-         takes it out of #root before React mounts and removes it as soon as
-         the page shows its own title. Only the top of the page is painted; the
-         rest stays in the HTML for crawlers. Safety: hidden after 10 s even if
-         the JavaScript never runs. */
-      html.js [data-seo-fallback] { position:fixed; inset:0; z-index:2147483000; overflow:hidden; display:flex; flex-direction:column; align-items:stretch; background:#fff; color:#161a22; padding:108px 24px 0; font:16px/1.6 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; animation:fp-out 0s linear 10s forwards; }
-      html.js [data-seo-fallback]::before { content:""; position:absolute; top:0; left:0; right:0; height:72px; box-sizing:border-box; border-bottom:1px solid #f1f2f4; padding-left:max(24px, calc(50% - 512px)); background:#fff url(/site-logo/logo-color.svg) no-repeat 0 24px / auto 23px; background-origin:content-box; }
-      html.js [data-seo-fallback] > * { width:100%; max-width:1024px; margin:0 auto; box-sizing:border-box; }
-      html.js [data-seo-fallback] > :not(nav[aria-label="Fil d'Ariane"]):not(h1):not(h1 + p):not(img[data-first-paint]) { display:none; }
-      html.js [data-seo-fallback] > nav { order:0; height:20px; margin-bottom:24px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:14px; line-height:20px; color:#6b7280; }
-      html.js [data-seo-fallback] a { color:inherit; text-decoration:none; }
-      html.js [data-seo-fallback] > img[data-first-paint="top"] { order:1; max-width:662px; margin:0 0 24px max(0px, calc((100% - 1024px) / 2)); aspect-ratio:4/3; height:auto; object-fit:cover; border-radius:24px; background:#f3f4f6; }
-      html.js [data-seo-fallback] > h1 { order:2; margin:0 auto; font-size:28px; line-height:1.15; font-weight:800; letter-spacing:-0.02em; }
-      html.js [data-seo-fallback] > h1 + p { order:3; margin:12px auto 0; color:#4b5563; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
-      @media (min-width: 768px) {
-        html.js [data-seo-fallback] { padding-top:122px; }
-        html.js [data-seo-fallback]::before { background-position:0 22px; background-size:auto 28px; }
-        html.js [data-seo-fallback] > h1 { font-size:40px; }
-      }
-      @keyframes fp-out { to { visibility:hidden; } }
-      /* The home page already paints its photo shell from HTML: its text stays crawler-only. */
-      html.js [data-home-shell] ~ [data-seo-fallback] { position:absolute!important; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-      html.js [data-home-shell] ~ [data-seo-fallback]::before { content:none; }
+      /* Crawler-only fallback text: kept in the DOM for bots, never painted for
+         JS visitors (it caused a ~1 s flash of black unstyled text on reload). */
+      @media (scripting: enabled) { [data-seo-fallback] { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
+      html.js [data-seo-fallback] { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
       html[data-pre-hydrate] { background-color: #ffffff; }
       @media (prefers-color-scheme: dark) {
         html[data-pre-hydrate] { background-color: #0E1116; }
