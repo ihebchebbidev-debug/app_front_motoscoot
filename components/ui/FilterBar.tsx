@@ -56,6 +56,9 @@ export interface FilterBarProps {
    *  search (brand page). 'withFilters': right after the filter menus, the
    *  search alone on the right (brand list). */
   sortPlacement?: 'end' | 'withFilters';
+  /** Shown while no sort is chosen (sortValue not among sortOptions), e.g.
+   *  « Trier » on the brand list, which opens on its own selection. */
+  sortPlaceholder?: string;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -83,6 +86,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   phoneLayout = 'stacked',
   searchLabel,
   sortPlacement = 'end',
+  sortPlaceholder,
 }) => {
   // « Scooter 6 » / greyed when nothing would show (the selected one stays usable).
   const countOf = (counts: Record<string, number> | undefined, opt: string) =>
@@ -103,10 +107,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // the phone shows the search field itself, not a « Filtres » button that
   // opened a « Trier et Filtrer » panel holding just that field.
   const onlySearch = categories.length === 0 && extraFilters.length === 0 && !hasSort;
+  const chosenSort = hasCustomSort ? sortOptions!.find((o) => o.value === sortValue) : undefined;
   const sortLabel = hasCustomSort
-    ? sortOptions!.find((o) => o.value === sortValue)?.label ?? sortOptions![0].label
+    ? chosenSort?.label ?? sortPlaceholder ?? sortOptions![0].label
     : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
 
+  const sortAriaLabel = hasCustomSort && !chosenSort && sortPlaceholder ? sortPlaceholder : `Trier : ${sortLabel}`;
   const inline = phoneLayout === 'inline' && !onlySearch;
   const sortWithFilters = hasCustomSort && sortPlacement === 'withFilters';
   // At the end of the bar (after the search) the sort makes the bar wrap
@@ -121,6 +127,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         className="bg-gray-50 border border-transparent rounded-xl pl-3 py-2.5 text-[12px] font-bold text-gray-900 outline-none focus:bg-card focus:border-primary-100 transition-all cursor-pointer appearance-none"
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '35px' }}
       >
+        {!chosenSort && sortPlaceholder && <option value={sortValue} hidden>{sortPlaceholder}</option>}
         {sortOptions!.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -130,8 +137,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // « Filtres, 2 actifs »: the label used to override the badge, so screen
   // readers never heard how many filters were on.
   const filtersLabel = activeFilterCount > 0 ? `Filtres, ${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}` : 'Filtres';
-  // A sort other than the first one (the default) is marked by a dot.
-  const sortChanged = hasCustomSort && !!sortValue && sortValue !== sortOptions![0].value;
+  // A sort other than the default is marked by a dot: the first option, or,
+  // with a placeholder, any option chosen.
+  const sortChanged = !!chosenSort && (sortPlaceholder ? true : chosenSort.value !== sortOptions![0].value);
 
   // Inline bar: a hairline under it only once it is stuck under the header.
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -194,7 +202,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   type="button"
                   onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
                   className="relative shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-gray-200 bg-card text-gray-900 active:scale-[0.97] transition-transform duration-100 ease-out"
-                  aria-label={`Trier : ${sortLabel}`}
+                  aria-label={sortAriaLabel}
                   aria-haspopup="dialog"
                 >
                   <ArrowUpDown size={20} aria-hidden="true" />
@@ -257,7 +265,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
               className="flex-1 min-w-0 flex items-center justify-between gap-2 h-12 px-4 bg-card border border-gray-100 rounded-2xl shadow-sm active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px] text-gray-900"
-              aria-label={`Trier : ${sortLabel}`}
+              aria-label={sortAriaLabel}
               aria-haspopup="dialog"
             >
               <span className="flex items-center gap-2 min-w-0">

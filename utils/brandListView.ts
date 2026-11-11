@@ -2,13 +2,22 @@
  * Brand list (/fiches-techniques): what the « Trier » control shows, and the
  * importer filter. Pure functions, used by TechSpecsBrands.tsx.
  */
-export type BrandView = 'all' | 'popular' | 'tunisia';
+/** 'default': the page as it opens (« Marques populaires » 3 × 2, then
+ *  every brand A → Z); not in the menu, the button then reads « Trier ».
+ *  'all' and 'alpha' both list every brand A → Z, without the popular block
+ *  (the owner wants both entries). */
+export type BrandView = 'default' | 'all' | 'alpha' | 'popular' | 'tunisia';
 
 export const BRAND_VIEWS: { value: BrandView; label: string }[] = [
   { value: 'all', label: 'Toutes les marques' },
+  { value: 'alpha', label: 'Ordre alphabétique' },
   { value: 'popular', label: 'Les plus consultées' },
   { value: 'tunisia', label: 'Disponibles en Tunisie' },
 ];
+
+/** Title of the grid for a view. */
+export const brandGridTitle = (view: BrandView) =>
+  view === 'popular' ? 'Les plus consultées' : view === 'tunisia' ? 'Disponibles en Tunisie' : 'Toutes les marques';
 
 export const ALL_IMPORTERS = 'Tout';
 
