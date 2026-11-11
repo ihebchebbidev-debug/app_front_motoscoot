@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SECTION_LINKS, brandLinks, listingLinks, linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS } from '../src/seo/snapshotLinks';
+import { SECTION_LINKS, brandLinks, listingLinks, editorialLinks, linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS } from '../src/seo/snapshotLinks';
 import { SEO_SNAPSHOTS } from '../src/seo/snapshots';
 
 const plugin = readFileSync(new URL('../src/seo/vitePluginSeoSnapshots.ts', import.meta.url), 'utf8');
@@ -42,7 +42,7 @@ test('every section link is a page that exists, and the plugin writes the blocks
   const paths = new Set(SEO_SNAPSHOTS.map((s) => s.path));
   for (const l of SECTION_LINKS) assert.ok(paths.has(l.href) || l.href.startsWith('/prix/'), l.href);
   assert.match(plugin, /\$\{renderLinkBlocks\(linkBlocksFor\(snap\.path, data\)\)\}/);
-  assert.match(plugin, /const \[brands, listings\] = await Promise\.all\(\[fetchBrands\(\), fetchListings\(\)\]\);/);
+  assert.match(plugin, /const \[brands, listings, articles, guides\] = await Promise\.all\(\[fetchBrands\(\), fetchListings\(\), fetchEditorial\('articles'\), fetchEditorial\('tips'\)\]\);/);
 });
 
 test('step 2: /annonces links to the listings online, at the address of their page', () => {
@@ -65,4 +65,22 @@ test('step 2: /annonces links to the listings online, at the address of their pa
   assert.equal(linkBlocksFor('/actualites', { listings: rows }).length, 1); // only on /annonces
   assert.equal(linkBlocksFor('/annonces', { listings: [] }).length, 1); // API down: section links only
   assert.equal(listingLinks(Array.from({ length: 150 }, (_, i) => ({ title: `Moto ${i}`, listing_number: i, status: 'active' }))).length, MAX_LISTING_LINKS);
+});
+
+test('step 3: /actualites links to its articles, /conseils to its guides, never to a thin one', () => {
+  const long = 'mot '.repeat(320);
+  const articles = [
+    { id: '21a8a3aa-3e32-43cd-919a-5fc78986f95f', title: 'Yamaha RW700 : le scooter qui a avalé une Ténéré 700', content: `<p>${long}</p>` },
+    { id: 'x1', title: 'Brève', content: '<p>trop court</p>' },
+    { id: '', title: 'Sans identifiant', content: long },
+  ];
+  assert.deepEqual(editorialLinks(articles, '/article'), [
+    { href: '/article/yamaha-rw700-le-scooter-qui-a-avale-une-tenere-700-21a8a3aa-3e32-43cd-919a-5fc78986f95f', label: 'Yamaha RW700 : le scooter qui a avalé une Ténéré 700' },
+  ]);
+  const guides = [{ id: '4703630e-6577-40ec-8ef2-95cbf4596263', title: 'Comment bien graisser son kit chaîne ?', content: long }];
+  assert.equal(editorialLinks(guides, '/guide')[0].href, '/guide/comment-bien-graisser-son-kit-chaine-4703630e-6577-40ec-8ef2-95cbf4596263');
+  assert.equal(linkBlocksFor('/actualites', { articles })[0].heading, 'Articles');
+  assert.equal(linkBlocksFor('/conseils', { guides })[0].heading, 'Guides');
+  assert.equal(linkBlocksFor('/annonces', { articles, guides }).length, 1); // only on their own page
+  assert.equal(linkBlocksFor('/actualites', { articles: [] }).length, 1); // API down: section links only
 });

@@ -1,4 +1,5 @@
 import { slugify } from '../../utils/slugify';
+import { wordCount, THIN_CONTENT_WORDS } from '../../utils/editorial';
 
 /**
  * Real links for the build-time HTML of the entry pages (SEO audit of
@@ -83,8 +84,43 @@ export function listingLinks(listings: SnapshotListing[]): SnapshotLink[] {
   return out;
 }
 
+export interface SnapshotEditorial {
+  id?: string | number | null;
+  title?: string | null;
+  content?: string | null;
+  body?: string | null;
+}
+
+/**
+ * « /article/yamaha-rw700-le-scooter-qui-a-avale-une-tenere-700-<id> »: the
+ * canonical address the article or guide page redirects to (slug of the
+ * title + id). Articles and guides under THIN_CONTENT_WORDS words are
+ * « noindex » and out of the sitemap: no link to them from here either.
+ */
+export function editorialLinks(rows: SnapshotEditorial[], base: '/article' | '/guide'): SnapshotLink[] {
+  const out: SnapshotLink[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    const title = String(r?.title || '').replace(/\s+/g, ' ').trim();
+    if (!title || r?.id === null || r?.id === undefined || r?.id === '') continue;
+    if (wordCount(String(r.content || r.body || '')) < THIN_CONTENT_WORDS) continue;
+    const href = `${base}/${slugify(title)}-${r.id}`;
+    if (seen.has(href)) continue;
+    seen.add(href);
+    out.push({ href, label: title });
+  }
+  return out;
+}
+
+export interface SnapshotLinkData {
+  brands?: string[];
+  listings?: SnapshotListing[];
+  articles?: SnapshotEditorial[];
+  guides?: SnapshotEditorial[];
+}
+
 /** The link blocks of one entry page. A page never links to itself. */
-export function linkBlocksFor(path: string, data: { brands?: string[]; listings?: SnapshotListing[] } = {}): SnapshotLinkBlock[] {
+export function linkBlocksFor(path: string, data: SnapshotLinkData = {}): SnapshotLinkBlock[] {
   const blocks: SnapshotLinkBlock[] = [
     { heading: 'Rubriques', links: SECTION_LINKS.filter((l) => l.href !== path) },
   ];
@@ -92,6 +128,11 @@ export function linkBlocksFor(path: string, data: { brands?: string[]; listings?
   // only knew them from the sitemap.
   const listings = path === '/annonces' ? listingLinks(data.listings || []) : [];
   if (listings.length) blocks.unshift({ heading: 'Annonces en ligne', links: listings });
+  // /actualites and /conseils: their articles and guides, first (step 3).
+  const articles = path === '/actualites' ? editorialLinks(data.articles || [], '/article') : [];
+  if (articles.length) blocks.unshift({ heading: 'Articles', links: articles });
+  const guides = path === '/conseils' ? editorialLinks(data.guides || [], '/guide') : [];
+  if (guides.length) blocks.unshift({ heading: 'Guides', links: guides });
   const brands = BRAND_PAGES.has(path) ? brandLinks(data.brands || []) : [];
   if (brands.length) blocks.push({ heading: 'Marques', links: brands });
   return blocks;
