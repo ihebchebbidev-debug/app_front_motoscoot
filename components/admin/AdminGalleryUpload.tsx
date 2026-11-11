@@ -252,12 +252,12 @@ export const AdminGalleryUpload: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => removeAt(idx)}
-                className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 touch:opacity-100 transition-opacity"
                 aria-label="Retirer l'image"
               >
                 <X size={11} />
               </button>
-              <div className="absolute bottom-1 inset-x-1 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-1 inset-x-1 flex items-center justify-between opacity-0 group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100 transition-opacity">
                 <button
                   type="button"
                   onClick={() => moveBy(idx, -1)}

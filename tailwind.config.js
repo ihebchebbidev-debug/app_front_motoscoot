@@ -6,6 +6,10 @@ import typography from '@tailwindcss/typography';
 
 export default {
   darkMode: 'class',
+  // hover: / group-hover: apply only with a mouse or trackpad
+  // (@media (hover: hover) and (pointer: fine)). On a phone a tap used to
+  // leave the hover look stuck until the next tap elsewhere.
+  future: { hoverOnlyWhenSupported: true },
   content: [
     './index.html',
     './index.tsx',
@@ -155,5 +159,10 @@ export default {
   // Typography plugin powers the `prose-*` utilities used by ArticleDetails,
   // TipDetails, Legal pages AND the rich-text editor's live preview — keep
   // the editor and the public page looking identical.
-  plugins: [typography],
+  plugins: [
+    typography,
+    // touch: — fingers (no hover, or a coarse pointer). For controls shown on
+    // hover with a mouse (delete a photo…): on touch they stay visible.
+    ({ addVariant }) => addVariant('touch', '@media (hover: none), (pointer: coarse)'),
+  ],
 };

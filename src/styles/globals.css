@@ -133,6 +133,9 @@
   }
 
   html {
+    /* iPhone in landscape: no automatic text enlargement. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -140,6 +143,10 @@
 
   body {
     @apply font-sans text-foreground bg-background;
+    /* viewport-fit=cover (index.html) lets the page run under the notch; in
+       landscape the content is kept clear of it. 0 in portrait. */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   /* Mobile: bump form inputs to 16px so iOS Safari doesn't zoom on focus. */

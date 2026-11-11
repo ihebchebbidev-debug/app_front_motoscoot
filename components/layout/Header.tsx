@@ -276,7 +276,7 @@ const Header: React.FC<HeaderProps> = ({
         </button>
       )}
       <header
-        className={`w-full z-[100] fixed left-0 transition-all duration-300 ease-in-out flex items-center ${
+        className={`w-full z-[100] fixed left-0 pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] transition-all duration-300 ease-in-out flex items-center ${
           isScrolled ? 'h-[56px]' : 'h-[72px]'
         } ${
           isSolid
