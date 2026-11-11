@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { getClerkPublishableKey } from './utils/clerkConfig';
-import { holdFirstPaint } from './utils/firstPaint';
 // SiteGate (password gate) removed — site is now fully public.
 // Local Tailwind pipeline (replaces the cdn.tailwindcss.com script that used
 // to live in index.html). Importing once here means Vite picks it up and
@@ -59,9 +58,6 @@ if (!rootElement) {
 // Live Clerk key is domain-locked. Only use the fallback on moto-scoot.tn;
 // previews need an explicit development key or Clerk rejects every request.
 const PUBLISHABLE_KEY = getClerkPublishableKey();
-
-// Keep the prepared page on screen until React shows its own (utils/firstPaint.ts).
-holdFirstPaint(rootElement);
 
 const root = ReactDOM.createRoot(rootElement);
 
