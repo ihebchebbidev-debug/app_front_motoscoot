@@ -75,3 +75,17 @@ export function displayPhone(raw?: string | null): string {
   if (!local) return raw;
   return `${local.slice(0, 2)} ${local.slice(2, 5)} ${local.slice(5)}`;
 }
+
+/**
+ * `tel:` link for a phone field that may hold several numbers
+ * (« 71123456 / 98765432 », « 71 123 456 - 98 765 432 », « … ou … »):
+ * always the first one. A Tunisian number gets its +216; anything else
+ * keeps its digits (and a leading +). Null when no number is left.
+ */
+export function telHref(raw?: string | null): string | null {
+  const first = String(raw || '').split(/\s*(?:\/|,|;|\||\s-\s|\bou\b|\bet\b)\s*/i).find((p) => /\d/.test(p)) || '';
+  const local = extractTunisiaLocal(first);
+  if (local) return `tel:+216${local}`;
+  const cleaned = cleanPhoneInput(first);
+  return cleaned.replace('+', '').length >= 6 ? `tel:${cleaned}` : null;
+}

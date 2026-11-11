@@ -1,4 +1,4 @@
-import { displayPhone } from '../utils/phoneUtils';
+import { displayPhone, telHref } from '../utils/phoneUtils';
 import React, { useEffect, useMemo, useState, memo, useCallback, useRef } from 'react';
 import {
   ChevronLeft,
@@ -9,9 +9,11 @@ import {
   ArrowRight,
   ChevronRight,
   Phone,
-  Mail
+  Mail,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
+import { capsulePrice } from '../utils/capsulePrice';
 import { techSpecsApi } from '../services/techSpecsApi';
 import SEO from './common/SEO';
 import { getOptimizedImageUrl } from '../utils/urlUtils';
@@ -179,7 +181,7 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
         {importer.phone && (
           <div className="flex items-center gap-3 text-gray-300">
             <Phone size={16} className="shrink-0 text-gray-500" />
-            <a href={`tel:${importer.phone.replace(/\s/g, '')}`} className="text-sm hover:text-white transition-colors">{displayPhone(importer.phone)}</a>
+            <a href={telHref(importer.phone) || undefined} className="text-sm hover:text-white transition-colors">{displayPhone(importer.phone)}</a>
           </div>
         )}
         {importer.email && (
@@ -200,7 +202,15 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 };
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-32 md:pb-20",
+  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
+  // Floating capsule: 56 px tall, 4 px inset, fully rounded (R 28 outside, R 24 inside).
+  // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
+  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-14 p-1 flex items-center gap-1 rounded-full",
+  FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
+  FloatPrice: "ms-capsule-well flex-1 min-w-0 h-12 px-3 min-[360px]:px-4 flex flex-col justify-center rounded-full",
+  // Solid dark circle (owner: the light one did not stand out): a solid layer on the glass, like « Comparer ».
+  FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-gray-700 [@media(hover:hover)]:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
+  FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[0.8125rem] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   Header: "flex items-center justify-between mb-3 md:mb-6",
@@ -509,6 +519,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
+  // Floating capsule: the price as typed in the admin, sorted (utils/capsulePrice.ts),
+  // and a call link to the importer's first number (utils/phoneUtils.ts telHref).
+  const capsule = capsulePrice(spec.priceNew);
+  const callHref = telHref(spec.importer?.phone);
+
   return (
     <main className={S.Wrapper}>
       <SEO 
@@ -749,33 +764,38 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         )}
       </article>
 
-      {/* STICKY BOTTOM BAR (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-lg border-t border-gray-200 p-4 z-50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex flex-col min-w-0">
-            <span className="text-lg font-black text-gray-900 leading-none truncate">{spec.priceNew}</span>
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">TTC</span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {spec.importer?.phone && (
-              <a
-                href={`tel:${spec.importer.phone.replace(/\s/g, '')}`}
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-900 text-white shadow-md hover:bg-gray-800 transition-colors shrink-0"
-                aria-label={`Contacter ${spec.importer.name}`}
-                title={`Contacter ${spec.importer.name}`}
-              >
-                <Phone size={18} />
-              </a>
-            )}
-            <Button
-              variant="primary"
-              className="rounded-xl px-6 py-3 text-[13px] font-extrabold uppercase tracking-wider shadow-md shadow-orange-500/20"
-              onClick={handleCompare}
-            >
-              Comparer
-            </Button>
-          </div>
+      {/* Floating action capsule (phones and tablets): dark frosted glass that
+          floats 12 px above the content and the iPhone home indicator. Price,
+          call the importer, compare. Price and call are 48 px; « Comparer » is a
+          smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
+      <div className={S.FloatEdge} aria-hidden="true" />
+      <div className={S.FloatBar} role="region" aria-label="Prix et actions">
+        <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
+          {capsule.kind === 'amount' ? (
+            <>
+              <span className="text-[0.9375rem] min-[360px]:text-base font-bold text-gray-900 leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[0.6875rem] font-semibold text-gray-700 leading-tight tracking-[0.02em] whitespace-nowrap truncate">{capsule.sub}</span>
+            </>
+          ) : capsule.kind === 'text' ? (
+            <span className="text-[0.8125rem] font-semibold text-gray-900 leading-[1.2] line-clamp-2 break-words">{capsule.main}</span>
+          ) : (
+            <span className="text-sm font-semibold text-gray-700 leading-tight truncate">{capsule.main}</span>
+          )}
         </div>
+        {callHref && (
+          <a
+            href={callHref}
+            className={S.FloatCall}
+            aria-label={`Appeler ${spec.importer.name}`}
+            title={`Appeler ${spec.importer.name}`}
+          >
+            <Phone size={19} strokeWidth={2.2} aria-hidden="true" />
+          </a>
+        )}
+        <button type="button" className={S.FloatCompare} onClick={handleCompare}>
+          <ArrowLeftRight size={15} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
+          Comparer
+        </button>
       </div>
 
       {spec && (
