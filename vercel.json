@@ -4,6 +4,23 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/tech-specs",
+      "destination": "/fiches-techniques",
+      "permanent": true
+    },
+    {
+      "source": "/tech-specs/:brand",
+      "destination": "/fiches-techniques/:brand",
+      "permanent": true
+    },
+    {
+      "source": "/conseils/:id([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+      "destination": "/guide/:id",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap-dynamic.xml",

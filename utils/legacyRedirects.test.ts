@@ -33,3 +33,18 @@ test('every public page has a link from the footer (no orphan)', () => {
   assert.match(footer, /<FooterLink view="security">Sécurité<\/FooterLink>/);
   assert.match(footer, /<FooterLink view="sitemap">Plan du site<\/FooterLink>/);
 });
+
+test('old English and old guide addresses redirect permanently (vercel.json)', () => {
+  const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  const redirects = vercel.redirects as { source: string; destination: string; permanent?: boolean }[];
+  const to = (src: string) => redirects.find((r) => r.source === src);
+  assert.deepEqual(to('/tech-specs'), { source: '/tech-specs', destination: '/fiches-techniques', permanent: true });
+  assert.deepEqual(to('/tech-specs/:brand'), { source: '/tech-specs/:brand', destination: '/fiches-techniques/:brand', permanent: true });
+  // /conseils/<uuid> only: /conseils itself stays the guides list.
+  const guide = redirects.find((r) => r.source.startsWith('/conseils/:id('));
+  assert.ok(guide && guide.permanent && guide.destination === '/guide/:id');
+  assert.ok(new RegExp('^/conseils/' + guide!.source.slice('/conseils/:id'.length) + '$').test('/conseils/1b220407-0481-414e-9d1e-57b4b5ad66b2'));
+  assert.ok(!redirects.some((r) => r.source === '/conseils'));
+  // No redirect may shadow a live route.
+  for (const r of redirects) assert.ok(!/^\/(fiches-techniques|fiche-technique|guide|annonces?)(\/|$)/.test(r.source), r.source);
+});
