@@ -203,14 +203,14 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 
 const S = {
   Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
-  // Floating capsule: 56 px tall, 4 px inset, fully rounded (R 28 outside, R 24 inside).
+  // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
-  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-14 p-1 flex items-center gap-1 rounded-full",
+  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1.5 rounded-full",
   FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
-  FloatPrice: "ms-capsule-well flex-1 min-w-0 h-12 px-3 min-[360px]:px-4 flex flex-col justify-center rounded-full",
-  // Solid dark circle (owner: the light one did not stand out): a solid layer on the glass, like « Comparer ».
-  FloatCall: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-gray-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-gray-700 [@media(hover:hover)]:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
-  FloatCompare: "shrink-0 h-10 mx-1 px-3.5 min-[360px]:pl-2.5 min-[360px]:pr-3 inline-flex items-center gap-1 rounded-full bg-primary-600 text-white text-[0.8125rem] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-700 [@media(hover:hover)]:hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
+  FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[360px]:pl-4 flex flex-col justify-center",
+  // Call: a lighter disc on the dark glass (white icon, 52 px).
+  FloatCall: "shrink-0 w-[3.25rem] h-[3.25rem] inline-flex items-center justify-center rounded-full bg-white/[0.14] text-white ring-1 ring-inset ring-white/[0.10] transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
+  FloatCompare: "shrink-0 h-12 px-4 min-[360px]:pl-3.5 inline-flex items-center gap-1.5 rounded-full bg-orange-700 text-white font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   // Phones: no breadcrumb row (its 44 px go to the photo and the title); « ← » sits on the photo
@@ -778,7 +778,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         )}
       </article>
 
-      {/* Floating action capsule (phones and tablets): white frosted glass that
+      {/* Floating action capsule (phones and tablets): dark frosted glass that
           floats 12 px above the content and the iPhone home indicator. Price,
           call the importer, compare. Price and call are 48 px; « Comparer » is a
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
@@ -787,13 +787,13 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
           {capsule.kind === 'amount' ? (
             <>
-              <span className="text-[0.9375rem] min-[360px]:text-base font-bold text-gray-900 leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
-              <span className="text-[0.6875rem] font-semibold text-gray-700 leading-tight tracking-[0.02em] whitespace-nowrap truncate">{capsule.sub}</span>
+              <span className="text-[1.0625rem] min-[360px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[0.75rem] font-medium text-gray-300 leading-tight tracking-[0.01em] whitespace-nowrap truncate">{capsule.sub}</span>
             </>
           ) : capsule.kind === 'text' ? (
-            <span className="text-[0.8125rem] font-semibold text-gray-900 leading-[1.2] line-clamp-2 break-words">{capsule.main}</span>
+            <span className="text-[0.875rem] font-semibold text-white leading-[1.2] line-clamp-2 break-words">{capsule.main}</span>
           ) : (
-            <span className="text-sm font-semibold text-gray-700 leading-tight truncate">{capsule.main}</span>
+            <span className="text-[0.9375rem] font-semibold text-gray-200 leading-tight truncate">{capsule.main}</span>
           )}
         </div>
         {callHref && (
@@ -803,11 +803,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             aria-label={`Appeler ${spec.importer.name}`}
             title={`Appeler ${spec.importer.name}`}
           >
-            <Phone size={19} strokeWidth={2.2} aria-hidden="true" />
+            <Phone size={21} strokeWidth={2.2} aria-hidden="true" />
           </a>
         )}
         <button type="button" className={S.FloatCompare} onClick={handleCompare}>
-          <ArrowLeftRight size={15} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
+          <ArrowLeftRight size={17} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
           Comparer
         </button>
       </div>
