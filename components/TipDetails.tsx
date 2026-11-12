@@ -4,6 +4,7 @@ import { sanitizeRichHtml } from './admin/RichTextEditor';
 import { useTip, useTips, useRelatedTips } from '../hooks/useTips';
 import Header from './layout/Header';
 import { Reveal } from './ui/Reveal';
+import { READING_PROSE } from './ui/readingProse';
 import SEO from './common/SEO';
 import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, type ShareContent } from './common/SocialShareModal';
@@ -199,19 +200,14 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
             {/* Main Column */}
             <article className="lg:col-span-8 lg:col-start-1">
                 {/* Summary */}
-                <Reveal animation="fade-in-up">
                   <div className="bg-card rounded-2xl p-6 md:p-8 border border-gray-200 mb-8 md:mb-10">
-                      <p className="text-lg md:text-xl text-gray-800 leading-relaxed font-medium italic">{tip.summary}</p>
+                      <p className="text-lg md:text-xl text-gray-900 leading-relaxed font-semibold">{tip.summary}</p>
                   </div>
-                </Reveal>
 
                 {/* Content */}
-                <Reveal animation="fade-in-up">
-                  <div className="prose prose-lg prose-slate max-w-none mb-12" dangerouslySetInnerHTML={{ __html: demoteBodyH1(sanitizeRichHtml(tip.content || "")) }} />
-                </Reveal>
+                  <div className={`${READING_PROSE} prose-lg mb-12`} dangerouslySetInnerHTML={{ __html: demoteBodyH1(sanitizeRichHtml(tip.content || "")) }} />
 
                 {/* Feedback */}
-                <Reveal animation="fade-in-up">
                   <div className="bg-gray-50 border border-gray-100 rounded-3xl p-8 text-center mb-8">
                      <h3 className="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Ce guide vous a-t-il été utile ?</h3>
                      <div className="flex justify-center gap-4">
@@ -219,7 +215,6 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
                         <button onClick={() => setHelpful('no')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border uppercase text-xs ${helpful === 'no' ? 'bg-card text-gray-900 border-gray-300 shadow-sm' : 'bg-card text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900'}`}><ThumbsDown size={16} /> Non</button>
                      </div>
                   </div>
-                </Reveal>
             </article>
 
             {/* Sidebar */}
@@ -285,7 +280,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         {/* Related Tips */}
         <div className="bg-gray-50 py-16 border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight mb-8">À consulter également</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight mb-8">À consulter également</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {(fetchedRelated.length ? fetchedRelated : allTips.filter(t => t.id !== tip.id)).slice(0, 3).map((relatedTip) => (
                 <div key={relatedTip.id} className="bg-card rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => onNavigate?.('tip-details', { id: relatedTip.id })}>
