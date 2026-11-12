@@ -166,15 +166,17 @@ const News: React.FC<BasePageProps> = ({ onNavigate, onGoHome, onSearch }) => {
                     <img src={article.image} className={S.RecImage} alt="" loading="lazy" decoding="async" />
                     <div className={S.RecContent}>
                       <div className="flex items-center justify-between mb-1.5">
-                        <button 
+                        {/* Small label, so the title reads first. `!` because phones
+                            force every button to 16 px (globals.css, iOS zoom rule). */}
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleCategoryChange(article.category); }}
-                          className="text-[9px] font-[900] text-primary-600 uppercase tracking-widest"
+                          className="!text-[12px] leading-none font-bold text-primary-700 bg-primary-50 rounded-full px-2.5 py-1.5"
                         >
                           {article.category}
                         </button>
                         <span className="text-[9px] font-black text-gray-300 uppercase">{article.date}</span>
                       </div>
-                      <h4 className="text-[14px] font-[800] text-gray-900 leading-[1.3] mb-2 line-clamp-2 tracking-tight">
+                      <h4 className="text-[16px] font-[800] text-gray-900 leading-[1.3] mb-1.5 line-clamp-2 tracking-tight">
                         {/* Real link so crawlers reach the article; the card click stays for the rest of the card. */}
                         <Link to={getUrlFromState('article-details', { id: article.id, title: article.title })} onClick={(e) => e.stopPropagation()}>{article.title}</Link>
                       </h4>
