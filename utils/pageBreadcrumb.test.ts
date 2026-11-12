@@ -79,10 +79,13 @@ test('phones: 24 px under the header and 12 px to the title, on every page', () 
   assert.match(read('components/ListingDetails.tsx'), /Header: "hidden md:flex items-center justify-between mb-3 md:mb-6"/);
   // Fiche: no breadcrumb row on phones (owner, 2026-11-11); « ← » on the photo instead.
   assert.match(read('components/TechSpecsDetails.tsx'), /Header: "hidden md:flex items-center justify-between mb-3 md:mb-6"/);
-  for (const p of ['components/ArticleDetails.tsx', 'components/TipDetails.tsx']) {
-    const src = read(p);
-    assert.match(src, /<div className="pt-0 md:pt-8">/, p);
-    assert.match(src, /className="mb-3 md:mb-8"/, p);
+  {
+    const src = read('components/TipDetails.tsx');
+    assert.match(src, /<div className="pt-0 md:pt-8">/);
+    assert.match(src, /className="mb-3 md:mb-8"/);
   }
+  // Article: no breadcrumb row on phones (owner, 2026-11-12); photo first with « ← » on it, then the title.
+  assert.match(read('components/ArticleDetails.tsx'), /<div className="pt-4 md:pt-8">\s*<div className="flex flex-col">/);
+  assert.match(read('components/ArticleDetails.tsx'), /className="hidden md:flex mb-3 md:mb-8"/);
   assert.match(read('components/GarageDetails.tsx'), /pt-0 md:pt-6">[\s\S]*?<header className="flex items-center justify-between mb-3 md:mb-6">/);
 });
