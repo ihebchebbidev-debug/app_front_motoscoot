@@ -17,6 +17,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
 import { HERO_DEFAULTS } from '../../config/heroDefaults';
+import { SPA_TITLE, SPA_DESCRIPTION, DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from './privatePages';
 import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing, type SnapshotEditorial } from './snapshotLinks';
 
 interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
@@ -224,6 +225,35 @@ function injectIntoIndex(indexHtml: string, snap: SeoSnapshot, hero: HeroImages,
   return html;
 }
 
+/**
+ * Shell of the private app pages Vercel rewrites to /spa.html (favoris, mon
+ * compte, espace pro, admin, mot de passe…) and of « Déposer une annonce ».
+ * They used to send the home page's title, description and « index, follow »
+ * (SEO audit 2026-11-12: /deposer-une-annonce read as a copy of the home page).
+ * Now: their own title, « noindex, follow », no googlebot line, no canonical.
+ *
+ * The detail pages (fiche, annonce, article…) are built on /spa.html too
+ * (utils/detailHtml.ts mergeDetailShell): it strips this title, description
+ * and robots line and puts the page's own, so they stay indexable.
+ */
+export function privateShell(indexHtml: string, title: string, description: string): string {
+  const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return indexHtml
+    .replace(/\sdata-pre-hydrate/g, '')
+    .replace(/<link[^>]+rel="preload"[^>]+as="image"[^>]*>/gi, '')
+    .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
+    .replace(/<link\s+rel="alternate"[^>]*hreflang="[^"]*"[^>]*>/gi, '')
+    .replace(/<meta\s+property="og:url"[^>]*>/gi, '')
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(title)}</title>`)
+    .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${esc(description)}" />`)
+    .replace(/<meta\s+property="og:title"[^>]*>/gi, `<meta property="og:title" content="${esc(title)}" />`)
+    .replace(/<meta\s+property="og:description"[^>]*>/gi, `<meta property="og:description" content="${esc(description)}" />`)
+    .replace(/<meta\s+name="twitter:title"[^>]*>/gi, `<meta name="twitter:title" content="${esc(title)}" />`)
+    .replace(/<meta\s+name="twitter:description"[^>]*>/gi, `<meta name="twitter:description" content="${esc(description)}" />`)
+    .replace(/<meta\s+name="googlebot"[^>]*>\s*/gi, '')
+    .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="noindex, follow" />');
+}
+
 export function seoSnapshotsPlugin(): Plugin {
   let outDir = 'dist';
   return {
@@ -247,13 +277,16 @@ export function seoSnapshotsPlugin(): Plugin {
       // Generic SPA shell for dynamic routes (listing, article, sheet…):
       // no canonical / hreflang so a detail URL never claims to be the home
       // page. Vercel rewrites the whitelisted dynamic routes to /spa.html.
-      const shell = baseHtml
-        .replace(/\sdata-pre-hydrate/g, '')
-        .replace(/<link[^>]+rel="preload"[^>]+as="image"[^>]*>/gi, '')
-        .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
-        .replace(/<link\s+rel="alternate"[^>]*hreflang="[^"]*"[^>]*>/gi, '')
-        .replace(/<meta\s+property="og:url"[^>]*>/gi, '');
+      const shell = privateShell(baseHtml, SPA_TITLE, SPA_DESCRIPTION);
       await fs.writeFile(SPA_SHELL, shell, 'utf-8');
+      // « Déposer une annonce »: its own title and description, out of Google
+      // (a form, not a page to find). Served before the /spa.html rewrite.
+      await fs.mkdir(path.resolve(outDir, 'deposer-une-annonce'), { recursive: true });
+      await fs.writeFile(
+        path.resolve(outDir, 'deposer-une-annonce', 'index.html'),
+        privateShell(baseHtml, DEPOSIT_TITLE, DEPOSIT_DESCRIPTION),
+        'utf-8',
+      );
 
       const { hero, raw: heroRaw } = await fetchHeroImages();
       // eslint-disable-next-line no-console
