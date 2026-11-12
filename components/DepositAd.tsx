@@ -37,6 +37,7 @@ import { listingsApi, PriceEstimate } from '../services/listingsApi';
 import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
 import { DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from '../src/seo/privatePages';
+import { analytics } from '../src/lib/posthog';
 
 /** Step fields that show their own error message under the field. */
 const FIELDS_WITH_INLINE_ERROR = new Set([
