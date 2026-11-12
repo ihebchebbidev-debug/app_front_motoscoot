@@ -19,9 +19,10 @@ test('finds the file to fetch again', () => {
 });
 
 test('one reload per 10 s, never a loop', () => {
-  assert.equal(mayReload(100_000, 0), true);
-  assert.equal(mayReload(100_000, 95_000), false);
-  assert.equal(mayReload(100_000, 89_000), true);
+  assert.equal(mayReload(1_000_000, 0), true);
+  assert.equal(mayReload(1_000_000, 989_000), false); // 11 s ago: the old limit looped every 10 s on Safari
+  assert.equal(mayReload(1_000_000, 750_000), false); // 4 min 10 s ago
+  assert.equal(mayReload(1_000_000, 699_000), true);  // more than 5 minutes ago
 });
 
 test('the global boundary reloads the asked page instead of going home', () => {
