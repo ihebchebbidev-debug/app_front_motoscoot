@@ -52,7 +52,9 @@ const listingSeoInput = (l: Listing) => ({ brand: l.brand, model: l.model, year:
 const S = {
   Wrapper: "min-h-screen bg-muted font-sans pb-32 md:pb-20",
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-4",
-  Header: "flex items-center justify-between mb-3 md:mb-6",
+  // Phones: no breadcrumb row (its 44 px go to the photo and the title); « ← » sits on the photo,
+  // as on the fiche technique. Kept in the DOM for crawlers and from 768 px.
+  Header: "hidden md:flex items-center justify-between mb-3 md:mb-6",
   
   MainGrid: "grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10",
   ContentCol: "md:col-span-7 xl:col-span-8 space-y-6",
@@ -301,6 +303,8 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
                 favorited={isFavorited} 
                 onFavoriteToggle={handleFavoriteToggle} 
                 onShare={handleShare}
+                // Phones: back to the search the visitor came from (filters, page), like « ← » in the breadcrumb.
+                backLink={{ href: '/annonces', label: 'Annonces', onClick: goBack }}
               />
 
               <Reveal animation="fade-in-up" delay={100}>

@@ -23,3 +23,10 @@ test('fiche, phones: the brand above the title is the link up (44 px to the fing
   assert.match(page, /<a\s+href=\{brandHref\}[\s\S]*?className="inline-flex items-center gap-0\.5 -my-3 py-3 font-sans text-\[14px\] font-bold text-primary-600/);
   assert.match(page, /\{spec\.brand\}\s*<ChevronRight size=\{15\}/);
 });
+
+test('listing, phones: same as the fiche — no breadcrumb row, « ← » on the photo back to the search', () => {
+  const listing = readFileSync(new URL('../components/ListingDetails.tsx', import.meta.url), 'utf8');
+  assert.match(listing, /Header: "hidden md:flex items-center justify-between mb-3 md:mb-6"/);
+  assert.match(listing, /<header className=\{S\.Header\}>\s*<PageBreadcrumb/);
+  assert.match(listing, /backLink=\{\{ href: '\/annonces', label: 'Annonces', onClick: goBack \}\}/);
+});
