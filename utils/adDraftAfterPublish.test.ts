@@ -18,5 +18,11 @@ test('after a publish, the draft is removed and autosave stays off', () => {
 
 test('« Déposer une autre annonce » starts a fresh draft that is saved again', () => {
   assert.match(hook, /const resumeDraft = \(\) => \{\s*stoppedRef\.current = false;\s*\};/);
-  assert.match(page, /const handleDepositAnother = \(\) => \{\s*clearDraft\(\);\s*reset\(\);\s*setMediaList\(\[\]\);\s*setStep\(1\);\s*setPublished\(null\);[\s\S]*?resumeDraft\(\);\s*\};/);
+  assert.match(page, /const startBlankDeposit = \(\) => \{\s*clearDraft\(\);\s*reset\(\);\s*setMediaList\(\[\]\);\s*setStep\(1\);\s*setPublished\(null\);[\s\S]*?resumeDraft\(\);\s*\};/);
+});
+
+test('« Réinitialiser »: confirms, then starts a blank deposit (form, photos, draft)', () => {
+  assert.match(page, /const handleResetDeposit = \(\) => \{\s*if \(!window\.confirm\('Effacer toutes les informations de cette annonce et recommencer \?'\)\) return;\s*startBlankDeposit\(\);/);
+  assert.match(page, /onClick=\{handleResetDeposit\}[\s\S]{0,800}?Réinitialiser/);
+  assert.match(page, /min-h-11/); // 44 px to the finger
 });
