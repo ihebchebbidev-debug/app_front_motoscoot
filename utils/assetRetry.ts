@@ -9,7 +9,8 @@
  *    file ignores the query);
  *  - entry script: one page reload. A fresh URL is not enough there: the
  *    other chunks import the entry by its plain URL, which must be repaired.
- *    The 10 s guard stops a loop if the file is really gone.
+ *    At most one reload every 5 minutes: a cached 404 that Safari keeps
+ *    despite the repair fetch must not reload the page forever (2026-11-12).
  * Applied to the built index.html (vite.config.ts); the SEO snapshots and
  * spa.html are copies of it, so they get it too.
  */
@@ -19,7 +20,7 @@ const ON_CSS_ERROR =
 
 const ON_SCRIPT_ERROR =
   `this.onerror=null;fetch(this.src,{cache:'reload'}).then(function(r){if(!r.ok)return;` +
-  `try{var k='asset-retry-reload',t=+sessionStorage.getItem(k)||0;if(Date.now()-t<1e4)return;` +
+  `try{var k='asset-retry-reload',t=+sessionStorage.getItem(k)||0;if(Date.now()-t<3e5)return;` +
   `sessionStorage.setItem(k,String(Date.now()))}catch(e){return}location.reload()}).catch(function(){})`;
 
 export function addAssetRetry(html: string): string {

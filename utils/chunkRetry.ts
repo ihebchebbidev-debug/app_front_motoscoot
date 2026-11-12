@@ -7,8 +7,11 @@
  * The global ErrorBoundary used to send the visitor to the home page
  * (2026-11-07: tapping a brand on a phone opened the home page). Instead:
  * fetch the file again from the network (replaces a cached 404), then reload
- * the page that was asked for, which gets the current app. Once per 10 s, so
- * a file that is really gone cannot loop; after that the old behaviour runs.
+ * the page that was asked for, which gets the current app. At most once every
+ * 5 minutes: on 2026-11-12 an iPhone (Safari) kept a cached 404 that the
+ * repair fetch did not replace, and the old 10 s limit only spaced the reloads
+ * out (a white page reloading forever). After the one reload, the old
+ * behaviour runs.
  */
 
 // Chrome, Safari, Firefox wordings, Vite's CSS preload, older bundlers.
@@ -26,14 +29,14 @@ export function failedAssetUrl(error: unknown): string | null {
 }
 
 const KEY = 'chunk-retry-reload';
-const WINDOW_MS = 10_000;
+const WINDOW_MS = 5 * 60_000;
 
-/** Whether a reload may run now (none in the last 10 s). */
+/** Whether a reload may run now (none in the last 5 minutes). */
 export const mayReload = (now: number, last: number) => !(last && now - last < WINDOW_MS);
 
 /**
  * Repairs the cache and reloads the current page. Returns false (and does
- * nothing) when it already did so in the last 10 s or storage is blocked.
+ * nothing) when it already did so in the last 5 minutes or storage is blocked.
  */
 export function reloadForCurrentVersion(error: unknown): boolean {
   if (typeof window === 'undefined') return false;

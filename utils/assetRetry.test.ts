@@ -20,7 +20,7 @@ test('the entry stylesheet repairs the cached file and retries under a fresh URL
 test('the entry script repairs the cached file, then reloads once (10 s guard)', () => {
   const tag = addAssetRetry(BUILT).match(/<script type="module" crossorigin src="\/assets\/index-29Nx2mwb\.js"[^>]*>/)?.[0] ?? '';
   assert.match(tag, /fetch\(this\.src,\{cache:'reload'\}\)\.then\(function\(r\)\{if\(!r\.ok\)return;/);
-  assert.match(tag, /Date\.now\(\)-t<1e4\)return;/);
+  assert.match(tag, /Date\.now\(\)-t<3e5\)return;/); // one reload per 5 minutes, never a loop
   assert.match(tag, /location\.reload\(\)/);
 });
 
