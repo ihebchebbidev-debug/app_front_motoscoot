@@ -11,6 +11,7 @@ import {
 import { useAvailableSearchOptions } from '../../hooks/useAvailableSearchOptions';
 import { useListingsTotal } from '../../hooks/useListings';
 import { filtersFromSearch, filtersToServerParams } from '../../hooks/useListingFilters';
+import { analytics } from '../../src/lib/posthog';
 
 interface SearchBarProps {
   onSearch?: (filters: any) => void;
@@ -202,6 +203,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onNeufClick }) =
   };
 
   const handleSearchClick = () => {
+    analytics.capture('listing_search_submitted', {
+      category: type || 'all',
+      has_brand_filter: Boolean(brand),
+      has_model_filter: Boolean(model),
+      has_accessory_filter: Boolean(accessoryCategory),
+      has_location_filter: Boolean(location),
+      is_nearby_search: searchFilters.aroundMe,
+      has_max_price_filter: Boolean(maxPrice),
+      has_min_year_filter: Boolean(minYear),
+    });
     onSearch?.(searchFilters);
   };
 

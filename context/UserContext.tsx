@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi, type UserProfile } from '../services/authApi';
 import { tokenStorage } from '../services/apiClient';
+import { analytics } from '../src/lib/posthog';
 
 export type { UserProfile };
 
@@ -27,6 +28,7 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children, isLoggedIn, onAuthLost }) => {
   const queryClient = useQueryClient();
+  const identifiedUserIdRef = useRef<string | null>(null);
 
   const hasToken = isLoggedIn && !!tokenStorage.get();
 
@@ -51,6 +53,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children, isLoggedIn
       onAuthLost?.();
     }
   }, [profileQuery.error, queryClient, onAuthLost]);
+
+  // This profile is populated after login and restored on page refresh. Identify
+  // once per authenticated user (after cookie consent) by the backend's stable
+  // user ID only: no email or name is sent to PostHog.
+  useEffect(() => {
+    const user = profileQuery.data;
+    if (!user) {
+      identifiedUserIdRef.current = null;
+      return;
+    }
+    if (identifiedUserIdRef.current === user.id) return;
+
+    if (identifiedUserIdRef.current) analytics.reset();
+
+    analytics.identify(String(user.id), {
+      member_type: user.memberType,
+      ...(user.role ? { role: user.role } : {}),
+    });
+    identifiedUserIdRef.current = user.id;
+  }, [profileQuery.data]);
 
   const updateMutation = useMutation({
     mutationFn: (updates: Partial<UserProfile>) => authApi.updateProfile(updates),

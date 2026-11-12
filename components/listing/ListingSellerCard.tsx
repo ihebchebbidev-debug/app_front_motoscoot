@@ -15,6 +15,7 @@ import { apiClient } from '../../services/apiClient';
 import { tracker } from '../../services/trackingService';
 import AuthLockOverlay from '../common/AuthLockOverlay';
 import { MemberSinceSkeleton } from '../ui/Skeleton';
+import { analytics } from '../../src/lib/posthog';
 
 interface ListingSellerCardProps {
   listing: Listing;
@@ -150,6 +151,11 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
   const isLikelyMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const handlePhoneClick = () => {
+    analytics.capture('seller_contact_started', {
+      contact_channel: 'phone',
+      seller_type: listing.sellerType,
+      device_type: isLikelyMobile ? 'mobile' : 'desktop',
+    });
     // Persist contact intent (server dedupes per viewer/channel/1h)
     apiClient.post(`/listings/${listing.id}/contact`, { channel: 'phone' }).catch(() => {});
     try { tracker.trackListingEvent(String(listing.id), phoneRevealed ? 'call' : 'phone_reveal'); } catch {}
@@ -201,6 +207,12 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
         message: req.composed,
       });
       persistRequest({ ...req, status: 'sent', error: null });
+      analytics.capture('seller_contact_started', {
+        contact_channel: 'callback',
+        seller_type: listing.sellerType,
+        callback_slot: req.slot,
+        has_message: Boolean(req.message),
+      });
       monitoring.trackEvent('ListingCallbackRequested', {
         listingId: listing.id,
         sellerType: listing.sellerType,
@@ -282,6 +294,10 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
         seller_id: listing.sellerId,
       });
       monitoring.trackEvent('ListingMessageInitiated', { listingId: listing.id });
+      analytics.capture('seller_contact_started', {
+        contact_channel: 'message',
+        seller_type: listing.sellerType,
+      });
       apiClient.post(`/listings/${listing.id}/contact`, { channel: 'message' }).catch(() => {});
       try { tracker.trackListingEvent(String(listing.id), 'message_seller'); } catch {}
       navigateTo('dashboard', { tab: 'messages' });

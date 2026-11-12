@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { listingsApi } from '../services/listingsApi';
 import { tokenStorage } from '../services/apiClient';
+import { analytics } from '../src/lib/posthog';
 
 type FavoriteType = 'listing' | 'garage';
 type FavoriteId = string | number;
@@ -162,10 +163,13 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // (instead of blindly re-flipping current state, which can corrupt if a
     // racing refresh already corrected the value in the meantime).
     const key = type === 'listing' ? 'listings' : 'garages';
-    let wasFavoritedBefore = false;
+    const wasFavoritedBefore = (favorites[key] || []).some((itemId) => String(itemId) === String(id));
+    analytics.capture('favorite_updated', {
+      action: wasFavoritedBefore ? 'removed' : 'added',
+      favorite_type: type,
+    });
     setFavorites((prev) => {
       const list = prev[key] || [];
-      wasFavoritedBefore = list.some((x) => String(x) === String(id));
       return {
         ...prev,
         [key]: wasFavoritedBefore
@@ -228,7 +232,7 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           });
         });
     }
-  }, []);
+  }, [favorites]);
 
   const isFavorite = useCallback((type: FavoriteType, id: FavoriteId) => {
     const list = type === 'listing' ? favorites.listings : favorites.garages;

@@ -36,6 +36,7 @@ import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
 import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
+import { analytics } from '../src/lib/posthog';
 
 /** Step fields that show their own error message under the field. */
 const FIELDS_WITH_INLINE_ERROR = new Set([
@@ -501,6 +502,13 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
 
     try {
       const created = await listingService.publishListing(data);
+
+      analytics.capture('listing_published', {
+        category: data.category,
+        image_count: data.images.length,
+        contact_method: data.contactMethod || 'phone',
+        has_equipment: data.equipment.length > 0,
+      });
 
       // The draft is done: remove it so it does not come back on the next deposit.
       clearDraft();

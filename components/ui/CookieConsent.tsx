@@ -35,6 +35,9 @@ function persistChoice(value: 'accepted' | 'rejected') {
   import('../../services/analytics').then(({ updateAnalyticsConsent }) => {
     updateAnalyticsConsent(value === 'accepted');
   }).catch(() => {});
+  import('../../src/lib/posthog').then(({ updatePostHogConsent }) => {
+    updatePostHogConsent(value === 'accepted');
+  }).catch(() => {});
 }
 
 export const CookieConsent: React.FC = () => {
