@@ -36,6 +36,7 @@ import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
 import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
+import { DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from '../src/seo/privatePages';
 
 /** Step fields that show their own error message under the field. */
 const FIELDS_WITH_INLINE_ERROR = new Set([
@@ -582,7 +583,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     // Calm type scale (sentence case, fewer weights) for the deposit only.
     <TypeScaleProvider tone="calm">
     <div className="bg-neutral-50 min-h-screen">
-      <SEO title="Déposer une annonce" description="Publiez gratuitement votre annonce moto ou scooter sur Moto-Scoot.tn." noIndex url="/deposer-une-annonce" />
+      <SEO title={DEPOSIT_TITLE} rawTitle description={DEPOSIT_DESCRIPTION} noIndex url="/deposer-une-annonce" />
       <div className={S.Container}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 space-y-6">

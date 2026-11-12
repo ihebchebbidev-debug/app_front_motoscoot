@@ -10,7 +10,7 @@ export function mergeDetailShell(shell: string, detail: string): string {
     .replace(/\sdata-pre-hydrate/g, '')
     .replace(/<link[^>]+rel="preload"[^>]+as="image"[^>]*>/gi, '')
     .replace(/<title>[\s\S]*?<\/title>/gi, '')
-    .replace(/<meta\s+(?:name="(?:description|robots|twitter:[^"]+)"|property="(?:og:[^"]+|product:[^"]+)")[^>]*>/gi, '')
+    .replace(/<meta\s+(?:name="(?:description|robots|googlebot|twitter:[^"]+)"|property="(?:og:[^"]+|product:[^"]+)")[^>]*>/gi, '')
     .replace(/<link\s+rel="(?:canonical|alternate)"[^>]*>/gi, '')
     .replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/gi, '')
     .replace('</head>', `${head}</head>`)
