@@ -218,7 +218,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const brandNames = brandsForCategory.map((b) => b.name);
 
   // Hook 3 : Gestion du brouillon (localStorage)
-  const { clearDraft } = useAdDraft(
+  const { clearDraft, resumeDraft } = useAdDraft(
     step, 
     setStep, 
     allValues, 
@@ -482,6 +482,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     setMediaList([]);
     setStep(1);
     setPublished(null);
+    // A new listing: its draft is saved again from now on.
+    resumeDraft();
   };
 
   const handleEditStep = useCallback((id: DepositStepId) => {
