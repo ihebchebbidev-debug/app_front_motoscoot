@@ -15,7 +15,8 @@ import {
   TrendingUp,
   User,
   UserCircle,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 import { sanitizeRichHtml } from './admin/RichTextEditor';
 import Header from './layout/Header';
@@ -174,9 +175,13 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
         />
       </div>
 
-      <div className="pt-0 md:pt-8">
+      {/* Phones (under 768 px): no breadcrumb row, the photo first with « ← »
+          on it (as on the fiche technique), then the title. From 768 px:
+          breadcrumb, title, then the photo, as before. One h1 for both. */}
+      <div className="pt-4 md:pt-8">
+        <div className="flex flex-col">
         {/* Header Section */}
-        <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-10">
+        <header className="order-2 md:order-1 max-w-7xl w-full mx-auto px-4 md:px-6 mb-6 md:mb-10">
             <Reveal animation="fade-in-up">
               <PageBreadcrumb
                 parents={[
@@ -184,22 +189,17 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                   { label: 'Actualités', href: '/actualites', onClick: () => onNavigate?.('news') },
                 ]}
                 current={article.title}
-                className="mb-3 md:mb-8"
+                className="hidden md:flex mb-3 md:mb-8"
               />
 
-              {/* Titre Mobile */}
-              <div className="md:hidden text-[30px] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-6">
-                {article.title}
-              </div>
-              {/* Titre Desktop */}
-              <h1 className="hidden md:block text-[45px] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-8">
+              <h1 className="text-[30px] md:text-[45px] font-[900] text-gray-900 leading-[1.15] md:leading-[1.1] tracking-[-0.03em] mb-0 md:mb-8">
                 {article.title}
               </h1>
             </Reveal>
         </header>
 
         {/* Featured Image */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 md:mb-16">
+        <div className="order-1 md:order-2 max-w-7xl w-full mx-auto px-4 md:px-8 mb-5 md:mb-16">
             {/* No fade-in: this photo is the largest element of the first screen
                 (LCP); the 700 ms reveal delayed it by ~800 ms. */}
               <div className="relative aspect-[16/9] md:aspect-[21/9] md:rounded-[2.5rem] overflow-hidden shadow-xl bg-gray-100">
@@ -221,6 +221,20 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                       beside the article is desktop-only). Dark frosted glass: the
                       darkened, blurred backdrop keeps the white glyph ≥ 3:1 even
                       over a white sky; without backdrop-filter, a denser tint. */}
+                  {/* Phones: back to the news list, top left, mirroring « partager ». */}
+                  <a
+                    href="/actualites"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      onNavigate?.('news');
+                    }}
+                    aria-label="Retour aux actualités"
+                    title="Retour"
+                    className="md:hidden absolute top-3 left-3 grid h-11 w-11 place-items-center rounded-full text-white bg-black/50 supports-[backdrop-filter]:bg-black/30 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-75 ring-1 ring-inset ring-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.25)] transition-transform duration-150 active:scale-90 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                  >
+                    <ArrowLeft size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
+                  </a>
                   <button
                     type="button"
                     onClick={handleShare}
@@ -232,6 +246,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                   </button>
               </div>
             
+        </div>
         </div>
 
         {/* Article Core Content */}
