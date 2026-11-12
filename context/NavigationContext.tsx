@@ -6,6 +6,7 @@ import { getUrlFromState, getStateFromUrl } from '../utils/urlUtils';
 import { ROUTES } from '../config/routes';
 import { tokenStorage } from '../services/apiClient';
 import { authApi } from '../services/authApi';
+import { analytics } from '../src/lib/posthog';
 import { readSearchBackContext } from '../utils/searchBackContext';
 
 export interface NavigationContextType {
@@ -64,9 +65,12 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const setIsLoggedIn = useCallback((val: boolean) => {
+    if (!val) {
+      if (isLoggedIn) analytics.reset();
+      tokenStorage.clear();
+    }
     setIsLoggedInState(val);
-    if (!val) tokenStorage.clear();
-  }, []);
+  }, [isLoggedIn]);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -173,6 +177,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
 
   const logout = useCallback(async () => {
+    if (isLoggedIn) analytics.reset();
     try {
       await authApi.logout();
     } catch {
@@ -182,7 +187,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     queryClient.clear();
     setIsLoggedInState(false);
     navigateTo('home');
-  }, [navigateTo, queryClient]);
+  }, [isLoggedIn, navigateTo, queryClient]);
 
   const value: NavigationContextType = {
     currentView: viewState.view,

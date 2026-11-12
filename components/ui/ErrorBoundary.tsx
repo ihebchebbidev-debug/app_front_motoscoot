@@ -1,6 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { monitoring } from '../../utils/monitoring';
 import { isChunkLoadError, reloadForCurrentVersion } from '../../utils/chunkRetry';
+import { posthogLogs } from '../../src/lib/posthogLogs';
+import { analytics } from '../../src/lib/posthog';
 
 interface Props {
   children: ReactNode;
@@ -50,6 +52,8 @@ export class ErrorBoundary extends Component<Props, State> {
       boundary: this.props.boundaryName || 'Global',
       url: typeof window !== 'undefined' ? window.location.href : '',
     });
+    posthogLogs.reactRenderFailed(this.props.boundaryName || 'global');
+    analytics.captureException(error, { boundary: this.props.boundaryName || 'global' });
   }
 
   public componentDidUpdate(_prev: Props, prevState: State) {

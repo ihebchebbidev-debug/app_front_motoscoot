@@ -3,6 +3,7 @@ import { Mail, Check, Loader2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { newsletterApi } from '../services/miscApi';
 import { useToast } from '../context/ToastContext';
+import { analytics } from '../src/lib/posthog';
 
 interface NewsletterProps {
   variant?: 'inline' | 'section';
@@ -17,6 +18,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ variant = 'section', className 
   const subscribe = useMutation({
     mutationFn: (e: string) => newsletterApi.subscribe(e),
     onSuccess: () => {
+      analytics.capture('newsletter_subscribed');
       setDone(true);
       setEmail('');
       addToast('Merci ! Vous êtes inscrit à la newsletter.', 'success');

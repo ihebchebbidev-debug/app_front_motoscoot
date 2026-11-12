@@ -7,6 +7,8 @@
  * - Handles JSON parsing, query strings, AbortSignal, and error normalization.
  */
 
+import { posthogLogs } from '../src/lib/posthogLogs';
+
 export interface ApiError extends Error {
   status: number;
   data?: any;
@@ -271,6 +273,7 @@ async function request<T = any>(path: string, options: RequestOptions = {}): Pro
       code: 'NETWORK_ERROR',
       requestId: clientReqId,
     });
+    posthogLogs.apiRequestFailed(method, networkError.status);
     throw networkError;
   }
 
@@ -341,6 +344,8 @@ async function request<T = any>(path: string, options: RequestOptions = {}): Pro
     if (response.status === 401 && !noAuth && sentAuth) {
       tokenStorage.clear();
     }
+
+    posthogLogs.apiRequestFailed(method, response.status);
 
     // Surface backend correlation id in the console for easier debugging
     if (typeof console !== 'undefined') {

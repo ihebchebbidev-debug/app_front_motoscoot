@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { getClerkPublishableKey } from './utils/clerkConfig';
+import { startPostHog } from './src/lib/posthog';
+import { posthogLogs } from './src/lib/posthogLogs';
 // SiteGate (password gate) removed — site is now fully public.
 // Local Tailwind pipeline (replaces the cdn.tailwindcss.com script that used
 // to live in index.html). Importing once here means Vite picks it up and
@@ -72,4 +74,7 @@ const tree = (
 // mounts it lazily only when sign-in is needed (PageSpeed: ~250 KB saved).
 void PUBLISHABLE_KEY;
 root.render(tree);
+// PostHog: only after cookie consent, once the page is idle (src/lib/posthog.ts).
+startPostHog();
+posthogLogs.applicationStarted();
 
