@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  ChevronLeft, ChevronRight, CheckCircle2, MapPin, Calendar, Gauge, Zap, Camera, SearchCheck, Layers
+  ChevronLeft, ChevronRight, CheckCircle2, MapPin, Calendar, Gauge, Zap, Camera, SearchCheck, Layers, RotateCcw
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -218,7 +218,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const brandNames = brandsForCategory.map((b) => b.name);
 
   // Hook 3 : Gestion du brouillon (localStorage)
-  const { clearDraft } = useAdDraft(
+  const { clearDraft, resumeDraft } = useAdDraft(
     step, 
     setStep, 
     allValues, 
@@ -476,12 +476,26 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     onNavigate?.('listing-details', { id: published.id, title: published.title, listingNumber: published.listingNumber } as any);
   };
 
-  const handleDepositAnother = () => {
+  /** Empty form, step 1, no saved draft; the new listing's draft is saved again. */
+  const startBlankDeposit = () => {
     clearDraft();
     reset();
     setMediaList([]);
     setStep(1);
     setPublished(null);
+    // A new listing: its draft is saved again from now on.
+    resumeDraft();
+  };
+
+  const handleDepositAnother = () => {
+    startBlankDeposit();
+  };
+
+  /** « Réinitialiser »: start over, after a confirmation (everything typed is lost). */
+  const handleResetDeposit = () => {
+    if (!window.confirm('Effacer toutes les informations de cette annonce et recommencer ?')) return;
+    startBlankDeposit();
+    addToast('Formulaire réinitialisé.', 'info');
   };
 
   const handleEditStep = useCallback((id: DepositStepId) => {
@@ -604,6 +618,17 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                 steps={stepNames}
                 onStepClick={(n) => { if (n < step) setStep(n); }}
               />
+              {/* Start over: clears the form, the photos and the saved draft. */}
+              <div className="flex justify-end px-4 md:px-12 -mb-4 md:-mb-2">
+                <button
+                  type="button"
+                  onClick={handleResetDeposit}
+                  className="inline-flex items-center gap-1.5 min-h-11 px-2 -mr-2 rounded-lg text-[13px] font-semibold text-gray-600 transition-colors duration-100 hover:text-primary-700 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                >
+                  <RotateCcw size={15} strokeWidth={2.25} aria-hidden="true" />
+                  Réinitialiser
+                </button>
+              </div>
               <form
                 onSubmit={(e) => { e.preventDefault(); handlePublish(); }}
                 onFocus={(e) => setTyping(isTypingField(e.target))}

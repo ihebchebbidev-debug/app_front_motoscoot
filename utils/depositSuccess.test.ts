@@ -10,7 +10,8 @@ test('after publishing, the wizard shows a success screen instead of sending the
   assert.doesNotMatch(src, /Redirection en cours/);
   assert.match(src, /<DepositSuccess listing=\{published\}/);
   // "Déposer une autre" starts a clean deposit.
-  assert.match(src, /const handleDepositAnother = \(\) => \{\s*clearDraft\(\);\s*reset\(\);\s*setMediaList\(\[\]\);\s*setStep\(1\);/);
+  assert.match(src, /const startBlankDeposit = \(\) => \{\s*clearDraft\(\);\s*reset\(\);\s*setMediaList\(\[\]\);\s*setStep\(1\);/);
+  assert.match(src, /const handleDepositAnother = \(\) => \{\s*startBlankDeposit\(\);\s*\};/);
 });
 
 test('the success screen offers the three actions and links to the public listing URL', () => {

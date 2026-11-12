@@ -78,20 +78,18 @@ export const useAdDraft = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
-  // Suppress the next N autosave passes after a clearDraft(). Without this,
-  // the reset() + setStep(1) that follow a successful publish would each
-  // re-trigger this effect and write a fresh empty draft to localStorage —
-  // re-creating the very key we just removed and risking a stale step:5
-  // snapshot if the autosave fires before the reset has settled.
-  const suppressSavesRef = useRef(0);
+  // After a publish the draft is done: autosave stays off until a new deposit
+  // starts (resumeDraft). It used to skip only the next 3 passes, but
+  // `watch()` hands a new object on every render, so the success screen's own
+  // re-renders (animation, sound) ran a 4th pass and saved the listing just
+  // published as a draft again: it came back on the next deposit (owner,
+  // 2026-11-12, « une mémoire d'annonce »).
+  const stoppedRef = useRef(false);
 
   // Sauvegarde automatique du brouillon à chaque changement
   useEffect(() => {
     if (isFirstRender.current) return;
-    if (suppressSavesRef.current > 0) {
-      suppressSavesRef.current -= 1;
-      return;
-    }
+    if (stoppedRef.current) return;
 
     const draft = {
       step,
@@ -110,15 +108,18 @@ export const useAdDraft = (
     }
   }, [allValues, step, mediaList, storageKey]);
 
+  /** Removes the saved draft and stops autosave (the listing was published). */
   const clearDraft = () => {
+    stoppedRef.current = true;
     try {
       localStorage.removeItem(storageKey);
     } catch {}
-    // Skip the autosave passes triggered by the reset() / setStep(1) /
-    // setMediaList([]) calls that the caller fires right after clearDraft.
-    // 3 covers the three independent state writes; extras are harmless.
-    suppressSavesRef.current = 3;
   };
 
-  return { clearDraft };
+  /** A new deposit starts: autosave runs again (after the form was reset). */
+  const resumeDraft = () => {
+    stoppedRef.current = false;
+  };
+
+  return { clearDraft, resumeDraft };
 };
