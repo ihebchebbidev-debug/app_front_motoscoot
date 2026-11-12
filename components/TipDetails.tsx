@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, Calendar, ThumbsUp, ThumbsDown, CheckCircle2, Wrench, Lightbulb, Share2, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, ThumbsUp, ThumbsDown, CheckCircle2, Wrench, Lightbulb, Share2, AlertTriangle, ChevronRight, ArrowLeft } from 'lucide-react';
 import { sanitizeRichHtml } from './admin/RichTextEditor';
 import { useTip, useTips, useRelatedTips } from '../hooks/useTips';
 import Header from './layout/Header';
@@ -122,9 +122,13 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         />
       </div>
 
-      <div className="pt-0 md:pt-8">
+      {/* Phones (under 768 px): no breadcrumb row, the photo first with « ← »
+          on it (as on the fiche technique and the article), then the title and
+          the meta line. From 768 px: unchanged. One h1 for both. */}
+      <div className="pt-4 md:pt-8">
+        <div className="flex flex-col">
         {/* Header Section */}
-        <header className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-8">
+        <header className="order-2 md:order-1 max-w-7xl w-full mx-auto px-4 md:px-6 mb-6 md:mb-8">
             <Reveal animation="fade-in-up">
               <PageBreadcrumb
                 parents={[
@@ -132,15 +136,10 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
                   { label: 'Conseils', href: '/conseils', onClick: () => onNavigate?.('tips') },
                 ]}
                 current={tip.title}
-                className="mb-3 md:mb-8"
+                className="hidden md:flex mb-3 md:mb-8"
               />
 
-              {/* Titre Mobile */}
-              <div className="md:hidden text-[2rem] font-[900] text-gray-900 leading-[1.15] tracking-[-0.03em] mb-4">
-                {tip.title}
-              </div>
-              {/* Titre Desktop */}
-              <h1 className="hidden md:block text-[3.5rem] font-[900] text-gray-900 leading-[1.1] tracking-[-0.03em] mb-6">
+              <h1 className="text-[2rem] md:text-[3.5rem] font-[900] text-gray-900 leading-[1.15] md:leading-[1.1] tracking-[-0.03em] mb-4 md:mb-6">
                 {tip.title}
               </h1>
 
@@ -163,7 +162,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
         </header>
 
         {/* Featured Image */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-12">
+        <div className="order-1 md:order-2 max-w-7xl w-full mx-auto px-4 md:px-6 mb-5 md:mb-12">
             {/* No fade-in: this photo is the largest element of the first screen
                 (LCP); the 700 ms reveal delayed it by ~800 ms. */}
               <div className="relative aspect-[16/10] md:aspect-[21/9] rounded-2xl md:rounded-3xl overflow-hidden bg-gray-100">
@@ -175,8 +174,23 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
                     decoding="async"
                     className="w-full h-full object-cover"
                   />
+                  {/* Phones: back to the guides, top left. */}
+                  <a
+                    href="/conseils"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      onNavigate?.('tips');
+                    }}
+                    aria-label="Retour aux conseils"
+                    title="Retour"
+                    className="md:hidden absolute top-3 left-3 grid h-11 w-11 place-items-center rounded-full text-white bg-black/50 supports-[backdrop-filter]:bg-black/30 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-75 ring-1 ring-inset ring-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.25)] transition-transform duration-150 active:scale-90 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                  >
+                    <ArrowLeft size={20} strokeWidth={2.25} aria-hidden="true" className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]" />
+                  </a>
               </div>
             
+        </div>
         </div>
 
         {/* Article Core Content */}

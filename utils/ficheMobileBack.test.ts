@@ -39,3 +39,12 @@ test('article, phones: no breadcrumb row, the photo first with « ← » on it, 
   assert.doesNotMatch(article, /Titre Mobile/);
   assert.match(article, /<a\s+href="\/actualites"[\s\S]{0,300}?onNavigate\?\.\('news'\);[\s\S]{0,200}?aria-label="Retour aux actualités"[\s\S]{0,80}?className="md:hidden absolute top-3 left-3 /);
 });
+
+test('guide, phones: same as the article — photo first with « ← » to /conseils, then the one h1', () => {
+  const guide = readFileSync(new URL('../components/TipDetails.tsx', import.meta.url), 'utf8');
+  assert.match(guide, /<header className="order-2 md:order-1 /);
+  assert.match(guide, /\{\/\* Featured Image \*\/\}\s*<div className="order-1 md:order-2 /);
+  assert.equal((guide.match(/<h1 /g) || []).length, 2); // the guide's title + « Astuce introuvable »
+  assert.doesNotMatch(guide, /Titre Mobile/);
+  assert.match(guide, /<a\s+href="\/conseils"[\s\S]{0,300}?onNavigate\?\.\('tips'\);[\s\S]{0,200}?aria-label="Retour aux conseils"[\s\S]{0,80}?className="md:hidden absolute top-3 left-3 /);
+});
