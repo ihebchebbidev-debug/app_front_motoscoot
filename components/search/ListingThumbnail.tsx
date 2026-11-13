@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Heart, Navigation, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
 
@@ -71,14 +71,36 @@ export const ListingThumbnail: React.FC<ListingThumbnailProps> = ({
     setMountedUpTo((m) => (upTo > m ? Math.min(upTo, count - 1) : m));
   }, [count]);
 
-  // Calcul direct (pas de rAF) : React ignore les setState à valeur identique.
-  const handleScroll = useCallback(() => {
+  // Fluidité au doigt : AUCUN rendu React ni ajout d'image pendant le geste.
+  // Toucher le contenu d'un conteneur scroll-snap en plein glissement relance
+  // l'aimantation et coupe l'élan (le « ressenti de bug »). On met donc à jour
+  // le point actif et on monte la photo suivante uniquement quand le défilement
+  // est terminé : événement natif `scrollend`, sinon 120 ms sans défilement
+  // (Safari ancien).
+  useEffect(() => {
     const el = trackRef.current;
-    if (!el || !el.clientWidth) return;
-    const idx = Math.max(0, Math.min(count - 1, Math.round(el.scrollLeft / el.clientWidth)));
-    setActive(idx);
-    armNext(idx + 1);
-  }, [count, armNext]);
+    if (!el || !multi) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const settle = () => {
+      if (timer) { clearTimeout(timer); timer = undefined; }
+      if (!el.clientWidth) return;
+      const idx = Math.max(0, Math.min(count - 1, Math.round(el.scrollLeft / el.clientWidth)));
+      setActive(idx);
+      armNext(idx + 1);
+    };
+    const hasScrollEnd = 'onscrollend' in window;
+    const onScroll = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(settle, 120);
+    };
+    if (hasScrollEnd) el.addEventListener('scrollend', settle, { passive: true });
+    else el.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (timer) clearTimeout(timer);
+      el.removeEventListener('scrollend', settle);
+      el.removeEventListener('scroll', onScroll);
+    };
+  }, [multi, count, armNext]);
 
   const goTo = useCallback((idx: number) => {
     const el = trackRef.current;
@@ -101,8 +123,9 @@ export const ListingThumbnail: React.FC<ListingThumbnailProps> = ({
     if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
   };
 
-  // Intention de voir la suite (survol souris, premier toucher) → on précharge la 2e photo.
-  const handleIntent = multi ? () => armNext(Math.max(1, active + 1)) : undefined;
+  // Intention de voir la suite (survol souris, toucher) → la photo suivante est
+  // montée AVANT que le doigt bouge, jamais pendant le glissement.
+  const handleIntent = multi ? () => armNext(active + 1) : undefined;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -133,7 +156,7 @@ export const ListingThumbnail: React.FC<ListingThumbnailProps> = ({
     >
       <div
         ref={trackRef}
-        onScroll={multi ? handleScroll : undefined}
+        data-carousel={multi ? '' : undefined}
         className={`flex h-full w-full ${
           multi ? 'overflow-x-auto overscroll-x-contain snap-x snap-mandatory no-scrollbar' : 'overflow-hidden'
         }`}
@@ -214,7 +237,7 @@ export const ListingThumbnail: React.FC<ListingThumbnailProps> = ({
               return (
                 <span
                   key={i}
-                  className={`rounded-full transition-all duration-200 ${
+                  className={`rounded-full transition-colors duration-200 ${
                     i === active ? 'bg-white' : 'bg-white/50'
                   } ${isEdge ? 'w-1 h-1' : 'w-1.5 h-1.5'}`}
                 />
