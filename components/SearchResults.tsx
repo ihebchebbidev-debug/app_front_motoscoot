@@ -44,6 +44,13 @@ const S = {
 
 const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, isLoggedIn, onTriggerLogin }) => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  // Le bouton « Filtres » touché : le focus y revient à la fermeture.
+  const filterOpenerRef = useRef<HTMLElement | null>(null);
+  const openMobileFilters = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    filterOpenerRef.current = e.currentTarget;
+    setIsMobileFilterOpen(true);
+  }, []);
+  const closeMobileFilters = useCallback(() => setIsMobileFilterOpen(false), []);
   // viewMode survives navigation via localStorage so users don't have to
   // re-toggle list/grid every time they jump back into search.
   const [viewMode, setViewMode] = usePersistedState<'grid' | 'list'>('motoscoot.viewMode', 'grid');
@@ -280,7 +287,7 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
                   <PhoneSortSheet sortBy={sortBy} onSortChange={setSortBy} hasLocation={!!userLocation} />
                 </div>
                 <button
-                  onClick={() => setIsMobileFilterOpen(true)}
+                  onClick={openMobileFilters}
                   className="flex items-center justify-center gap-2 h-11 bg-gray-900 text-white rounded-xl shadow-md active:scale-95 transition-all w-full font-bold text-sm"
                 >
                   <SlidersHorizontal size={18} />
@@ -296,7 +303,7 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
               <button onClick={() => setViewMode('list')} className={S.ViewBtn(viewMode === 'list')} aria-label="Vue liste"><ListIcon size={20} /></button>
             </div>
             <SortDropdown sortBy={sortBy} onSortChange={setSortBy} userLocation={userLocation} />
-            <button onClick={() => setIsMobileFilterOpen(true)} className="lg:hidden flex items-center gap-2 px-5 h-11 bg-gray-900 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"><SlidersHorizontal size={18} /> Filtres</button>
+            <button onClick={openMobileFilters} className="lg:hidden flex items-center gap-2 px-5 h-11 bg-gray-900 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"><SlidersHorizontal size={18} /> Filtres</button>
           </div>
         </header>
 
@@ -386,9 +393,8 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
         </div>
       </div>
 
-      {isMobileFilterOpen && (
-        <MobileFilters filters={filters} searchInputValue={searchInputValue} onFilterChange={handleFilterChange} onReset={resetFilters} onClose={() => setIsMobileFilterOpen(false)} onLocationDetect={handleLocationDetect} resultsCount={totalResults} locationStatus={locationStatus} radiusKm={radiusKm} onRadiusChange={setRadiusKm} userLocation={userLocation} facets={facets} />
-      )}
+      {/* Téléphone et tablette : feuille commune (montée en permanence pour l'animation de sortie). */}
+      <MobileFilters open={isMobileFilterOpen} filters={filters} searchInputValue={searchInputValue} onFilterChange={handleFilterChange} onReset={resetFilters} onClose={closeMobileFilters} onLocationDetect={handleLocationDetect} resultsCount={totalResults} counting={showOverlay} locationStatus={locationStatus} radiusKm={radiusKm} onRadiusChange={setRadiusKm} userLocation={userLocation} facets={facets} returnFocus={filterOpenerRef} />
     </div>
   );
 };
