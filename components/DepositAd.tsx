@@ -216,7 +216,6 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // has tagged with that accessory type via the Reference tab.
   const brandFilterCategory = category === 'Accessoires' ? undefined : (category || undefined);
   const { data: brandsForCategory = [] } = useBrands(brandFilterCategory, accessoryType || undefined);
-  const brandNames = brandsForCategory.map((b) => b.name);
 
   // Hook 3 : Gestion du brouillon (localStorage)
   const { clearDraft, resumeDraft } = useAdDraft(
@@ -601,7 +600,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                       setValue={setValue}
                       clearErrors={clearErrors}
                       category={category} 
-                      brands={brandNames}
+                      brands={brandsForCategory}
                     />
                   )}
                   {stepId === 'equipment' && (
