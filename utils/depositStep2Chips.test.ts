@@ -6,10 +6,13 @@ import { CONDITION_HINTS, DEFAULT_CONDITIONS } from './depositOptions';
 // Lot B (2026-11-13): short lists shown whole, the condition explained.
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
 const chips = readFileSync(new URL('../components/ui/ChoiceChips.tsx', import.meta.url), 'utf8');
+const picker = readFileSync(new URL('../components/deposit/ConditionPicker.tsx', import.meta.url), 'utf8');
 
-test('short lists are chips, not drop-downs; only year and cylinder size stay lists', () => {
-  assert.equal((step.match(/<Select\b/g) || []).length, 2); // category became tiles (lot C)
-  for (const f of ['accessoryType', 'helmetType', 'size', 'gender', 'antiTheftType', 'condition']) {
+test('owner choice (2026-11-13): category and accessory type stay drop-downs, as year and cylinder size', () => {
+  assert.equal((step.match(/<Select\b/g) || []).length, 4);
+  assert.match(step, /<Select label="Catégorie" \{\.\.\.register\('category'\)\}/);
+  assert.match(step, /<Select\n\s+label="Type d'accessoire"/);
+  for (const f of ['helmetType', 'size', 'gender', 'antiTheftType']) {
     assert.match(step, new RegExp(`name="${f}"\\n\\s+render=\\{\\(\\{ field \\}\\) => \\(\\n\\s+<ChoiceChips`), f);
   }
 });
@@ -24,13 +27,17 @@ test('chips are real radio buttons in a named group, 44 px tall, the error focus
   assert.match(chips, /has-\[:focus-visible\]:outline/);
 });
 
-test('every condition has the explanation the owner validated', () => {
+test('the condition opens a modal where each choice has the explanation the owner validated', () => {
   for (const c of DEFAULT_CONDITIONS) assert.ok(CONDITION_HINTS[c], c);
   assert.equal(CONDITION_HINTS['État neuf'], "Très peu utilisé (moins de 1 000 km), aucune trace d'usure.");
-  assert.match(step, /variant="cards"[\s\S]*hint: CONDITION_HINTS\[value\]/);
+  assert.match(step, /<ConditionPicker[\s\S]*hint: CONDITION_HINTS\[value\]/);
+  // No anchor: a modal everywhere (bottom sheet on phones, centred dialog from 768 px).
+  assert.match(picker, /<ChoiceSheet open=\{open\} label=\{label\} onClose=\{close\}>/);
+  assert.match(picker, /aria-haspopup="dialog"/);
+  assert.match(picker, /min-h-\[64px\]/);
+  assert.match(picker, /\{current\?\.hint && /); // the chosen meaning shows under the field
 });
 
-test('the condition comes last, once the item is described, across the full width', () => {
+test('the condition comes last, once the item is described', () => {
   assert.ok(step.indexOf('name="condition"') > step.indexOf("label=\"Cylindrée\""));
-  assert.match(step, /variant="cards"\n\s+className="md:col-span-2"/);
 });

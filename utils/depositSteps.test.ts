@@ -22,12 +22,11 @@ test('step numbers and ids map both ways, clamped to the last step', () => {
   assert.equal(depositStepLabel('details', false), 'Prix et description');
 });
 
-test('the category tiles offer exactly the categories the form accepts', () => {
+test('the category dropdown offers exactly the categories the form accepts', () => {
   const schema = read('types/listing.ts');
   for (const c of DEPOSIT_CATEGORIES) assert.match(schema, new RegExp(`'${c}'`));
   const tech = read('components/deposit/StepTechnical.tsx');
-  assert.match(tech, /const allowed = new Set<string>\(DEPOSIT_CATEGORIES\);/);
-  assert.match(tech, /options=\{categoryOptions\.map\(\(value\) => \(\{ value, image: categoryTileImage/);
+  assert.match(tech, /<Select label="Catégorie" \{\.\.\.register\('category'\)\}/);
 });
 
 test('the wizard renders and validates by step id, without the old category and map steps', () => {

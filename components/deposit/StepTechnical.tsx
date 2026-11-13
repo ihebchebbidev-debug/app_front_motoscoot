@@ -9,8 +9,8 @@ import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
 import { ModelPicker } from './ModelPicker';
-import { CONDITION_HINTS, DEFAULT_CONDITIONS, categoryTileImage, modelExample, optionsWithValue } from '../../utils/depositOptions';
-import { API_ORIGIN } from '../../services/apiClient';
+import { ConditionPicker } from './ConditionPicker';
+import { CONDITION_HINTS, DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 
 // Backend category names that differ from the form's values.
@@ -83,15 +83,6 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       .filter((n) => allowed.has(n));
     return names.length > 0 ? Array.from(new Set(names)) : [...DEPOSIT_CATEGORIES];
   }, [backendCategories]);
-  // Category → its photo (the admin's image, else its icon).
-  const categoryImages = useMemo(() => {
-    const m = new Map<string, string | null | undefined>();
-    for (const c of backendCategories || []) {
-      const name = CATEGORY_ALIASES[c.name] || c.name;
-      if (!m.has(name)) m.set(name, c.image_url || c.icon_url);
-    }
-    return m;
-  }, [backendCategories]);
   const accessoryTypeNames = useMemo(() => accessoryTypesData.map((t) => t.name), [accessoryTypesData]);
 
 
@@ -103,25 +94,11 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       </div>
       <div className={S.GridFields}>
 
-        {/* CATÉGORIE: the first choice; the other fields depend on it. Four photos (the admin's category images). */}
-        <Controller
-          control={control}
-          name="category"
-          render={({ field }) => (
-            <ChoiceChips
-              variant="tiles"
-              className="md:col-span-2"
-              label="Catégorie"
-              name={field.name}
-              ref={field.ref}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              options={categoryOptions.map((value) => ({ value, image: categoryTileImage(categoryImages.get(value), API_ORIGIN) }))}
-              error={errors.category?.message}
-            />
-          )}
-        />
+        {/* CATÉGORIE: the other fields depend on it (brands, accessory fields). A drop-down, as the owner prefers. */}
+        <Select label="Catégorie" {...register('category')} error={errors.category?.message}>
+          <option value="">Choisir une catégorie</option>
+          {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+        </Select>
 
         {category && (<>
         {category === 'Accessoires' && (
@@ -130,17 +107,18 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             control={control}
             name="accessoryType"
             render={({ field }) => (
-              <ChoiceChips
-                className="md:col-span-2"
+              <Select
                 label="Type d'accessoire"
                 name={field.name}
                 ref={field.ref}
-                value={field.value}
+                value={field.value ?? ''}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                options={optionsWithValue(accessoryTypeNames, field.value).map((value) => ({ value }))}
                 error={errors.accessoryType?.message}
-              />
+              >
+                <option value="">Choisir un type</option>
+                {optionsWithValue(accessoryTypeNames, field.value).map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
             )}
           />
         )}
@@ -321,19 +299,16 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
           </>
         )}
 
-        {/* ÉTAT: last, once the item is described; each choice says what it means. */}
+        {/* ÉTAT: last, once the item is described; a modal where each choice says what it means. */}
         <Controller
           control={control}
           name="condition"
           render={({ field }) => (
-            <ChoiceChips
-              variant="cards"
-              className="md:col-span-2"
-              label="État"
-              name={field.name}
+            <ConditionPicker
               ref={field.ref}
-              value={field.value}
-              onChange={field.onChange}
+              label="État"
+              value={field.value || ''}
+              onChange={(v) => { field.onChange(v); clearErrors('condition'); }}
               onBlur={field.onBlur}
               options={optionsWithValue(conditionList, field.value).map((value) => ({ value, hint: CONDITION_HINTS[value] }))}
               error={errors.condition?.message}

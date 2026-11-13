@@ -16,8 +16,7 @@ test('an empty list reads as empty: grey placeholder, as the inputs and the bran
 
 test('one wording for an empty list: « Choisir … »', () => {
   assert.doesNotMatch(step, /Sélectionner/);
-  // The short lists became chips (lot B): the drop-downs left are these three.
-  for (const p of ["Choisir l'année", 'Choisir la cylindrée']) {
+  for (const p of ['Choisir une catégorie', 'Choisir un type', "Choisir l'année", 'Choisir la cylindrée']) {
     assert.ok(step.includes(p), p);
   }
 });

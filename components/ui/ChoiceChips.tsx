@@ -1,4 +1,4 @@
-import React, { forwardRef, useId, useState } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { Check } from 'lucide-react';
 import { FIELD_TYPE, useTypeTone } from './TypeScale';
 
@@ -10,15 +10,12 @@ import { FIELD_TYPE, useTypeTone } from './TypeScale';
  *
  * - `chips`: one line each, wrapping (sizes, types…).
  * - `cards`: a name and a one-line explanation (the listing's condition).
- * - `tiles`: a photo above the name (the listing's category, the first choice).
  */
 
 export interface ChoiceOption {
   value: string;
   label?: string;
   hint?: string;
-  /** `tiles` only: the photo (no photo, or a failed one: the name alone). */
-  image?: { src: string; srcSet?: string } | null;
 }
 
 interface ChoiceChipsProps {
@@ -29,7 +26,7 @@ interface ChoiceChipsProps {
   onChange: (value: string) => void;
   onBlur?: () => void;
   error?: string;
-  variant?: 'chips' | 'cards' | 'tiles';
+  variant?: 'chips' | 'cards';
   className?: string;
 }
 
@@ -45,7 +42,6 @@ export const ChoiceChips = forwardRef<HTMLInputElement, ChoiceChipsProps>(({
   const type = FIELD_TYPE[useTypeTone()];
   const errorId = useId();
   const cards = variant === 'cards';
-  const tiles = variant === 'tiles';
   return (
     <fieldset
       className={`min-w-0 ${className}`}
@@ -53,13 +49,13 @@ export const ChoiceChips = forwardRef<HTMLInputElement, ChoiceChipsProps>(({
       aria-describedby={error ? errorId : undefined}
     >
       <legend className={`${type.label} ml-1 mb-2`}>{label}</legend>
-      <div className={tiles ? 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3' : cards ? 'grid grid-cols-1 sm:grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
+      <div className={cards ? 'grid grid-cols-1 sm:grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
         {options.map((o, i) => {
           const checked = value === o.value;
           return (
             <label
               key={o.value}
-              className={`${BOX} ${tiles ? 'group flex flex-col overflow-hidden bg-card' : cards ? 'flex items-start gap-3 px-4 py-3 min-h-[64px]' : 'inline-flex items-center justify-center min-h-[44px] min-w-[52px] px-4'} ${error && !value ? 'border-red-300' : ''}`}
+              className={`${BOX} ${cards ? 'flex items-start gap-3 px-4 py-3 min-h-[64px]' : 'inline-flex items-center justify-center min-h-[44px] min-w-[52px] px-4'} ${error && !value ? 'border-red-300' : ''}`}
             >
               <input
                 // The first radio takes the form's ref: an error focuses the group.
@@ -80,12 +76,7 @@ export const ChoiceChips = forwardRef<HTMLInputElement, ChoiceChipsProps>(({
                   {checked && <Check size={13} strokeWidth={3} />}
                 </span>
               )}
-              {tiles ? (
-                <>
-                  <TilePhoto image={o.image} />
-                  <span className="px-3 py-2.5 text-center text-[15px] font-semibold">{o.label ?? o.value}</span>
-                </>
-              ) : cards ? (
+              {cards ? (
                 <span className="min-w-0">
                   <span className="block text-[15px] font-semibold">{o.label ?? o.value}</span>
                   {o.hint && <span className="block mt-0.5 text-[13px] leading-snug text-gray-600">{o.hint}</span>}
@@ -104,26 +95,3 @@ export const ChoiceChips = forwardRef<HTMLInputElement, ChoiceChipsProps>(({
 
 ChoiceChips.displayName = 'ChoiceChips';
 
-/** Square-ish photo of a tile; a photo that fails to load leaves the name alone. */
-const TilePhoto: React.FC<{ image?: ChoiceOption['image'] }> = ({ image }) => {
-  const [failed, setFailed] = useState(false);
-  if (!image || failed) return null;
-  return (
-    <span className="block aspect-[4/3] overflow-hidden bg-gray-50">
-      <img
-        src={image.src}
-        srcSet={image.srcSet}
-        // 2 columns on phones, 4 from 640 px in the 896 px form.
-        sizes="(max-width: 639px) 46vw, 210px"
-        alt=""
-        width={300}
-        height={225}
-        loading="lazy"
-        decoding="async"
-        draggable={false}
-        onError={() => setFailed(true)}
-        className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] motion-reduce:group-hover:scale-100"
-      />
-    </span>
-  );
-};
