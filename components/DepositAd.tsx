@@ -32,7 +32,7 @@ import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess'
 import { primeSuccessSound } from '../utils/successSound';
 import { revealBelowHeader, scrollBelowHeader } from '../utils/scrollBelowHeader';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
-import { DEPOSIT_FIELD_LABELS, depositStepFields, photosStillUploading } from '../utils/depositRules';
+import { DEPOSIT_FIELD_LABELS, depositStepFields, photosStillUploading, strayDepositFields, type DepositValues } from '../utils/depositRules';
 
 import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
@@ -271,7 +271,11 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     return () => subscription.unsubscribe();
   }, [watch, trigger, getFieldState]);
 
-  // Reset brand/model quand la catégorie change
+  // What depends on what: a new category needs a new brand and model; a new
+  // brand, a new model. And a field that no longer belongs to the listing is
+  // emptied (utils/depositRules.ts): the year, km and cylinder size of a moto
+  // turned into a helmet, the helmet type of a « Casque » turned into « Gant ».
+  // A field that still belongs stays (« Veste » → « Pantalons » keeps the size).
   useEffect(() => {
     const subscription = watch((value, { name }) => {
       if (name === 'category') {
@@ -282,14 +286,10 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
       if (name === 'brand') {
         setValue('model', '');
       }
-      if (name === 'accessoryType') {
-        setValue('helmetType', '');
-        setValue('visorType', []);
-        setValue('size', '');
-        setValue('gender', '');
-        setValue('shoeSize', '');
-        setValue('antiTheftType', '');
-        setValue('intercomFeatures', []);
+      if (name === 'category' || name === 'accessoryType') {
+        for (const field of strayDepositFields(value as DepositValues)) {
+          setValue(field as keyof ListingFormData, (Array.isArray((value as any)[field]) ? [] : '') as never);
+        }
       }
     });
     return () => subscription.unsubscribe();

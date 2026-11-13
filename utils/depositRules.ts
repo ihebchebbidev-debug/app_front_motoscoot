@@ -58,6 +58,40 @@ const RULES: Rule[] = [
   { field: 'description', label: 'Description', step: 'details' },
 ];
 
+/**
+ * Fields that only make sense for some listings, and when (the same « when »
+ * as the required rules, plus the vehicle equipment, an optional step that
+ * accessories do not have). Every other field belongs to every listing.
+ */
+const CONDITIONAL_FIELDS: { field: string; when: (v: DepositValues) => boolean }[] = [
+  ...RULES.filter((r) => r.when).map((r) => ({ field: r.field, when: r.when! })),
+  { field: 'equipment', when: isVehicle },
+];
+
+/**
+ * The fields of the listing these values describe: the ones the form shows,
+ * the draft keeps and the publish sends. A field outside it (the year of a
+ * moto left when the seller switched to « Casque ») is never sent or checked.
+ */
+export function depositFieldBelongs(field: string, values: DepositValues): boolean {
+  const rule = CONDITIONAL_FIELDS.find((r) => r.field === field);
+  return !rule || rule.when(values);
+}
+
+/** Fields holding a value that no longer belongs to the listing (to clear). */
+export function strayDepositFields(values: DepositValues): string[] {
+  return CONDITIONAL_FIELDS
+    .filter((r) => !r.when(values) && notEmpty(values[r.field]))
+    .map((r) => r.field);
+}
+
+/** The values with every stray field emptied ('' or []), the rest untouched. */
+export function keepDepositFields<T extends DepositValues>(values: T): T {
+  const out: DepositValues = { ...values };
+  for (const f of strayDepositFields(values)) out[f] = Array.isArray(values[f]) ? [] : '';
+  return out as T;
+}
+
 /** Names shown in « Champs requis manquants : … ». */
 export const DEPOSIT_FIELD_LABELS: Record<string, string> = {
   category: 'Catégorie',

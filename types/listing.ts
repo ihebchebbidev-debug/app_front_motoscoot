@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { isValidTunisiaPhone, TUNISIA_PHONE_ERROR } from '../utils/phoneUtils';
-import { depositMissingConditional } from '../utils/depositRules';
+import { depositFieldBelongs, depositMissingConditional } from '../utils/depositRules';
 import { CC_MESSAGE, ccIsValid } from '../utils/depositOptions';
 
 export interface UploadedMedia {
@@ -71,9 +71,9 @@ export const listingSchema = z.object({
   // Optional base fields
   year: z.string().optional(),
   // A whole number of km (listings.mileage is an INTEGER): no sign, no decimal, no « 1e6 ».
-  mileage: z.string().optional().refine((v) => !v || MILEAGE_PATTERN.test(v.trim()), MILEAGE_MESSAGE),
+  mileage: z.string().optional(), // format checked below, only when it belongs (a vehicle)
   // A size from the list, « Électrique », « Autre », or a typed number of cc (30 to 3 000).
-  cc: z.string().optional().refine((v) => ccIsValid(v), CC_MESSAGE),
+  cc: z.string().optional(), // a list size, « Électrique », « Autre » or 30 to 3 000: checked below, only for a vehicle
   
   // Accessory specific fields
   accessoryType: z.string().optional(),
@@ -89,6 +89,14 @@ export const listingSchema = z.object({
   // (the deposit's « Suivant » and « Publier » read the same rules).
   for (const { path, message } of depositMissingConditional(data)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: [path] });
+  }
+  // A hidden field is never checked: a bad mileage left on a moto turned into
+  // a helmet used to block the publish on a field the seller could not see.
+  if (depositFieldBelongs('mileage', data) && data.mileage && !MILEAGE_PATTERN.test(data.mileage.trim())) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: MILEAGE_MESSAGE, path: ['mileage'] });
+  }
+  if (depositFieldBelongs('cc', data) && !ccIsValid(data.cc)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: CC_MESSAGE, path: ['cc'] });
   }
   if (data.category === 'Accessoires' && data.accessoryType === 'Casque' && (data.visorType?.length ?? 0) > 2) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Maximum 2 types de visière", path: ['visorType'] });
