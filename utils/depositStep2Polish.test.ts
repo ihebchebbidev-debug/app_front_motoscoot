@@ -8,13 +8,16 @@ const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', imp
 const select = readFileSync(new URL('../components/ui/Select.tsx', import.meta.url), 'utf8');
 
 test('an empty list reads as empty: grey placeholder, as the inputs and the brand picker', () => {
-  assert.match(select, /\[&:has\(option\[value=''\]:checked\)\]:text-gray-500/);
+  assert.match(select, /data-empty=\{empty \|\| undefined\}/);
+  assert.match(select, /data-\[empty\]:text-gray-500/);
+  assert.match(select, /onChange=\{\(e\) => \{ setEmpty\(!e\.target\.value\); onChange\?\.\(e\); \}\}/);
   assert.match(select, /\[&_option\]:text-gray-900/); // the opened list stays dark
 });
 
 test('one wording for an empty list: « Choisir … »', () => {
   assert.doesNotMatch(step, /Sélectionner/);
-  for (const p of ["Choisir une catégorie", "Choisir un type", "Choisir l'état", "Choisir l'année", 'Choisir la cylindrée', 'Choisir une taille']) {
+  // The short lists became chips (lot B): the drop-downs left are these three.
+  for (const p of ["Choisir une catégorie", "Choisir l'année", 'Choisir la cylindrée']) {
     assert.ok(step.includes(p), p);
   }
 });
