@@ -7,10 +7,12 @@ import { BRAND_LIST_LIMIT, tidyBrands } from './brandPicker';
 
 // Worst cases found with dev/etape-2.html (break-ui, 2026-11-13).
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
-const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8');
+const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8')
+  + readFileSync(new URL('../components/deposit/CatalogPicker.tsx', import.meta.url), 'utf8');
 const select = readFileSync(new URL('../components/ui/Select.tsx', import.meta.url), 'utf8');
 const input = readFileSync(new URL('../components/ui/Input.tsx', import.meta.url), 'utf8');
-const modelPicker = readFileSync(new URL('../components/deposit/ModelPicker.tsx', import.meta.url), 'utf8');
+const modelPicker = readFileSync(new URL('../components/deposit/ModelPicker.tsx', import.meta.url), 'utf8')
+  + readFileSync(new URL('../components/deposit/CatalogPicker.tsx', import.meta.url), 'utf8');
 
 const BASE = {
   category: 'Scooter', brand: 'Yamaha', model: 'TMAX 560', condition: 'Bon', year: '2019', mileage: '12000', cc: '560',
