@@ -230,19 +230,25 @@ async function searchAll(req, res, next) {
     if (!q) return res.json([]);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 30, 1), 50);
     const like = `%${q.replace(/[\\%_]/g, (m) => '\\' + m)}%`;
+    // Engine, chassis and electronics details live in JSONB blocks
+    // (tech_specs.engine / chassis / electronics), not in columns: the old
+    // query named engine_cc, frame, abs… which do not exist, so PostgreSQL
+    // rejected every search (HTTP 500, « 0 fiche » on the site). Values only
+    // are searched, never key names (else « cc » would match every row).
+    const inBlock = (col) =>
+      `EXISTS (SELECT 1 FROM jsonb_each_text(CASE WHEN jsonb_typeof(t.${col}) = 'object' THEN t.${col} ELSE '{}'::jsonb END) AS v WHERE v.value ILIKE $1)`;
     const { rows } = await query(
       `SELECT t.* FROM tech_specs t
         WHERE ${PUB} AND (
-              brand ILIKE $1 OR model ILIKE $1 OR category ILIKE $1
-           OR year::text ILIKE $1
-           OR engine_cc ILIKE $1 OR engine_power ILIKE $1
-           OR engine_torque ILIKE $1 OR engine_type ILIKE $1
-           OR transmission ILIKE $1 OR fuel_system ILIKE $1
-           OR cooling ILIKE $1 OR top_speed ILIKE $1
-           OR consumption ILIKE $1 OR frame ILIKE $1
-           OR abs ILIKE $1 OR tcs ILIKE $1 OR riding_modes ILIKE $1
+              t.brand ILIKE $1 OR t.model ILIKE $1
+           OR (t.brand || ' ' || t.model) ILIKE $1
+           OR t.category ILIKE $1 OR t.year::text ILIKE $1
+           OR t.top_speed ILIKE $1 OR t.consumption ILIKE $1
+           OR ${inBlock('engine')}
+           OR ${inBlock('chassis')}
+           OR ${inBlock('electronics')}
         )
-        ORDER BY year DESC NULLS LAST, brand, model
+        ORDER BY t.year DESC NULLS LAST, t.brand, t.model
         LIMIT $2`,
       [like, limit]
     );
