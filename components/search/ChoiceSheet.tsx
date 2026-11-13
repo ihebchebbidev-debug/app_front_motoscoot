@@ -78,7 +78,7 @@ interface ChoiceSheetProps {
   label: string;
   onClose: () => void;
   /** Optional search field (brand, model). */
-  search?: { value: string; placeholder: string; onChange: (v: string) => void };
+  search?: { value: string; placeholder: string; onChange: (v: string) => void; /** Enter in the field (e.g. pick the first match). */ onEnter?: () => void };
   /** The field box: from 768 px the list opens as a menu under it. */
   anchor?: React.RefObject<HTMLElement | null>;
   /** false: the body holds a form (filters), not a list of options. */
@@ -240,6 +240,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
               autoFocus={finePointer()}
               autoComplete="off"
               onChange={(e) => search.onChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && search.onEnter) { e.preventDefault(); search.onEnter(); } }}
               className="w-full h-10 px-3 rounded-lg border border-gray-300 text-[16px] md:text-[14.5px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
             />
           </div>
@@ -305,6 +306,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
               autoFocus={finePointer()}
               autoComplete="off"
               onChange={(e) => search.onChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && search.onEnter) { e.preventDefault(); search.onEnter(); } }}
               className="w-full h-11 px-3 rounded-lg border border-gray-300 text-[16px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
             />
           </div>

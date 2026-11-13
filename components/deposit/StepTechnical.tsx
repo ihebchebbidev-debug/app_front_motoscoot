@@ -1,11 +1,13 @@
 import React, { memo, useState, useMemo, useEffect, useRef } from 'react';
 import { Layers, Gauge, Search, Info } from 'lucide-react';
-import { UseFormRegister, FieldErrors, Control, useWatch, UseFormSetValue, UseFormClearErrors } from 'react-hook-form';
+import { UseFormRegister, FieldErrors, Control, Controller, useWatch, UseFormSetValue, UseFormClearErrors } from 'react-hook-form';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { ListingFormData } from '../../types/listing';
 import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategoriesRich } from '../../hooks/useReferenceData';
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
+import type { BrandRef } from '../../services/miscApi';
+import { BrandPicker } from './BrandPicker';
 
 // Backend category names that differ from the form's values.
 const CATEGORY_ALIASES: Record<string, string> = { Accesoires: 'Accessoires', Accessoire: 'Accessoires' };
@@ -17,7 +19,8 @@ interface StepTechnicalProps {
   setValue: UseFormSetValue<ListingFormData>;
   clearErrors: UseFormClearErrors<ListingFormData>;
   category: string;
-  brands: string[];
+  /** Brands of the category, with their logos. */
+  brands: BrandRef[];
 }
 
 const S = {
@@ -130,11 +133,23 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
           </Select>
         )}
 
-        {/* MARQUE */}
-        <Select label="Marque" {...register('brand')} error={errors.brand?.message}>
-          <option value="">Sélectionner</option>
-          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-        </Select>
+        {/* MARQUE: popular brands first, then A → Z, with a search (utils/brandPicker.ts). */}
+        <Controller
+          control={control}
+          name="brand"
+          render={({ field }) => (
+            <BrandPicker
+              ref={field.ref}
+              label="Marque"
+              value={field.value || ''}
+              onChange={(v) => { field.onChange(v); if (v) clearErrors('brand'); }}
+              onBlur={field.onBlur}
+              brands={brands}
+              category={category}
+              error={errors.brand?.message}
+            />
+          )}
+        />
 
         {/* MODÈLE avec autocomplete API */}
         <div className={S.AutocompleteWrapper} ref={containerRef}>
