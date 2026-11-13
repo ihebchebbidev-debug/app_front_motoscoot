@@ -380,3 +380,16 @@ test('a technical sheet preloads the first gallery photo at the URL the gallery 
     assert.equal((result.body.match(/rel="preload" as="image"/g) || []).length, 1);
   } finally { globalThis.fetch = original; }
 });
+
+test('sheet share image and gallery photos carry the same cache version as listings', async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => Response.json({ id: 'abc', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', year: 2026, price_new: '9000', image: 'https://www.moto-scoot.tn/uploads/a.webp', gallery: ['https://motoscoot.ihebchebbi.pro/uploads/b.webp'] });
+    const result = responseCapture();
+    await detailHandler({ query: { kind: 'fiche-technique', slugid: 'sym-jet-14-evo-125' }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+    assert.equal(result.code, 200);
+    assert.match(result.body, /<meta property="og:image" content="https:\/\/www\.moto-scoot\.tn\/m\/[a-z0-9-]+\/[ab]\.webp\?v=2"/);
+    assert.ok(/"https:\/\/www\.moto-scoot\.tn\/m\/[a-z0-9-]+\/b\.webp\?v=2"/.test(result.body), 'gallery photo in the JSON-LD');
+    assert.equal(/\/m\/[a-z0-9-]+\/[ab]\.webp"/.test(result.body.replace(/<link rel="preload"[^>]*>/g, '')), false, 'no bare photo address left in previews or data');
+  } finally { globalThis.fetch = original; }
+});
