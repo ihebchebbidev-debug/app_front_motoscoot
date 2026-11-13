@@ -18,6 +18,7 @@ import { ViewStateName, NavigationParams } from '../types';
 // Hooks isolés
 import { useMediaUpload } from '../hooks/useMediaUpload';
 import { useAdDraft } from '../hooks/useAdDraft';
+import { emptyDepositValues } from '../utils/depositValues';
 import { useBrands } from '../hooks/useReferenceData';
 import { UploadedMedia, ListingFormData, listingSchema, MAX_IMAGES } from '../types/listing';
 
@@ -183,6 +184,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const { 
     mediaList, 
     setMediaList, 
+    clearMedia,
     handleImageChange, 
     handleRemoveImage, 
     handleRetryUpload,
@@ -193,10 +195,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
 
   const { register, handleSubmit, setValue, watch, trigger, reset, clearErrors, control, getFieldState, formState: { errors } } = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
-    defaultValues: {
-      category: undefined as any, brand: '', model: '', year: '', mileage: '', cc: '', condition: '', equipment: [], price: '', city: '', governorate: '', phone: '', description: '', images: [], accessoryType: '', helmetType: '', visorType: [],
-      address: '', latitude: undefined as any, longitude: undefined as any,
-    }
+    // The one empty form (utils/depositValues.ts): also what a reset goes back to.
+    defaultValues: emptyDepositValues(),
   });
 
   // react-hook-form clears an error by mutating the same `errors` object, so
@@ -424,13 +424,26 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     onNavigate?.('listing-details', { id: published.id, title: published.title, listingNumber: published.listingNumber } as any);
   };
 
+  // Bumped on every fresh start: the step remounts, so pickers and fields
+  // drop their own state (a brand typed by hand, a cylinder size being typed…).
+  const [depositRun, setDepositRun] = useState(0);
+
   /** Empty form, step 1, no saved draft; the new listing's draft is saved again. */
   const startBlankDeposit = () => {
     clearDraft();
-    reset();
-    setMediaList([]);
+    // Explicit empty values: a bare reset() would go back to the last values
+    // given to reset(), i.e. a restored draft (utils/depositValues.ts).
+    reset(emptyDepositValues());
+    clearMedia();
+    // No market price of the previous listing, and no estimate still on its way.
+    if (estimateTimerRef.current) clearTimeout(estimateTimerRef.current);
+    if (estimateCtrlRef.current) estimateCtrlRef.current.abort();
+    setPriceEstimate(null);
     setStep(1);
     setPublished(null);
+    setDepositRun((n) => n + 1);
+    // Back to the top of the form (the step may already be 1: no step effect).
+    revealBelowHeader(mainCardRef.current);
     // A new listing: its draft is saved again from now on.
     resumeDraft();
   };
@@ -591,7 +604,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
                   aria-label={`Dépôt d'annonce - Étape ${step} sur ${totalSteps}`}
                 >
                   {/* Keyed by step: each new step plays its entrance once. */}
-                  <div key={step} className={stepDirection.current === 'back' ? 'ms-step-back' : 'ms-step-forward'}>
+                  <div key={`${depositRun}-${step}`} className={stepDirection.current === 'back' ? 'ms-step-back' : 'ms-step-forward'}>
                   {stepId === 'technical' && (
                     <StepTechnical 
                       register={register} 

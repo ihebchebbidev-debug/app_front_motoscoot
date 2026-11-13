@@ -18,7 +18,8 @@ test('after a publish, the draft is removed and autosave stays off', () => {
 
 test('« Déposer une autre annonce » starts a fresh draft that is saved again', () => {
   assert.match(hook, /const resumeDraft = \(\) => \{\s*stoppedRef\.current = false;\s*\};/);
-  assert.match(page, /const startBlankDeposit = \(\) => \{\s*clearDraft\(\);\s*reset\(\);\s*setMediaList\(\[\]\);\s*setStep\(1\);\s*setPublished\(null\);[\s\S]*?resumeDraft\(\);\s*\};/);
+  // Explicit empty values: a bare reset() went back to a restored draft (depositReset.test.ts).
+  assert.match(page, /const startBlankDeposit = \(\) => \{\s*clearDraft\(\);[\s\S]*?reset\(emptyDepositValues\(\)\);\s*clearMedia\(\);[\s\S]*?setStep\(1\);\s*setPublished\(null\);[\s\S]*?resumeDraft\(\);\s*\};/);
 });
 
 test('« Réinitialiser »: confirms, then starts a blank deposit (form, photos, draft)', () => {
