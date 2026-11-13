@@ -6,7 +6,7 @@ const deposit = readFileSync('components/DepositAd.tsx', 'utf8');
 const publish = readFileSync('components/deposit/StepPublish.tsx', 'utf8');
 
 test('a field raised by "Suivant" is re-checked as soon as it changes', () => {
-  assert.match(deposit, /getFieldState\(field as any\)\.error\) void trigger\(field as any\)/);
+  assert.match(readFileSync('hooks/useDepositSession.ts', 'utf8'), /getFieldState\(field as any\)\.error\) void trigger\(field as any\)/);
 });
 
 test('steps get a fresh errors object, so a fixed field drops its message', () => {

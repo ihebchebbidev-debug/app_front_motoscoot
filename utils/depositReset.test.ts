@@ -6,7 +6,8 @@ import { draftOverEmpty, emptyDepositValues } from './depositValues';
 
 // « Réinitialiser » did not clear everything (owner, 2026-11-13).
 const deposit = readFileSync(new URL('../components/DepositAd.tsx', import.meta.url), 'utf8');
-const draft = readFileSync(new URL('../hooks/useAdDraft.ts', import.meta.url), 'utf8');
+const session = readFileSync(new URL('./depositSession.ts', import.meta.url), 'utf8');
+const hook = readFileSync(new URL('../hooks/useDepositSession.ts', import.meta.url), 'utf8');
 const media = readFileSync(new URL('../hooks/useMediaUpload.ts', import.meta.url), 'utf8');
 
 const schemaKeys = () => {
@@ -33,22 +34,20 @@ test('a draft restores on top of the empty form', () => {
   assert.deepEqual(draftOverEmpty(null), emptyDepositValues());
 });
 
-test('the draft restore keeps the empty defaults; a reset passes the empty values', () => {
+test('the draft restore keeps the empty defaults; a new deposit passes the empty values', () => {
   // reset(values) makes `values` the new defaults in react-hook-form: the draft
-  // became the defaults and a bare reset() brought it back.
-  assert.match(draft, /resetForm\(keepDepositFields\(draftOverEmpty\(savedValues\)\), \{ keepDefaultValues: true \}\)/);
-  assert.match(deposit, /defaultValues: emptyDepositValues\(\),/);
-  assert.match(deposit, /reset\(emptyDepositValues\(\)\);/);
-  assert.doesNotMatch(deposit, /\breset\(\);/);
+  // became the defaults and a bare reset() brought it back (behaviour: depositSession.test.ts).
+  assert.match(session, /form\.reset\(keepDepositFields\(draftOverEmpty\(saved\.values\)\), \{ keepDefaultValues: true \}\);/);
+  assert.match(session, /form\.reset\(emptyDepositValues\(\)\);/);
+  assert.match(hook, /defaultValues: emptyDepositValues\(\),/);
+  assert.doesNotMatch(deposit + session + hook, /\breset\(\);/);
 });
 
-test('a reset also empties the photos (previews freed), the market price, and remounts the step', () => {
-  assert.match(deposit, /clearMedia\(\);/);
+test('a new deposit also empties the photos (previews freed), the market price, and remounts the step', () => {
+  assert.match(session, /ports\.clearMedia\(\);/);
   assert.match(media, /URL\.revokeObjectURL\(m\.url\)/);
-  assert.match(deposit, /setPriceEstimate\(null\);\n\s+setStep\(1\);/);
-  assert.match(deposit, /if \(estimateCtrlRef\.current\) estimateCtrlRef\.current\.abort\(\);\n\s+setPriceEstimate\(null\);/);
+  assert.match(hook, /market\.clear\(\);/);
   assert.match(deposit, /key=\{`\$\{depositRun\}-\$\{step\}`\}/);
-  assert.match(deposit, /setDepositRun\(\(n\) => n \+ 1\);/);
 });
 
 test('« Déposer une autre annonce » and « Réinitialiser » start the same blank deposit', () => {

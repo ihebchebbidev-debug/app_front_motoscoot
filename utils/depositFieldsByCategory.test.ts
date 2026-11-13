@@ -5,7 +5,7 @@ import { listingSchema } from '../types/listing';
 import { depositFieldBelongs, keepDepositFields, strayDepositFields } from './depositRules';
 
 // A helmet could be published with the year, km and cc of a moto (2026-11-13).
-const deposit = readFileSync(new URL('../components/DepositAd.tsx', import.meta.url), 'utf8');
+const deposit = readFileSync(new URL('../hooks/useDepositSession.ts', import.meta.url), 'utf8'); // the form's field relationships
 const service = readFileSync(new URL('../services/listingService.ts', import.meta.url), 'utf8');
 
 const MOTO = { category: 'Moto', brand: 'Yamaha', model: 'MT-07', year: '2019', mileage: '12000', cc: '700', equipment: ['ABS'], condition: 'Bon' };
