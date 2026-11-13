@@ -21,7 +21,7 @@
 
 import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
-import { seoImagePath } from '../utils/seoImagePath.js';
+import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -63,10 +63,7 @@ const slugify = (s: string): string =>
 // listing slug so the image URL exposed to Google is
 //   https://www.moto-scoot.tn/m/<slug>/<file>.webp
 // (vercel.json proxies /m/<slug>/<file> back to the real upload).
-// Bumped when the CDN holds a bad copy of the bare photo URLs (5 Nov 2026:
-// partial "Range" replies cached as the whole photo for 30 days). A new value
-// is a new cache key, so share previews and Google fetch the full photo again.
-const IMAGE_CACHE_VERSION = '2';
+// Cache version: utils/seoImagePath.ts (shared with the other detail pages).
 
 const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!url) return url;
