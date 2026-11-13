@@ -59,3 +59,23 @@ export function knownBrand(names: string[], typed: string): string | undefined {
 
 /** A free brand name, tidied: trimmed, single spaces, at most 40 characters. */
 export const cleanBrandName = (v: string): string => v.replace(/\s+/g, ' ').trim().slice(0, 40);
+
+/**
+ * The catalogue as the picker shows it: names trimmed (« ␣␣Peugeot » was
+ * sorted first with a blank initial), one entry per brand however the admin
+ * cased it (« SYM » / « Sym »), the one with a logo kept.
+ */
+export function tidyBrands<T extends { name: string; logo_url?: string | null }>(brands: T[]): T[] {
+  const byKey = new Map<string, T>();
+  for (const b of brands) {
+    const name = (b?.name || '').replace(/\s+/g, ' ').trim();
+    const key = brandKey(name);
+    if (!key) continue;
+    const prev = byKey.get(key);
+    if (!prev || (!prev.logo_url && b.logo_url)) byKey.set(key, { ...b, name });
+  }
+  return [...byKey.values()];
+}
+
+/** Rows drawn at once: past this the list asks for a few more letters. */
+export const BRAND_LIST_LIMIT = 200;

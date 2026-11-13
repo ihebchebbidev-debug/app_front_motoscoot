@@ -15,11 +15,16 @@ export interface UploadedMedia {
 
 export const MAX_IMAGES = 10;
 
+/** 0 to 999 999 km. */
+export const MILEAGE_PATTERN = /^\d{1,6}$/;
+export const MILEAGE_MESSAGE = 'Kilométrage : un nombre entier entre 0 et 999 999';
+
 export const listingSchema = z.object({
   // errorMap: an empty choice must not show zod's English "Invalid enum value".
   category: z.enum(['Moto', 'Scooter', 'Quad', 'Accessoires'], { errorMap: () => ({ message: 'Veuillez choisir une catégorie' }) }),
-  brand: z.string().min(1, "Veuillez choisir une marque"),
-  model: z.string().min(1, "Veuillez choisir un modèle"),
+  // 100: brands.name / listings.model are VARCHAR(100) (migrations/001).
+  brand: z.string().trim().min(1, "Veuillez choisir une marque").max(100, 'Marque trop longue (100 caractères max)'),
+  model: z.string().trim().min(1, "Veuillez choisir un modèle").max(100, 'Modèle trop long (100 caractères max)'),
   condition: z.string().min(1, "État requis"),
   equipment: z.array(z.string()).default([]),
   price: z.string().min(1, "Le prix est requis"),
@@ -64,7 +69,8 @@ export const listingSchema = z.object({
 
   // Optional base fields
   year: z.string().optional(),
-  mileage: z.string().optional(),
+  // A whole number of km (listings.mileage is an INTEGER): no sign, no decimal, no « 1e6 ».
+  mileage: z.string().optional().refine((v) => !v || MILEAGE_PATTERN.test(v.trim()), MILEAGE_MESSAGE),
   cc: z.string().optional(),
   
   // Accessory specific fields

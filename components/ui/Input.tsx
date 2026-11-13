@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { FIELD_TYPE, useTypeTone } from './TypeScale';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -17,10 +17,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   ...props
 }, ref) => {
   const type = FIELD_TYPE[useTypeTone()];
+  // Tie the visible label to the field: screen readers announced the
+  // placeholder (« Ex: TMAX 560 ») instead of « Modèle ».
+  const autoId = useId();
+  const id = props.id ?? autoId;
   return (
     <div className="space-y-2 w-full group">
       {label && (
-        <label className={`block ${type.label} ml-1 transition-colors group-focus-within:text-primary-700`}>
+        <label htmlFor={id} className={`block ${type.label} ml-1 transition-colors group-focus-within:text-primary-700`}>
           {label}
         </label>
       )}
@@ -41,6 +45,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             ${className}
           `}
           {...props}
+          id={id}
         />
         {rightIcon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">

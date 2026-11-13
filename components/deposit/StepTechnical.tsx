@@ -8,6 +8,7 @@ import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategorie
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
+import { DEFAULT_CONDITIONS, optionsWithValue } from '../../utils/depositOptions';
 
 // Backend category names that differ from the form's values.
 const CATEGORY_ALIASES: Record<string, string> = { Accesoires: 'Accessoires', Accessoire: 'Accessoires' };
@@ -66,7 +67,8 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
   // to models the admin has tagged with that accessory type. For vehicle
   // categories the second arg stays undefined → no extra filtering.
   const accessoryTypeForModels = category === 'Accessoires' ? (accessoryType || undefined) : undefined;
-  const { data: conditionList = [] }       = useConditions();
+  const { data: conditionData = [] }       = useConditions();
+  const conditionList = conditionData.length > 0 ? conditionData : DEFAULT_CONDITIONS;
   const { names: referenceModels = [] }    = useModelsByBrand(brand || undefined, accessoryTypeForModels);
   const { data: accessoryTypesData = [] }  = useAccessoryTypes();
   const { data: backendCategories }        = useVehicleCategoriesRich();
@@ -123,14 +125,25 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
 
         {category && (<>
         {category === 'Accessoires' && (
-          <Select
-            label="Type d'accessoire"
-            {...register('accessoryType')}
-            error={errors.accessoryType?.message}
-          >
-            <option value="">Sélectionner</option>
-            {accessoryTypeNames.map((t) => <option key={t} value={t}>{t}</option>)}
-          </Select>
+          // Controlled: a restored draft shows its value even when the list arrives after it.
+          <Controller
+            control={control}
+            name="accessoryType"
+            render={({ field }) => (
+              <Select
+                label="Type d'accessoire"
+                name={field.name}
+                ref={field.ref}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.accessoryType?.message}
+              >
+                <option value="">Sélectionner</option>
+                {optionsWithValue(accessoryTypeNames, field.value).map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            )}
+          />
         )}
 
         {/* MARQUE: popular brands first, then A → Z, with a search (utils/brandPicker.ts). */}
@@ -157,6 +170,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             label="Modèle"
             placeholder="Ex: TMAX 560"
             leftIcon={<Layers size={18} className="text-primary-600" />}
+            maxLength={100}
             {...register('model')}
             error={errors.model?.message}
             onFocus={() => setShowSuggestions(true)}
@@ -175,8 +189,8 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
                   className={S.SuggestionItem}
                   role="option"
                 >
-                  <div className="flex items-center gap-3">
-                    <Search size={14} className="text-gray-300" />
+                  <div className="flex items-start gap-3 min-w-0">
+                    <Search size={14} className="text-gray-300 shrink-0 mt-[3px]" />
                     <span>{suggestion}</span>
                   </div>
                   <Info size={12} className="opacity-0 group-hover:opacity-40" />
@@ -187,10 +201,24 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         </div>
 
         {/* ÉTAT */}
-        <Select label="État" {...register('condition')} error={errors.condition?.message}>
-          <option value="">Choisir l'état</option>
-          {conditionList.map((c) => <option key={c} value={c}>{c}</option>)}
-        </Select>
+        <Controller
+          control={control}
+          name="condition"
+          render={({ field }) => (
+            <Select
+              label="État"
+              name={field.name}
+              ref={field.ref}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.condition?.message}
+            >
+              <option value="">Choisir l'état</option>
+              {optionsWithValue(conditionList, field.value).map((c) => <option key={c} value={c}>{c}</option>)}
+            </Select>
+          )}
+        />
 
         {category === 'Accessoires' && accessoryType === 'Casque' && (
           <>
@@ -297,6 +325,9 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
               type="number"
               inputMode="numeric"
               leftIcon={<Gauge size={18} className="text-primary-600" />}
+              min={0}
+              max={999999}
+              step={1}
               {...register('mileage')}
               error={errors.mileage?.message}
             />
