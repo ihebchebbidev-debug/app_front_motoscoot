@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
+import { parseSpecNumber, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath } from '../utils/seoImagePath.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { ficheSlugCandidates, hasTunisiaParam } from '../utils/legacyRedirects.js';
@@ -83,13 +83,8 @@ const rewriteImageHost = (url: string, slug?: string | null): string => {
 const stripHtml = (s: string) => (s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 
-// "124.7 cc" → 124.7. Keeping only digits turned it into 1247 cc.
-export const parseCc = (v: unknown): number | null => {
-  const m = String(v ?? '').match(/\d+(?:[.,]\d+)?/);
-  if (!m) return null;
-  const n = parseFloat(m[0].replace(',', '.'));
-  return Number.isFinite(n) && n > 0 ? n : null;
-};
+// "124.7 cc" → 124.7 (shared with the page: utils/techSpecSeo.ts).
+export const parseCc = parseSpecNumber;
 const fmtNum = (n: number) => n.toLocaleString('fr-FR');
 
 type Kind = 'article' | 'guide' | 'garage' | 'fiche-technique';
