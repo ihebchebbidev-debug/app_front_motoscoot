@@ -10,6 +10,7 @@ const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', imp
 const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8');
 const select = readFileSync(new URL('../components/ui/Select.tsx', import.meta.url), 'utf8');
 const input = readFileSync(new URL('../components/ui/Input.tsx', import.meta.url), 'utf8');
+const modelPicker = readFileSync(new URL('../components/deposit/ModelPicker.tsx', import.meta.url), 'utf8');
 
 const BASE = {
   category: 'Scooter', brand: 'Yamaha', model: 'TMAX 560', condition: 'Bon', year: '2019', mileage: '12000', cc: '560',
@@ -31,7 +32,8 @@ test('model and brand: 100 characters at most, as the database columns', () => {
   assert.ok(issues({ model: 'x'.repeat(101) }).includes('model'));
   assert.ok(issues({ brand: 'x'.repeat(101) }).includes('brand'));
   assert.deepEqual(issues({ model: 'TMAX 560 Tech MAX ABS Édition spéciale 20e anniversaire – Icon Blue / Midnight Black' }), []);
-  assert.match(step, /maxLength=\{100\}\n\s+\{\.\.\.register\('model'\)\}/);
+  assert.match(modelPicker, /maxLength=\{100\}/);
+  assert.match(modelPicker, /\.slice\(0, 100\)/);
 });
 
 test('a restored condition is shown even when the list arrives after it', () => {
@@ -65,5 +67,5 @@ test('the picker: no broken logo, full names on hover, 200 rows at most', () => 
 test('select text stops before the arrow; input labels name their field', () => {
   assert.match(select, /pl-5 pr-12 py-4/);
   assert.match(input, /<label htmlFor=\{id\}/);
-  assert.match(step, /<Search size=\{14\} className="text-gray-300 shrink-0/);
+  assert.doesNotMatch(step, /SuggestionList|showSuggestions/); // the old model menu is gone (lot D)
 });
