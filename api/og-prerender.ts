@@ -23,6 +23,7 @@ import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
+import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { ficheSlugCandidates, hasTunisiaParam } from '../utils/legacyRedirects.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
@@ -48,17 +49,8 @@ const escapeHtml = (s: string) =>
 
 const toHttps = (url: string) => (url ? url.replace(/^http:\/\//i, 'https://') : url);
 
-const slugify = (s: string): string =>
-  (s || '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-|-$/g, '');
+// Slugs: the one rule shared with the app's links (utils/slugify.ts), so the
+// redirect below never sends an internal link elsewhere.
 
 // Rewrite backend storage hostnames to the public www.moto-scoot.tn domain AND
 // inject the listing / post slug into the path so every image URL exposed to

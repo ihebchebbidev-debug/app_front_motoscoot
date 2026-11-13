@@ -22,6 +22,7 @@
 import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
+import { slugify } from '../utils/slugify.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -39,25 +40,11 @@ const escapeHtml = (s: string) =>
 
 const toHttps = (url: string) => (url ? url.replace(/^http:\/\//i, 'https://') : url);
 
-/** Mirror of utils/urlUtils.ts slugify so canonical URLs match the app. */
-const frontSlugify = (text: string): string => {
-  if (!text) return 'details';
-  return text.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-');
-};
-
-const slugify = (s: string): string =>
-  (s || '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60);
+// Slugs: the one rule shared with the app's links (utils/slugify.ts). The
+// canonical below must equal the link the app builds, or every internal link
+// 301s (a title ending in « ! » used to give « …-sym--12 »). Image slugs keep
+// their 60-character cap, as before.
+const imageSlug = (s: string): string => slugify(s).slice(0, 60);
 
 // Rewrite backend storage hostnames to www.moto-scoot.tn AND inject the
 // listing slug so the image URL exposed to Google is
@@ -69,7 +56,7 @@ const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!url) return url;
   let out = toHttps(url);
   out = out.replace(/^https:\/\/(www\.)?motoscoot\.ihebchebbi\.pro\//i, `${SITE}/`);
-  const cleanSlug = slug ? slugify(slug) : '';
+  const cleanSlug = slug ? imageSlug(slug) : '';
   if (!cleanSlug) return out;
   const m = out.match(/\/uploads\/([^?#]+)/i);
   if (!m) return out;
@@ -147,7 +134,7 @@ export default async function handler(req: any, res: any) {
     // One URL per listing: /annonce/<slug>-<number>. Other variants 301 here.
     if (listing) {
       const publicId = (listing as any).listing_number ?? listing.id;
-      const canonicalPath = `/annonce/${frontSlugify(listing.title || '')}-${publicId}`;
+      const canonicalPath = `/annonce/${slugify(listing.title || '')}-${publicId}`;
       if (`/annonce/${slugid.replace(/^annonce\//, '')}`.replace(/\/$/, '') !== canonicalPath) {
         res.setHeader('Location', `${SITE}${canonicalPath}`);
         res.status(301).end();
@@ -166,7 +153,7 @@ export default async function handler(req: any, res: any) {
     const imgSlug = listing ? [listing.brand, listing.model, listing.year].filter(Boolean).join('-') || listing.title : '';
     const image = rewriteImageHost(listing?.images?.[0] || DEFAULT_OG, imgSlug);
     const allImages = (listing?.images || []).map(u => rewriteImageHost(u, imgSlug)).slice(0, 6);
-    const brandLogo = listing?.brand_logo ? rewriteImageHost(listing.brand_logo, listing.brand ? `${slugify(listing.brand)}-logo` : '') : '';
+    const brandLogo = listing?.brand_logo ? rewriteImageHost(listing.brand_logo, listing.brand ? `${imageSlug(listing.brand)}-logo` : '') : '';
     const brandNode = listing?.brand ? { '@type': 'Brand', name: listing.brand, ...(brandLogo ? { logo: brandLogo } : {}) } : undefined;
 
     // ---- JSON-LD: one Product + Vehicle node + Breadcrumbs ----

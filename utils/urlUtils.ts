@@ -236,7 +236,8 @@ export const getUrlFromState = (view: string, params: any = {}): string => {
     case 'listing-details': path = `/annonce/${slugify(slug)}-${params.listingNumber ?? getListingNumber(id) ?? id}`; break;
     case 'article-details': path = `/article/${slugify(slug)}-${id}`; break;
     case 'tip-details': path = `/guide/${slugify(slug)}-${id}`; break;
-    case 'garage-details': path = `/garage/${slugify(slug)}-${id}`; break;
+    // Name + city, as the server's canonical (api/og-prerender.ts): no 301 on internal links.
+    case 'garage-details': path = `/garage/${slugify([slug, params.city].filter(Boolean).join(' '))}-${id}`; break;
     case 'tech-specs-details': {
       const short = params.specSlug || getSpecSlug(id) || (typeof id === 'string' && !UUID_RE.test(id) ? id : undefined);
       path = short ? `/fiche-technique/${short}` : `/fiche-technique/${slugify(slug)}-${id}`;

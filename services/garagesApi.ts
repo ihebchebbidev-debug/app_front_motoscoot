@@ -46,6 +46,8 @@ export function mapBackendGarage(g: BackendGarage): Garage {
     description: g.description,
     address: g.address,
     location: g.city || g.governorate,
+    // The city alone, as in the garage's address (/garage/<name>-<city>-<id>).
+    city: g.city || undefined,
     hours: g.hours || (typeof g.opening_hours === 'string' ? g.opening_hours : undefined),
     reviewsCount: g.reviews_count,
     specialties: g.specialties,
