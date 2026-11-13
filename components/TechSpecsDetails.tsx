@@ -29,7 +29,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { parseSpecNumber, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
@@ -353,8 +353,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
       ...(spec.image ? [getOptimizedImageUrl(spec.image, 1200, 800, 80, undefined, name)] : []),
       ...((spec.gallery || []).slice(0, 5).map((g) => getOptimizedImageUrl(g, 1200, 800, 80, undefined, name))),
     ];
-    const priceDigits = (spec.priceNew || '').replace(/[^\d]/g, '');
-    const price = priceDigits ? parseInt(priceDigits, 10) : 0;
+    const price = parseSpecPrice(spec.priceNew) ?? 0;
     const canonical = typeof window !== 'undefined'
       ? `https://www.moto-scoot.tn${window.location.pathname}`
       : `https://www.moto-scoot.tn/fiche-technique/${spec.id}`;
@@ -512,13 +511,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
 
   // Indicative monthly installment (price spread over 60 months, no interest).
   // Purely informational — not a financing offer.
-  const priceRaw = (spec.priceNew || '').replace(/[^\d]/g, '');
   const priceBlock = techSpecPriceBlock({
     brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, cc: spec.engine?.cc,
     price: spec.priceNew, updatedAt: spec.updatedAt, availableInTunisia: spec.availableInTunisia,
     importerName: spec.importer?.name, importerCity: spec.importer?.city,
   });
-  const priceNumber = priceRaw ? parseInt(priceRaw, 10) : 0;
+  const priceNumber = parseSpecPrice(spec.priceNew) ?? 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
   const brandHref = getUrlFromState('tech-specs-models', { brand: spec.brand });
