@@ -90,10 +90,13 @@ interface ChoiceSheetProps {
   /** Phones: a fixed 85 % height, so the sheet does not shrink while the
    *  search filters and the results stay under the field, above the keyboard. */
   tall?: boolean;
+  /** Where focus goes back on close (a tap does not focus a button on iPhone,
+   *  so the opener cannot always be read from document.activeElement). */
+  returnFocus?: React.RefObject<HTMLElement | null>;
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false, returnFocus }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -143,6 +146,45 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
     };
     document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('keydown', onKey); unlock(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, menu]);
+
+  // Sheet (modal): focus goes in (the ticked option, else the panel), Tab
+  // stays inside, and focus returns to the control that opened it.
+  // The anchored menu keeps its own behaviour (Escape → its field).
+  useEffect(() => {
+    if (!mounted || menu) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    const frame = requestAnimationFrame(() => {
+      if (!panel || panel.contains(document.activeElement)) return; // e.g. an autofocused search field
+      const target = panel.querySelector<HTMLElement>('[aria-selected="true"]') ?? panel;
+      target.focus({ preventScroll: true });
+    });
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !panel) return;
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onTab);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', onTab);
+      const back = returnFocus?.current ?? (opener !== document.body ? opener : null);
+      if (back && document.contains(back)) back.focus({ preventScroll: true });
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, menu]);
 
@@ -274,10 +316,11 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
     >
       <div
         ref={panelRef}
+        tabIndex={-1}
         data-state={draggedShut.current ? 'dragged' : state}
         // dvh: the visible height with the browser bars (85vh overflowed under the
         // URL bar). Bottom padding keeps the last row clear of the home indicator.
-        className={`ms-sheet bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85dvh] ${tall ? 'h-[85dvh] md:h-auto' : ''} pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl`}
+        className={`ms-sheet outline-none bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85dvh] ${tall ? 'h-[85dvh] md:h-auto' : ''} pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Grabber + title: the part a finger drags down to close (phones). */}

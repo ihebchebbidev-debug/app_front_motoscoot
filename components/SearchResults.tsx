@@ -7,6 +7,7 @@ import { useListings, useListingFacets } from '../hooks/useListings';
 import { useSearchSEO } from '../hooks/useSearchSEO';
 import { usePersistedState } from '../hooks/usePersistedState';
 import { ListingCard } from './search/ListingCard';
+import { PhoneSortSheet } from './search/PhoneSortSheet';
 import { FilterSidebar } from './search/FilterSidebar';
 import { SortDropdown } from './search/SortDropdown';
 import { MobileFilters } from './search/MobileFilters';
@@ -275,7 +276,8 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
 
               <div className={S.MobileActions}>
                 <div className="w-full">
-                  <SortDropdown sortBy={sortBy} onSortChange={setSortBy} userLocation={userLocation} />
+                  {/* Téléphone : feuille à choix unique. Tablette et ordinateur : menu inchangé. */}
+                  <PhoneSortSheet sortBy={sortBy} onSortChange={setSortBy} hasLocation={!!userLocation} />
                 </div>
                 <button
                   onClick={() => setIsMobileFilterOpen(true)}
