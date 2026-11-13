@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
 import { draftOverEmpty } from '../utils/depositValues';
+import { keepDepositFields } from '../utils/depositRules';
 
 const STORAGE_PREFIX = 'motoscoot_deposit_draft';
 const LEGACY_KEY = 'motoscoot_deposit_draft';
@@ -57,7 +58,8 @@ export const useAdDraft = (
         }
         // Keep the empty form as the defaults: a bare reset(values) would make
         // the draft the new defaults, and « Réinitialiser » would bring it back.
-        resetForm(draftOverEmpty(savedValues), { keepDefaultValues: true });
+        // A draft saved before this rule may hold fields of another kind of listing.
+        resetForm(keepDepositFields(draftOverEmpty(savedValues)), { keepDefaultValues: true });
 
         // Drop any blob: previews (no longer valid after refresh) AND any
         // entries that were stuck in upload-or-error: without the original

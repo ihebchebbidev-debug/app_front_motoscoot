@@ -2,6 +2,7 @@ import type { ListingFormData } from '../types/listing';
 import { listingsApi, BackendListing } from './listingsApi';
 import { authApi } from './authApi';
 import { formatTunisiaPhone } from '../utils/phoneUtils';
+import { keepDepositFields } from '../utils/depositRules';
 
 /**
  * High-level service for publishing a listing from the deposit wizard.
@@ -33,7 +34,11 @@ class ListingService {
    * Publishes a new listing through the real backend API.
    * Throws on network / validation / server errors so the caller can show a toast.
    */
-  async publishListing(data: ListingFormData): Promise<{ success: true; id: string | number; listingNumber?: number; title: string; image?: string; publishedAt: string }> {
+  async publishListing(input: ListingFormData): Promise<{ success: true; id: string | number; listingNumber?: number; title: string; image?: string; publishedAt: string }> {
+    // Only the fields of this kind of listing (utils/depositRules.ts): the
+    // year, km and cylinder size of a moto never reach a helmet's listing.
+    const data = keepDepositFields(input);
+
     // Persist the seller phone on the user profile so it shows up on the
     // listing card (the backend joins users.phone as seller_phone). Best-effort
     // — we don't fail the publish if this update fails.

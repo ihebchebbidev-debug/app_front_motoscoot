@@ -36,7 +36,7 @@ test('a draft restores on top of the empty form', () => {
 test('the draft restore keeps the empty defaults; a reset passes the empty values', () => {
   // reset(values) makes `values` the new defaults in react-hook-form: the draft
   // became the defaults and a bare reset() brought it back.
-  assert.match(draft, /resetForm\(draftOverEmpty\(savedValues\), \{ keepDefaultValues: true \}\)/);
+  assert.match(draft, /resetForm\(keepDepositFields\(draftOverEmpty\(savedValues\)\), \{ keepDefaultValues: true \}\)/);
   assert.match(deposit, /defaultValues: emptyDepositValues\(\),/);
   assert.match(deposit, /reset\(emptyDepositValues\(\)\);/);
   assert.doesNotMatch(deposit, /\breset\(\);/);
