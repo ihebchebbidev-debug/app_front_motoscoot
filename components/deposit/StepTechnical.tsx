@@ -1,5 +1,4 @@
-import React, { memo, useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Info } from 'lucide-react';
+import React, { memo, useMemo } from 'react';
 import { UseFormRegister, FieldErrors, Control, Controller, useWatch, UseFormSetValue, UseFormClearErrors } from 'react-hook-form';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -9,6 +8,7 @@ import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategorie
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
+import { ModelPicker } from './ModelPicker';
 import { CONDITION_HINTS, DEFAULT_CONDITIONS, categoryTileImage, modelExample, optionsWithValue } from '../../utils/depositOptions';
 import { API_ORIGIN } from '../../services/apiClient';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
@@ -32,11 +32,6 @@ const S = {
   Title: "text-[26px] md:text-3xl leading-[1.15] font-extrabold text-gray-900 mb-2 tracking-[-0.02em]",
   Subtitle: "text-base leading-relaxed text-gray-600",
   GridFields: "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8",
-  AutocompleteWrapper: "relative w-full",
-  SuggestionList: "absolute top-[calc(100%+8px)] left-0 w-full bg-card border border-neutral-200 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] z-[100] overflow-hidden py-2 animate-scale-in origin-top",
-  SuggestionItem: "w-full text-left px-5 py-3 text-[15px] font-medium text-gray-900 hover:bg-primary-50 hover:text-primary-600 transition-colors flex items-center justify-between group",
-  NoResult: "px-5 py-3.5 text-[13px] text-gray-600",
-  LabelBadge: "text-[11px] font-black text-gray-500 uppercase tracking-widest px-5 py-2 border-b border-gray-100 mb-1",
 };
 
 const displacementOptions = [
@@ -58,7 +53,6 @@ const CHECK_ROW = "min-h-[44px] inline-flex items-center gap-2.5 px-4 rounded-xl
 
 export const StepTechnical = memo(({ register, errors, control, setValue, clearErrors, category, brands }: StepTechnicalProps) => {
   const brand            = useWatch({ control, name: 'brand' });
-  const modelValue       = useWatch({ control, name: 'model' }) || '';
   const accessoryType    = useWatch({ control, name: 'accessoryType' });
   const visorTypeValues  = useWatch({ control, name: 'visorType' }) || [];
   const fieldType        = FIELD_TYPE[useTypeTone()];
@@ -77,7 +71,8 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
   const accessoryTypeForModels = category === 'Accessoires' ? (accessoryType || undefined) : undefined;
   const { data: conditionData = [] }       = useConditions();
   const conditionList = conditionData.length > 0 ? conditionData : DEFAULT_CONDITIONS;
-  const { names: referenceModels = [] }    = useModelsByBrand(brand || undefined, accessoryTypeForModels);
+  // No brand yet: no request (the whole catalogue is not worth downloading).
+  const { names: referenceModels = [], isLoading: modelsLoading } = useModelsByBrand(brand || undefined, accessoryTypeForModels, !!brand);
   const { data: accessoryTypesData = [] }  = useAccessoryTypes();
   const { data: backendCategories }        = useVehicleCategoriesRich();
   // The admin's category list, limited to what the listing form accepts.
@@ -99,32 +94,6 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
   }, [backendCategories]);
   const accessoryTypeNames = useMemo(() => accessoryTypesData.map((t) => t.name), [accessoryTypesData]);
 
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const filteredSuggestions = useMemo(() => {
-    const search = modelValue.toLowerCase().trim();
-    if (search.length < 1) return [];
-    return referenceModels
-      .filter((m) => m.toLowerCase().includes(search) && m.toLowerCase() !== search)
-      .slice(0, 8);
-  }, [modelValue, referenceModels]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSuggestionSelect = (suggestion: string) => {
-    setValue('model', suggestion, { shouldValidate: true, shouldDirty: true });
-    clearErrors('model');
-    setShowSuggestions(false);
-  };
 
   return (
     <div className="space-y-8">
@@ -134,8 +103,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       </div>
       <div className={S.GridFields}>
 
-        {/* CATÉGORIE: the other fields depend on it (brands, accessory fields). */}
-        {/* CATÉGORIE: the first choice, four photos (the admin's category images). */}
+        {/* CATÉGORIE: the first choice; the other fields depend on it. Four photos (the admin's category images). */}
         <Controller
           control={control}
           name="category"
@@ -195,41 +163,25 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
           )}
         />
 
-        {/* MODÈLE avec autocomplete API */}
-        <div className={S.AutocompleteWrapper} ref={containerRef}>
-          <Input
-            label="Modèle"
-            placeholder={modelExample(category, accessoryType)}
-            maxLength={100}
-            {...register('model')}
-            error={errors.model?.message}
-            onFocus={() => setShowSuggestions(true)}
-            autoComplete="off"
-          />
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div className={S.SuggestionList} role="listbox">
-              <div className={S.LabelBadge}>
-                {brand ? `Modèles ${brand}` : 'Modèles suggérés'}
-              </div>
-              {filteredSuggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onMouseDown={(e) => { e.preventDefault(); handleSuggestionSelect(suggestion); }}
-                  className={S.SuggestionItem}
-                  role="option"
-                >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <Search size={14} className="text-gray-300 shrink-0 mt-[3px]" />
-                    <span>{suggestion}</span>
-                  </div>
-                  <Info size={12} className="opacity-0 group-hover:opacity-40" />
-                </button>
-              ))}
-            </div>
+        {/* MODÈLE: the brand's models in the same sheet as the brand (ModelPicker). */}
+        <Controller
+          control={control}
+          name="model"
+          render={({ field }) => (
+            <ModelPicker
+              ref={field.ref}
+              label="Modèle"
+              value={field.value || ''}
+              onChange={(v) => { field.onChange(v); if (v) clearErrors('model'); }}
+              onBlur={field.onBlur}
+              brand={brand || ''}
+              models={referenceModels}
+              loading={!!brand && modelsLoading}
+              example={modelExample(category, accessoryType)}
+              error={errors.model?.message}
+            />
           )}
-        </div>
-
+        />
 
         {category === 'Accessoires' && accessoryType === 'Casque' && (
           <>

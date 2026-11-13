@@ -32,7 +32,7 @@ test('the model example fits what is sold', () => {
   assert.equal(modelExample('Scooter'), 'Ex : TMAX 560');
   assert.equal(modelExample('Accessoires', 'Casque'), 'Ex : Shoei GT-Air 3');
   assert.equal(modelExample('Accessoires'), 'Ex : le nom du modèle');
-  assert.match(step, /placeholder=\{modelExample\(category, accessoryType\)\}/);
+  assert.match(step, /example=\{modelExample\(category, accessoryType\)\}/);
 });
 
 test('no decorative icons; the mileage says its unit', () => {

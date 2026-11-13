@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { brandKey, cleanBrandName, knownBrand, matchBrands, popularBrands, POPULAR_COUNT } from './brandPicker';
 
-const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8');
+// The brand picker and the parts it shares with the model picker (pickerParts.tsx).
+const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8')
+  + readFileSync(new URL('../components/deposit/pickerParts.tsx', import.meta.url), 'utf8');
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
 const sheet = readFileSync(new URL('../components/search/ChoiceSheet.tsx', import.meta.url), 'utf8');
 
@@ -92,7 +94,7 @@ test('brand searches are not autocorrected or capitalised, and Enter says « go 
 });
 
 test('tiles and rows answer the finger at once, without selecting text or the iOS callout', () => {
-  assert.match(picker, /const TAP = 'touch-manipulation select-none \[-webkit-touch-callout:none\]';/);
+  assert.match(picker, /export const TAP = 'touch-manipulation select-none \[-webkit-touch-callout:none\]';/);
   assert.match(picker, /active:bg-gray-100/);
   assert.match(picker, /active:scale-\[0\.97\] motion-reduce:active:scale-100/);
   assert.match(picker, /draggable=\{false\}/);

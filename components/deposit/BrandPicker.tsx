@@ -5,6 +5,7 @@ import { Input } from '../ui/Input';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 import { useListingFacets } from '../../hooks/useListings';
 import type { BrandRef } from '../../services/miscApi';
+import { BACK_TO_LIST, Highlight, ROW, ROW_OFF, ROW_ON, TAP, useCloseOutside } from './pickerParts';
 import { BRAND_LIST_LIMIT, cleanBrandName, knownBrand, matchBrands, popularBrands, tidyBrands } from '../../utils/brandPicker';
 
 /**
@@ -25,13 +26,6 @@ interface BrandPickerProps {
   category?: string;
   error?: string;
 }
-
-// Controls, not content: pressed at once (no double-tap wait), no text
-// selection or iOS callout on a long press.
-const TAP = 'touch-manipulation select-none [-webkit-touch-callout:none]';
-const ROW = `${TAP} w-full min-h-[44px] flex items-center gap-3 text-left px-4 py-2 text-[15px] font-medium transition-colors active:bg-gray-100`;
-const ROW_ON = 'bg-primary-50 text-primary-700 font-semibold';
-const ROW_OFF = 'text-gray-900 hover:bg-gray-50';
 
 const Logo: React.FC<{ brand?: BrandRef; size: number }> = ({ brand, size }) => {
   // A logo file that is gone (404) falls back to the initial, never a broken image.
@@ -64,14 +58,6 @@ const Logo: React.FC<{ brand?: BrandRef; size: number }> = ({ brand, size }) => 
   );
 };
 
-/** The typed letters in bold when they appear as written in the name. */
-const Highlight: React.FC<{ name: string; query: string }> = ({ name, query }) => {
-  const q = query.trim();
-  const i = q ? name.toLowerCase().indexOf(q.toLowerCase()) : -1;
-  if (i < 0) return <>{name}</>;
-  return <>{name.slice(0, i)}<strong className="font-extrabold">{name.slice(i, i + q.length)}</strong>{name.slice(i + q.length)}</>;
-};
-
 export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ label, value, onChange, onBlur, brands, category, error }, ref) => {
   const type = FIELD_TYPE[useTypeTone()];
   const id = useId();
@@ -99,20 +85,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
   const typedByHand = manual || (!!value && names.length > 0 && !knownBrand(names, value));
 
   // Click outside the field and its menu closes the menu (the sheet has its scrim).
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: Event) => {
-      const t = e.target as Element;
-      if (t.closest?.('[data-searchbar-sheet]') || wrapRef.current?.contains(t)) return;
-      setOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('touchstart', onDown, { passive: true });
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('touchstart', onDown);
-    };
-  }, [open]);
+  useCloseOutside(open, wrapRef, () => setOpen(false));
 
   const close = () => { setOpen(false); setQuery(''); onBlur?.(); };
   const pick = (name: string) => {
@@ -157,7 +130,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
         <button
           type="button"
           onClick={() => { setManual(false); onChange(''); setOpen(true); }}
-          className="ml-1 min-h-[44px] text-[14px] font-semibold text-primary-700 underline underline-offset-4 decoration-primary-300 hover:decoration-primary-700"
+          className={BACK_TO_LIST}
         >
           Choisir dans la liste des marques
         </button>
