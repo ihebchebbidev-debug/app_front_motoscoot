@@ -16,7 +16,8 @@ test('steps enter from the right going forward, from the left going back, in 220
 
 test('the wizard keys the entrance on the step and fixes its direction on step change only', () => {
   const src = read('components/DepositAd.tsx');
-  assert.match(src, /<div key=\{step\} className=\{stepDirection\.current === 'back' \? 'ms-step-back' : 'ms-step-forward'\}>/);
+  // Keyed by the step (and the deposit run: a reset remounts it too).
+  assert.match(src, /<div key=\{`\$\{depositRun\}-\$\{step\}`\} className=\{stepDirection\.current === 'back' \? 'ms-step-back' : 'ms-step-forward'\}>/);
   assert.match(src, /if \(lastStep\.current !== step\) \{\s*stepDirection\.current = step < lastStep\.current \? 'back' : 'forward';/);
   // The old slow upward slide is gone from every step.
   for (const f of ['StepMedia', 'StepTechnical', 'StepEquipment', 'StepPublish', 'StepRecap']) {

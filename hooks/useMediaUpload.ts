@@ -351,9 +351,22 @@ export const useMediaUpload = () => {
     [uploadFile],
   );
 
+  /** No photo left (« Réinitialiser », a new listing): frees the local previews too. */
+  const clearMedia = useCallback(() => {
+    setMediaList((prev) => {
+      for (const m of prev) {
+        if (m.url?.startsWith('blob:')) {
+          try { URL.revokeObjectURL(m.url); } catch {}
+        }
+      }
+      return [];
+    });
+  }, []);
+
   return {
     mediaList,
     setMediaList,
+    clearMedia,
     handleImageChange,
     handleRemoveImage,
     handleRetryUpload,

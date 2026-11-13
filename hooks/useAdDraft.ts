@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
+import { draftOverEmpty } from '../utils/depositValues';
 
 const STORAGE_PREFIX = 'motoscoot_deposit_draft';
 const LEGACY_KEY = 'motoscoot_deposit_draft';
@@ -19,7 +20,7 @@ export const useAdDraft = (
   allValues: any,
   mediaList: any[],
   setMediaList: (m: any[]) => void,
-  resetForm: (values: any) => void
+  resetForm: (values: any, options?: { keepDefaultValues?: boolean }) => void
 ) => {
   const { addToast } = useToast();
   const { user } = useUser();
@@ -54,7 +55,9 @@ export const useAdDraft = (
         if (step <= 1) {
           setStep(savedStep || 1);
         }
-        resetForm(savedValues);
+        // Keep the empty form as the defaults: a bare reset(values) would make
+        // the draft the new defaults, and « Réinitialiser » would bring it back.
+        resetForm(draftOverEmpty(savedValues), { keepDefaultValues: true });
 
         // Drop any blob: previews (no longer valid after refresh) AND any
         // entries that were stuck in upload-or-error: without the original
