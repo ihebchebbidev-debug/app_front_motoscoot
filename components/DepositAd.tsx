@@ -3,8 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronRight, CheckCircle2, MapPin, Calendar, Gauge, Zap, Camera, SearchCheck, Layers, RotateCcw
 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { Button } from './ui/Button';
@@ -16,9 +14,7 @@ import { useUser } from '../context/UserContext';
 import { ViewStateName, NavigationParams } from '../types';
 
 // Hooks isolés
-import { useMediaUpload } from '../hooks/useMediaUpload';
-import { useAdDraft } from '../hooks/useAdDraft';
-import { emptyDepositValues } from '../utils/depositValues';
+import { useDepositSession } from '../hooks/useDepositSession';
 import { useBrands } from '../hooks/useReferenceData';
 import { UploadedMedia, ListingFormData, listingSchema, MAX_IMAGES } from '../types/listing';
 
@@ -32,10 +28,9 @@ import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess'
 import { primeSuccessSound } from '../utils/successSound';
 import { revealBelowHeader, scrollBelowHeader } from '../utils/scrollBelowHeader';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
-import { DEPOSIT_FIELD_LABELS, depositStepFields, photosStillUploading, strayDepositFields, type DepositValues } from '../utils/depositRules';
+import { DEPOSIT_FIELD_LABELS, depositStepFields, photosStillUploading } from '../utils/depositRules';
 
 import { listingService } from '../services/listingService';
-import { listingsApi, PriceEstimate } from '../services/listingsApi';
 import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
 import { DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from '../src/seo/privatePages';
@@ -130,7 +125,7 @@ const isTypingField = (el: Element | null): boolean =>
 const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // Step is mirrored to the URL as `?step=N` so a refresh on step 4 stays on
   // step 4 (and the step is shareable / linkable). The form data itself is
-  // already restored from localStorage by `useAdDraft` below — together they
+  // already restored from localStorage by `useDepositSession` below — together they
   // give a fully resumable wizard whether the user refreshes, copies the URL,
   // or comes back later. We seed initial state from the URL so the very first
   // render mounts the correct step.
@@ -168,9 +163,6 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // Once the listing is sent, the wizard gives way to the success screen
   // ("Voir mon annonce", "Partager", "Déposer une autre").
   const [published, setPublished] = useState<PublishedListing | null>(null);
-  const [priceEstimate, setPriceEstimate] = useState<PriceEstimate | null>(null);
-  const estimateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const estimateCtrlRef = useRef<AbortController | null>(null);
   const { addToast } = useToast();
   const stepWrapperRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
@@ -180,31 +172,27 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   // text field is being typed in; hide it until the field loses focus.
   const [typing, setTyping] = useState(false);
 
-  // Hook 1 : Gestion des médias
-  const { 
-    mediaList, 
-    setMediaList, 
-    clearMedia,
-    handleImageChange, 
-    handleRemoveImage, 
+  // The listing in progress: form, photos, market price and draft, with the
+  // rules of a new deposit and of a published one (hooks/useDepositSession.ts).
+  const {
+    form, values: allValues, media, priceEstimate, run: depositRun, startNew, markPublished,
+  } = useDepositSession({ step, setStep });
+  const {
+    mediaList,
+    handleImageChange,
+    handleRemoveImage,
     handleRetryUpload,
     handleReorder,
     handleSetMain,
     handleCropDone,
-  } = useMediaUpload();
+  } = media;
 
-  const { register, handleSubmit, setValue, watch, trigger, reset, clearErrors, control, getFieldState, formState: { errors } } = useForm<ListingFormData>({
-    resolver: zodResolver(listingSchema),
-    // The one empty form (utils/depositValues.ts): also what a reset goes back to.
-    defaultValues: emptyDepositValues(),
-  });
+  const { register, handleSubmit, setValue, trigger, clearErrors, control, getFieldState, formState: { errors } } = form;
 
   // react-hook-form clears an error by mutating the same `errors` object, so
   // the memoised steps would keep showing a fixed field's message: give them
   // a new object whenever the form re-renders.
   const stepErrors = { ...errors };
-
-  const allValues = watch();
 
   const {
     category, brand, model, price, city, year, mileage, cc, condition,
@@ -217,15 +205,6 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   const brandFilterCategory = category === 'Accessoires' ? undefined : (category || undefined);
   const { data: brandsForCategory = [] } = useBrands(brandFilterCategory, accessoryType || undefined);
 
-  // Hook 3 : Gestion du brouillon (localStorage)
-  const { clearDraft, resumeDraft } = useAdDraft(
-    step, 
-    setStep, 
-    allValues, 
-    mediaList, 
-    setMediaList, 
-    reset
-  );
 
   // New step: focus it for screen readers WITHOUT scrolling (focus() and
   // scrollIntoView({ block: 'start' }) put the step under the fixed header
@@ -252,81 +231,9 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.latitude, user?.longitude]);
 
-  // Synchronisation de mediaList vers le champ 'images' de react-hook-form
-  useEffect(() => {
-    const successfulUrls = mediaList
-      .filter(m => m.status === 'success')
-      .map(m => m.url);
-    setValue('images', successfulUrls);
-  }, [mediaList, setValue]);
 
-  // Errors are raised by "Suivant" (trigger), and react-hook-form only
-  // re-checks fields by itself after a real submit: re-check a field as soon
-  // as it changes, so a fixed field loses its message right away.
-  useEffect(() => {
-    const subscription = watch((_value, { name }) => {
-      const field = name?.split('.')[0];
-      if (field && getFieldState(field as any).error) void trigger(field as any);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, trigger, getFieldState]);
 
-  // What depends on what: a new category needs a new brand and model; a new
-  // brand, a new model. And a field that no longer belongs to the listing is
-  // emptied (utils/depositRules.ts): the year, km and cylinder size of a moto
-  // turned into a helmet, the helmet type of a « Casque » turned into « Gant ».
-  // A field that still belongs stays (« Veste » → « Pantalons » keeps the size).
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name === 'category') {
-        setValue('brand', '');
-        setValue('model', '');
-        setValue('accessoryType', '');
-      }
-      if (name === 'brand') {
-        setValue('model', '');
-      }
-      if (name === 'category' || name === 'accessoryType') {
-        for (const field of strayDepositFields(value as DepositValues)) {
-          setValue(field as keyof ListingFormData, (Array.isArray((value as any)[field]) ? [] : '') as never);
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, setValue]);
 
-  useEffect(() => {
-    if (category === 'Accessoires' || !brand) {
-      setPriceEstimate(null);
-      return;
-    }
-    if (estimateTimerRef.current) clearTimeout(estimateTimerRef.current);
-    if (estimateCtrlRef.current) estimateCtrlRef.current.abort();
-
-    estimateTimerRef.current = setTimeout(async () => {
-      const ctrl = new AbortController();
-      estimateCtrlRef.current = ctrl;
-      try {
-        const result = await listingsApi.estimatePrice(
-          {
-            brand,
-            model: model || undefined,
-            year: year ? parseInt(year) : undefined,
-            condition: condition || undefined,
-          },
-          ctrl.signal,
-        );
-        setPriceEstimate(result);
-      } catch {
-        setPriceEstimate(null);
-      }
-    }, 800);
-
-    return () => {
-      if (estimateTimerRef.current) clearTimeout(estimateTimerRef.current);
-      if (estimateCtrlRef.current) estimateCtrlRef.current.abort();
-    };
-  }, [category, brand, model, year, condition]);
 
   // ---- Per-step required fields ----------------------------------------------
   // Which field is required on which step, and its name in the toasts:
@@ -424,28 +331,12 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     onNavigate?.('listing-details', { id: published.id, title: published.title, listingNumber: published.listingNumber } as any);
   };
 
-  // Bumped on every fresh start: the step remounts, so pickers and fields
-  // drop their own state (a brand typed by hand, a cylinder size being typed…).
-  const [depositRun, setDepositRun] = useState(0);
-
-  /** Empty form, step 1, no saved draft; the new listing's draft is saved again. */
+  /** Empty form, no photo, no market price, step 1, no draft (useDepositSession). */
   const startBlankDeposit = () => {
-    clearDraft();
-    // Explicit empty values: a bare reset() would go back to the last values
-    // given to reset(), i.e. a restored draft (utils/depositValues.ts).
-    reset(emptyDepositValues());
-    clearMedia();
-    // No market price of the previous listing, and no estimate still on its way.
-    if (estimateTimerRef.current) clearTimeout(estimateTimerRef.current);
-    if (estimateCtrlRef.current) estimateCtrlRef.current.abort();
-    setPriceEstimate(null);
-    setStep(1);
+    startNew();
     setPublished(null);
-    setDepositRun((n) => n + 1);
     // Back to the top of the form (the step may already be 1: no step effect).
     revealBelowHeader(mainCardRef.current);
-    // A new listing: its draft is saved again from now on.
-    resumeDraft();
   };
 
   const handleDepositAnother = () => {
@@ -486,8 +377,8 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         has_equipment: data.equipment.length > 0,
       });
 
-      // The draft is done: remove it so it does not come back on the next deposit.
-      clearDraft();
+      // The draft is done: removed, and nothing is saved until a new deposit.
+      markPublished();
       setIsSubmitting(false);
       setPublished({
         id: created.id,

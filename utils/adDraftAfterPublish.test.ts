@@ -2,24 +2,22 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const hook = readFileSync(new URL('../hooks/useAdDraft.ts', import.meta.url), 'utf8');
-const page = readFileSync(new URL('../components/DepositAd.tsx', import.meta.url), 'utf8');
-
 // 2026-11-12, owner: « quand je poste une annonce il y a une mémoire
-// d'annonce ». After a publish, autosave skipped only 3 passes; watch() gives a
-// new object every render, so the success screen's re-renders saved the
-// published listing again and it came back as a draft on the next deposit.
-test('after a publish, the draft is removed and autosave stays off', () => {
-  assert.match(hook, /const clearDraft = \(\) => \{\s*stoppedRef\.current = true;\s*try \{\s*localStorage\.removeItem\(storageKey\);/);
-  assert.match(hook, /if \(isFirstRender\.current\) return;\s*if \(stoppedRef\.current\) return;/);
-  assert.doesNotMatch(hook, /suppressSavesRef/); // no more « skip the next N renders »
-  assert.match(page, /\/\/ The draft is done: remove it so it does not come back on the next deposit\.\s*clearDraft\(\);/);
+// d'annonce ». The rules now live in the deposit session and are tested
+// through its interface (utils/depositSession.test.ts); here, that the page
+// calls them at the right moments.
+const page = readFileSync(new URL('../components/DepositAd.tsx', import.meta.url), 'utf8');
+const hook = readFileSync(new URL('../hooks/useDepositSession.ts', import.meta.url), 'utf8');
+
+test('after a publish, the session is told: draft removed, nothing saved', () => {
+  assert.match(page, /\/\/ The draft is done: removed, and nothing is saved until a new deposit\.\s*markPublished\(\);/);
+  assert.match(hook, /const markPublished = useCallback\(\(\) => session\.published\(\), \[session\]\);/);
+  assert.doesNotMatch(page, /suppressSavesRef|stoppedRef|clearDraft|resumeDraft/);
 });
 
-test('« Déposer une autre annonce » starts a fresh draft that is saved again', () => {
-  assert.match(hook, /const resumeDraft = \(\) => \{\s*stoppedRef\.current = false;\s*\};/);
-  // Explicit empty values: a bare reset() went back to a restored draft (depositReset.test.ts).
-  assert.match(page, /const startBlankDeposit = \(\) => \{\s*clearDraft\(\);[\s\S]*?reset\(emptyDepositValues\(\)\);\s*clearMedia\(\);[\s\S]*?setStep\(1\);\s*setPublished\(null\);[\s\S]*?resumeDraft\(\);\s*\};/);
+test('« Déposer une autre annonce » and « Réinitialiser » start a new deposit through the session', () => {
+  assert.match(page, /const startBlankDeposit = \(\) => \{\s*startNew\(\);\s*setPublished\(null\);/);
+  assert.match(hook, /session\.startNew\(\);\s*market\.clear\(\);\s*setRun\(\(n\) => n \+ 1\);/);
 });
 
 test('« Réinitialiser »: confirms, then starts a blank deposit (form, photos, draft)', () => {
