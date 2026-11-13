@@ -9,7 +9,8 @@ import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategorie
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
-import { CONDITION_HINTS, DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
+import { CONDITION_HINTS, DEFAULT_CONDITIONS, categoryTileImage, modelExample, optionsWithValue } from '../../utils/depositOptions';
+import { API_ORIGIN } from '../../services/apiClient';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 
 // Backend category names that differ from the form's values.
@@ -87,6 +88,15 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       .filter((n) => allowed.has(n));
     return names.length > 0 ? Array.from(new Set(names)) : [...DEPOSIT_CATEGORIES];
   }, [backendCategories]);
+  // Category → its photo (the admin's image, else its icon).
+  const categoryImages = useMemo(() => {
+    const m = new Map<string, string | null | undefined>();
+    for (const c of backendCategories || []) {
+      const name = CATEGORY_ALIASES[c.name] || c.name;
+      if (!m.has(name)) m.set(name, c.image_url || c.icon_url);
+    }
+    return m;
+  }, [backendCategories]);
   const accessoryTypeNames = useMemo(() => accessoryTypesData.map((t) => t.name), [accessoryTypesData]);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -125,10 +135,25 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
       <div className={S.GridFields}>
 
         {/* CATÉGORIE: the other fields depend on it (brands, accessory fields). */}
-        <Select label="Catégorie" {...register('category')} error={errors.category?.message}>
-          <option value="">Choisir une catégorie</option>
-          {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
-        </Select>
+        {/* CATÉGORIE: the first choice, four photos (the admin's category images). */}
+        <Controller
+          control={control}
+          name="category"
+          render={({ field }) => (
+            <ChoiceChips
+              variant="tiles"
+              className="md:col-span-2"
+              label="Catégorie"
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={categoryOptions.map((value) => ({ value, image: categoryTileImage(categoryImages.get(value), API_ORIGIN) }))}
+              error={errors.category?.message}
+            />
+          )}
+        />
 
         {category && (<>
         {category === 'Accessoires' && (

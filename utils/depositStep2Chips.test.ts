@@ -7,8 +7,8 @@ import { CONDITION_HINTS, DEFAULT_CONDITIONS } from './depositOptions';
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
 const chips = readFileSync(new URL('../components/ui/ChoiceChips.tsx', import.meta.url), 'utf8');
 
-test('short lists are chips, not drop-downs; only category, year and cylinder size stay lists', () => {
-  assert.equal((step.match(/<Select\b/g) || []).length, 3);
+test('short lists are chips, not drop-downs; only year and cylinder size stay lists', () => {
+  assert.equal((step.match(/<Select\b/g) || []).length, 2); // category became tiles (lot C)
   for (const f of ['accessoryType', 'helmetType', 'size', 'gender', 'antiTheftType', 'condition']) {
     assert.match(step, new RegExp(`name="${f}"\\n\\s+render=\\{\\(\\{ field \\}\\) => \\(\\n\\s+<ChoiceChips`), f);
   }
