@@ -6,6 +6,7 @@ import { modelExample } from './depositOptions';
 // Step 2/5 dropdown review (lot A, 2026-11-13).
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
 const select = readFileSync(new URL('../components/ui/Select.tsx', import.meta.url), 'utf8');
+const cylinder = readFileSync(new URL('../components/deposit/CylinderField.tsx', import.meta.url), 'utf8');
 
 test('an empty list reads as empty: grey placeholder, as the inputs and the brand picker', () => {
   assert.match(select, /data-empty=\{empty \|\| undefined\}/);
@@ -17,14 +18,14 @@ test('an empty list reads as empty: grey placeholder, as the inputs and the bran
 test('one wording for an empty list: « Choisir … »', () => {
   assert.doesNotMatch(step, /Sélectionner/);
   for (const p of ['Choisir une catégorie', 'Choisir un type', "Choisir l'année", 'Choisir la cylindrée']) {
-    assert.ok(step.includes(p), p);
+    assert.ok(step.includes(p) || cylinder.includes(p), p);
   }
 });
 
 test('French spelling of the stored choices', () => {
   assert.match(step, /"Fumée", "Claire", "Iridium"/);
   assert.match(step, /"Bloque-disque", "Bloque-guidon", "Chaîne", "Antivol en U"/);
-  assert.match(step, /<option value="Électrique">Électrique<\/option>\n\s+<option value="Autre">Autre<\/option>/);
+  assert.match(cylinder, /<option value="Électrique">Électrique<\/option>\n\s+<option value="Autre">Autre<\/option>/);
 });
 
 test('the model example fits what is sold', () => {

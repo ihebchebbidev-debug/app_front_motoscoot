@@ -9,7 +9,7 @@ const chips = readFileSync(new URL('../components/ui/ChoiceChips.tsx', import.me
 const picker = readFileSync(new URL('../components/deposit/ConditionPicker.tsx', import.meta.url), 'utf8');
 
 test('owner choice (2026-11-13): category and accessory type stay drop-downs, as year and cylinder size', () => {
-  assert.equal((step.match(/<Select\b/g) || []).length, 4);
+  assert.equal((step.match(/<Select\b/g) || []).length, 3); // + Cylindrée, in CylinderField
   assert.match(step, /<Select label="Catégorie" \{\.\.\.register\('category'\)\}/);
   assert.match(step, /<Select\n\s+label="Type d'accessoire"/);
   for (const f of ['helmetType', 'size', 'gender', 'antiTheftType']) {
@@ -39,5 +39,5 @@ test('the condition opens a modal where each choice has the explanation the owne
 });
 
 test('the condition comes last, once the item is described', () => {
-  assert.ok(step.indexOf('name="condition"') > step.indexOf("label=\"Cylindrée\""));
+  assert.ok(step.indexOf('name="cc"') > 0 && step.indexOf('name="condition"') > step.indexOf('name="cc"'));
 });
