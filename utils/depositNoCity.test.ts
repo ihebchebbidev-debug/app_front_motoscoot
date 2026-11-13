@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { depositStepFields } from './depositRules';
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
@@ -9,8 +10,7 @@ test('the price step asks for the governorate only, not the city', () => {
   assert.doesNotMatch(step, /label="(VILLE|Ville)"/);
   assert.doesNotMatch(step, /register\('city'\)/);
   assert.match(step, /label="Gouvernorat"/);
-  const wizard = read('components/DepositAd.tsx');
-  assert.match(wizard, /return \['price', 'governorate', 'phone', 'description'\];/);
+  assert.deepEqual(depositStepFields('details', { category: 'Moto' }), ['price', 'governorate', 'phone', 'description']);
   assert.match(read('types/listing.ts'), /city: z\.string\(\)\.optional\(\)/);
 });
 

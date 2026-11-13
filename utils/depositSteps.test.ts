@@ -36,8 +36,8 @@ test('the wizard renders and validates by step id, without the old category and 
   for (const id of ['photos', 'technical', 'equipment', 'details', 'recap']) {
     assert.match(src, new RegExp(`stepId === '${id}'`), id);
   }
-  assert.match(src, /case 'photos':\s*return \['images'\];/);
-  assert.match(src, /if \(!allValues\.category\) return \['category'\];/);
+  // Required fields by step id (utils/depositRules.ts, tested in depositRules.test.ts).
+  assert.match(src, /depositStepFields\(depositStepAt\(targetStep, isAccessory\), allValues\)/);
   // The profile position keeps new listings in the proximity search.
   assert.match(src, /setValue\('latitude', user\.latitude/);
 });

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { isValidTunisiaPhone, TUNISIA_PHONE_ERROR } from '../utils/phoneUtils';
+import { depositMissingConditional } from '../utils/depositRules';
 
 export interface UploadedMedia {
   id: string;
@@ -76,47 +77,13 @@ export const listingSchema = z.object({
   antiTheftType: z.string().optional(),
   intercomFeatures: z.array(z.string()).optional(),
 }).superRefine((data, ctx) => {
-  if (data.category !== 'Accessoires') {
-    if (!data.year || !/^\d{4}$/.test(data.year)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Année requise (4 chiffres)", path: ['year'] });
-    }
-    if (!data.mileage) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Kilométrage requis", path: ['mileage'] });
-    }
-    if (!data.cc) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Cylindrée requise", path: ['cc'] });
-    }
-  } else {
-    if (!data.accessoryType) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type d'accessoire requis", path: ['accessoryType'] });
-    }
-    if (data.accessoryType === 'Casque') {
-      if (!data.helmetType) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type de casque requis", path: ['helmetType'] });
-      }
-      if (!data.visorType || data.visorType.length === 0) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type de visière requis", path: ['visorType'] });
-      } else if (data.visorType.length > 2) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Maximum 2 types de visière", path: ['visorType'] });
-      }
-    }
-    
-    // Add validation for new specific accessory fields if needed
-    if (['Gant', 'Veste', 'Pantalons'].includes(data.accessoryType || '')) {
-      if (!data.size) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Taille requise", path: ['size'] });
-    }
-    if (['Veste', 'Pantalons', 'Chaussures'].includes(data.accessoryType || '')) {
-      if (!data.gender) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Genre requis", path: ['gender'] });
-    }
-    if (data.accessoryType === 'Chaussures' && !data.shoeSize) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Pointure requise", path: ['shoeSize'] });
-    }
-    if (data.accessoryType === 'Antivol' && !data.antiTheftType) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type d'antivol requis", path: ['antiTheftType'] });
-    }
-    if (data.accessoryType === 'Intercom' && (!data.intercomFeatures || data.intercomFeatures.length === 0)) {
-       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Sélectionner au moins une option", path: ['intercomFeatures'] });
-    }
+  // Which conditional field is required, and its message: utils/depositRules.ts
+  // (the deposit's « Suivant » and « Publier » read the same rules).
+  for (const { path, message } of depositMissingConditional(data)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: [path] });
+  }
+  if (data.category === 'Accessoires' && data.accessoryType === 'Casque' && (data.visorType?.length ?? 0) > 2) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Maximum 2 types de visière", path: ['visorType'] });
   }
 });
 

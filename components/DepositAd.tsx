@@ -31,6 +31,7 @@ import { DepositSuccess, type PublishedListing } from './deposit/DepositSuccess'
 import { primeSuccessSound } from '../utils/successSound';
 import { revealBelowHeader, scrollBelowHeader } from '../utils/scrollBelowHeader';
 import { depositSteps, depositStepAt, depositStepNumber, depositStepLabel, MAX_DEPOSIT_STEPS, type DepositStepId } from '../utils/depositSteps';
+import { DEPOSIT_FIELD_LABELS, depositStepFields, photosStillUploading } from '../utils/depositRules';
 
 import { listingService } from '../services/listingService';
 import { listingsApi, PriceEstimate } from '../services/listingsApi';
@@ -329,68 +330,17 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
   }, [category, brand, model, year, condition]);
 
   // ---- Per-step required fields ----------------------------------------------
-  // Single source of truth for which fields belong to which step. Used by both
-  // the per-step "Suivant" button AND the final "Publier" button so we never
-  // surface an error from a step the user hasn't filled out yet.
-  const fieldLabels: Record<string, string> = {
-    category: 'Catégorie',
-    brand: 'Marque',
-    model: 'Modèle',
-    condition: 'État',
-    year: 'Année',
-    mileage: 'Kilométrage',
-    cc: 'Cylindrée',
-    accessoryType: "Type d'accessoire",
-    helmetType: 'Type de casque',
-    visorType: 'Type de visière',
-    size: 'Taille',
-    gender: 'Genre',
-    shoeSize: 'Pointure',
-    antiTheftType: "Type d'antivol",
-    intercomFeatures: 'Options Intercom',
-    images: 'Photos',
-    price: 'Prix',
-    city: 'Ville',
-    governorate: 'Gouvernorat',
-    phone: 'Téléphone',
-    latitude: 'Position sur la carte',
-    longitude: 'Position sur la carte',
-    address: 'Adresse',
-  };
+  // Which field is required on which step, and its name in the toasts:
+  // utils/depositRules.ts (the zod schema reads the same rules). Used by both
+  // the per-step « Suivant » and the final « Publier », so we never surface an
+  // error from a step the user hasn't filled out yet.
+  const fieldLabels = DEPOSIT_FIELD_LABELS;
 
   const stepLabels = (isAccessory: boolean): Record<number, string> =>
     Object.fromEntries(depositSteps(isAccessory).map((id, i) => [i + 1, depositStepLabel(id, isAccessory)]));
 
-  /**
-   * Returns the list of required fields for a given step + whether the user
-   * is depositing an accessory. Mirrors the logic that used to live inline
-   * in `handleNext`. Returning an empty array means "no required fields"
-   * (e.g. step 3 for non-accessories: optional equipment).
-   */
-  const getStepFields = (targetStep: number, isAccessory: boolean): string[] => {
-    switch (depositStepAt(targetStep, isAccessory)) {
-      case 'photos':
-        return ['images'];
-      case 'technical': {
-        // The other fields only appear once a category is chosen.
-        if (!allValues.category) return ['category'];
-        if (!isAccessory) return ['brand', 'model', 'condition', 'year', 'mileage', 'cc'];
-        const f: string[] = ['brand', 'model', 'condition', 'accessoryType'];
-        if (allValues.accessoryType === 'Casque') f.push('helmetType', 'visorType');
-        if (['Gant', 'Veste', 'Pantalons'].includes(allValues.accessoryType || '')) f.push('size');
-        if (['Veste', 'Pantalons', 'Chaussures'].includes(allValues.accessoryType || '')) f.push('gender');
-        if (allValues.accessoryType === 'Chaussures') f.push('shoeSize');
-        if (allValues.accessoryType === 'Antivol') f.push('antiTheftType');
-        if (allValues.accessoryType === 'Intercom') f.push('intercomFeatures');
-        return f;
-      }
-      case 'details':
-        return ['price', 'governorate', 'phone', 'description'];
-      // Equipment is optional; the recap has no field of its own.
-      default:
-        return [];
-    }
-  };
+  const getStepFields = (targetStep: number, isAccessory: boolean): string[] =>
+    depositStepFields(depositStepAt(targetStep, isAccessory), allValues);
 
   /**
    * Lightweight per-step validator that only inspects the fields belonging to
@@ -448,8 +398,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     // Block on still-uploading photos (only when on the photos step).
     const isPhotosStep = depositStepAt(step, isAccessory) === 'photos';
     if (isPhotosStep && valid) {
-      const isUploading = mediaList.some((m) => m.status === 'uploading');
-      if (isUploading) {
+      if (photosStillUploading(mediaList)) {
         addToast('Veuillez attendre la fin du téléchargement des photos.', 'warning');
         return;
       }
@@ -581,7 +530,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
     }
 
     // All steps valid — block on still-uploading photos as a final safety net.
-    if (mediaList.some((m) => m.status === 'uploading')) {
+    if (photosStillUploading(mediaList)) {
       addToast('Veuillez attendre la fin du téléchargement des photos.', 'warning');
       return;
     }
