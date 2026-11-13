@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 import { brandKey, cleanBrandName, knownBrand, matchBrands, popularBrands, POPULAR_COUNT } from './brandPicker';
 
 // The brand picker and the parts it shares with the model picker (pickerParts.tsx).
+// The brand picker, the catalogue picker it is built on, and the parts they share.
 const picker = readFileSync(new URL('../components/deposit/BrandPicker.tsx', import.meta.url), 'utf8')
+  + readFileSync(new URL('../components/deposit/CatalogPicker.tsx', import.meta.url), 'utf8')
   + readFileSync(new URL('../components/deposit/pickerParts.tsx', import.meta.url), 'utf8');
 const step = readFileSync(new URL('../components/deposit/StepTechnical.tsx', import.meta.url), 'utf8');
 const sheet = readFileSync(new URL('../components/search/ChoiceSheet.tsx', import.meta.url), 'utf8');
@@ -59,7 +61,7 @@ test('the form step uses the picker, not a long <select>', () => {
 test('the picker reuses the shared sheet: phone sheet, menu under the field from 768 px', () => {
   assert.match(picker, /<ChoiceSheet/);
   assert.match(picker, /anchor=\{wrapRef\}/);
-  assert.match(picker, /placeholder: 'Rechercher une marque…'/);
+  assert.match(picker, /search: 'Rechercher une marque…'/);
   assert.match(sheet, /onEnter\?: \(\) => void/);
 });
 
