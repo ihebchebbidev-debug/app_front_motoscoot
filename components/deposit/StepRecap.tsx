@@ -96,7 +96,7 @@ export const StepRecap = memo(({ values: v, mediaList, isAccessory, onEdit }: St
         ['État', show(v.condition)],
         ['Année', show(v.year)],
         ['Kilométrage', formatNumber(v.mileage, 'km')],
-        ['Cylindrée', v.cc === 'Autre' ? 'Autre / Électrique' : formatNumber(v.cc, 'cc')],
+        ['Cylindrée', v.cc === 'Autre' || v.cc === 'Électrique' ? v.cc : formatNumber(v.cc, 'cc')],
       ];
 
   const place = [show(v.city), show(v.governorate)].filter(Boolean);

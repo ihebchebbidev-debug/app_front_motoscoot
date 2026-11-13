@@ -10,6 +10,7 @@ import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
 import { ModelPicker } from './ModelPicker';
 import { ConditionPicker } from './ConditionPicker';
+import { CylinderField } from './CylinderField';
 import { CONDITION_HINTS, DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 
@@ -34,11 +35,6 @@ const S = {
   GridFields: "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8",
 };
 
-const displacementOptions = [
-  "50", "80", "100", "110", "125", "150", "180", "200", "250", "300",
-  "350", "400", "450", "500", "530", "560", "600", "650", "700", "750",
-  "800", "850", "900", "1000", "1100", "1200", "1300", "1400", "1600", "1800"
-];
 
 const helmetTypes   = ["Jet", "Modulable", "Intégral"];
 // Agreed with « visière » (féminin); stored as shown.
@@ -287,15 +283,21 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
               error={errors.mileage?.message}
             />
 
-            <Select label="Cylindrée" {...register('cc')} error={errors.cc?.message}>
-              <option value="">Choisir la cylindrée</option>
-              {displacementOptions.map((cc) => (
-                <option key={cc} value={cc}>{cc} cc</option>
-              ))}
-              {/* Both are stored as no cylinder size (listings.cc is a number). */}
-              <option value="Électrique">Électrique</option>
-              <option value="Autre">Autre</option>
-            </Select>
+            {/* CYLINDRÉE: the list, or a size typed in cc (CylinderField). */}
+            <Controller
+              control={control}
+              name="cc"
+              render={({ field }) => (
+                <CylinderField
+                  ref={field.ref}
+                  name={field.name}
+                  value={field.value || ''}
+                  onChange={(v) => { field.onChange(v); if (v) clearErrors('cc'); }}
+                  onBlur={field.onBlur}
+                  error={errors.cc?.message}
+                />
+              )}
+            />
           </>
         )}
 

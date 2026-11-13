@@ -2,6 +2,7 @@ import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { isValidTunisiaPhone, TUNISIA_PHONE_ERROR } from '../utils/phoneUtils';
 import { depositMissingConditional } from '../utils/depositRules';
+import { CC_MESSAGE, ccIsValid } from '../utils/depositOptions';
 
 export interface UploadedMedia {
   id: string;
@@ -71,7 +72,8 @@ export const listingSchema = z.object({
   year: z.string().optional(),
   // A whole number of km (listings.mileage is an INTEGER): no sign, no decimal, no « 1e6 ».
   mileage: z.string().optional().refine((v) => !v || MILEAGE_PATTERN.test(v.trim()), MILEAGE_MESSAGE),
-  cc: z.string().optional(),
+  // A size from the list, « Électrique », « Autre », or a typed number of cc (30 to 3 000).
+  cc: z.string().optional().refine((v) => ccIsValid(v), CC_MESSAGE),
   
   // Accessory specific fields
   accessoryType: z.string().optional(),
