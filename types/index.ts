@@ -131,6 +131,8 @@ export interface Garage {
   description?: string;
   address?: string;
   location?: string; 
+  /** City only (location falls back to the governorate). Part of the page address. */
+  city?: string;
   hours?: string;
   reviewsCount?: number;
   specialties?: string[];

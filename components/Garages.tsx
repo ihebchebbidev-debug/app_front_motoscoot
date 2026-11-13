@@ -383,7 +383,7 @@ const Garages: React.FC<BasePageProps> = ({ onNavigate }) => {
                       <Reveal key={garage.id} animation="fade-in-up" delay={index % 12 * 50} className="h-full">
                         <GarageCard 
                           garage={garage} 
-                          onClick={() => onNavigate?.('garage-details', { id: garage.id, name: garage.name })} 
+                          onClick={() => onNavigate?.('garage-details', { id: garage.id, name: garage.name, city: garage.city })} 
                         />
                       </Reveal>
                     ))}
