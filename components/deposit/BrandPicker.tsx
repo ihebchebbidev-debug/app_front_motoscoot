@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 import { useListingFacets } from '../../hooks/useListings';
 import type { BrandRef } from '../../services/miscApi';
-import { cleanBrandName, knownBrand, matchBrands, popularBrands } from '../../utils/brandPicker';
+import { BRAND_LIST_LIMIT, cleanBrandName, knownBrand, matchBrands, popularBrands, tidyBrands } from '../../utils/brandPicker';
 
 /**
  * « Marque » of the listing form. A field that opens the shared choice sheet
@@ -33,28 +33,36 @@ const ROW = `${TAP} w-full min-h-[44px] flex items-center gap-3 text-left px-4 p
 const ROW_ON = 'bg-primary-50 text-primary-700 font-semibold';
 const ROW_OFF = 'text-gray-900 hover:bg-gray-50';
 
-const Logo: React.FC<{ brand?: BrandRef; size: number }> = ({ brand, size }) =>
-  brand?.logo_url ? (
-    <img
-      src={brand.logo_url}
-      alt=""
-      width={size}
-      height={size}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-      className="object-contain shrink-0"
-      style={{ width: size, height: size }}
-    />
-  ) : (
+const Logo: React.FC<{ brand?: BrandRef; size: number }> = ({ brand, size }) => {
+  // A logo file that is gone (404) falls back to the initial, never a broken image.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [brand?.logo_url]);
+  if (brand?.logo_url && !failed) {
+    return (
+      <img
+        src={brand.logo_url}
+        alt=""
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        onError={() => setFailed(true)}
+        className="object-contain shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
     <span
       aria-hidden="true"
       className="shrink-0 rounded-md bg-gray-100 text-gray-500 font-bold flex items-center justify-center"
       style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }}
     >
-      {(brand?.name || '?').charAt(0).toUpperCase()}
+      {Array.from((brand?.name || '?').trim())[0]?.toUpperCase() || '?'}
     </span>
   );
+};
 
 /** The typed letters in bold when they appear as written in the name. */
 const Highlight: React.FC<{ name: string; query: string }> = ({ name, query }) => {
@@ -73,8 +81,9 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
   const [query, setQuery] = useState('');
   const [manual, setManual] = useState(false);
 
-  const names = useMemo(() => Array.from(new Set(brands.map((b) => b.name).filter(Boolean))), [brands]);
-  const byName = useMemo(() => new Map(brands.map((b) => [b.name, b])), [brands]);
+  const catalogue = useMemo(() => tidyBrands(brands), [brands]);
+  const names = useMemo(() => catalogue.map((b) => b.name), [catalogue]);
+  const byName = useMemo(() => new Map(catalogue.map((b) => [b.name, b])), [catalogue]);
 
   // Live listings per brand in the category: the popular tiles.
   const { data: facets } = useListingFacets(category ? { type: category } : undefined);
@@ -217,7 +226,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
                   }`}
                 >
                   <Logo brand={byName.get(name)} size={36} />
-                  <span className="max-w-full truncate text-[12px] font-semibold text-gray-800">{name}</span>
+                  <span title={name} className="max-w-full truncate text-[12px] font-semibold text-gray-800">{name}</span>
                 </button>
               ))}
             </div>
@@ -226,7 +235,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
         {showPopular && (
           <p className="px-4 pt-2 pb-1 border-t border-gray-100 text-[12px] font-bold uppercase tracking-[0.08em] text-gray-500">Toutes les marques</p>
         )}
-        {matches.map((name) => (
+        {matches.slice(0, BRAND_LIST_LIMIT).map((name) => (
           <button
             key={name}
             type="button"
@@ -236,9 +245,14 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
             className={`${ROW} ${value === name ? ROW_ON : ROW_OFF}`}
           >
             <Logo brand={byName.get(name)} size={28} />
-            <span className="truncate"><Highlight name={name} query={query} /></span>
+            <span title={name} className="truncate"><Highlight name={name} query={query} /></span>
           </button>
         ))}
+        {matches.length > BRAND_LIST_LIMIT && (
+          <p className="px-4 py-3 text-[14px] text-gray-600">
+            {matches.length - BRAND_LIST_LIMIT} autres marques : tapez quelques lettres pour les trouver.
+          </p>
+        )}
         {!matches.length && (
           <p className="px-4 py-3 text-[14px] text-gray-600">
             {query.trim() ? <>Aucune marque « {query.trim()} » dans la liste.</> : 'Aucune marque pour cette catégorie.'}

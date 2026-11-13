@@ -30,9 +30,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           ref={ref}
           id={id}
           className={`
-            w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-gray-900 shadow-none
+            w-full pl-5 pr-12 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-gray-900 shadow-none
             focus:bg-card focus:border-primary-600 focus:ring-4 focus:ring-primary-50
-            appearance-none cursor-pointer
+            appearance-none cursor-pointer truncate
             ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-50' : ''}
             ${className}
           `}
