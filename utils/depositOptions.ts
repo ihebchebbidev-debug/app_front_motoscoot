@@ -39,3 +39,21 @@ export const CONDITION_HINTS: Record<string, string> = {
   'À réparer': 'Ne fonctionne pas ou demande une réparation importante.',
   'Pour pièces': 'Vendu pour ses pièces, ne sera pas remis en état.',
 };
+
+/**
+ * The admin's category photo for a tile: the 300 px thumbnail the upload
+ * pipeline makes (~8 KB) and the 1200 px original for wide, dense screens.
+ * Stored URLs can be absolute and in http:// (« http://<api>/uploads/x.webp »):
+ * the /uploads/ path is kept and served from the API origin over https.
+ */
+export function categoryTileImage(url: string | null | undefined, apiOrigin: string): { src: string; srcSet?: string } | null {
+  if (!url) return null;
+  const i = url.indexOf('/uploads/');
+  if (i < 0) return url.startsWith('/') || /^https:/i.test(url) ? { src: url } : null;
+  const path = url.slice(i); // /uploads/<file> or /uploads/thumbnails/thumb_<file>
+  const file = path.slice('/uploads/'.length);
+  if (file.includes('/')) return { src: `${apiOrigin}${path}` };
+  const full = `${apiOrigin}/uploads/${file}`;
+  const thumb = `${apiOrigin}/uploads/thumbnails/thumb_${file}`;
+  return { src: thumb, srcSet: `${thumb} 300w, ${full} 1200w` };
+}
