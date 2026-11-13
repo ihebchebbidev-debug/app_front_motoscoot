@@ -76,7 +76,7 @@ export const ListingCard = memo(({
         href={href}
         onClick={handleItemClick}
         aria-label={listing.title}
-        className={`group bg-card rounded-[14px] border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-primary-100 [&:active:not(:has(button:active))]:scale-[0.98] no-underline text-inherit ${
+        className={`group bg-card rounded-[14px] border border-gray-100 overflow-hidden transition-[box-shadow,border-color,transform] duration-200 ease-out cursor-pointer flex shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-primary-100 [&:active:not(:has(button:active)):not(:has([data-carousel]:active))]:scale-[0.98] no-underline text-inherit ${
           isGrid ? 'flex-col h-full' : 'flex-col md:flex-row min-h-[220px]'
         }`}
         style={{ 
