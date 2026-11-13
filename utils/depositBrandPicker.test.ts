@@ -71,3 +71,33 @@ test('logos load lazily and are decorative (the name is the label)', () => {
   assert.match(picker, /loading="lazy"/);
   assert.match(picker, /alt=""/);
 });
+
+// ── Phones (mobile-native review) ──
+
+test('the brand sheet keeps its height while the search filters, measured on the visible screen', () => {
+  assert.match(picker, /\n\s+tall\n/);
+  assert.match(sheet, /max-h-\[85dvh\] \$\{tall \? 'h-\[85dvh\] md:h-auto' : ''\}/);
+  assert.doesNotMatch(sheet, /max-h-\[85vh\]/);
+});
+
+test('the last row stays clear of the iPhone home indicator', () => {
+  assert.match(sheet, /pb-\[env\(safe-area-inset-bottom,0px\)\]/);
+});
+
+test('brand searches are not autocorrected or capitalised, and Enter says « go »', () => {
+  assert.equal((sheet.match(/autoCorrect="off"/g) || []).length, 2);
+  assert.equal((sheet.match(/autoCapitalize="none"/g) || []).length, 2);
+  assert.match(sheet, /enterKeyHint=\{search\.onEnter \? 'go' : undefined\}/);
+  assert.match(picker, /autoCapitalize="words"/);
+});
+
+test('tiles and rows answer the finger at once, without selecting text or the iOS callout', () => {
+  assert.match(picker, /const TAP = 'touch-manipulation select-none \[-webkit-touch-callout:none\]';/);
+  assert.match(picker, /active:bg-gray-100/);
+  assert.match(picker, /active:scale-\[0\.97\] motion-reduce:active:scale-100/);
+  assert.match(picker, /draggable=\{false\}/);
+});
+
+test('320 px phones: three tiles a row, so names are not cut', () => {
+  assert.match(picker, /grid-cols-4 max-\[359px\]:grid-cols-3/);
+});

@@ -26,7 +26,10 @@ interface BrandPickerProps {
   error?: string;
 }
 
-const ROW = 'w-full min-h-[44px] flex items-center gap-3 text-left px-4 py-2 text-[15px] font-medium transition-colors';
+// Controls, not content: pressed at once (no double-tap wait), no text
+// selection or iOS callout on a long press.
+const TAP = 'touch-manipulation select-none [-webkit-touch-callout:none]';
+const ROW = `${TAP} w-full min-h-[44px] flex items-center gap-3 text-left px-4 py-2 text-[15px] font-medium transition-colors active:bg-gray-100`;
 const ROW_ON = 'bg-primary-50 text-primary-700 font-semibold';
 const ROW_OFF = 'text-gray-900 hover:bg-gray-50';
 
@@ -39,6 +42,7 @@ const Logo: React.FC<{ brand?: BrandRef; size: number }> = ({ brand, size }) =>
       height={size}
       loading="lazy"
       decoding="async"
+      draggable={false}
       className="object-contain shrink-0"
       style={{ width: size, height: size }}
     />
@@ -132,6 +136,11 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
           value={value}
           autoFocus={manual && !value}
           maxLength={40}
+          autoComplete="off"
+          autoCapitalize="words"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
           onChange={(e) => onChange(e.target.value)}
           onBlur={(e) => { onChange(cleanBrandName(e.target.value)); onBlur?.(); }}
           error={error}
@@ -169,7 +178,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
           aria-invalid={!!error || undefined}
           onClick={() => (open ? close() : setOpen(true))}
           className={`
-            w-full flex items-center gap-3 pl-5 pr-12 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-left text-gray-900
+            ${TAP} w-full flex items-center gap-3 pl-5 pr-12 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none transition-all ${type.value} text-left text-gray-900
             focus-visible:bg-card focus-visible:border-primary-600 focus-visible:ring-4 focus-visible:ring-primary-50
             ${open ? 'bg-card border-primary-600 ring-4 ring-primary-50' : ''}
             ${error ? 'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-50' : ''}
@@ -189,12 +198,13 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
         anchor={wrapRef}
         label={label}
         onClose={close}
+        tall
         search={{ value: query, placeholder: 'Rechercher une marque…', onChange: setQuery, onEnter }}
       >
         {showPopular && (
           <div className="px-3 pt-1 pb-3">
             <p className="px-1 pb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-gray-500">Les plus vendues</p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 max-[359px]:grid-cols-3 gap-2">
               {popular.map((name) => (
                 <button
                   key={name}
@@ -202,7 +212,7 @@ export const BrandPicker = forwardRef<HTMLButtonElement, BrandPickerProps>(({ la
                   role="option"
                   aria-selected={value === name}
                   onClick={() => pick(name)}
-                  className={`min-h-[72px] flex flex-col items-center justify-center gap-1.5 px-1 py-2 rounded-xl border transition-colors ${
+                  className={`${TAP} min-h-[72px] flex flex-col items-center justify-center gap-1.5 px-1 py-2 rounded-xl border transition-[transform,border-color,background-color] duration-100 ease-out active:scale-[0.97] motion-reduce:active:scale-100 ${
                     value === name ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-400 active:bg-gray-50'
                   }`}
                 >

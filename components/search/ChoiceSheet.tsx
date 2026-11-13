@@ -87,10 +87,13 @@ interface ChoiceSheetProps {
   headerAction?: React.ReactNode;
   /** Pinned under the scrolling body (e.g. « Voir 9 modèles »). */
   footer?: React.ReactNode;
+  /** Phones: a fixed 85 % height, so the sheet does not shrink while the
+   *  search filters and the results stay under the field, above the keyboard. */
+  tall?: boolean;
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -239,6 +242,11 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
               // Mouse: type at once. Touch tablets: no keyboard over the list.
               autoFocus={finePointer()}
               autoComplete="off"
+              // Brand and model names: no capital, no autocorrect (« ktm » must not become « kit »).
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint={search.onEnter ? 'go' : undefined}
               onChange={(e) => search.onChange(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && search.onEnter) { e.preventDefault(); search.onEnter(); } }}
               className="w-full h-10 px-3 rounded-lg border border-gray-300 text-[16px] md:text-[14.5px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
@@ -267,7 +275,9 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
       <div
         ref={panelRef}
         data-state={draggedShut.current ? 'dragged' : state}
-        className="ms-sheet bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col shadow-2xl"
+        // dvh: the visible height with the browser bars (85vh overflowed under the
+        // URL bar). Bottom padding keeps the last row clear of the home indicator.
+        className={`ms-sheet bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85dvh] ${tall ? 'h-[85dvh] md:h-auto' : ''} pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Grabber + title: the part a finger drags down to close (phones). */}
@@ -300,11 +310,17 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           <div className="px-5 pt-3 pb-2 border-b border-gray-100">
             <input
               type="text"
+              aria-label={search.placeholder}
               placeholder={search.placeholder}
               value={search.value}
               // Phones: no keyboard over half the list until the field is touched.
               autoFocus={finePointer()}
               autoComplete="off"
+              // Brand and model names: no capital, no autocorrect (« ktm » must not become « kit »).
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint={search.onEnter ? 'go' : undefined}
               onChange={(e) => search.onChange(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && search.onEnter) { e.preventDefault(); search.onEnter(); } }}
               className="w-full h-11 px-3 rounded-lg border border-gray-300 text-[16px] text-gray-900 placeholder:text-gray-500 outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600"
