@@ -76,7 +76,7 @@ export const ListingCard = memo(({
         href={href}
         onClick={handleItemClick}
         aria-label={listing.title}
-        className={`group bg-card rounded-[14px] border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-primary-100 active:scale-[0.98] no-underline text-inherit ${
+        className={`group bg-card rounded-[14px] border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-primary-100 [&:active:not(:has(button:active))]:scale-[0.98] no-underline text-inherit ${
           isGrid ? 'flex-col h-full' : 'flex-col md:flex-row min-h-[220px]'
         }`}
         style={{ 
@@ -86,6 +86,7 @@ export const ListingCard = memo(({
       >
         <ListingThumbnail 
           image={listing.image}
+          images={listing.images}
           title={listing.title}
           distance={listing.distance ?? null}
           isNear={listing.distance != null && listing.distance < 20}
@@ -140,6 +141,7 @@ export const ListingCard = memo(({
 }, (prev, next) => {
   return prev.listing.id === next.listing.id && 
          prev.listing.distance === next.listing.distance &&
+         prev.listing.images?.length === next.listing.images?.length &&
          prev.favorited === next.favorited && 
          prev.isLoggedIn === next.isLoggedIn &&
          prev.viewMode === next.viewMode &&
