@@ -21,6 +21,8 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
+import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 import { parseSpecNumber, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath } from '../utils/seoImagePath.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
@@ -66,6 +68,7 @@ const slugify = (s: string): string =>
 // of a meaningless UUID. The /m/<slug>/<file> path is proxied by vercel.json
 // straight back to the real upload, so bytes are unchanged — only the URL is
 // SEO-friendly. Falls back to the host-only rewrite when no slug is provided.
+// Same cache version as the listing pages (utils/seoImagePath.ts).
 const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!url) return url;
   let out = toHttps(url);
@@ -76,9 +79,9 @@ const rewriteImageHost = (url: string, slug?: string | null): string => {
   if (!m) return out;
   const rest = m[1];
   if (rest.startsWith('thumbnails/')) {
-    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}`;
+    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}?v=${IMAGE_CACHE_VERSION}`;
   }
-  return `${SITE}/m/${cleanSlug}/${rest}`;
+  return `${SITE}/m/${cleanSlug}/${rest}?v=${IMAGE_CACHE_VERSION}`;
 };
 const stripHtml = (s: string) => (s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
