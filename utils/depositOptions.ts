@@ -27,3 +27,15 @@ export function modelExample(category?: string, accessoryType?: string): string 
   const ex = (category === 'Accessoires' ? MODEL_EXAMPLES[accessoryType || ''] : MODEL_EXAMPLES[category || '']);
   return ex ? `Ex : ${ex}` : 'Ex : le nom du modèle';
 }
+
+/** One line under each condition (validated by the owner, 2026-11-13). */
+export const CONDITION_HINTS: Record<string, string> = {
+  'Neuf': "Jamais utilisé : 0 km, ou étiquette et emballage d'origine pour un accessoire.",
+  'État neuf': "Très peu utilisé (moins de 1 000 km), aucune trace d'usure.",
+  'Excellent': 'Entretien à jour, aucun défaut visible, rien à prévoir.',
+  'Très bon': "Légères traces d'usage (petites rayures), tout fonctionne.",
+  'Bon': 'Usure normale visible, fonctionne sans problème.',
+  'Correct': 'Fonctionne, mais défauts visibles ou petites réparations à prévoir.',
+  'À réparer': 'Ne fonctionne pas ou demande une réparation importante.',
+  'Pour pièces': 'Vendu pour ses pièces, ne sera pas remis en état.',
+};

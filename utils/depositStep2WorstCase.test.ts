@@ -38,7 +38,7 @@ test('a restored condition is shown even when the list arrives after it', () => 
   assert.deepEqual(optionsWithValue(['Neuf', 'Bon'], 'Bon'), ['Neuf', 'Bon']);
   assert.deepEqual(optionsWithValue([], 'Très bon'), ['Très bon']);
   assert.deepEqual(optionsWithValue(['Neuf'], ''), ['Neuf']);
-  assert.match(step, /name="condition"[\s\S]*value=\{field\.value \?\? ''\}/);
+  assert.match(step, /name="condition"[\s\S]*optionsWithValue\(conditionList, field\.value\)/);
   assert.match(step, /name="accessoryType"[\s\S]*optionsWithValue\(accessoryTypeNames, field\.value\)/);
 });
 

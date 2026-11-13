@@ -3,12 +3,13 @@ import { Search, Info } from 'lucide-react';
 import { UseFormRegister, FieldErrors, Control, Controller, useWatch, UseFormSetValue, UseFormClearErrors } from 'react-hook-form';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { ChoiceChips } from '../ui/ChoiceChips';
 import { ListingFormData } from '../../types/listing';
 import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategoriesRich } from '../../hooks/useReferenceData';
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
-import { DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
+import { CONDITION_HINTS, DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
 import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 
 // Backend category names that differ from the form's values.
@@ -136,18 +137,17 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             control={control}
             name="accessoryType"
             render={({ field }) => (
-              <Select
+              <ChoiceChips
+                className="md:col-span-2"
                 label="Type d'accessoire"
                 name={field.name}
                 ref={field.ref}
-                value={field.value ?? ''}
+                value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                options={optionsWithValue(accessoryTypeNames, field.value).map((value) => ({ value }))}
                 error={errors.accessoryType?.message}
-              >
-                <option value="">Choisir un type</option>
-                {optionsWithValue(accessoryTypeNames, field.value).map((t) => <option key={t} value={t}>{t}</option>)}
-              </Select>
+              />
             )}
           />
         )}
@@ -205,32 +205,17 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
           )}
         </div>
 
-        {/* ÉTAT */}
-        <Controller
-          control={control}
-          name="condition"
-          render={({ field }) => (
-            <Select
-              label="État"
-              name={field.name}
-              ref={field.ref}
-              value={field.value ?? ''}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              error={errors.condition?.message}
-            >
-              <option value="">Choisir l'état</option>
-              {optionsWithValue(conditionList, field.value).map((c) => <option key={c} value={c}>{c}</option>)}
-            </Select>
-          )}
-        />
 
         {category === 'Accessoires' && accessoryType === 'Casque' && (
           <>
-            <Select label="Type de casque" {...register('helmetType')} error={errors.helmetType?.message}>
-              <option value="">Choisir un type</option>
-              {helmetTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-            </Select>
+            <Controller
+              control={control}
+              name="helmetType"
+              render={({ field }) => (
+                <ChoiceChips label="Type de casque" name={field.name} ref={field.ref} value={field.value} onChange={field.onChange} onBlur={field.onBlur}
+                  options={helmetTypes.map((value) => ({ value }))} error={errors.helmetType?.message} />
+              )}
+            />
 
             {/* A group of choices: a fieldset named by its legend, in the labels' own style. */}
             <fieldset className="flex flex-col gap-2 min-w-0">
@@ -260,17 +245,25 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {category === 'Accessoires' && (
           <>
             {['Gant', 'Veste', 'Pantalons'].includes(accessoryType || '') && (
-              <Select label="Taille" {...register('size')} error={errors.size?.message}>
-                <option value="">Choisir une taille</option>
-                {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
-              </Select>
+              <Controller
+                control={control}
+                name="size"
+                render={({ field }) => (
+                  <ChoiceChips label="Taille" name={field.name} ref={field.ref} value={field.value} onChange={field.onChange} onBlur={field.onBlur}
+                    options={sizes.map((value) => ({ value }))} error={errors.size?.message} />
+                )}
+              />
             )}
 
             {['Veste', 'Pantalons', 'Chaussures'].includes(accessoryType || '') && (
-              <Select label="Genre" {...register('gender')} error={errors.gender?.message}>
-                <option value="">Choisir</option>
-                {genders.map((g) => <option key={g} value={g}>{g}</option>)}
-              </Select>
+              <Controller
+                control={control}
+                name="gender"
+                render={({ field }) => (
+                  <ChoiceChips label="Genre" name={field.name} ref={field.ref} value={field.value} onChange={field.onChange} onBlur={field.onBlur}
+                    options={genders.map((value) => ({ value }))} error={errors.gender?.message} />
+                )}
+              />
             )}
 
             {accessoryType === 'Chaussures' && (
@@ -285,10 +278,14 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             )}
 
             {accessoryType === 'Antivol' && (
-              <Select label="Type d'antivol" {...register('antiTheftType')} error={errors.antiTheftType?.message}>
-                <option value="">Choisir un type</option>
-                {antiTheftTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-              </Select>
+              <Controller
+                control={control}
+                name="antiTheftType"
+                render={({ field }) => (
+                  <ChoiceChips className="md:col-span-2" label="Type d'antivol" name={field.name} ref={field.ref} value={field.value} onChange={field.onChange} onBlur={field.onBlur}
+                    options={antiTheftTypes.map((value) => ({ value }))} error={errors.antiTheftType?.message} />
+                )}
+              />
             )}
 
             {accessoryType === 'Intercom' && (
@@ -346,6 +343,26 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             </Select>
           </>
         )}
+
+        {/* ÉTAT: last, once the item is described; each choice says what it means. */}
+        <Controller
+          control={control}
+          name="condition"
+          render={({ field }) => (
+            <ChoiceChips
+              variant="cards"
+              className="md:col-span-2"
+              label="État"
+              name={field.name}
+              ref={field.ref}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={optionsWithValue(conditionList, field.value).map((value) => ({ value, hint: CONDITION_HINTS[value] }))}
+              error={errors.condition?.message}
+            />
+          )}
+        />
         </>)}
       </div>
     </div>
