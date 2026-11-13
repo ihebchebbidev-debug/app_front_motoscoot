@@ -25,12 +25,18 @@ export interface TechSpecSeoInput {
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-const firstNumber = (v: unknown): number | null => {
+/**
+ * First number in a spec value: "124.7 cc" → 124.7, "11,6 ch" → 11.6.
+ * Keeping only the digits turned "124.7 cc" into 1247; the page, the crawler
+ * HTML and the JSON-LD of both must read engine size through this one rule.
+ */
+export const parseSpecNumber = (v: unknown): number | null => {
   const m = String(v ?? '').match(/\d+(?:[.,]\d+)?/);
   if (!m) return null;
   const n = parseFloat(m[0].replace(',', '.'));
   return Number.isFinite(n) && n > 0 ? n : null;
 };
+const firstNumber = parseSpecNumber;
 
 const priceNumber = (v: unknown): number | null => {
   const digits = String(v ?? '').replace(/[^\d]/g, '');
