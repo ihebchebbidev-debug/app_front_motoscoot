@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect, useRef } from 'react';
-import { Layers, Gauge, Search, Info } from 'lucide-react';
+import { Search, Info } from 'lucide-react';
 import { UseFormRegister, FieldErrors, Control, Controller, useWatch, UseFormSetValue, UseFormClearErrors } from 'react-hook-form';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -8,7 +8,8 @@ import { useConditions, useModelsByBrand, useAccessoryTypes, useVehicleCategorie
 import { DEPOSIT_CATEGORIES } from '../../utils/depositSteps';
 import type { BrandRef } from '../../services/miscApi';
 import { BrandPicker } from './BrandPicker';
-import { DEFAULT_CONDITIONS, optionsWithValue } from '../../utils/depositOptions';
+import { DEFAULT_CONDITIONS, modelExample, optionsWithValue } from '../../utils/depositOptions';
+import { FIELD_TYPE, useTypeTone } from '../ui/TypeScale';
 
 // Backend category names that differ from the form's values.
 const CATEGORY_ALIASES: Record<string, string> = { Accesoires: 'Accessoires', Accessoire: 'Accessoires' };
@@ -43,17 +44,22 @@ const displacementOptions = [
 ];
 
 const helmetTypes   = ["Jet", "Modulable", "Intégral"];
-const visorTypes    = ["Fumé", "Claire", "Iridium"];
+// Agreed with « visière » (féminin); stored as shown.
+const visorTypes    = ["Fumée", "Claire", "Iridium"];
 const sizes         = ["XS", "S", "M", "L", "XL", "XXL"];
 const genders       = ["Homme", "Femme", "Enfant"];
-const antiTheftTypes = ["Bloc disque", "Bloc guidon", "Chaîne", "U", "Alarme", "Traceur GPS"];
+const antiTheftTypes = ["Bloque-disque", "Bloque-guidon", "Chaîne", "Antivol en U", "Alarme", "Traceur GPS"];
 const intercomOptions = ["Bluetooth", "Mesh"];
+
+// Each choice is a 44 px target for a finger (the bare 16 px boxes were 20 px tall).
+const CHECK_ROW = "min-h-[44px] inline-flex items-center gap-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer select-none touch-manipulation has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50 has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed";
 
 export const StepTechnical = memo(({ register, errors, control, setValue, clearErrors, category, brands }: StepTechnicalProps) => {
   const brand            = useWatch({ control, name: 'brand' });
   const modelValue       = useWatch({ control, name: 'model' }) || '';
   const accessoryType    = useWatch({ control, name: 'accessoryType' });
   const visorTypeValues  = useWatch({ control, name: 'visorType' }) || [];
+  const fieldType        = FIELD_TYPE[useTypeTone()];
   const intercomFeatures = useWatch({ control, name: 'intercomFeatures' }) || [];
 
   const currentYear = new Date().getFullYear();
@@ -139,7 +145,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
                 onBlur={field.onBlur}
                 error={errors.accessoryType?.message}
               >
-                <option value="">Sélectionner</option>
+                <option value="">Choisir un type</option>
                 {optionsWithValue(accessoryTypeNames, field.value).map((t) => <option key={t} value={t}>{t}</option>)}
               </Select>
             )}
@@ -168,8 +174,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         <div className={S.AutocompleteWrapper} ref={containerRef}>
           <Input
             label="Modèle"
-            placeholder="Ex: TMAX 560"
-            leftIcon={<Layers size={18} className="text-primary-600" />}
+            placeholder={modelExample(category, accessoryType)}
             maxLength={100}
             {...register('model')}
             error={errors.model?.message}
@@ -223,32 +228,32 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {category === 'Accessoires' && accessoryType === 'Casque' && (
           <>
             <Select label="Type de casque" {...register('helmetType')} error={errors.helmetType?.message}>
-              <option value="">Sélectionner</option>
+              <option value="">Choisir un type</option>
               {helmetTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </Select>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[14px] leading-[1.3] font-semibold text-gray-900">
-                TYPE DE VISIÈRE (MAX 2)
-              </label>
-              <div className="flex flex-wrap gap-3">
+            {/* A group of choices: a fieldset named by its legend, in the labels' own style. */}
+            <fieldset className="flex flex-col gap-2 min-w-0">
+              <legend className={`${fieldType.label} ml-1 mb-2`}>Type de visière</legend>
+              <p className="ml-1 -mt-1 text-[13px] text-gray-600">2 au maximum</p>
+              <div className="flex flex-wrap gap-2">
                 {visorTypes.map((t) => (
-                  <label key={t} className="flex items-center gap-2 cursor-pointer">
+                  <label key={t} className={CHECK_ROW}>
                     <input
                       type="checkbox"
                       value={t}
                       {...register('visorType')}
                       disabled={visorTypeValues?.length >= 2 && !visorTypeValues?.includes(t)}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-5 h-5"
                     />
-                    <span className="text-sm font-medium text-gray-700">{t}</span>
+                    <span className="text-[15px] font-medium text-gray-900">{t}</span>
                   </label>
                 ))}
               </div>
               {errors.visorType?.message && (
-                <p className="text-red-600 text-[13px] font-medium mt-1">{errors.visorType.message}</p>
+                <p className={`${fieldType.error} text-red-600 ml-1`}>{errors.visorType.message}</p>
               )}
-            </div>
+            </fieldset>
           </>
         )}
 
@@ -256,14 +261,14 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
           <>
             {['Gant', 'Veste', 'Pantalons'].includes(accessoryType || '') && (
               <Select label="Taille" {...register('size')} error={errors.size?.message}>
-                <option value="">Sélectionner</option>
+                <option value="">Choisir une taille</option>
                 {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
               </Select>
             )}
 
             {['Veste', 'Pantalons', 'Chaussures'].includes(accessoryType || '') && (
               <Select label="Genre" {...register('gender')} error={errors.gender?.message}>
-                <option value="">Sélectionner</option>
+                <option value="">Choisir</option>
                 {genders.map((g) => <option key={g} value={g}>{g}</option>)}
               </Select>
             )}
@@ -271,7 +276,7 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
             {accessoryType === 'Chaussures' && (
               <Input
                 label="Pointure"
-                placeholder="Ex: 42"
+                placeholder="Ex : 42"
                 type="number"
                 inputMode="numeric"
                 {...register('shoeSize')}
@@ -281,33 +286,31 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
 
             {accessoryType === 'Antivol' && (
               <Select label="Type d'antivol" {...register('antiTheftType')} error={errors.antiTheftType?.message}>
-                <option value="">Sélectionner</option>
+                <option value="">Choisir un type</option>
                 {antiTheftTypes.map((t) => <option key={t} value={t}>{t}</option>)}
               </Select>
             )}
 
             {accessoryType === 'Intercom' && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[14px] leading-[1.3] font-semibold text-gray-900">
-                  FONCTIONNALITÉS INTERCOM
-                </label>
-                <div className="flex flex-wrap gap-3">
+              <fieldset className="flex flex-col gap-2 min-w-0">
+                <legend className={`${fieldType.label} ml-1 mb-2`}>Options Intercom</legend>
+                <div className="flex flex-wrap gap-2">
                   {intercomOptions.map((t) => (
-                    <label key={t} className="flex items-center gap-2 cursor-pointer">
+                    <label key={t} className={CHECK_ROW}>
                       <input
                         type="checkbox"
                         value={t}
                         {...register('intercomFeatures')}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-5 h-5"
                       />
-                      <span className="text-sm font-medium text-gray-700">{t}</span>
+                      <span className="text-[15px] font-medium text-gray-900">{t}</span>
                     </label>
                   ))}
                 </div>
                 {errors.intercomFeatures?.message && (
-                  <p className="text-red-600 text-[13px] font-medium mt-1">{errors.intercomFeatures.message}</p>
+                  <p className={`${fieldType.error} text-red-600 ml-1`}>{errors.intercomFeatures.message}</p>
                 )}
-              </div>
+              </fieldset>
             )}
           </>
         )}
@@ -315,16 +318,16 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
         {category !== 'Accessoires' && (
           <>
             <Select label="Année" {...register('year')} error={errors.year?.message}>
-              <option value="">Sélectionner l'année</option>
+              <option value="">Choisir l'année</option>
               {years.map((year) => <option key={year} value={year}>{year}</option>)}
             </Select>
 
             <Input
               label="Kilométrage"
-              placeholder="Ex: 5000"
+              placeholder="Ex : 12000"
               type="number"
               inputMode="numeric"
-              leftIcon={<Gauge size={18} className="text-primary-600" />}
+              rightIcon={<span aria-hidden="true" className="text-[15px] font-medium text-gray-600">km</span>}
               min={0}
               max={999999}
               step={1}
@@ -332,12 +335,14 @@ export const StepTechnical = memo(({ register, errors, control, setValue, clearE
               error={errors.mileage?.message}
             />
 
-            <Select label="Cylindrée (cc)" {...register('cc')} error={errors.cc?.message}>
-              <option value="">Sélectionner la cylindrée</option>
+            <Select label="Cylindrée" {...register('cc')} error={errors.cc?.message}>
+              <option value="">Choisir la cylindrée</option>
               {displacementOptions.map((cc) => (
                 <option key={cc} value={cc}>{cc} cc</option>
               ))}
-              <option value="Autre">Autre / Électrique</option>
+              {/* Both are stored as no cylinder size (listings.cc is a number). */}
+              <option value="Électrique">Électrique</option>
+              <option value="Autre">Autre</option>
             </Select>
           </>
         )}

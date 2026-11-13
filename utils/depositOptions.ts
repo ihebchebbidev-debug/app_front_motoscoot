@@ -15,3 +15,15 @@ export function optionsWithValue(options: string[], value?: string | null): stri
   const v = (value ?? '').trim();
   return v && !options.includes(v) ? [...options, v] : options;
 }
+
+/** « Modèle » example that fits what is sold (« TMAX 560 » on a helmet misled). */
+const MODEL_EXAMPLES: Record<string, string> = {
+  Moto: 'MT-07', Scooter: 'TMAX 560', Quad: 'Kodiak 450',
+  Casque: 'Shoei GT-Air 3', Gant: 'Alpinestars SP-8', Veste: 'Dainese Super Speed', Pantalons: 'Rev’It Sand 4',
+  Chaussures: 'TCX Street 3', Antivol: 'Abus Granit 59', Intercom: 'Cardo Packtalk Edge',
+};
+
+export function modelExample(category?: string, accessoryType?: string): string {
+  const ex = (category === 'Accessoires' ? MODEL_EXAMPLES[accessoryType || ''] : MODEL_EXAMPLES[category || '']);
+  return ex ? `Ex : ${ex}` : 'Ex : le nom du modèle';
+}

@@ -18,7 +18,7 @@ test('only the deposit uses the calm scale, with sentence-case labels', () => {
   assert.match(read('components/DepositAd.tsx'), /<TypeScaleProvider tone="calm">/);
   const tech = read('components/deposit/StepTechnical.tsx');
   assert.doesNotMatch(tech, /label="[A-ZÉÈ' ()]{3,}"/);
-  assert.match(tech, /label="Cylindrée \(cc\)"/);
+  assert.match(tech, /label="Cylindrée"/); // « cc » is in each choice (« 125 cc »)
   const publish = read('components/deposit/StepPublish.tsx');
   assert.match(publish, /label="Prix \(DT\)"/);
   assert.doesNotMatch(publish, /uppercase/);
