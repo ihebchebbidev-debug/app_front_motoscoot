@@ -38,11 +38,30 @@ export const parseSpecNumber = (v: unknown): number | null => {
 };
 const firstNumber = parseSpecNumber;
 
-const priceNumber = (v: unknown): number | null => {
-  const digits = String(v ?? '').replace(/[^\d]/g, '');
-  const n = digits ? parseInt(digits, 10) : NaN;
+/**
+ * New price of a model, in dinars, from tech_specs.price_new (free text up to
+ * 50 characters typed in the admin) or its formatted form (« 9 000 DT »).
+ * The one rule for the page, the crawler HTML and both JSON-LD:
+ * - the amount written before « DT » / « TND » / « dinars » wins, otherwise the
+ *   first number (« Prix 2026 : 9 000 DT » → 9000, not 2026 or 20269000);
+ * - spaces (also non-breaking) and a dot before groups of three digits are
+ *   thousand separators (« 9.000 », « 4 679 »);
+ * - after that, a dot or comma is the decimal mark (« 6199.500 » → 6199.5);
+ * - no amount (« Sur demande », « En arrivage », « — ») → null.
+ */
+const GROUPED = String.raw`\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?:[.,]\d+)?|\d{1,3}(?:\.\d{3})+(?:,\d+)?`;
+const PLAIN = String.raw`\d+(?:[.,]\d+)?`;
+const AMOUNT = `(?:${GROUPED}|${PLAIN})`;
+export const parseSpecPrice = (v: unknown): number | null => {
+  const text = String(v ?? '');
+  const m = text.match(new RegExp(`(${AMOUNT})\\s*(?:DT|TND|dinars?)\\b`, 'i')) || text.match(new RegExp(`(${AMOUNT})`));
+  if (!m) return null;
+  let raw = m[1].replace(/[ \u00a0\u202f]/g, '');
+  if (/^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(raw)) raw = raw.replace(/\./g, '');
+  const n = Math.round(parseFloat(raw.replace(',', '.')) * 1000) / 1000;
   return Number.isFinite(n) && n > 0 ? n : null;
 };
+const priceNumber = parseSpecPrice;
 
 // Power is stored as "12.6 ch", "15 cv", "9.2 kW" or "15 ch (11 kW)"; the
 // description shows ch. Only the unit right after the first number counts.

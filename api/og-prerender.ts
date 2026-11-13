@@ -21,6 +21,8 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
+import { techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 import { parseSpecNumber, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
@@ -167,13 +169,8 @@ function pickGallery(d: Doc | null, slug?: string | null): string[] {
   return Array.from(new Set(arr.map(u => rewriteImageHost(u, slug)).filter(Boolean))).slice(0, 6);
 }
 
-function parsePrice(v: any): number | null {
-  if (v == null) return null;
-  const digits = String(v).replace(/[^\d]/g, '');
-  if (!digits) return null;
-  const n = parseInt(digits, 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
+// Same price rule as the page (utils/techSpecSeo.ts).
+const parsePrice = parseSpecPrice;
 
 function pickTitle(kind: Kind, d: Doc | null): string {
   if (!d) return `${KIND_CONFIG[kind].label} | Moto-Scoot.tn`;
