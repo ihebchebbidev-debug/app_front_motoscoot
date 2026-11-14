@@ -273,8 +273,8 @@ const SearchResults: React.FC<BasePageProps> = ({ initialFilters, onNavigate, is
       <div className={S.Container}>
         <header className={S.Header}>
           <div className="flex flex-col w-full">
-            {/* Phones: « ← Accueil » first, right under the header, before the title. */}
-            <PageBreadcrumb className="md:hidden mb-3" parents={[{ label: 'Accueil', href: '/', onClick: () => onNavigate?.('home') }]} current="Annonces" />
+            {/* Téléphone : pas de fil d'Ariane visible (demande du propriétaire, 2026-11-14).
+                Le BreadcrumbList JSON-LD (useSearchSEO) reste ; l'ordinateur garde le fil visible. */}
             <h1 className={S.Title}>{seoInfo.displayTitle}</h1>
             <p className={S.Count}>{isLoading ? 'Chargement...' : `${totalResults} annonces disponibles`}</p>
 
