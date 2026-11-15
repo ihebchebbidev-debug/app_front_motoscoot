@@ -32,6 +32,7 @@ import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, shareTo, type ShareContent } from './common/SocialShareModal';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, prepareBodyImages, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
+import { useContentView } from '../hooks/useContentView';
 
 interface ArticleDetailsProps extends BasePageProps {
   articleId: number;
@@ -73,6 +74,9 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
     () => fetchedArticle || allArticles.find((a) => a.id === articleId) || null,
     [fetchedArticle, allArticles, articleId],
   );
+
+  // Back-office "Vues": one view once the article has been read a few seconds.
+  useContentView('articles', article ? String(article.id) : null);
 
   const relatedArticles = useMemo(
     () =>

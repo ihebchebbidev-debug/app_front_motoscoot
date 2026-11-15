@@ -124,3 +124,22 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ title, description, 
     {children}
   </section>
 );
+
+const fmtViews = (n: unknown) => (Number(n) || 0).toLocaleString('fr-FR');
+
+/**
+ * "Vues" cell for actualités and conseils: total views (one per visitor per
+ * day, bots excluded) and the last 30 days. Drafts are never counted.
+ */
+export const ViewsCell: React.FC<{ total?: number; last30?: number; published?: boolean }> = ({ total, last30, published }) => (
+  <td className="p-3 whitespace-nowrap tabular-nums">
+    {published === false && !total ? (
+      <span className="text-xs text-slate-400" title="Les brouillons ne sont pas comptés">—</span>
+    ) : (
+      <div title="Une vue = un visiteur qui a lu la page quelques secondes (une fois par jour, robots exclus)">
+        <p className="text-sm font-bold text-slate-900">{fmtViews(total)}</p>
+        <p className="text-[11px] text-slate-500">{fmtViews(last30)} sur 30 j</p>
+      </div>
+    )}
+  </td>
+);

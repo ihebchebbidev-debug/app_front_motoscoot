@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Plus, Trash2, Edit3, Star, Eye, EyeOff, X } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
-import { AdminTable } from './AdminPrimitives';
+import { AdminTable, ViewsCell } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import AdminImageUpload from './AdminImageUpload';
 import RichTextEditor, { sanitizeRichHtml } from './RichTextEditor';
@@ -53,13 +53,14 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
   const { confirm, dialog } = useConfirm();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | 'published' | 'draft'>('');
+  const [sort, setSort] = useState<'' | 'views'>('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<ArticleForm>(emptyForm());
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'articles', search, statusFilter],
+    queryKey: ['admin', 'articles', search, statusFilter, sort],
     queryFn: ({ signal }) => adminApi.getArticles(
-      { search: search || undefined, status: statusFilter || undefined, limit: 100 },
+      { search: search || undefined, status: statusFilter || undefined, sort: sort || undefined, limit: 100 },
       signal,
     ),
     staleTime: 30_000,
@@ -170,6 +171,15 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
           <option value="">Tous statuts</option>
           <option value="published">Publiés</option>
           <option value="draft">Brouillons</option>
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
+          aria-label="Trier"
+        >
+          <option value="">Plus récents</option>
+          <option value="views">Plus vus</option>
         </select>
       </div>
 
@@ -287,7 +297,7 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
       )}
 
       <AdminTable
-        columns={['Article', 'Catégorie', 'Statut', 'Actions']}
+        columns={['Article', 'Catégorie', 'Statut', 'Vues', 'Actions']}
         loading={isLoading}
         rowCount={articles.length}
         empty="Aucun article."
@@ -331,6 +341,7 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
                 )}
               </div>
             </td>
+            <ViewsCell total={a.views_count} last30={a.views_30d} published={a.is_published} />
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
                 <button onClick={() => toggleFeatured(a)} title="Mettre à la une" className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg">
