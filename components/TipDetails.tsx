@@ -12,6 +12,7 @@ import { getUrlFromState } from '../utils/urlUtils';
 import { Button } from './ui/Button';
 import { isThinContent, THIN_CONTENT_ROBOTS, demoteBodyH1, realAuthorName, ORGANIZATION_NODE, titleFitsBrandSuffix } from '../utils/editorial';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
+import { useContentView } from '../hooks/useContentView';
 
 interface TipDetailsProps {
   tipId: number | string;
@@ -28,6 +29,8 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
   const { data: allTips = [] } = useTips();
   const { data: fetchedRelated = [] } = useRelatedTips(tipId);
   const tip = fetchedTip || allTips.find((t) => String(t.id) === String(tipId));
+  // Back-office "Vues": one view once the conseil has been read a few seconds.
+  useContentView('tips', tip ? String(tip.id) : null);
 
   // Hooks must run before any early return (the old order crashed the page
   // on a cold load once the guide finished loading).

@@ -13,12 +13,22 @@ function escapeLike(s) {
 /* ============================================================
  * Articles — admin list (incl. drafts)
  * ============================================================ */
+/**
+ * ORDER BY for the admin lists: newest first (default) or most viewed
+ * (?sort=views). Only these two fixed strings ever reach the SQL.
+ */
+function viewsOrder(sort, alias) {
+  return sort === 'views'
+    ? `COALESCE(${alias}.views_count, 0) DESC, ${alias}.created_at DESC NULLS LAST`
+    : `${alias}.created_at DESC NULLS LAST`;
+}
+
 async function listArticles(req, res, next) {
   try {
     const pageNum  = Math.max(parseInt(req.query.page)  || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
     const offset   = (pageNum - 1) * limitNum;
-    const { search, category, status } = req.query;
+    const { search, category, status, sort } = req.query;
 
     const conditions = [];
     const params = [];
@@ -44,11 +54,14 @@ async function listArticles(req, res, next) {
 
     params.push(limitNum, offset);
     const { rows } = await query(
-      `SELECT a.*, u.full_name AS author_name
+      `SELECT a.*, u.full_name AS author_name,
+              COALESCE(a.views_count, 0)::int AS views_count,
+              (SELECT COUNT(*) FROM article_views v
+                WHERE v.article_id = a.id AND v.viewed_at > NOW() - INTERVAL '30 days')::int AS views_30d
          FROM articles a
          LEFT JOIN users u ON a.author_id = u.id
          ${where}
-         ORDER BY a.created_at DESC NULLS LAST
+         ORDER BY ${viewsOrder(sort, 'a')}
          LIMIT $${idx++} OFFSET $${idx}`,
       params
     );
@@ -133,7 +146,7 @@ async function listTips(req, res, next) {
     const pageNum  = Math.max(parseInt(req.query.page)  || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
     const offset   = (pageNum - 1) * limitNum;
-    const { search, category, difficulty, status } = req.query;
+    const { search, category, difficulty, status, sort } = req.query;
 
     const conditions = [];
     const params = [];
@@ -161,11 +174,14 @@ async function listTips(req, res, next) {
 
     params.push(limitNum, offset);
     const { rows } = await query(
-      `SELECT t.*, u.full_name AS author_name
+      `SELECT t.*, u.full_name AS author_name,
+              COALESCE(t.views_count, 0)::int AS views_count,
+              (SELECT COUNT(*) FROM tip_views v
+                WHERE v.tip_id = t.id AND v.viewed_at > NOW() - INTERVAL '30 days')::int AS views_30d
          FROM tips t
          LEFT JOIN users u ON t.author_id = u.id
          ${where}
-         ORDER BY t.created_at DESC NULLS LAST
+         ORDER BY ${viewsOrder(sort, 't')}
          LIMIT $${idx++} OFFSET $${idx}`,
       params
     );

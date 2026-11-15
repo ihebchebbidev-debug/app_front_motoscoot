@@ -1,57 +1,14 @@
 const { query } = require('../config/database');
+const { makeTrackView } = require('../utils/contentViews');
 
 function bySlugOrId(val) {
   const isId = /^\d+$/.test(String(val));
   return { where: isId ? 'id = $1' : 'slug = $1', value: isId ? parseInt(val, 10) : val };
 }
 
-// Bots / crawlers shouldn't bump article views — match what listingsController does.
-const BOT_UA_RE = /(bot|spider|crawler|crawling|preview|facebookexternalhit|whatsapp|slurp|baiduspider|yandex|duckduckbot|bingbot|googlebot)/i;
 
-async function trackView(req, res, next) {
-  try {
-    const { where, value } = bySlugOrId(req.params.slug);
-    const a = await query(`SELECT id FROM articles WHERE ${where}`, [value]);
-    if (a.rows.length === 0) return res.status(404).json({ error: 'Not found' });
-
-    // Bot guard
-    const ua = String(req.headers['user-agent'] || '');
-    if (BOT_UA_RE.test(ua)) return res.json({ success: true, skipped: 'bot' });
-
-    const articleId = a.rows[0].id;
-    const userId = req.user?.id || null;
-    const fingerprint = req.body?.fingerprint || null;
-
-    // Dedupe within 1 hour by (article, user) OR (article, fingerprint).
-    // If neither user nor fingerprint is provided, we skip the count entirely
-    // — anonymous-no-fingerprint hits are too easy to spam.
-    if (!userId && !fingerprint) {
-      return res.json({ success: true, skipped: 'no_identity' });
-    }
-    try {
-      const dupe = await query(
-        `SELECT 1 FROM article_views
-          WHERE article_id = $1
-            AND viewed_at > NOW() - INTERVAL '1 hour'
-            AND ((user_id IS NOT NULL AND user_id = $2)
-              OR (user_id IS NULL AND fingerprint = $3))
-          LIMIT 1`,
-        [articleId, userId, fingerprint]
-      );
-      if (dupe.rows.length > 0) return res.json({ success: true, skipped: 'dedupe' });
-    } catch (e) {
-      // 42703 = column missing (e.g. viewed_at not present yet) — fall through
-      if (!e || e.code !== '42703') throw e;
-    }
-
-    await query(
-      'INSERT INTO article_views (article_id, user_id, fingerprint) VALUES ($1,$2,$3)',
-      [articleId, userId, fingerprint]
-    );
-    await query('UPDATE articles SET views_count = views_count + 1 WHERE id = $1', [articleId]);
-    res.json({ success: true });
-  } catch (e) { next(e); }
-}
+// Views: privacy-friendly daily-unique counter shared with tips.
+const trackView = makeTrackView('articles');
 
 async function toggleLike(req, res, next) {
   try {

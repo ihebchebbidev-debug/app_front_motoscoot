@@ -374,7 +374,7 @@ export const adminApi = {
 
   // ---------- Articles (actualités) ----------
   getArticles: (
-    params?: { page?: number; limit?: number; search?: string; category?: string; status?: 'published' | 'draft' },
+    params?: { page?: number; limit?: number; search?: string; category?: string; status?: 'published' | 'draft'; sort?: 'views' },
     signal?: AbortSignal,
   ) =>
     apiClient.get<{ articles: any[]; total: number; page: number; limit: number; total_pages: number }>(
@@ -416,7 +416,7 @@ export const adminApi = {
 
   // ---------- Tips (conseils) ----------
   getTips: (
-    params?: { page?: number; limit?: number; search?: string; category?: string; difficulty?: string; status?: 'published' | 'draft' },
+    params?: { page?: number; limit?: number; search?: string; category?: string; difficulty?: string; status?: 'published' | 'draft'; sort?: 'views' },
     signal?: AbortSignal,
   ) =>
     apiClient.get<{ tips: any[]; total: number; page: number; limit: number; total_pages: number }>(
