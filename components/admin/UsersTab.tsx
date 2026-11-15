@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Ban, ShieldCheck, Shield, ShieldOff, Trash2, Camera, X } from 'lucide-react';
+import { Search, Ban, ShieldCheck, Shield, ShieldOff, Trash2, Camera, X, UserCog } from 'lucide-react';
 import { useAdminUsersPaginated, useBanUser, useSetUserRole, useRemoveUserRole, useDeleteUser, useSetUserAvatar } from '../../hooks/useAdmin';
 import { useUser } from '../../context/UserContext';
 import { useToast } from '../../context/ToastContext';
@@ -18,6 +18,8 @@ const ROLE_FILTERS = [
 ];
 
 const PAGE_SIZE = 25;
+
+const ROLE_LABELS: Record<string, string> = { pro: 'Pro', admin: 'Admin', moderator: 'Modérateur' };
 
 export const UsersTab: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -85,10 +87,10 @@ export const UsersTab: React.FC = () => {
     }
   };
 
-  const promote = async (userId: string, newRole: 'pro' | 'admin') => {
+  const promote = async (userId: string, newRole: 'pro' | 'admin' | 'moderator') => {
     try {
       await setUserRole.mutateAsync({ userId, role: newRole });
-      addToast(`Rôle ${newRole} attribué`, 'success');
+      addToast(`Rôle ${ROLE_LABELS[newRole] || newRole} attribué`, 'success');
     } catch (e: any) {
       addToast(e?.message || 'Échec de la promotion', 'error');
     }
@@ -96,7 +98,7 @@ export const UsersTab: React.FC = () => {
 
   const demote = async (userId: string, role: 'pro' | 'admin' | 'moderator') => {
     const ok = await confirm({
-      title: `Retirer le rôle "${role}" ?`,
+      title: `Retirer le rôle "${ROLE_LABELS[role] || role}" ?`,
       message: 'Cet utilisateur perdra immédiatement les permissions associées.',
       confirmLabel: 'Retirer',
       variant: 'warning',
@@ -104,7 +106,7 @@ export const UsersTab: React.FC = () => {
     if (!ok) return;
     try {
       await removeUserRole.mutateAsync({ userId, role });
-      addToast(`Rôle ${role} retiré`, 'success');
+      addToast(`Rôle ${ROLE_LABELS[role] || role} retiré`, 'success');
     } catch (e: any) {
       addToast(e?.message || 'Échec du retrait', 'error');
     }
@@ -257,6 +259,30 @@ export const UsersTab: React.FC = () => {
                       title="Retirer le rôle Admin"
                     >
                       <ShieldOff size={14} /> Admin
+                    </button>
+                  )
+                )}
+                {/* Modérateur : ajoute et modifie actualités, conseils et
+                    fiches techniques (pas de suppression). Inutile pour un
+                    admin, qui a déjà tout. */}
+                {u.roles?.includes('moderator') ? (
+                  <button
+                    onClick={() => demote(u.id, 'moderator')}
+                    disabled={removeUserRole.isPending}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-teal-300 text-teal-700 hover:bg-teal-50 text-xs font-bold disabled:opacity-60"
+                    title="Retirer le rôle Modérateur"
+                  >
+                    <ShieldOff size={14} /> Modérateur
+                  </button>
+                ) : (
+                  !u.roles?.includes('admin') && (
+                    <button
+                      onClick={() => promote(u.id, 'moderator')}
+                      disabled={setUserRole.isPending}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold disabled:opacity-60"
+                      title="Peut ajouter et modifier les actualités, conseils et fiches techniques"
+                    >
+                      <UserCog size={14} /> Modérateur
                     </button>
                   )
                 )}
