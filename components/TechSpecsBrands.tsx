@@ -275,6 +275,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         subtitle="Caractéristiques officielles et prix du neuf des modèles vendus en Tunisie."
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent="Fiches Techniques"
+        breadcrumbOnMobile={false}
         onBack={() => onNavigate?.('home')}
       />
 
