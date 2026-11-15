@@ -217,7 +217,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const { data: unreadCount = 0 } = useUnreadConversationsCount();
-  const isAdminUser = user?.role === 'admin' || user?.role === 'moderator';
+  const isAdminUser = !!user?.staffRole || user?.role === 'admin' || user?.role === 'moderator';
   const navItems = useMemo<DashboardNavItem[]>(
     () => isAdminUser ? [...NAV_ITEMS, { id: 'admin', label: 'Administration', icon: Settings }] : NAV_ITEMS,
     [isAdminUser],

@@ -46,7 +46,8 @@ const slugify = (s: string) =>
    .replace(/^-|-$/g, '')
    .slice(0, 80);
 
-export const ArticlesTab: React.FC = () => {
+/** canDelete=false for moderators: they add and edit, only admins delete. */
+export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = true }) => {
   const qc = useQueryClient();
   const { addToast } = useToast();
   const { confirm, dialog } = useConfirm();
@@ -336,7 +337,7 @@ export const ArticlesTab: React.FC = () => {
                   <Star size={14} fill={a.is_featured ? 'currentColor' : 'none'} />
                 </button>
                 <button onClick={() => startEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit3 size={14} /></button>
-                <button onClick={() => del(a.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
+                {canDelete && <button onClick={() => del(a.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>}
               </div>
             </td>
           </tr>

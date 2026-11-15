@@ -1,8 +1,41 @@
 const router = require('express').Router();
-const { authenticate, requireAdmin } = require('../middlewares/auth');
+const { authenticate, requireAdmin, requireStaff } = require('../middlewares/auth');
 const ctrl = require('../controllers/adminController');
 const { upload, uploadSingle } = require('../controllers/uploadController');
+const articlesCtrl = require('../controllers/articlesController');
+const tipsCtrl = require('../controllers/tipsController');
+const techSpecsCtrl = require('../controllers/techSpecsController');
+const importersCtrl = require('../controllers/importersController');
+const adminContent = require('../controllers/adminContentController');
 
+// ---------------------------------------------------------------------------
+// Staff routes — admin OR moderator. Declared BEFORE the admin-only guard
+// below: a request that matches one of these is answered here and never
+// reaches requireAdmin. Moderators may list, add and edit actualités,
+// conseils and fiches techniques — never delete (DELETE routes stay below).
+// ---------------------------------------------------------------------------
+const staff = [authenticate, requireStaff];
+
+// Which back-office the signed-in user gets: { role: 'admin' | 'moderator' }.
+router.get('/access', staff, (req, res) => res.json({ role: req.staffRole }));
+
+router.get('/articles',      staff, adminContent.listArticles);
+router.post('/articles',     staff, articlesCtrl.create);
+router.put('/articles/:id',  staff, articlesCtrl.update);
+
+router.get('/tips',          staff, adminContent.listTips);
+router.post('/tips',         staff, tipsCtrl.create);
+router.put('/tips/:id',      staff, tipsCtrl.update);
+
+router.get('/tech-specs',     staff, adminContent.listTechSpecs);
+router.post('/tech-specs',    staff, techSpecsCtrl.create);
+router.put('/tech-specs/:id', staff, techSpecsCtrl.update);
+// The fiche form picks the importer from this list (read-only).
+router.get('/importers',      staff, importersCtrl.list);
+
+// ---------------------------------------------------------------------------
+// Everything below is admin-only.
+// ---------------------------------------------------------------------------
 router.use(authenticate, requireAdmin);
 
 // Dashboard
@@ -137,35 +170,22 @@ const adminBrands = require('../controllers/adminBrandsController');
 router.get('/brand-trends', adminBrands.getBrandTrends);
 router.get('/brand-trends/:brand/models', adminBrands.getBrandModelsBreakdown);
 
-// Articles (actualités) — admin list incl. drafts; CRUD reuses public controller
-const articlesCtrl = require('../controllers/articlesController');
-const adminContent = require('../controllers/adminContentController');
-router.get   ('/articles',     adminContent.listArticles);
-router.post  ('/articles',     articlesCtrl.create);
-router.put   ('/articles/:id', articlesCtrl.update);
+// Articles (actualités) — list/add/edit are staff routes at the top of this
+// file; deletion stays admin-only.
 router.delete('/articles/:id', articlesCtrl.remove);
 
-// Tech specs (fiches techniques) — admin list + CRUD
-const techSpecsCtrl = require('../controllers/techSpecsController');
-router.get   ('/tech-specs',     adminContent.listTechSpecs);
-router.post  ('/tech-specs',     techSpecsCtrl.create);
-router.put   ('/tech-specs/:id', techSpecsCtrl.update);
+// Tech specs (fiches techniques) — list/add/edit are staff routes (top).
 router.delete('/tech-specs/:id', techSpecsCtrl.remove);
 
 // Importateurs (catalog of brand importers/distributors). Public read
-// happens via /importers; admin CRUD lives here under /admin/importers.
-const importersCtrl = require('../controllers/importersController');
-router.get   ('/importers',      importersCtrl.list);
+// happens via /importers; admin CRUD lives here under /admin/importers
+// (the list itself is a staff route at the top of this file).
 router.get   ('/importers/:id',  importersCtrl.getById);
 router.post  ('/importers',      importersCtrl.create);
 router.put   ('/importers/:id',  importersCtrl.update);
 router.delete('/importers/:id',  importersCtrl.remove);
 
-// Tips (conseils) — admin list incl. drafts; CRUD reuses public controller
-const tipsCtrl = require('../controllers/tipsController');
-router.get   ('/tips',     adminContent.listTips);
-router.post  ('/tips',     tipsCtrl.create);
-router.put   ('/tips/:id', tipsCtrl.update);
+// Tips (conseils) — list/add/edit are staff routes (top); delete admin-only.
 router.delete('/tips/:id', tipsCtrl.remove);
 
 // Site settings (hero images on the landing page, etc.)

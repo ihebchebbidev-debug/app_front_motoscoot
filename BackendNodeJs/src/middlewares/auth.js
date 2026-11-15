@@ -102,6 +102,27 @@ async function requireAdmin(req, res, next) {
   }
 }
 
+/**
+ * Require a staff role — admin OR moderator (must come after authenticate).
+ * Moderators only reach the content routes (actualités, conseils, fiches
+ * techniques: list, add, edit) mounted with this guard in routes/admin.js;
+ * everything else, deletion included, stays behind requireAdmin.
+ * Sets req.staffRole to 'admin' or 'moderator' (admin wins when both).
+ */
+async function requireStaff(req, res, next) {
+  try {
+    const { rows } = await query(
+      "SELECT role FROM user_roles WHERE user_id = $1 AND role IN ('admin', 'moderator')",
+      [req.user.id]
+    );
+    if (rows.length === 0) return res.status(403).json({ error: 'Staff access required' });
+    req.staffRole = rows.some((r) => r.role === 'admin') ? 'admin' : 'moderator';
+    next();
+  } catch {
+    return res.status(500).json({ error: 'Authorization check failed' });
+  }
+}
+
 function generateToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email },
@@ -110,4 +131,4 @@ function generateToken(user) {
   );
 }
 
-module.exports = { authenticate, optionalAuth, requireAdmin, generateToken };
+module.exports = { authenticate, optionalAuth, requireAdmin, requireStaff, generateToken };

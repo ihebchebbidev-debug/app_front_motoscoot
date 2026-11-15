@@ -29,7 +29,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { BasePageProps } from '../../types';
-import { useAdminStats } from '../../hooks/useAdmin';
+import { useAdminAccess, useAdminStats } from '../../hooks/useAdmin';
 import { useUser } from '../../context/UserContext';
 import { tokenStorage } from '../../services/apiClient';
 import OverviewTab from './OverviewTab';
@@ -70,17 +70,37 @@ interface NavSection {
   items: NavItem[];
 }
 
+/** The only tabs a moderator sees (and the API lets them use). */
+const MODERATOR_TABS: TabKey[] = ['articles', 'tips', 'tech-specs'];
+
 const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, onTriggerLogin }) => {
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [selectedTab, setActiveTab] = useState<TabKey>('overview');
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isLoading: userLoading } = useUser();
   const hasToken = !!tokenStorage.get();
 
-  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useAdminStats();
+  // Who gets which back-office: admin = everything, moderator = the three
+  // content tabs (add + edit, no delete). The API enforces the same split.
+  const { data: access, isLoading: accessLoading, error: accessError } = useAdminAccess();
+  // The API runs on its own server and may be deployed after this page: an
+  // API without /admin/access answers 404, and the console then behaves
+  // exactly as before (admin gate on /admin/stats).
+  const accessMissing = (accessError as any)?.status === 404;
+  const isModerator = access?.role === 'moderator';
+  const isAdminRole = access?.role === 'admin' || accessMissing;
+
+  const { data: stats, isLoading: statsQueryLoading, error: statsQueryError, refetch: refetchStats } = useAdminStats(isAdminRole);
+  // Stats only matter (and only load) for admins.
+  const statsLoading = isAdminRole && statsQueryLoading;
+  const statsError = (accessMissing ? null : accessError) || (isAdminRole ? statsQueryError : null);
   const statsErrStatus = (statsError as any)?.status;
-  const isAdmin = !!stats && !statsError;
+  const isAdmin = isModerator || (isAdminRole && !!stats && !statsError);
   const isForbidden = statsErrStatus === 403;
   const isUnauth = statsErrStatus === 401 || !hasToken;
+
+  // Moderators land on Actualités and never render an admin-only tab (its
+  // API calls would answer 403), not even for one frame.
+  const activeTab: TabKey = isModerator && !MODERATOR_TABS.includes(selectedTab) ? 'articles' : selectedTab;
 
   useEffect(() => { setMobileOpen(false); }, [activeTab]);
 
@@ -129,7 +149,7 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
             Le compte <strong>{user?.email}</strong> n'a pas les droits d'administrateur.
           </p>
           <p className="text-xs text-slate-500 mb-6">
-            Demandez à un super-administrateur de vous attribuer le rôle <code className="font-mono">admin</code>.
+            Demandez à un super-administrateur de vous attribuer le rôle <code className="font-mono">admin</code> ou <code className="font-mono">moderator</code>.
           </p>
           <button
             onClick={() => onNavigate?.('home')}
@@ -142,7 +162,7 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
     );
   }
 
-  if (statsLoading || userLoading || (!isAdmin && !statsError)) {
+  if (accessLoading || statsLoading || userLoading || (!isAdmin && !statsError)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-[72px]">
         <div className="text-center">
@@ -182,7 +202,7 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
    * Authenticated admin view
    * ============================================================ */
 
-  const navSections: NavSection[] = [
+  const allNavSections: NavSection[] = [
     {
       title: 'Pilotage',
       items: [
@@ -224,6 +244,13 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
     },
   ];
 
+  const navSections: NavSection[] = isModerator
+    ? allNavSections
+        .map((s) => ({ ...s, items: s.items.filter((i) => MODERATOR_TABS.includes(i.key)) }))
+        .filter((s) => s.items.length > 0)
+    : allNavSections;
+  const canDelete = !isModerator;
+
   const allItems = navSections.flatMap((s) => s.items);
   const activeItem = allItems.find((i) => i.key === activeTab);
   const activeSection = navSections.find((s) => s.items.some((i) => i.key === activeTab));
@@ -237,7 +264,7 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
             <ShieldCheck size={20} strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <div className="text-[13px] font-black text-slate-900 leading-tight tracking-tight">Admin Console</div>
+            <div className="text-[13px] font-black text-slate-900 leading-tight tracking-tight">{isModerator ? 'Espace modérateur' : 'Admin Console'}</div>
             <div className="text-[11px] text-slate-500 truncate font-medium">{user?.email || '—'}</div>
           </div>
         </div>
@@ -314,14 +341,18 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
           <ShieldCheck size={16} className="text-slate-700" />
           <span className="text-sm font-bold text-slate-900 truncate">{activeItem?.label}</span>
         </div>
-        <button
-          onClick={() => refetchStats()}
-          disabled={statsLoading}
-          className="p-2 rounded-lg hover:bg-slate-100 -mr-1 text-slate-500"
-          aria-label="Actualiser"
-        >
-          <RefreshCw size={16} className={statsLoading ? 'animate-spin' : ''} />
-        </button>
+        {isAdminRole ? (
+          <button
+            onClick={() => refetchStats()}
+            disabled={statsLoading}
+            className="p-2 rounded-lg hover:bg-slate-100 -mr-1 text-slate-500"
+            aria-label="Actualiser"
+          >
+            <RefreshCw size={16} className={statsLoading ? 'animate-spin' : ''} />
+          </button>
+        ) : (
+          <span className="w-9" aria-hidden="true" />
+        )}
       </div>
 
       {/* Mobile drawer overlay */}
@@ -355,7 +386,7 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
         <div className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-20">
           <div className="px-8 py-5 max-w-[1600px] mx-auto">
             <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 mb-1.5">
-              <span>Admin</span>
+              <span>{isModerator ? 'Modération' : 'Admin'}</span>
               <ChevronRight size={12} />
               <span>{activeSection?.title}</span>
             </div>
@@ -414,9 +445,9 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
           {activeTab === 'reviews'      && <SiteReviewsTab />}
           {activeTab === 'garages'      && <GaragesTab />}
           {activeTab === 'reports'      && <ReportsTab />}
-          {activeTab === 'articles'     && <ArticlesTab />}
-          {activeTab === 'tips'         && <TipsTab />}
-          {activeTab === 'tech-specs'   && <TechSpecsTab />}
+          {activeTab === 'articles'     && <ArticlesTab canDelete={canDelete} />}
+          {activeTab === 'tips'         && <TipsTab canDelete={canDelete} />}
+          {activeTab === 'tech-specs'   && <TechSpecsTab canDelete={canDelete} />}
           {activeTab === 'importers'    && <ImportersTab />}
           {activeTab === 'ad-campaigns' && <AdsTab />}
           {activeTab === 'faq'          && <FaqTab />}

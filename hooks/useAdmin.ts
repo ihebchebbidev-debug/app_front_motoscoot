@@ -9,10 +9,19 @@ const retryStrategy = (failureCount: number, error: any) => {
 const baseOpts = { staleTime: 1000 * 30, retry: retryStrategy };
 
 // ---------- Dashboard ----------
-export const useAdminStats = () =>
+export const useAdminAccess = () =>
+  useQuery({
+    queryKey: ['admin', 'access'],
+    queryFn: ({ signal }) => adminApi.getAccess(signal),
+    ...baseOpts,
+  });
+
+/** Stats are admin-only: pass enabled=false for moderators (the API answers 403). */
+export const useAdminStats = (enabled = true) =>
   useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: ({ signal }) => adminApi.getStats(signal),
+    enabled,
     ...baseOpts,
   });
 
