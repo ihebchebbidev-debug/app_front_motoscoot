@@ -82,13 +82,17 @@ const SuperAdminDashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, on
   // Who gets which back-office: admin = everything, moderator = the three
   // content tabs (add + edit, no delete). The API enforces the same split.
   const { data: access, isLoading: accessLoading, error: accessError } = useAdminAccess();
+  // The API runs on its own server and may be deployed after this page: an
+  // API without /admin/access answers 404, and the console then behaves
+  // exactly as before (admin gate on /admin/stats).
+  const accessMissing = (accessError as any)?.status === 404;
   const isModerator = access?.role === 'moderator';
-  const isAdminRole = access?.role === 'admin';
+  const isAdminRole = access?.role === 'admin' || accessMissing;
 
   const { data: stats, isLoading: statsQueryLoading, error: statsQueryError, refetch: refetchStats } = useAdminStats(isAdminRole);
   // Stats only matter (and only load) for admins.
   const statsLoading = isAdminRole && statsQueryLoading;
-  const statsError = accessError || (isAdminRole ? statsQueryError : null);
+  const statsError = (accessMissing ? null : accessError) || (isAdminRole ? statsQueryError : null);
   const statsErrStatus = (statsError as any)?.status;
   const isAdmin = isModerator || (isAdminRole && !!stats && !statsError);
   const isForbidden = statsErrStatus === 403;

@@ -21,6 +21,12 @@ test('ordinary and pro accounts get no back-office link', () => {
   assert.equal(staffRoleOf(undefined), undefined);
 });
 
+test('the console still works for admins while the API has no /admin/access yet', () => {
+  const src = readFileSync(new URL('../components/admin/SuperAdminDashboard.tsx', import.meta.url), 'utf8');
+  assert.match(src, /const accessMissing = \(accessError as any\)\?\.status === 404;/);
+  assert.match(src, /const isAdminRole = access\?\.role === 'admin' \|\| accessMissing;/);
+});
+
 test('moderators see only actualités, conseils and fiches techniques, without delete', () => {
   const src = readFileSync(new URL('../components/admin/SuperAdminDashboard.tsx', import.meta.url), 'utf8');
   assert.match(src, /const MODERATOR_TABS: TabKey\[\] = \['articles', 'tips', 'tech-specs'\];/);
