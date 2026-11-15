@@ -69,7 +69,7 @@ test('the hero pages show their title on phones (the trail no longer does it)', 
 // Spacing (phones): the pages set 24 px under the header and 12 px between the
 // breadcrumb row (button 44 px) and what follows.
 test('phones: 24 px under the header and 12 px to the title, on every page', () => {
-  assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /className="mb-1 md:mb-3 w-full"/); // + gap-2 = 12
+  assert.match(read('components/tech-specs/TechSpecsHero.tsx'), /className=\{`\$\{breadcrumbOnMobile \? '' : 'hidden md:flex '\}mb-1 md:mb-3 w-full`\}/); // + gap-2 = 12
   for (const p of ['components/SearchResults.tsx', 'components/Garages.tsx']) {
     const src = read(p);
     assert.match(src, /Header: "flex flex-col md:flex-row md:items-end justify-between pt-0 pb-10 md:pt-6/, p);

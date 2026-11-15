@@ -212,6 +212,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         breadcrumbParents={[{ label: 'Fiches techniques', href: '/fiches-techniques', onClick: () => onNavigate?.('tech-specs-brands', { available_in_tunisia: availableInTunisia || undefined }) }]}
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent={brandName}
+        breadcrumbOnMobile={false}
       />
 
       {/* One box for the bar and the list: the phone bar sticks under the

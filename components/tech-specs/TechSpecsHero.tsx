@@ -21,6 +21,10 @@ interface TechSpecsHeroProps {
   /** Show the H1 on phones. Default true: the phone breadcrumb is now only
    *  « ← Parent », so the title must name the page. */
   titleOnMobile?: boolean;
+  /** Show the breadcrumb row on phones. Default true. The fiches techniques
+   *  hub and brand pages pass false (owner, 2026-11-15): from 768 px the trail
+   *  stays; the links stay in the HTML and the BreadcrumbList JSON-LD is kept. */
+  breadcrumbOnMobile?: boolean;
   /** 'standard': one level below the hub, a 24 px phone title on one line
    *  (brand pages). 'large' (default): the 32 px hub title. */
   titleSize?: 'large' | 'standard';
@@ -60,6 +64,7 @@ export const TechSpecsHero = memo(({
   backLabel,
   backHref,
   titleOnMobile = true,
+  breadcrumbOnMobile = true,
   titleSize = 'large',
   summary,
 }: TechSpecsHeroProps) => {
@@ -87,7 +92,7 @@ export const TechSpecsHero = memo(({
             // place on every page (phones: « ← Parent »; from 768 px: trail).
             <PageBreadcrumb
               tone="hero"
-              className="mb-1 md:mb-3 w-full"
+              className={`${breadcrumbOnMobile ? '' : 'hidden md:flex '}mb-1 md:mb-3 w-full`}
               parents={[
                 { label: 'Accueil', href: '/', onClick: onNavigateHome },
                 ...(breadcrumbParents ?? []),
