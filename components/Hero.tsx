@@ -132,7 +132,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch, onNavigate }) => {
           </div>
 
           <div className={S.SearchBarContainer}>
-            <SearchBar onSearch={onSearch} onNeufClick={() => onNavigate?.('tech-specs-brands', { available_in_tunisia: true })} />
+            <SearchBar onSearch={onSearch} onNeufClick={() => onNavigate?.('tech-specs-brands')} />
           </div>
 
           {/* Version Desktop/Tablette : Icônes directement sous la barre de recherche */}
