@@ -193,6 +193,9 @@ export interface AdminDevTicket {
 
 export const adminApi = {
   // Dashboard
+  /** Which back-office the user gets — 403 if neither admin nor moderator. */
+  getAccess: (signal?: AbortSignal) =>
+    apiClient.get<{ role: 'admin' | 'moderator' }>('/admin/access', { signal }),
   getStats: (signal?: AbortSignal) =>
     apiClient.get<AdminStats>('/admin/stats', { signal }),
 

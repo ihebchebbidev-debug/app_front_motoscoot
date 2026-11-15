@@ -142,7 +142,8 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </div>
 );
 
-export const TechSpecsTab: React.FC = () => {
+/** canDelete=false for moderators: they add and edit, only admins delete. */
+export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = true }) => {
   const qc = useQueryClient();
   const { addToast } = useToast();
   const { confirm, dialog } = useConfirm();
@@ -592,7 +593,7 @@ export const TechSpecsTab: React.FC = () => {
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
                 <button onClick={() => startEdit(s)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" aria-label="Modifier"><Edit3 size={14} /></button>
-                <button onClick={() => del(s.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" aria-label="Supprimer"><Trash2 size={14} /></button>
+                {canDelete && <button onClick={() => del(s.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" aria-label="Supprimer"><Trash2 size={14} /></button>}
               </div>
             </td>
           </tr>

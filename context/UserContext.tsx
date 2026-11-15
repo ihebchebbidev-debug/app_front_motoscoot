@@ -77,7 +77,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children, isLoggedIn
   const updateMutation = useMutation({
     mutationFn: (updates: Partial<UserProfile>) => authApi.updateProfile(updates),
     onSuccess: (next) => {
-      queryClient.setQueryData(['auth', 'me'], next);
+      // PUT /users/profile does not return `roles`: keep the back-office
+      // access we already know instead of hiding the admin/moderator link.
+      queryClient.setQueryData<UserProfile | undefined>(['auth', 'me'], (prev) => ({
+        ...next,
+        staffRole: next.staffRole ?? prev?.staffRole,
+      }));
     },
   });
 

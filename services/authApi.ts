@@ -13,6 +13,7 @@
  *   PUT    /users/password        → change password (auth required)
  */
 import { apiClient, tokenStorage } from './apiClient';
+import { staffRoleOf, type StaffRole } from '../utils/staffRole';
 
 export interface BackendUser {
   id: number | string;
@@ -34,6 +35,8 @@ export interface BackendUser {
   is_verified?: boolean;
   created_at?: string;
   role?: 'user' | 'pro' | 'admin' | 'moderator';
+  /** What /auth/me and /auth/login actually send: every row of user_roles. */
+  roles?: string[];
 }
 
 export interface UserProfile {
@@ -61,6 +64,12 @@ export interface UserProfile {
   createdAt?: string;
   /** Backend role — 'admin' / 'moderator' = staff. */
   role?: 'user' | 'pro' | 'admin' | 'moderator';
+  /**
+   * Back-office access derived from the `roles` list: 'admin' wins over
+   * 'moderator'. Only drives the "Interface administrateur" links; the API
+   * checks the role again on every /admin call.
+   */
+  staffRole?: StaffRole;
 }
 
 /** Map a backend user row into the frontend UserProfile shape. */
@@ -111,6 +120,7 @@ export function mapBackendUser(u: BackendUser): UserProfile {
     isVerified: !!u.is_verified,
     createdAt: u.created_at,
     role: u.role,
+    staffRole: staffRoleOf(u.roles),
   };
 }
 

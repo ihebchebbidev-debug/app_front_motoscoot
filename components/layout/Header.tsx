@@ -88,8 +88,9 @@ const Header: React.FC<HeaderProps> = ({
   // yet (e.g. right after login, before profile refresh).
   const adminEmail = (user?.email || '').trim().toLowerCase();
   const isAdminEmail = /^admin@motoscoot\.(com|tn)$/.test(adminEmail);
-  const isAdminUser = isLoggedIn && (user?.role === 'admin' || user?.role === 'moderator' || isAdminEmail);
-  const adminLabel = user?.role === 'moderator' ? 'Modérateur' : 'Admin';
+  const isModeratorUser = user?.staffRole === 'moderator' || user?.role === 'moderator';
+  const isAdminUser = isLoggedIn && (!!user?.staffRole || user?.role === 'admin' || isModeratorUser || isAdminEmail);
+  const adminLabel = isModeratorUser ? 'Modérateur' : 'Admin';
 
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -268,10 +269,10 @@ const Header: React.FC<HeaderProps> = ({
           type="button"
           onClick={() => handleNavClick('admin')}
           className="fixed top-0 left-0 right-0 z-[101] h-9 flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 text-white text-[12px] font-black uppercase tracking-wider shadow-md hover:brightness-110 active:brightness-95 transition-all group"
-          aria-label="Ouvrir l'interface administrateur"
+          aria-label={isModeratorUser ? "Ouvrir l'espace modérateur" : "Ouvrir l'interface administrateur"}
         >
           <Settings size={13} strokeWidth={3} className="group-hover:rotate-45 transition-transform duration-300" />
-          <span>Interface administrateur</span>
+          <span>{isModeratorUser ? 'Espace modérateur' : 'Interface administrateur'}</span>
           <ChevronRight size={13} strokeWidth={3} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
         </button>
       )}

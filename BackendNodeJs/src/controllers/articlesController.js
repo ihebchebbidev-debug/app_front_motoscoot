@@ -86,7 +86,9 @@ async function update(req, res, next) {
   try {
     const own = await query('SELECT author_id FROM articles WHERE id = $1', [req.params.id]);
     if (own.rows.length === 0) return res.status(404).json({ error: 'Article not found' });
-    const admin = await isAdmin(req.user?.id);
+    // req.staffRole is set by requireStaff on /admin routes (admin or
+    // moderator: both may edit any author's content there).
+    const admin = !!req.staffRole || await isAdmin(req.user?.id);
     if (String(own.rows[0].author_id) !== String(req.user.id) && !admin) {
       return res.status(403).json({ error: 'Not your article' });
     }
