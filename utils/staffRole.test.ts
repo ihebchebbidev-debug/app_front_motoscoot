@@ -36,3 +36,9 @@ test('moderators see only actualités, conseils and fiches techniques, without d
     assert.match(tabSrc, /\{canDelete && <button onClick=\{\(\) => del\(/, `${tab} hides delete`);
   }
 });
+
+test('the Users page can assign and remove the moderator role', () => {
+  const src = readFileSync(new URL('../components/admin/UsersTab.tsx', import.meta.url), 'utf8');
+  assert.match(src, /onClick=\{\(\) => promote\(u\.id, 'moderator'\)\}/);
+  assert.match(src, /onClick=\{\(\) => demote\(u\.id, 'moderator'\)\}/);
+});
