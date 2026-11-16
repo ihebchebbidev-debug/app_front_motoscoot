@@ -130,6 +130,8 @@ const DELETE_ROUTES = [
   ['DELETE', '/articles/7', 'articlesController.remove'],
   ['DELETE', '/tips/7', 'tipsController.remove'],
   ['DELETE', '/tech-specs/7', 'techSpecsController.remove'],
+  // Bulk import of fiches (created as drafts) is admin-only too.
+  ['POST', '/tech-specs/import', 'techSpecsController.importBatch'],
 ];
 
 const OTHER_ADMIN_ROUTES = [

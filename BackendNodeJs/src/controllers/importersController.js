@@ -37,8 +37,9 @@ async function list(req, res, next) {
       const ids = rows.map((r) => r.id);
       const { rows: brandRows } = await query(
         `SELECT importer_id, ARRAY_AGG(DISTINCT brand ORDER BY brand) AS brands
-           FROM tech_specs
+           FROM tech_specs t
           WHERE importer_id = ANY($1::uuid[])
+            AND COALESCE((to_jsonb(t)->>'is_published')::boolean, TRUE)
           GROUP BY importer_id`,
         [ids],
       );

@@ -5,6 +5,7 @@
  * unpublished/draft rows the public endpoints intentionally hide.
  */
 const { query } = require('../config/database');
+const { publishedSql } = require('../utils/techSpecDrafts');
 
 function escapeLike(s) {
   return String(s).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
@@ -83,12 +84,14 @@ async function listTechSpecs(req, res, next) {
     const pageNum  = Math.max(parseInt(req.query.page)  || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
     const offset   = (pageNum - 1) * limitNum;
-    const { search, brand, category } = req.query;
+    const { search, brand, category, status } = req.query;
 
     const conditions = [];
     const params = [];
     let idx = 1;
 
+    if (status === 'published') conditions.push(publishedSql('t'));
+    if (status === 'draft')     conditions.push(`NOT ${publishedSql('t')}`);
     if (search) {
       conditions.push(`(
         t.id::text ILIKE $${idx} OR t.brand ILIKE $${idx} OR t.model ILIKE $${idx}

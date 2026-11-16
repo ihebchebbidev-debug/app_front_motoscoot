@@ -18,7 +18,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Wrench, Plus, Trash2, Edit3, X } from 'lucide-react';
+import { Wrench, Plus, Trash2, Edit3, X, FileUp, Eye } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
 import { AdminTable } from './AdminPrimitives';
@@ -28,6 +28,7 @@ import AdminGalleryUpload from './AdminGalleryUpload';
 import { useBrands, useVehicleCategories } from '../../hooks/useReferenceData';
 import TechSpecsLivePreview from './TechSpecsLivePreview';
 import TechSpecsJsonImport from './TechSpecsJsonImport';
+import TechSpecsBatchImport from './TechSpecsBatchImport';
 
 interface SpecForm {
   id?: number | string;
@@ -41,6 +42,8 @@ interface SpecForm {
   norm_logo: string;
   importer_id: string;
   available_in_tunisia: boolean;
+  /** false = brouillon: only the back-office sees it. */
+  is_published: boolean;
   // Engine
   engine_type: string;
   engine_cc: string;
@@ -87,7 +90,7 @@ interface SpecForm {
 
 const emptyForm = (): SpecForm => ({
   brand: '', model: '', year: new Date().getFullYear(), category: '',
-  price_new: '', image: '', gallery: [], norm_logo: '', importer_id: '', available_in_tunisia: true,
+  price_new: '', image: '', gallery: [], norm_logo: '', importer_id: '', available_in_tunisia: true, is_published: true,
   engine_type: '', engine_cc: '', engine_power: '', engine_torque: '',
   fuel_system: '', cooling: '', transmission: '',
   frame: '', suspension_front: '', travel_front: '',
@@ -150,7 +153,9 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<SpecForm>(emptyForm());
-  
+  const [showImport, setShowImport] = useState(false);
+  const [status, setStatus] = useState<'' | 'published' | 'draft'>('');
+
 
   const { data: brandRefs = [] } = useBrands();
   const { data: categories = [] } = useVehicleCategories();
@@ -165,8 +170,8 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
   const importers: any[] = importersData?.importers || [];
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'tech-specs', search],
-    queryFn: ({ signal }) => adminApi.getTechSpecs({ search: search || undefined, limit: 100 }, signal),
+    queryKey: ['admin', 'tech-specs', search, status],
+    queryFn: ({ signal }) => adminApi.getTechSpecs({ search: search || undefined, status: status || undefined, limit: 100 }, signal),
     staleTime: 30_000,
   });
   const specs = data?.specs || [];
@@ -191,6 +196,11 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
     onSuccess: () => { invalidate(); setForm(emptyForm()); setShowForm(false); addToast('Fiche mise à jour', 'success'); },
     onError: (e: any) => addToast(e?.message || 'Erreur', 'error'),
   });
+  const publish = useMutation({
+    mutationFn: (id: any) => adminApi.updateTechSpec(id, { is_published: true }),
+    onSuccess: () => { invalidate(); addToast('Fiche publiée', 'success'); },
+    onError: (e: any) => addToast(e?.message || 'Erreur', 'error'),
+  });
   const remove = useMutation({
     mutationFn: (id: any) => adminApi.deleteTechSpec(id),
     onSuccess: () => { invalidate(); addToast('Fiche supprimée', 'success'); },
@@ -213,6 +223,7 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
     norm_logo: f.norm_logo || null,
     importer_id: f.importer_id || null,
     available_in_tunisia: f.available_in_tunisia !== false,
+    is_published: f.is_published !== false,
     engine: {
       type: f.engine_type,
       cc: f.engine_cc,
@@ -288,6 +299,7 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
       norm_logo: s.norm_logo || '',
       importer_id: s.importer_id || s.importer?.id || '',
       available_in_tunisia: s.available_in_tunisia !== false,
+      is_published: s.is_published !== false,
       engine_type: s.engine?.type || s.engine_type || '',
       engine_cc: s.engine?.cc || s.engine_cc || '',
       engine_power: s.engine?.power || s.engine_power || '',
@@ -331,6 +343,17 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // A fiche without photo or engine figures is a thin page: ask first.
+  const publishDraft = async (s: any) => {
+    const missing = [!s.image && 'photo', !(s.engine?.cc || s.engine?.power) && 'cylindrée / puissance'].filter(Boolean);
+    if (missing.length && !(await confirm({
+      title: `Publier sans ${missing.join(' ni ')} ?`,
+      message: 'Une fiche incomplète aide peu les visiteurs et peut nuire au référencement.',
+      confirmLabel: 'Publier quand même',
+    }))) return;
+    publish.mutate(s.id);
+  };
+
   const del = async (id: any) => {
     if (await confirm({ title: 'Supprimer cette fiche ?', confirmLabel: 'Supprimer', variant: 'danger' })) {
       remove.mutate(id);
@@ -354,6 +377,15 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
         <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
           <Wrench size={20} /> Fiches techniques
         </h2>
+        <div className="flex items-center gap-2">
+        {canDelete && (
+          <button
+            onClick={() => setShowImport((v) => !v)}
+            className="inline-flex items-center gap-2 border border-slate-300 hover:bg-slate-50 text-slate-800 px-4 py-2 rounded-lg text-sm font-bold"
+          >
+            <FileUp size={16} /> Importer un lot
+          </button>
+        )}
         <button
           onClick={() => { setForm(emptyForm()); setShowForm((s) => !s); }}
           className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-bold"
@@ -361,16 +393,31 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
           {showForm ? <X size={16} /> : <Plus size={16} />}
           {showForm ? 'Fermer' : 'Nouvelle fiche'}
         </button>
+        </div>
       </div>
 
       <StepHeader />
 
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Marque, modèle, année, moteur, dimensions…"
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-      />
+      {showImport && <TechSpecsBatchImport onClose={() => setShowImport(false)} onImported={invalidate} />}
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Marque, modèle, année, moteur, dimensions…"
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as typeof status)}
+          aria-label="Filtrer par statut"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm sm:w-48"
+        >
+          <option value="">Toutes les fiches</option>
+          <option value="published">Publiées</option>
+          <option value="draft">Brouillons</option>
+        </select>
+      </div>
 
       {showForm && (
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
@@ -443,6 +490,26 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
                 <p className="text-[11px] text-slate-500 leading-tight">
                   Quand activé, ce modèle apparaît sur la page « Fiches Techniques » côté visiteur.
                   Désactivez pour masquer la fiche du grand public (visible uniquement en admin).
+                </p>
+              </div>
+            </div>
+            {/* Draft toggle — off = brouillon: the fiche exists only in the
+                back-office (no public page, no sitemap, no search). */}
+            <div className="mt-3 flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.is_published}
+                aria-label="Publiée sur le site"
+                onClick={() => setForm({ ...form, is_published: !form.is_published })}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${form.is_published ? 'bg-primary-600' : 'bg-slate-300'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${form.is_published ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold text-slate-800">{form.is_published ? 'Publiée sur le site' : 'Brouillon'}</p>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Un brouillon n’a pas de page publique : ni visiteurs, ni Google. Publiez quand la fiche est complète (photos comprises).
                 </p>
               </div>
             </div>
@@ -570,7 +637,12 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-bold text-slate-900 line-clamp-1">{s.brand} {s.model}</p>
+                  <p className="font-bold text-slate-900 line-clamp-1">
+                    {s.brand} {s.model}
+                    {s.is_published === false && (
+                      <span className="ml-2 align-middle px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wide">Brouillon</span>
+                    )}
+                  </p>
                   {(s.engine?.cc || s.engine_cc) && (
                     <p className="text-[11px] text-slate-500">
                       {s.engine?.cc || s.engine_cc} · {s.engine?.power || s.engine_power || '—'}
@@ -592,6 +664,15 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
             })()}</td>
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
+                {s.is_published === false && (
+                  <button
+                    onClick={() => publishDraft(s)}
+                    disabled={publish.isPending}
+                    className="inline-flex items-center gap-1 px-2 py-1.5 text-[12px] font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg disabled:opacity-60"
+                  >
+                    <Eye size={14} /> Publier
+                  </button>
+                )}
                 <button onClick={() => startEdit(s)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" aria-label="Modifier"><Edit3 size={14} /></button>
                 {canDelete && <button onClick={() => del(s.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" aria-label="Supprimer"><Trash2 size={14} /></button>}
               </div>

@@ -388,7 +388,7 @@ export const adminApi = {
 
   // ---------- Tech specs (fiches techniques) ----------
   getTechSpecs: (
-    params?: { page?: number; limit?: number; search?: string; brand?: string; category?: string },
+    params?: { page?: number; limit?: number; search?: string; brand?: string; category?: string; status?: 'published' | 'draft' },
     signal?: AbortSignal,
   ) =>
     apiClient.get<{ specs: any[]; total: number; page: number; limit: number; total_pages: number }>(
@@ -396,6 +396,13 @@ export const adminApi = {
       { query: params as any, signal },
     ),
   createTechSpec: (payload: any) => apiClient.post<any>('/admin/tech-specs', payload),
+  /** Creates a lot of fiches as drafts (max 50). See BackendNodeJs/src/utils/techSpecImport.js. */
+  importTechSpecs: (fiches: unknown[]) =>
+    apiClient.post<{
+      created: { id: string; slug: string; brand: string; model: string; year: number }[];
+      skipped: { index: number; label: string; reason: string }[];
+      warnings: { index: number; label: string; message: string }[];
+    }>('/admin/tech-specs/import', { fiches }),
   updateTechSpec: (id: number | string, payload: any) =>
     apiClient.put<any>(`/admin/tech-specs/${id}`, payload),
   deleteTechSpec: (id: number | string) => apiClient.delete(`/admin/tech-specs/${id}`),
