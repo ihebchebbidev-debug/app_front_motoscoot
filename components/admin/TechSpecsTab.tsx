@@ -16,8 +16,8 @@
  *   PUT    /admin/tech-specs/:id
  *   DELETE /admin/tech-specs/:id
  */
-import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Wrench, Plus, Trash2, Edit3, X, FileUp, Eye } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
@@ -29,6 +29,28 @@ import { useBrands, useVehicleCategories } from '../../hooks/useReferenceData';
 import TechSpecsLivePreview from './TechSpecsLivePreview';
 import TechSpecsJsonImport from './TechSpecsJsonImport';
 import TechSpecsBatchImport from './TechSpecsBatchImport';
+import { AdminPagination } from './AdminPagination';
+import {
+  SORT_OPTIONS, PAGE_SIZE, loadFilters, saveFilters, updateFilters, activeFilterCount,
+  toQuery, isIncomplete, DEFAULT_FILTERS, type SpecFilters, type SpecStatus, type SpecSort,
+} from '../../utils/techSpecAdminFilters';
+
+const sessionStore = (): Storage | null => {
+  try { return typeof window !== 'undefined' ? window.sessionStorage : null; } catch { return null; }
+};
+
+const STATUS_TABS: { value: SpecStatus; label: string; countKey: 'all' | 'published' | 'draft' | 'incomplete' }[] = [
+  { value: '', label: 'Toutes', countKey: 'all' },
+  { value: 'published', label: 'Publiées', countKey: 'published' },
+  { value: 'draft', label: 'Brouillons', countKey: 'draft' },
+  { value: 'incomplete', label: 'À compléter', countKey: 'incomplete' },
+];
+
+const dateFr = (v?: string | null) => {
+  if (!v) return '—';
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
 
 interface SpecForm {
   id?: number | string;
@@ -150,11 +172,20 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
   const qc = useQueryClient();
   const { addToast } = useToast();
   const { confirm, dialog } = useConfirm();
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<SpecFilters>(() => loadFilters(sessionStore()));
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const setF = (patch: Partial<SpecFilters>) => setFilters((f) => updateFilters(f, patch));
+  useEffect(() => { saveFilters(filters, sessionStore()); }, [filters]);
+  // Search is sent 300 ms after the last keystroke, not on every letter.
+  useEffect(() => {
+    if (searchInput === filters.search) return;
+    const t = setTimeout(() => setF({ search: searchInput }), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<SpecForm>(emptyForm());
   const [showImport, setShowImport] = useState(false);
-  const [status, setStatus] = useState<'' | 'published' | 'draft'>('');
 
 
   const { data: brandRefs = [] } = useBrands();
@@ -169,12 +200,25 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
   });
   const importers: any[] = importersData?.importers || [];
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'tech-specs', search, status],
-    queryFn: ({ signal }) => adminApi.getTechSpecs({ search: search || undefined, status: status || undefined, limit: 100 }, signal),
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['admin', 'tech-specs', filters],
+    queryFn: ({ signal }) => adminApi.getTechSpecs(toQuery(filters), signal),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
   const specs = data?.specs || [];
+  const counts = data?.counts;
+  const brandFacets = data?.facets?.brands || [];
+  const categoryFacets = data?.facets?.categories || [];
+  const totalPages = data?.total_pages || 1;
+  // A filter can leave the admin on a page that no longer exists (e.g. the
+  // last fiche of page 3 was just published): go back to the last page.
+  useEffect(() => {
+    if (data && filters.page > 1 && filters.page > totalPages) setF({ page: Math.max(totalPages, 1) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, totalPages]);
+  const nbActive = activeFilterCount(filters);
+  const resetFilters = () => { setSearchInput(''); setFilters({ ...DEFAULT_FILTERS, sort: filters.sort }); };
 
   const invalidate = () => {
     // Admin list
@@ -400,23 +444,67 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
 
       {showImport && <TechSpecsBatchImport onClose={() => setShowImport(false)} onImported={invalidate} />}
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Status tabs with counters (other filters applied). */}
+      <div role="tablist" aria-label="Statut des fiches" className="flex gap-1.5 overflow-x-auto pb-1">
+        {STATUS_TABS.map((t) => {
+          const active = filters.status === t.value;
+          const n = counts?.[t.countKey];
+          return (
+            <button
+              key={t.countKey}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setF({ status: t.value })}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                active ? 'bg-primary-600 border-primary-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {t.label}
+              {n !== undefined && (
+                <span className={`tabular-nums text-[11px] px-1.5 rounded ${active ? 'bg-white/20' : t.value === 'incomplete' && n > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>{n}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Filters + sort */}
+      <div className="grid grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))] gap-2">
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Marque, modèle, année, moteur, dimensions…"
-          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          type="search"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Marque, modèle, année, moteur…"
+          aria-label="Rechercher une fiche"
+          className="col-span-2 lg:col-span-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
         />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as typeof status)}
-          aria-label="Filtrer par statut"
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm sm:w-48"
-        >
-          <option value="">Toutes les fiches</option>
-          <option value="published">Publiées</option>
-          <option value="draft">Brouillons</option>
+        <select value={filters.brand} onChange={(e) => setF({ brand: e.target.value })} aria-label="Filtrer par marque" className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+          <option value="">Toutes les marques</option>
+          {brandFacets.map((b) => <option key={b.name} value={b.name}>{b.name} ({b.count})</option>)}
         </select>
+        <select value={filters.category} onChange={(e) => setF({ category: e.target.value })} aria-label="Filtrer par catégorie" className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+          <option value="">Toutes les catégories</option>
+          {categoryFacets.map((c) => <option key={c.name} value={c.name}>{c.name} ({c.count})</option>)}
+        </select>
+        <select value={filters.tunisia} onChange={(e) => setF({ tunisia: e.target.value as SpecFilters['tunisia'] })} aria-label="Filtrer par disponibilité en Tunisie" className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+          <option value="">Dispo. en Tunisie : toutes</option>
+          <option value="true">Disponibles en Tunisie</option>
+          <option value="false">Non disponibles</option>
+        </select>
+        <select value={filters.sort} onChange={(e) => setF({ sort: e.target.value as SpecSort })} aria-label="Trier par" className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+          {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>Trier : {o.label}</option>)}
+        </select>
+      </div>
+      <div className="flex items-center justify-between gap-3 text-[12px] text-slate-500 -mt-3">
+        <span aria-live="polite">
+          {data ? `${data.total} fiche${data.total > 1 ? 's' : ''}` : ''}
+        </span>
+        {nbActive > 0 && (
+          <button type="button" onClick={resetFilters} className="font-bold text-primary-700 hover:underline">
+            Effacer les filtres ({nbActive})
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -620,10 +708,10 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
       )}
 
       <AdminTable
-        columns={['Fiche', 'Année', 'Catégorie', 'Prix', 'Actions']}
+        columns={['Fiche', 'Statut', 'Année', 'Catégorie', 'Prix', 'Ajoutée le', ...(filters.sort === 'views' ? ['Vues'] : []), 'Actions']}
         loading={isLoading}
         rowCount={specs.length}
-        empty="Aucune fiche."
+        empty={nbActive > 0 ? 'Aucune fiche ne correspond à ces filtres.' : 'Aucune fiche.'}
       >
         {specs.map((s: any) => (
           <tr key={s.id} className="hover:bg-slate-50 align-top">
@@ -639,9 +727,6 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 line-clamp-1">
                     {s.brand} {s.model}
-                    {s.is_published === false && (
-                      <span className="ml-2 align-middle px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wide">Brouillon</span>
-                    )}
                   </p>
                   {(s.engine?.cc || s.engine_cc) && (
                     <p className="text-[11px] text-slate-500">
@@ -649,6 +734,18 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
                     </p>
                   )}
                 </div>
+              </div>
+            </td>
+            <td className="p-3">
+              <div className="flex flex-col items-start gap-1">
+                {s.is_published === false ? (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wide">Brouillon</span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wide">Publiée</span>
+                )}
+                {isIncomplete(s) && (
+                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">À compléter</span>
+                )}
               </div>
             </td>
             <td className="p-3 text-sm tabular-nums">{s.year || '—'}</td>
@@ -662,6 +759,8 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
               const isNum = /^-?\d+(\.\d+)?$/.test(str);
               return isNum ? `${Number(str).toLocaleString('fr-FR')} DT` : str;
             })()}</td>
+            <td className="p-3 text-xs tabular-nums text-slate-600 whitespace-nowrap">{dateFr(s.created_at)}</td>
+            {filters.sort === 'views' && <td className="p-3 text-sm tabular-nums">{Number(s.visits || 0).toLocaleString('fr-FR')}</td>}
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
                 {s.is_published === false && (
@@ -680,6 +779,14 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
           </tr>
         ))}
       </AdminTable>
+      <AdminPagination
+        currentPage={filters.page}
+        totalPages={totalPages}
+        total={data?.total || 0}
+        pageSize={PAGE_SIZE}
+        onPageChange={(page) => { setF({ page }); if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        isFetching={isFetching}
+      />
       {dialog}
     </div>
   );

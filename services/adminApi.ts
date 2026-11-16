@@ -388,10 +388,20 @@ export const adminApi = {
 
   // ---------- Tech specs (fiches techniques) ----------
   getTechSpecs: (
-    params?: { page?: number; limit?: number; search?: string; brand?: string; category?: string; status?: 'published' | 'draft' },
+    params?: {
+      page?: number; limit?: number; search?: string; brand?: string; category?: string;
+      status?: 'published' | 'draft' | 'incomplete';
+      tunisia?: 'true' | 'false';
+      sort?: 'recent' | 'updated' | 'brand' | 'year' | 'views';
+    },
     signal?: AbortSignal,
   ) =>
-    apiClient.get<{ specs: any[]; total: number; page: number; limit: number; total_pages: number }>(
+    apiClient.get<{
+      specs: any[]; total: number; page: number; limit: number; total_pages: number;
+      /** Per-status totals with the other filters applied (absent on an old API). */
+      counts?: { all: number; published: number; draft: number; incomplete: number };
+      facets?: { brands: { name: string; count: number }[]; categories: { name: string; count: number }[] };
+    }>(
       '/admin/tech-specs',
       { query: params as any, signal },
     ),
