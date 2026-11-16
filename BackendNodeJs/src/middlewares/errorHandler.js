@@ -10,13 +10,13 @@ function notFound(req, res, _next) {
 function errorHandler(err, req, res, _next) {
   // Multer errors
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'File too large. Maximum size is 10MB.', requestId: req.id });
+    return res.status(413).json({ error: 'Fichier trop lourd (25 Mo maximum).', requestId: req.id });
   }
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
     return res.status(400).json({ error: 'Too many files or unexpected field name.', requestId: req.id });
   }
-  // Multer custom filter error
-  if (err.message && err.message.includes('Only JPEG')) {
+  // Multer custom filter error (uploadController fileFilter)
+  if (err.code === 'UNSUPPORTED_IMAGE_TYPE') {
     return res.status(400).json({ error: err.message, requestId: req.id });
   }
 

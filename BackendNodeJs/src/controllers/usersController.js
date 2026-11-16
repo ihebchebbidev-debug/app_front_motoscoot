@@ -354,7 +354,7 @@ async function uploadAvatar(req, res, next) {
 
     // compressAndSave is called via the upload middleware, result is in req.compressedImage
     const { compressAndSave } = require('./uploadController');
-    const result = await compressAndSave(req.file.buffer, req.file.originalname, req);
+    const result = await compressAndSave(req.file.buffer, req.file.originalname, req, req.file.mimetype);
 
     await query('UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2', [result.url, req.user.id]);
     res.json({ avatar_url: result.url, thumbnail_url: result.thumbnail_url });
