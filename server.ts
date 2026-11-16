@@ -106,6 +106,7 @@ async function startServer() {
             WHERE EXISTS (
               SELECT 1 FROM tech_specs ts
                WHERE LOWER(ts.brand) = LOWER(bv.brand)
+                 AND COALESCE((to_jsonb(ts)->>'is_published')::boolean, TRUE)
             )
             ORDER BY bv.visits DESC
             LIMIT 6`

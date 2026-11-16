@@ -24,7 +24,7 @@ router.get('/popular', async (req, res, next) => {
            FROM brand_visits bv
            JOIN brands b ON b.name = bv.brand
           WHERE bv.visits > 0
-            AND EXISTS (SELECT 1 FROM tech_specs ts WHERE ts.brand = b.name)
+            AND EXISTS (SELECT 1 FROM tech_specs ts WHERE ts.brand = b.name AND COALESCE((to_jsonb(ts)->>'is_published')::boolean, TRUE))
           ORDER BY bv.visits DESC, b.name ASC
           LIMIT $1`,
         [limit]
@@ -36,7 +36,7 @@ router.get('/popular', async (req, res, next) => {
         `SELECT b.id, b.name, b.logo_url, 0 AS visits
            FROM brands b
           WHERE b.logo_url IS NOT NULL AND b.logo_url <> ''
-            AND EXISTS (SELECT 1 FROM tech_specs ts WHERE ts.brand = b.name)
+            AND EXISTS (SELECT 1 FROM tech_specs ts WHERE ts.brand = b.name AND COALESCE((to_jsonb(ts)->>'is_published')::boolean, TRUE))
           ORDER BY b.name ASC
           LIMIT $1`,
         [limit]

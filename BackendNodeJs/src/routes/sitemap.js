@@ -129,6 +129,7 @@ async function buildGroups() {
       `SELECT id, to_jsonb(t)->>'slug' AS slug, COALESCE(model, brand) AS title, brand,
               COALESCE(updated_at, created_at) AS lastmod
          FROM tech_specs t
+        WHERE COALESCE((to_jsonb(t)->>'is_published')::boolean, TRUE)
         ORDER BY COALESCE(updated_at, created_at) DESC
         LIMIT 5000`,
       []

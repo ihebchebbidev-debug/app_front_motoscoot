@@ -176,6 +176,8 @@ router.delete('/articles/:id', articlesCtrl.remove);
 
 // Tech specs (fiches techniques) — list/add/edit are staff routes (top).
 router.delete('/tech-specs/:id', techSpecsCtrl.remove);
+// Bulk import of a lot of fiches, created as drafts (admin only).
+router.post('/tech-specs/import', techSpecsCtrl.importBatch);
 
 // Importateurs (catalog of brand importers/distributors). Public read
 // happens via /importers; admin CRUD lives here under /admin/importers

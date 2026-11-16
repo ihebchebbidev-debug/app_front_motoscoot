@@ -1,9 +1,12 @@
 const { query } = require('../config/database');
 const { encodeCursor, parseCursorParams } = require('../utils/cursor');
 
+const { publishedSql } = require('../utils/techSpecDrafts');
+
 // Public visibility filter — see techSpecsController for the rationale.
-// All public endpoints in this file restrict to fiches available in Tunisia.
-const PUB = `t.available_in_tunisia = TRUE`;
+// All public endpoints in this file restrict to published fiches (drafts
+// stay in the back-office) available in Tunisia.
+const PUB = `t.available_in_tunisia = TRUE AND ${publishedSql('t')}`;
 
 async function compare(req, res, next) {
   try {
