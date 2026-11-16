@@ -22,6 +22,7 @@ export interface BackendTip {
   reading_time?: string | number;
   author?: string | { full_name?: string; name?: string };
   author_name?: string;
+  author_avatar?: string | null;
   excerpt?: string;
   summary?: string;
   content?: string;
@@ -68,6 +69,7 @@ export function mapBackendTip(t: BackendTip): Tip {
     image: t.cover_image || t.image || FALLBACK_IMAGE,
     date: formatDate(t.published_at || t.created_at),
     author,
+    authorAvatar: t.author_avatar || undefined,
     readTime: readingTime(t.content || t.body, rt),
     difficulty: normalizeDifficulty(t.difficulty),
   };
