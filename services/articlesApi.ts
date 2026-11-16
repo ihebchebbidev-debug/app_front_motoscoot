@@ -23,6 +23,7 @@ export interface BackendArticle {
   reading_time?: string | number;
   author?: string | { full_name?: string; name?: string };
   author_name?: string;
+  author_avatar?: string | null;
   excerpt?: string;
   summary?: string;
   content?: string;
@@ -60,6 +61,7 @@ export function mapBackendArticle(a: BackendArticle): Article {
     date: formatDate(a.published_at || a.created_at),
     readTime: readingTime(a.content || a.body, rt),
     author,
+    authorAvatar: a.author_avatar || undefined,
     summary: a.excerpt || a.summary || '',
     content: a.content || a.body,
     tags: a.tags,

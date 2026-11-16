@@ -24,6 +24,7 @@ import Header from './layout/Header';
 import { useArticles, useArticle, useRelatedArticles } from '../hooks/useArticles';
 import { BasePageProps } from '../types';
 import SEO from './common/SEO';
+import AuthorAvatar from './common/AuthorAvatar';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/Button';
@@ -289,9 +290,11 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
                 {/* Author Signature */}
                 <div className="flex items-center gap-5 py-10 border-t border-gray-100 mt-16 group">
                     <div className="relative">
-                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center text-primary-600 font-black text-base md:text-lg border-4 border-white shadow-md shrink-0 group-hover:scale-105 transition-transform duration-500">
-                            {article.author.charAt(0)}
-                        </div>
+                        <AuthorAvatar
+                            name={article.author}
+                            src={article.authorAvatar}
+                            className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center text-primary-600 font-black text-base md:text-lg border-4 border-white shadow-md shrink-0 group-hover:scale-105 transition-transform duration-500"
+                        />
                         <div className="absolute -bottom-1 -right-1 bg-primary-600 text-white p-1 rounded-full shadow-md">
                             <CheckCircle2 size={12} strokeWidth={3} />
                         </div>

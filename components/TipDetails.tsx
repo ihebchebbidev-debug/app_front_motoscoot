@@ -6,6 +6,7 @@ import Header from './layout/Header';
 import { Reveal } from './ui/Reveal';
 import { READING_PROSE } from './ui/readingProse';
 import SEO from './common/SEO';
+import AuthorAvatar from './common/AuthorAvatar';
 import AdBanner from './common/AdBanner';
 import SocialShareModal, { shareNatively, type ShareContent } from './common/SocialShareModal';
 import { getUrlFromState } from '../utils/urlUtils';
@@ -150,7 +151,11 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
               {/* Meta Info */}
               <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 font-bold uppercase">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-primary-600 font-black text-[10px]">{tip.author.charAt(0)}</div>
+                    <AuthorAvatar
+                      name={tip.author}
+                      src={tip.authorAvatar}
+                      className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-primary-600 font-black text-[10px]"
+                    />
                     <span className="text-gray-900">{tip.author}</span>
                   </div>
                   <div className="flex items-center gap-1.5"><Clock size={14} /><span>{tip.readTime}</span></div>

@@ -175,6 +175,8 @@ export interface Article {
   date: string;
   readTime: string;
   author: string;
+  /** Author's profile photo (users.avatar_url), when the account has one. */
+  authorAvatar?: string;
   summary: string;
   content?: string; 
   tags?: string[];
@@ -195,6 +197,8 @@ export interface Tip {
   image: string;
   date: string;
   author: string;
+  /** Author's profile photo (users.avatar_url), when the account has one. */
+  authorAvatar?: string;
   readTime: string;
   difficulty: 'Débutant' | 'Intermédiaire' | 'Expert';
 }
