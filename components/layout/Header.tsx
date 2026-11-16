@@ -40,7 +40,6 @@ import iconSpecs from '../../src/assets/sidebar/icon-specs-3d.webp';
 import iconCompare from '../../src/assets/sidebar/icon-compare-3d.webp';
 import iconMessages from '../../src/assets/sidebar/icon-messages-3d.webp';
 import iconHeart from '../../src/assets/sidebar/icon-heart-3d.webp';
-import iconAdmin from '../../src/assets/sidebar/icon-admin-3d.webp';
 import iconWrench from '../../src/assets/sidebar/icon-garage-3d.webp';
 import iconTips from '../../src/assets/sidebar/icon-tips-3d.webp';
 import iconNews from '../../src/assets/sidebar/icon-news-3d.webp';
@@ -89,8 +88,10 @@ const Header: React.FC<HeaderProps> = ({
   const adminEmail = (user?.email || '').trim().toLowerCase();
   const isAdminEmail = /^admin@motoscoot\.(com|tn)$/.test(adminEmail);
   const isModeratorUser = user?.staffRole === 'moderator' || user?.role === 'moderator';
-  const isAdminUser = isLoggedIn && (!!user?.staffRole || user?.role === 'admin' || isModeratorUser || isAdminEmail);
-  const adminLabel = isModeratorUser ? 'Modérateur' : 'Admin';
+  // Staff (admin / moderator) only get the orange bar at the very top that
+  // opens /admin. Everything else in the header — links, icons, menus,
+  // "Déposer une annonce" — stays exactly what every visitor sees.
+  const isStaffUser = isLoggedIn && (!!user?.staffRole || user?.role === 'admin' || isModeratorUser || isAdminEmail);
 
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -146,7 +147,7 @@ const Header: React.FC<HeaderProps> = ({
   // they aren't already inside the admin console. We push everything else
   // down by the bar's height (36px) via a body padding so the fixed
   // header and page content don't slide under it.
-  const showAdminBar = isAdminUser && currentView !== 'admin';
+  const showAdminBar = isStaffUser && currentView !== 'admin';
   const ADMIN_BAR_HEIGHT = 36;
   useEffect(() => {
     // --admin-bar-h: bars that stick under the header (fiches-techniques
@@ -306,68 +307,52 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Navigation Desktop */}
           <nav className="hidden lg:flex items-center gap-8 h-full lg:ml-12 flex-1 justify-end">
-            {!isAdminUser && (
-              <>
-                <div className="flex items-center gap-8 h-full">
-                  <Link to={getUrlFromState('search')} onClick={closeMenus} className={linkBaseClasses}>Annonces</Link>
-                  <div className="relative h-full flex items-center" ref={techMenuRef}>
-                      <button onClick={() => setIsTechMenuOpen(!isTechMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
-                          Fiches Techniques <ChevronDown size={14} className={`transition-transform duration-300 ${isTechMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
-                      </button>
-                      {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
-                      <div className={`${isTechMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
-                          <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
-                          <Link to={getUrlFromState('scooter-125-prices')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Prix Scooters 125</Link>
-                          <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
-                      </div>
-                  </div>
-                  <div className="relative h-full flex items-center" ref={newsMenuRef}>
-                      <button onClick={() => setIsNewsMenuOpen(!isNewsMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
-                          Actualités <ChevronDown size={14} className={`transition-transform duration-300 ${isNewsMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
-                      </button>
-                      {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
-                      <div className={`${isNewsMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
-                          <Link to={getUrlFromState('news')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</Link>
-                          <Link to={getUrlFromState('tips')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</Link>
-                      </div>
-                  </div>
-                  {/* Garages — temporarily hidden until launch */}
+              <div className="flex items-center gap-8 h-full">
+                <Link to={getUrlFromState('search')} onClick={closeMenus} className={linkBaseClasses}>Annonces</Link>
+                <div className="relative h-full flex items-center" ref={techMenuRef}>
+                    <button onClick={() => setIsTechMenuOpen(!isTechMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
+                        Fiches Techniques <ChevronDown size={14} className={`transition-transform duration-300 ${isTechMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
+                    </button>
+                    {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
+                    <div className={`${isTechMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
+                        <Link to={getUrlFromState('tech-specs-brands')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Fiches Techniques</Link>
+                        <Link to={getUrlFromState('scooter-125-prices')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Prix Scooters 125</Link>
+                        <Link to={getUrlFromState('comparator')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Comparateur Expert</Link>
+                    </div>
                 </div>
-                <div className={`h-6 w-px transition-colors duration-300 ${!isSolid ? 'bg-white/30' : 'bg-gray-200'}`}></div>
-              </>
-            )}
-
-            {isAdminUser && (
-              <span className={`hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
-                isSolid ? 'bg-slate-900 text-white' : 'bg-white/15 text-white border border-white/25'
-              }`}>
-                <Settings size={12} /> Mode admin
-              </span>
-            )}
+                <div className="relative h-full flex items-center" ref={newsMenuRef}>
+                    <button onClick={() => setIsNewsMenuOpen(!isNewsMenuOpen)} className={`flex items-center gap-1 ${linkBaseClasses}`}>
+                        Actualités <ChevronDown size={14} className={`transition-transform duration-300 ${isNewsMenuOpen ? 'rotate-180' : ''}`} strokeWidth={3} />
+                    </button>
+                    {/* Always in the DOM (hidden when closed) so crawlers see these links. */}
+                    <div className={`${isNewsMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-2 w-52 bg-card rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in-up origin-top-left overflow-hidden z-[110]`}>
+                        <Link to={getUrlFromState('news')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block">Actualités & Essais</Link>
+                        <Link to={getUrlFromState('tips')} onClick={closeMenus} className="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors block border-t border-gray-50">Conseils & Guides</Link>
+                    </div>
+                </div>
+                {/* Garages — temporarily hidden until launch */}
+              </div>
+              <div className={`h-6 w-px transition-colors duration-300 ${!isSolid ? 'bg-white/30' : 'bg-gray-200'}`}></div>
 
             <div className="flex items-center gap-4">
               {isLoggedIn ? (
                 <>
-                  {!isAdminUser && (
-                    <>
-                      <button onClick={() => handleNavClick('dashboard', { tab: 'messages' })} className={headerIconButtonClasses} aria-label="Messages" title="Messages">
-                          <div className="relative">
-                              <MessageSquare size={20} className={unreadMessagesCount > 0 ? "text-primary-600" : ""} />
-                              {unreadMessagesCount > 0 && (
-                                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm border-2 border-white">
-                                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                                </span>
-                              )}
-                          </div>
-                      </button>
-                      <button onClick={() => handleNavClick('dashboard', { tab: 'favorites' })} className={headerIconButtonClasses} aria-label="Favoris">
-                          <div className="relative">
-                              <Heart size={20} className={favoritesCount > 0 ? "fill-current text-red-500" : ""} />
-                              {favoritesCount > 0 && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary-600 text-white text-[12px] font-bold rounded-full flex items-center justify-center shadow-sm">{favoritesCount}</span>}
-                          </div>
-                      </button>
-                    </>
-                  )}
+                  <button onClick={() => handleNavClick('dashboard', { tab: 'messages' })} className={headerIconButtonClasses} aria-label="Messages" title="Messages">
+                      <div className="relative">
+                          <MessageSquare size={20} className={unreadMessagesCount > 0 ? "text-primary-600" : ""} />
+                          {unreadMessagesCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm border-2 border-white">
+                              {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                            </span>
+                          )}
+                      </div>
+                  </button>
+                  <button onClick={() => handleNavClick('dashboard', { tab: 'favorites' })} className={headerIconButtonClasses} aria-label="Favoris">
+                      <div className="relative">
+                          <Heart size={20} className={favoritesCount > 0 ? "fill-current text-red-500" : ""} />
+                          {favoritesCount > 0 && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary-600 text-white text-[12px] font-bold rounded-full flex items-center justify-center shadow-sm">{favoritesCount}</span>}
+                      </div>
+                  </button>
                   <div className="relative" ref={userMenuRef}>
                     <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className={`flex items-center gap-3 p-1 rounded-full transition-all focus:outline-none ${!isSolid ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
                       <div className={`rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold shadow-md text-[12px] transition-all duration-300 ${isScrolled ? 'w-8 h-8' : 'w-9 h-9'}`}>{initials}</div>
@@ -382,11 +367,6 @@ const Header: React.FC<HeaderProps> = ({
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="text-sm font-black text-gray-900 truncate">{displayName}</h4>
-                                {isAdminUser && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
-                                    <Settings size={9} strokeWidth={3} /> {adminLabel}
-                                  </span>
-                                )}
                               </div>
                               {user?.email && (
                                 <p className="text-[11px] text-gray-400 font-medium truncate">{user.email}</p>
@@ -394,12 +374,7 @@ const Header: React.FC<HeaderProps> = ({
                             </div>
                           </div>
                         </div>
-                        {isAdminUser ? (
-                          <button onClick={() => handleNavClick('admin')} className="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                            <Settings size={16} className="text-gray-400" /> Admin
-                          </button>
-                        ) : (
-                          <>
+                        <>
                             <button onClick={() => handleNavClick('dashboard', { tab: 'overview' })} className="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
                               <LayoutDashboard size={16} className="text-gray-400" /> Tableau de bord
                             </button>
@@ -414,8 +389,7 @@ const Header: React.FC<HeaderProps> = ({
                             <button onClick={() => handleNavClick('dashboard', { tab: 'favorites' })} className="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
                               <Heart size={16} className="text-gray-400" /> Favoris
                             </button>
-                          </>
-                        )}
+                        </>
                         <div className="mx-4 my-2 border-t border-gray-50"></div>
                         <button onClick={() => { setIsUserMenuOpen(false); logout(); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors">
                           <LogOut size={16} /> Se Déconnecter
@@ -431,22 +405,8 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
 
-              {/* Primary CTA — admins see "Console admin", others see "Déposer une annonce" */}
-              {isAdminUser ? (
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className={`flex items-center justify-center gap-2 px-6 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${
-                    isScrolled ? 'h-9 px-5' : 'h-11'
-                  } ${
-                    !isScrolled && variant === 'transparent'
-                      ? 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
-                      : 'bg-slate-900 hover:bg-slate-800 text-white'
-                  }`}
-                >
-                  <Settings className={isScrolled ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
-                  <span className="whitespace-nowrap">Console admin</span>
-                </button>
-              ) : currentView !== 'deposit' ? (
+              {/* Primary CTA */}
+              {currentView !== 'deposit' ? (
                 <button
                   onClick={openDeposit}
                   className={`flex items-center justify-center gap-2 px-6 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${
@@ -520,18 +480,14 @@ const Header: React.FC<HeaderProps> = ({
             <div className="px-5 pt-5 pb-2">
               {isLoggedIn ? (
                 <button
-                  onClick={() => handleNavClick(isAdminUser ? 'admin' : 'dashboard', isAdminUser ? undefined : { tab: 'overview' })}
+                  onClick={() => handleNavClick('dashboard', { tab: 'overview' })}
                   className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-orange-50 border border-orange-100 active:scale-[0.99] transition-transform"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <img src={iconProfile} alt="" aria-hidden width={32} height={32} className="w-8 h-8 object-contain" />
                     <div className="flex flex-col items-start min-w-0">
                       <span className="text-[15px] font-black text-gray-900 truncate">{displayName || 'Mon Profil'}</span>
-                      {isAdminUser ? (
-                        <span className="text-[11px] text-primary-600 font-bold uppercase tracking-wider">{adminLabel}</span>
-                      ) : (
-                        <span className="text-[11px] text-gray-500 font-medium">{user?.memberType === 'Pro' ? 'Professionnel' : 'Particulier'}</span>
-                      )}
+                      <span className="text-[11px] text-gray-500 font-medium">{user?.memberType === 'Pro' ? 'Professionnel' : 'Particulier'}</span>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-gray-300 shrink-0" />
@@ -557,7 +513,7 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Section: Tableau de bord */}
-            {isLoggedIn && !isAdminUser && (
+            {isLoggedIn && (
               <div className="mt-4">
                 <span className="px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest block mb-1">Tableau de bord</span>
                 <MenuLink image={iconDashboard} label="Tableau de bord" onClick={() => handleNavClick('dashboard', { tab: 'overview' })} />
@@ -582,7 +538,6 @@ const Header: React.FC<HeaderProps> = ({
               {/* Garages — temporarily hidden until launch */}
               <MenuLink image={iconTips} label="Conseils et guides" to={getUrlFromState('tips')} />
               <MenuLink image={iconNews} label="Actualités et essais" to={getUrlFromState('news')} />
-              {isAdminUser && <MenuLink image={iconAdmin} label="Administration" onClick={() => handleNavClick('admin')} />}
             </div>
 
             {/* Logout pill at bottom */}
