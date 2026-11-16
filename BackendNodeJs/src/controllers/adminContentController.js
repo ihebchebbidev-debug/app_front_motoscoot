@@ -5,7 +5,11 @@
  * unpublished/draft rows the public endpoints intentionally hide.
  */
 const { query } = require('../config/database');
-const { publishedSql } = require('../utils/techSpecDrafts');
+const {
+  buildFilters: buildTechSpecFilters,
+  orderBy: techSpecOrderBy,
+  INCOMPLETE_SQL: TECH_SPEC_INCOMPLETE_SQL,
+} = require('../utils/techSpecAdminList');
 
 function escapeLike(s) {
   return String(s).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
@@ -79,58 +83,71 @@ async function listArticles(req, res, next) {
 /* ============================================================
  * Tech specs — admin list (all rows)
  * ============================================================ */
+// model_visits is created lazily by the public visit counter
+// (techSpecsExtraController.ensureVisitTables): the "Plus consultées" sort
+// only joins it once it exists.
+let hasModelVisits = false;
+async function modelVisitsExists() {
+  if (hasModelVisits) return true;
+  try {
+    const { rows } = await query(`SELECT to_regclass('public.model_visits') IS NOT NULL AS ok`);
+    hasModelVisits = !!(rows[0] && rows[0].ok);
+  } catch { hasModelVisits = false; }
+  return hasModelVisits;
+}
+
 async function listTechSpecs(req, res, next) {
   try {
     const pageNum  = Math.max(parseInt(req.query.page)  || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
     const offset   = (pageNum - 1) * limitNum;
-    const { search, brand, category, status } = req.query;
 
-    const conditions = [];
-    const params = [];
-    let idx = 1;
+    const { base, params, statusSql, pub } = buildTechSpecFilters(req.query);
+    const visits = await modelVisitsExists();
+    const from = `FROM tech_specs t LEFT JOIN importers i ON i.id = t.importer_id`;
+    const baseWhere = base.length ? `WHERE ${base.join(' AND ')}` : '';
+    const listWhere = [...base, ...(statusSql ? [statusSql] : [])];
 
-    if (status === 'published') conditions.push(publishedSql('t'));
-    if (status === 'draft')     conditions.push(`NOT ${publishedSql('t')}`);
-    if (search) {
-      conditions.push(`(
-        t.id::text ILIKE $${idx} OR t.brand ILIKE $${idx} OR t.model ILIKE $${idx}
-        OR t.category ILIKE $${idx} OR t.year::text ILIKE $${idx}
-        OR COALESCE(t.price_new::text, '') ILIKE $${idx} OR COALESCE(t.consumption, '') ILIKE $${idx}
-        OR COALESCE(t.top_speed, '') ILIKE $${idx} OR COALESCE(t.norm_logo, '') ILIKE $${idx}
-        OR COALESCE(t.engine::text, '') ILIKE $${idx} OR COALESCE(t.chassis::text, '') ILIKE $${idx}
-        OR COALESCE(t.electronics::text, '') ILIKE $${idx} OR COALESCE(t.dimensions::text, '') ILIKE $${idx}
-        OR COALESCE(i.name, '') ILIKE $${idx}
-      )`);
-      params.push(`%${escapeLike(search)}%`);
-      idx++;
-    }
-    if (brand)    { conditions.push(`t.brand ILIKE $${idx++}`); params.push(brand); }
-    if (category) { conditions.push(`t.category ILIKE $${idx++}`); params.push(category); }
-
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const countRes = await query(
-      `SELECT COUNT(*) FROM tech_specs t LEFT JOIN importers i ON i.id = t.importer_id ${where}`,
+    // Status counters with every other filter applied (one query).
+    const { rows: [c] } = await query(
+      `SELECT COUNT(*)::int AS "all",
+              COUNT(*) FILTER (WHERE ${pub})::int AS published,
+              COUNT(*) FILTER (WHERE NOT ${pub})::int AS draft,
+              COUNT(*) FILTER (WHERE ${TECH_SPEC_INCOMPLETE_SQL})::int AS incomplete
+         ${from} ${baseWhere}`,
       params,
     );
-    const total = parseInt(countRes.rows[0].count, 10);
+    const counts = { all: c.all, published: c.published, draft: c.draft, incomplete: c.incomplete };
+    const total = req.query.status && counts[req.query.status] !== undefined ? counts[req.query.status] : counts.all;
 
-    params.push(limitNum, offset);
+    // Brand and category choices for the filters, over the whole catalogue.
+    const [{ rows: brands }, { rows: categories }] = await Promise.all([
+      query(`SELECT MIN(TRIM(brand)) AS name, COUNT(*)::int AS count FROM tech_specs
+              GROUP BY LOWER(TRIM(brand)) ORDER BY LOWER(TRIM(brand))`),
+      query(`SELECT MIN(TRIM(category)) AS name, COUNT(*)::int AS count FROM tech_specs
+              WHERE COALESCE(TRIM(category), '') <> ''
+              GROUP BY LOWER(TRIM(category)) ORDER BY LOWER(TRIM(category))`),
+    ]);
+
+    const n = params.length;
     const { rows } = await query(
       `SELECT t.*,
+              ${visits ? 'COALESCE(mv.visits, 0)::int' : '0'} AS visits,
               CASE WHEN i.id IS NULL THEN NULL ELSE jsonb_build_object(
                 'id', i.id, 'name', i.name, 'logo_url', i.logo_url,
                 'city', i.city
               ) END AS importer
-         FROM tech_specs t
-         LEFT JOIN importers i ON i.id = t.importer_id
-         ${where}
-        ORDER BY t.year DESC NULLS LAST, t.brand, t.model
-        LIMIT $${idx++} OFFSET $${idx}`,
-      params
+         ${from}
+         ${visits ? 'LEFT JOIN model_visits mv ON mv.brand = t.brand AND mv.model = t.model' : ''}
+         ${listWhere.length ? `WHERE ${listWhere.join(' AND ')}` : ''}
+        ORDER BY ${techSpecOrderBy(req.query.sort, visits)}
+        LIMIT $${n + 1} OFFSET $${n + 2}`,
+      [...params, limitNum, offset],
     );
     res.json({
       specs: rows,
+      counts,
+      facets: { brands, categories },
       total,
       page: pageNum,
       limit: limitNum,
