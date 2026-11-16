@@ -25,7 +25,12 @@ const TEMPLATE = {
     brakesFront: '', brakesRear: '',
     tireFront: '', tireRear: '',
   },
-  electronics: { abs: '', tcs: '', ridingModes: '', quickshifter: '' },
+  electronics: {
+    abs: '', tcs: '', ridingModes: '', quickshifter: '',
+    lighting: '', usb: '', dashboard: '', connectivity: '',
+    cruiseControl: '', keyless: '', other: '',
+  },
+  maintenance: { warranty: '', firstService: '', serviceInterval: '' },
   dimensions: { weight: '', seatHeight: '', tank: '', length: '', wheelbase: '' },
   consumption: '',
   top_speed: '',
@@ -38,6 +43,9 @@ ${JSON.stringify(TEMPLATE, null, 2)}
 
 Règles :
 - Toutes les valeurs textuelles incluent l'unité (ex: "689 cc", "73 ch", "67 Nm", "184 kg", "805 mm", "14 L").
+- Puissance et couple sans le régime : "47,5 ch (35 kW)", "43 Nm" (jamais "à 8 600 tr/min").
+- Valeurs courtes, comme "Liquide", "6 vitesses", "Série", "Non", "Oui (série)".
+- Uniquement des données publiées par le constructeur ; si une donnée est inconnue, chaîne vide (n'invente rien).
 - price_new = nombre en DT (Dinar Tunisien) ou null si inconnu.
 - gallery = tableau d'URLs d'images publiques (ou tableau vide).
 - image = URL principale (ou chaîne vide).
@@ -222,6 +230,16 @@ export function mapJsonToForm(raw: AnyForm): ImportResult {
     ['tcs',              'Élec. · TCS',           ['electronics', 'tcs'],          'tcs'],
     ['riding_modes',     'Élec. · Modes',         ['electronics', 'ridingModes'],  'riding_modes'],
     ['quickshifter',     'Élec. · Quickshifter',  ['electronics', 'quickshifter'], 'quickshifter'],
+    ['lighting',         'Élec. · Éclairage',     ['electronics', 'lighting']],
+    ['usb',              'Élec. · Prise USB',     ['electronics', 'usb']],
+    ['dashboard',        'Élec. · Tableau de bord', ['electronics', 'dashboard']],
+    ['connectivity',     'Élec. · Connectivité',  ['electronics', 'connectivity']],
+    ['cruise_control',   'Élec. · Régulateur',    ['electronics', 'cruiseControl']],
+    ['keyless',          'Élec. · Sans clé',      ['electronics', 'keyless']],
+    ['other_equipment',  'Élec. · Autres équip.', ['electronics', 'other']],
+    ['warranty',         'Entretien · Garantie',  ['maintenance', 'warranty']],
+    ['first_service',    'Entretien · 1ère rév.', ['maintenance', 'firstService']],
+    ['service_interval', 'Entretien · Révisions', ['maintenance', 'serviceInterval']],
     ['weight',           'Dim. · Poids',          ['dimensions', 'weight'],        'weight'],
     ['seat_height',      'Dim. · Hauteur selle',  ['dimensions', 'seatHeight'],    'seat_height'],
     ['tank',             'Dim. · Réservoir',      ['dimensions', 'tank'],          'tank'],
