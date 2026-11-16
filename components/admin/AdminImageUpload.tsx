@@ -8,7 +8,9 @@
  *   - Accepts JPG/PNG/WebP/SVG and HEIC (iPhone). HEIC is converted to JPEG
  *     in the browser via heic2any (lazy-loaded).
  *   - Compresses raster images client-side before upload (compressImage),
- *     same util every other upload uses. SVG is sent as-is.
+ *     same util every other upload uses. SVG is sent as-is; the API draws
+ *     it into a transparent WebP (BackendNodeJs/src/utils/svgImage.js), so
+ *     no SVG file — which could carry a script — is ever stored or served.
  *   - Shows an INSTANT local preview (object URL) while the upload runs,
  *     then swaps to the canonical server URL on success. Lets admins judge
  *     the icon visually before the round-trip completes.

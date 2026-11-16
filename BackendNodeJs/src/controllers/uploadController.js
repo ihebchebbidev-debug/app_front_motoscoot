@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+const { isSvg, svgPipeline } = require('../utils/svgImage');
 
 // Auto-create uploads directories
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
@@ -24,12 +25,16 @@ if (process.env.NODE_ENV === 'production' && !process.env.S3_BUCKET) {
 // Use memory storage so we can process with sharp before saving
 const storage = multer.memoryStorage();
 
+// SVG is accepted but never stored as SVG: compressAndSave draws it into a
+// WebP (see utils/svgImage.js for why).
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 const fileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowed.includes(file.mimetype)) {
+  if (ALLOWED_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only JPEG, PNG, WebP and GIF images are allowed'), false);
+    const e = new Error('Format non accepté : JPEG, PNG, WebP, GIF ou SVG.');
+    e.code = 'UNSUPPORTED_IMAGE_TYPE';
+    cb(e, false);
   }
 };
 
@@ -45,23 +50,36 @@ const upload = multer({
  * - Creates a thumbnail version (300px wide)
  * - Returns { filename, url, thumbnail_url }
  */
-async function compressAndSave(buffer, originalName, req) {
+async function compressAndSave(buffer, originalName, req, mimetype) {
   const id = uuidv4();
   const ext = '.webp';
   const filename = `${id}${ext}`;
   const thumbFilename = `thumb_${id}${ext}`;
 
-  // Main image: resize to max 1600px wide, quality 82 (good balance)
-  await sharp(buffer)
-    .resize({ width: 1600, height: 1200, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toFile(path.join(UPLOADS_DIR, filename));
+  if (isSvg(mimetype, buffer)) {
+    // Logo: drawn at full size, transparency kept, never cropped.
+    const read = await svgPipeline(sharp, buffer);
+    await read()
+      .resize({ width: 1600, height: 1200, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 90, alphaQuality: 100 })
+      .toFile(path.join(UPLOADS_DIR, filename));
+    await read()
+      .resize({ width: 300, height: 300, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .webp({ quality: 80, alphaQuality: 100 })
+      .toFile(path.join(THUMBS_DIR, thumbFilename));
+  } else {
+    // Main image: resize to max 1600px wide, quality 82 (good balance)
+    await sharp(buffer)
+      .resize({ width: 1600, height: 1200, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toFile(path.join(UPLOADS_DIR, filename));
 
-  // Thumbnail: 300px wide, quality 70
-  await sharp(buffer)
-    .resize({ width: 300, height: 300, fit: 'cover' })
-    .webp({ quality: 70 })
-    .toFile(path.join(THUMBS_DIR, thumbFilename));
+    // Thumbnail: 300px wide, quality 70
+    await sharp(buffer)
+      .resize({ width: 300, height: 300, fit: 'cover' })
+      .webp({ quality: 70 })
+      .toFile(path.join(THUMBS_DIR, thumbFilename));
+  }
 
   // Persist RELATIVE URLs ("/uploads/<file>") so links keep working when the
   // API host changes (staging↔prod, custom domain, http↔https). The current
@@ -88,10 +106,11 @@ async function uploadSingle(req, res) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const result = await compressAndSave(req.file.buffer, req.file.originalname, req);
+    const result = await compressAndSave(req.file.buffer, req.file.originalname, req, req.file.mimetype);
     res.json(result);
   } catch (err) {
     logger.error('Upload error:', err.message);
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Image processing failed' });
   }
 }
@@ -104,7 +123,7 @@ async function uploadMultiple(req, res) {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
 
     const results = await Promise.all(
-      req.files.map(f => compressAndSave(f.buffer, f.originalname, req))
+      req.files.map(f => compressAndSave(f.buffer, f.originalname, req, f.mimetype))
     );
 
     res.json({
@@ -114,6 +133,7 @@ async function uploadMultiple(req, res) {
     });
   } catch (err) {
     logger.error('Upload error:', err.message);
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Image processing failed' });
   }
 }
