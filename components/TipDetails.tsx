@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, Calendar, ThumbsUp, ThumbsDown, CheckCircle2, Wrench, Lightbulb, Share2, AlertTriangle, ChevronRight, ArrowLeft } from 'lucide-react';
-import { sanitizeRichHtml } from './admin/RichTextEditor';
+import { sanitizeRichHtml } from '../utils/richHtml';
 import { useTip, useTips, useRelatedTips } from '../hooks/useTips';
 import Header from './layout/Header';
 import { Reveal } from './ui/Reveal';

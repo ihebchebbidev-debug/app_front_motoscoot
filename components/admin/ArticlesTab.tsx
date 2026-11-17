@@ -16,7 +16,8 @@ import { useToast } from '../../context/ToastContext';
 import { AdminTable, ViewsCell } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import AdminImageUpload from './AdminImageUpload';
-import RichTextEditor, { sanitizeRichHtml } from './RichTextEditor';
+import RichTextEditor from './RichTextEditor';
+import { sanitizeRichHtml } from '../../utils/richHtml';
 
 const ARTICLE_CATEGORIES = ['Nouveautés', 'Essais', 'Tech', 'Scooters', 'Électrique'];
 

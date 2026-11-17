@@ -14,7 +14,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Youtube, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { parseYouTubeId } from './RichTextEditor';
+import { parseYouTubeId } from '../../utils/richHtml';
 
 interface Props {
   open: boolean;
