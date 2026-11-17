@@ -131,3 +131,47 @@ test('public pages import the sanitizer from utils/richHtml, never the editor', 
   }
   assert.doesNotMatch(readFileSync('utils/richHtml.ts', 'utf8'), /@tiptap/);
 });
+
+test('a pasted table keeps its rows, cells, header and merged cells', () => {
+  const html =
+    '<table border="1" style="width:100%"><thead><tr><th>Modèle</th><th>Prix</th></tr></thead>' +
+    '<tbody><tr><td>SYM ADX 300</td><td><strong>24 000</strong> DT</td></tr>' +
+    '<tr><td colspan="2">Prix TTC, novembre 2026</td></tr></tbody></table>';
+  const out = roundTrip(html);
+  assert.equal(count(out, 'table'), 1);
+  assert.equal(count(out, 'tr'), 3);
+  assert.equal(count(out, 'th'), 2);
+  assert.equal(count(out, 'td'), 3);
+  assert.equal(count(out, 'td[colspan="2"]'), 1);
+  assert.equal(count(out, 'td strong'), 1);
+  assert.equal(text(out), text(html));
+  assert.equal(roundTrip(out), out, 'stable on a second save');
+});
+
+test('accordion, checklist, subscript and superscript survive a save', () => {
+  const html =
+    '<details open=""><summary>Quelle huile ?</summary><div data-type="detailsContent"><p>10W40.</p></div></details>' +
+    '<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Vidange</p></div></li>' +
+    '<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Chaîne</p></div></li></ul>' +
+    '<p>CO<sub>2</sub> et 125 cm<sup>3</sup></p>';
+  const out = roundTrip(html);
+  assert.equal(count(out, 'details > summary'), 1);
+  assert.equal(dom(out).querySelector('summary')?.textContent, 'Quelle huile ?');
+  assert.equal(count(out, 'ul[data-type="taskList"] > li[data-checked="true"]'), 1);
+  assert.equal(count(out, 'ul[data-type="taskList"] > li[data-checked="false"]'), 1);
+  assert.equal(count(out, 'sub'), 1);
+  assert.equal(count(out, 'sup'), 1);
+  assert.equal(text(out), text(html));
+  assert.equal(roundTrip(out), out, 'stable on a second save');
+});
+
+test('the public sanitizer allows every tag the new modules write', () => {
+  const src = readFileSync('utils/richHtml.ts', 'utf8');
+  for (const tag of ['table', 'thead', 'tbody', 'tr', 'th', 'td', 'details', 'summary', 'sub', 'sup', 'label', 'input']) {
+    assert.match(src, new RegExp(`'${tag}'`), tag);
+  }
+  for (const attr of ['colspan', 'rowspan', 'open', 'data-type', 'data-checked']) {
+    assert.match(src, new RegExp(`'${attr}'`), attr);
+  }
+  assert.match(src, /type'\) \|\| ''\)\.toLowerCase\(\) !== 'checkbox'/, 'only checkboxes may survive');
+});

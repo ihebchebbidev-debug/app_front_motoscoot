@@ -16,8 +16,11 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
-import { Placeholder } from '@tiptap/extensions';
+import { CharacterCount, Placeholder } from '@tiptap/extensions';
+import { Typography } from '@tiptap/extension-typography';
+import { FileHandler } from '@tiptap/extension-file-handler';
 import { YouTubeEmbedModal } from './YouTubeEmbedModal';
+import { uploadsApi } from '../../services/uploadsApi';
 import { richTextExtensions } from './richTextExtensions';
 import { sanitizeRichHtml } from '../../utils/richHtml';
 import {
@@ -27,6 +30,8 @@ import {
   Link as LinkIcon, Unlink, Image as ImageIcon,
   AlignLeft, AlignCenter, AlignRight,
   Palette, Highlighter, Eraser, Undo2, Redo2, Code, Youtube,
+  Table as TableIcon, Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
+  ListChecks, ListCollapse, ImageUp,
 } from 'lucide-react';
 
 interface Props {
@@ -133,6 +138,53 @@ function insertImage(editor: Editor) {
   editor.chain().focus().setImage({ src }).run();
 }
 
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+
+/**
+ * Upload images through the single /api/uploads pipeline (Multer + Sharp) and
+ * insert the returned URLs — never the image bytes — at `pos`.
+ */
+async function uploadAndInsert(editor: Editor, files: File[], pos?: number) {
+  for (const file of files) {
+    try {
+      const uploaded = await uploadsApi.single(file);
+      const node = { type: 'image', attrs: { src: uploaded.url } };
+      if (typeof pos === 'number') editor.chain().focus().insertContentAt(pos, node).run();
+      else editor.chain().focus().insertContent(node).run();
+    } catch {
+      window.alert(`Impossible d'envoyer l'image « ${file.name} ».`);
+    }
+  }
+}
+
+/** Table tools, shown only while the cursor is inside a table. */
+const TableBar: React.FC<{ editor: Editor }> = ({ editor }) => {
+  const btn = (label: string, run: () => boolean, danger = false) => (
+    <button
+      type="button"
+      onMouseDown={(e) => { e.preventDefault(); run(); }}
+      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+        danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-white'
+      }`}
+    >
+      {label}
+    </button>
+  );
+  const c = () => editor.chain().focus();
+  return (
+    <div className="flex flex-wrap items-center gap-0.5 px-2 py-1 border-b border-slate-200 bg-primary-50/60">
+      <span className="text-[11px] font-bold text-slate-500 mr-1">Tableau :</span>
+      {btn('+ Ligne dessous', () => c().addRowAfter().run())}
+      {btn('+ Colonne à droite', () => c().addColumnAfter().run())}
+      {btn('− Ligne', () => c().deleteRow().run())}
+      {btn('− Colonne', () => c().deleteColumn().run())}
+      {btn('Fusionner / scinder', () => c().mergeOrSplit().run())}
+      {btn('Ligne d’en-tête', () => c().toggleHeaderRow().run())}
+      {btn('Supprimer le tableau', () => c().deleteTable().run(), true)}
+    </div>
+  );
+};
+
 export const RichTextEditor: React.FC<Props> = ({
   value,
   onChange,
@@ -150,8 +202,31 @@ export const RichTextEditor: React.FC<Props> = ({
   // own change apart from a real external value (form reset, other article).
   const lastHtmlRef = useRef(value || '');
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const extensions = useMemo(
-    () => [...richTextExtensions(), Placeholder.configure({ placeholder })],
+    () => [
+      ...richTextExtensions(),
+      Placeholder.configure({ placeholder }),
+      CharacterCount,
+      // French typography while typing: « » quotes, …, —, ©, →. The
+      // multiplication rule is off so model names like « 4x4 » stay as typed.
+      Typography.configure({
+        openDoubleQuote: '«\u00a0',
+        closeDoubleQuote: '\u00a0»',
+        multiplication: false,
+      }),
+      // Drop or paste image files → /api/uploads → image URL in the text.
+      FileHandler.configure({
+        allowedMimeTypes: IMAGE_TYPES,
+        onDrop: (ed, files, pos) => { void uploadAndInsert(ed, files, pos); },
+        onPaste: (ed, files, htmlContent) => {
+          // Pasted HTML that already carries <img> URLs is handled by the editor.
+          if (htmlContent) return;
+          void uploadAndInsert(ed, files);
+        },
+      }),
+    ],
     [placeholder],
   );
 
@@ -199,6 +274,8 @@ export const RichTextEditor: React.FC<Props> = ({
         <ToolbarBtn onClick={() => chain().toggleItalic().run()} active={editor.isActive('italic')} title="Italique"><Italic size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().toggleUnderline().run()} active={editor.isActive('underline')} title="Souligné"><UnderlineIcon size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().toggleStrike().run()} active={editor.isActive('strike')} title="Barré"><Strikethrough size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => chain().toggleSubscript().run()} active={editor.isActive('subscript')} title="Indice (CO₂)"><SubscriptIcon size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => chain().toggleSuperscript().run()} active={editor.isActive('superscript')} title="Exposant (cm³)"><SuperscriptIcon size={15} /></ToolbarBtn>
         <Divider />
 
         {/* Text color */}
@@ -253,8 +330,11 @@ export const RichTextEditor: React.FC<Props> = ({
         <Divider />
         <ToolbarBtn onClick={() => chain().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Liste à puces"><List size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Liste numérotée"><ListOrdered size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => chain().toggleTaskList().run()} active={editor.isActive('taskList')} title="Liste de tâches (cases à cocher)"><ListChecks size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Citation"><Quote size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Bloc de code"><Code size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} active={editor.isActive('table')} title="Insérer un tableau"><TableIcon size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => chain().setDetails().run()} active={editor.isActive('details')} title="Accordéon (question / réponse)"><ListCollapse size={15} /></ToolbarBtn>
         <Divider />
         <ToolbarBtn onClick={() => chain().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Aligner à gauche"><AlignLeft size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })} title="Centrer"><AlignCenter size={15} /></ToolbarBtn>
@@ -262,14 +342,34 @@ export const RichTextEditor: React.FC<Props> = ({
         <Divider />
         <ToolbarBtn onClick={() => setLink(editor)} active={editor.isActive('link')} title="Insérer un lien"><LinkIcon size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => chain().extendMarkRange('link').unsetLink().run()} title="Retirer le lien"><Unlink size={15} /></ToolbarBtn>
-        <ToolbarBtn onClick={() => insertImage(editor)} title="Insérer une image"><ImageIcon size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => insertImage(editor)} title="Insérer une image (URL)"><ImageIcon size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => fileInputRef.current?.click()} title="Importer une image depuis l’ordinateur"><ImageUp size={15} /></ToolbarBtn>
         <ToolbarBtn onClick={() => setYtModalOpen(true)} title="Insérer une vidéo YouTube"><Youtube size={15} /></ToolbarBtn>
         <Divider />
         <ToolbarBtn onClick={() => chain().unsetAllMarks().clearNodes().unsetTextAlign().run()} title="Effacer le formatage"><Eraser size={15} /></ToolbarBtn>
       </div>
 
+      {editor.isActive('table') && <TableBar editor={editor} />}
+
       {/* Editing surface — `prose` classes mirror the public page. */}
       <EditorContent editor={editor} />
+
+      <div className="flex justify-end gap-3 px-3 py-1.5 border-t border-slate-100 text-[11px] text-slate-500">
+        <span>{editor.storage.characterCount.words().toLocaleString('fr-FR')} mots</span>
+        <span>{editor.storage.characterCount.characters().toLocaleString('fr-FR')} caractères</span>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={IMAGE_TYPES.join(',')}
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length) void uploadAndInsert(editor, files);
+        }}
+      />
     </div>
     <YouTubeEmbedModal
       open={ytModalOpen}
