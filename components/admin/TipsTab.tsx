@@ -21,7 +21,8 @@ import { useToast } from '../../context/ToastContext';
 import { AdminTable, ViewsCell } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import AdminImageUpload from './AdminImageUpload';
-import RichTextEditor, { sanitizeRichHtml } from './RichTextEditor';
+import RichTextEditor from './RichTextEditor';
+import { sanitizeRichHtml } from '../../utils/richHtml';
 
 const TIP_CATEGORIES = ['Entretien', 'Sécurité', 'Équipement', 'Conduite', 'Législation'];
 const TIP_DIFFICULTIES = ['Débutant', 'Intermédiaire', 'Expert'];

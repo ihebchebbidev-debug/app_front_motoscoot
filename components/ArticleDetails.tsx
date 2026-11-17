@@ -18,7 +18,7 @@ import {
   X,
   ArrowLeft
 } from 'lucide-react';
-import { sanitizeRichHtml } from './admin/RichTextEditor';
+import { sanitizeRichHtml } from '../utils/richHtml';
 import Header from './layout/Header';
 // Article fallbacks now come exclusively from the API (useArticles / useArticle).
 import { useArticles, useArticle, useRelatedArticles } from '../hooks/useArticles';
