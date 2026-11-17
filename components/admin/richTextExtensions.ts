@@ -18,6 +18,10 @@
  *   - A `<div class="…">` box (e.g. the orange tip box) stays a box.
  *   - A plain `<div style="text-align:…">` keeps its alignment.
  *   - Images stay inline inside their paragraph, as the old editor wrote them.
+ *
+ * Extra modules (all MIT): tables, accordion, checklist, subscript and
+ * superscript. Every tag they write is allowed by sanitizeRichHtml, so it
+ * also shows on the public page.
  */
 import { Extension, Node } from '@tiptap/core';
 import Paragraph from '@tiptap/extension-paragraph';
@@ -25,6 +29,11 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle, Color, BackgroundColor } from '@tiptap/extension-text-style';
+import { TableKit } from '@tiptap/extension-table';
+import { Details, DetailsContent, DetailsSummary } from '@tiptap/extension-details';
+import { TaskItem, TaskList } from '@tiptap/extension-list';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
 import {
   parseYouTubeId,
   youtubeEmbedSrc,
@@ -187,5 +196,20 @@ export function richTextExtensions() {
     Callout,
     YoutubeEmbed,
     PreservedAttributes,
+    // Tables (pasted from Word / Docs / Excel / a website, or built with the
+    // toolbar). Column resizing is off: widths would be stored as pixels and
+    // break the table on phones.
+    TableKit.configure({ table: { resizable: false } }),
+    // Accordion (<details><summary>) — FAQ-style blocks; the content stays in
+    // the HTML, so Google reads it.
+    Details.configure({ persist: true }),
+    DetailsSummary,
+    DetailsContent,
+    // Checklist (« ce qu'il vous faut », étapes d'entretien).
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    // cm³, CO₂…
+    Subscript,
+    Superscript,
   ];
 }

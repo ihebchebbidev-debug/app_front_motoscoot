@@ -76,7 +76,14 @@ const ALLOWED_TAGS = [
   'h1', 'h2', 'h3', 'h4',
   'ul', 'ol', 'li',
   'blockquote', 'a', 'span', 'div', 'img',
-  'code', 'pre', 'hr',
+  'code', 'pre', 'hr', 'sub', 'sup',
+  // Tables (editor « Tableau » button, or pasted from Word / Docs / Excel).
+  'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+  // Accordion (editor « Accordéon » button).
+  'details', 'summary',
+  // Checklist (editor « Liste de tâches » button). The input is forced to a
+  // read-only checkbox by the hook below.
+  'label', 'input',
   // YouTube embed support — iframe is restricted to youtube hosts via the
   // hook below; the wrapper div uses inline styles for its 16:9 aspect ratio.
   'iframe',
@@ -86,6 +93,9 @@ const ALLOWED_ATTR = [
   // iframe-specific attributes needed for the YouTube embed to behave well.
   'frameborder', 'allow', 'allowfullscreen', 'loading', 'referrerpolicy',
   'width', 'height',
+  // Tables, accordion, checklist.
+  'colspan', 'rowspan', 'open', 'type', 'checked', 'disabled',
+  'data-type', 'data-checked',
 ];
 
 // Restrict inline `style` to a small whitelist:
@@ -113,6 +123,18 @@ function installHooks() {
       data.attrValue = safe;
       if (!safe) data.keepAttr = false;
     }
+  });
+
+  // Checklist boxes: only a read-only checkbox may survive — no text fields,
+  // buttons or anything a visitor could type into.
+  DOMPurify.addHook('uponSanitizeElement', (node, data) => {
+    if (data.tagName !== 'input') return;
+    const el = node as Element;
+    if ((el.getAttribute('type') || '').toLowerCase() !== 'checkbox') {
+      el.remove();
+      return;
+    }
+    el.setAttribute('disabled', '');
   });
 
   // Iframe lockdown — only allow YouTube (incl. nocookie) embeds. Anything

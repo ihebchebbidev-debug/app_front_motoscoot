@@ -267,3 +267,50 @@
   color: #94a3b8;
   pointer-events: none;
 }
+
+/* Article / tip bodies (public pages + admin editor): blocks written by the
+   editor's table, accordion and checklist modules. */
+.prose table {
+  display: block;            /* lets a wide table scroll sideways on phones */
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.95em;
+}
+.prose th,
+.prose td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 6rem;
+}
+.prose th { background: #f9fafb; font-weight: 700; color: #111827; }
+.prose th > p,
+.prose td > p { margin: 0; }
+.prose details {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+}
+.prose summary { cursor: pointer; font-weight: 700; color: #111827; }
+.prose details > div > :first-child,
+.prose details[open] > summary + div > :first-child { margin-top: 0.75rem; }
+.prose ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.prose ul[data-type="taskList"] li { display: flex; gap: 0.6rem; align-items: flex-start; padding-left: 0; }
+.prose ul[data-type="taskList"] li::before { content: none; }
+.prose ul[data-type="taskList"] li > label { margin-top: 0.35em; flex: none; }
+.prose ul[data-type="taskList"] li > div { flex: 1; }
+.prose ul[data-type="taskList"] li > div > p { margin: 0; }
+.prose ul[data-type="taskList"] input[type="checkbox"] { accent-color: #ea580c; width: 1rem; height: 1rem; }
+
+/* Admin editor only: selected table cells and the accordion toggle. */
+.rich-editor .tiptap .selectedCell { background: rgba(234, 88, 12, 0.08); }
+.rich-editor .tiptap [data-type="details"] { display: flex; gap: 0.5rem; }
+.rich-editor .tiptap [data-type="details"] > button { flex: none; width: 1.25rem; height: 1.25rem; margin-top: 0.2rem; border-radius: 0.25rem; background: #f1f5f9; }
+.rich-editor .tiptap [data-type="details"] > button::before { content: "▸"; display: block; text-align: center; line-height: 1.25rem; font-size: 0.75rem; }
+.rich-editor .tiptap [data-type="details"].is-open > button::before { content: "▾"; }
+.rich-editor .tiptap [data-type="details"] > div { flex: 1; }
+.rich-editor .tiptap [data-type="details"]:not(.is-open) > div > [data-type="detailsContent"] { display: none; }
