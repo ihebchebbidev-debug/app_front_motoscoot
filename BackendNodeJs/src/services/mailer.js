@@ -1,9 +1,8 @@
 /**
  * Mailer service — sends transactional emails via OVH SMTP using nodemailer.
  *
- * Credentials are hard-coded per project requirement (the OVH mailbox
- * `motoscoot_password_reset_protoco@spadadibattaglia.com` is dedicated to
- * password-reset transactional sends only).
+ * Default sender is the customer-requested Moto-Scoot mailbox. Environment
+ * overrides remain supported for local/dev deployments.
  *
  * Environment overrides (optional, for local dev):
  *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM_NAME
@@ -11,11 +10,11 @@
  */
 const nodemailer = require('nodemailer');
 
-// ---- OVH SMTP credentials (hard-coded, as requested) ----
+// ---- OVH SMTP credentials (default sender requested by customer) ----
 const SMTP_HOST = process.env.SMTP_HOST || 'ssl0.ovh.net';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
-const SMTP_USER = process.env.SMTP_USER || 'motoscoot_password_reset_protoco@spadadibattaglia.com';
-const SMTP_PASS = process.env.SMTP_PASS || 'Dadouhibou2025';
+const SMTP_USER = process.env.SMTP_USER || 'bienvenue@moto-scoot.tn';
+const SMTP_PASS = process.env.SMTP_PASS || 'M001020m,,,,';
 const FROM_NAME = process.env.SMTP_FROM_NAME || 'Moto-Scoot.tn';
 
 const transporter = nodemailer.createTransport({
