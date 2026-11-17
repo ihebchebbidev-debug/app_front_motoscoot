@@ -3,7 +3,8 @@ const { query, getClient } = require('../config/database');
 const { generateToken } = require('../middlewares/auth');
 const crypto = require('crypto');
 const { isValidTunisiaPhone, formatTunisiaPhone, TUNISIA_PHONE_ERROR } = require('../utils/phone');
-const { sendPasswordResetEmail, sendWelcomeEmail } = require('../services/mailer');
+const { sendPasswordResetEmail } = require('../services/mailer');
+const { sendWelcomeEmail } = require('../services/welcomeEmail');
 const logger = require('../utils/logger');
 
 /**

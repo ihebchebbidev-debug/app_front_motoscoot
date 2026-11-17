@@ -2,7 +2,8 @@ const { query } = require('../config/database');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { generateToken } = require('../middlewares/auth');
-const { sendWelcomeEmail, sendVerificationEmail } = require('../services/mailer');
+const { sendVerificationEmail } = require('../services/mailer');
+const { sendWelcomeEmail } = require('../services/welcomeEmail');
 const logger = require('../utils/logger');
 const { JWT_SECRET } = require('../config/jwt');
 
