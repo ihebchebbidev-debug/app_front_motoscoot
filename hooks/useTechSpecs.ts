@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { techSpecsApi, type TechSpecBrandRow } from '../services/techSpecsApi';
 import { TechSpec } from '../types';
 import { pickPopularModels } from '../utils/popularModels';
+import { searchTechSpecsLocally } from '../utils/techSpecsSearch';
 
 const retryStrategy = (failureCount: number, error: any) => {
   if (error?.status >= 400 && error?.status < 500) return false;
@@ -122,12 +123,29 @@ export const useTechSpecsByBrand = (brand?: string, options: TechSpecsVisibility
  * 2 chars to avoid one-letter floods. Stale time kept short — fresh results
  * matter more here than cache hit-rate.
  */
+// Catalogue for the local search, fetched once per visit (every published
+// sheet, the same scope as the server search).
+let catalogueForSearch: Promise<TechSpec[]> | null = null;
+const localSearchCatalogue = () => {
+  catalogueForSearch ??= techSpecsApi.getPopularAll().catch((e) => { catalogueForSearch = null; throw e; });
+  return catalogueForSearch;
+};
+
 export const useTechSpecsSearch = (query?: string, options: TechSpecsVisibilityOptions = {}) => {
   const term = (query || '').trim();
   const availableInTunisia = options.availableInTunisia === true;
   return useQuery<TechSpec[]>({
     queryKey: ['tech-specs', 'search', term, { availableInTunisia }],
-    queryFn: ({ signal }) => techSpecsApi.searchAll(term, 30, { availableInTunisia, signal }),
+    // Server search first; if it fails (it answered 500 to every query),
+    // the same search runs here over the catalogue (one request, cached).
+    queryFn: async ({ signal }) => {
+      try {
+        return await techSpecsApi.searchAll(term, 30, { availableInTunisia, signal });
+      } catch (err) {
+        if (signal?.aborted) throw err;
+        return searchTechSpecsLocally(await localSearchCatalogue(), term, 30);
+      }
+    },
     enabled: term.length >= 2,
     staleTime: 1000 * 60 * 2,
     retry: retryStrategy,

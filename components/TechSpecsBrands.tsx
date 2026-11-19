@@ -243,6 +243,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (inTunisia ? 1 : 0);
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
+  const searchingModels = deferredBrandSearch.trim().length >= 2;
+  const hideBrandGrid = !!brandSearch && searchingModels && filteredBrands.length === 0 && matchingSpecs.length > 0;
   const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;
 
   // Cards are real links (crawlable); the click only records the brand visit.
@@ -441,7 +443,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
             </div>
           )}
 
-          {/* ALL BRANDS GRID */}
+          {/* ALL BRANDS GRID — left out when a search finds models but no
+              brand: « Aucune marque pour « jet 14 » » under the Jet 14 sheets
+              read as « nothing found ». */}
+          {!hideBrandGrid && (<>
           <div className="flex items-center justify-between mb-5 md:mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
               {brandSearch ? `Résultats pour « ${brandSearch} »` : inTunisia ? 'Disponibles en Tunisie' : brandGridTitle(view)}
@@ -481,6 +486,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
               </button>
             </div>
           )}
+          </>)}
       </Section>
       </div>
     </main>
