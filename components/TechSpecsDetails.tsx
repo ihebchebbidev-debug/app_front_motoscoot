@@ -173,7 +173,7 @@ const S = {
   // Icon buttons next to the price (owner, 2026-11-19): same 44 px light-grey
   // square for Comparer, WhatsApp and Appeler, grey icons; on hover WhatsApp
   // turns green and Appeler orange.
-  CardIcon: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition-[transform,background-color,color] duration-100 ease-out hover:bg-gray-200 hover:text-gray-900 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardIcon: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 transition-[transform,background-color,color] duration-100 ease-out hover:bg-gray-100 hover:text-gray-900 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
   CardIconWhatsapp: "hover:!text-[#1DA851] focus-visible:!text-[#1DA851]",
   CardIconCall: "hover:!text-primary-600 focus-visible:!text-primary-600",
   // « Devis » always says its word next to its icon (owner, 2026-11-19): the

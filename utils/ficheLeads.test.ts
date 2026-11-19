@@ -46,7 +46,7 @@ test('quote sheet: the model card photo (as on the brand page), no price, the im
 
 test('desktop card (owner): price + Comparer, WhatsApp, Appeler as grey icons (green / orange on hover); Devis #E65400 below', () => {
   assert.doesNotMatch(page, />\s*Comparer ce modèle\s*</); // the old big orange compare button
-  assert.match(page, /CardIcon: "shrink-0 w-11 h-11 [^"]*rounded-xl bg-gray-100 text-gray-600 /);
+  assert.match(page, /CardIcon: "shrink-0 w-11 h-11 [^"]*rounded-xl bg-gray-50 text-gray-600 [^"]*hover:bg-gray-100 /); // lighter grey (owner)
   assert.match(page, /CardIconWhatsapp: "hover:!text-\[#1DA851\] /);
   assert.match(page, /CardIconCall: "hover:!text-primary-600 /);
   assert.match(page, /onClick=\{handleCompare\} className=\{S\.CardIcon\} aria-label="Comparer ce modèle" title="Comparer">/);
