@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, X, Check, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ChoiceSheet } from '../search/ChoiceSheet';
+import { SwitchRow } from './SwitchRow';
 
 /** Section title in the phone filters panel: sentence case, dark (it was
  *  12 px heavy capitals in light grey, 3:1). */
@@ -16,6 +17,16 @@ export interface FilterOption {
   counts?: Record<string, number>;
 }
 
+/** An on/off filter (e.g. « Disponibles en Tunisie »): a switch in the bar
+ *  from 768 px, a switch row at the top of the phone « Filtres » panel. */
+export interface FilterToggle {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  icon: React.ReactNode;
+}
+
 export interface FilterBarProps {
   categories: string[];
   activeCategory: string;
@@ -27,6 +38,7 @@ export interface FilterBarProps {
   searchPlaceholder?: string;
   showSort?: boolean;
   extraFilters?: FilterOption[];
+  toggles?: FilterToggle[];
   categoriesVariant?: 'list' | 'dropdown';
   categoryLabel?: string;
   searchWidth?: string;
@@ -72,6 +84,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   searchPlaceholder = "Rechercher...",
   showSort = true,
   extraFilters = [],
+  toggles = [],
   categoriesVariant = 'list',
   categoryLabel = "Toutes les catégories",
   searchWidth = "w-64",
@@ -106,7 +119,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // Nothing to filter or sort, only a search (fiches-techniques brands list):
   // the phone shows the search field itself, not a « Filtres » button that
   // opened a « Trier et Filtrer » panel holding just that field.
-  const onlySearch = categories.length === 0 && extraFilters.length === 0 && !hasSort;
+  const onlySearch = categories.length === 0 && extraFilters.length === 0 && toggles.length === 0 && !hasSort;
   const chosenSort = hasCustomSort ? sortOptions!.find((o) => o.value === sortValue) : undefined;
   const sortLabel = hasCustomSort
     ? chosenSort?.label ?? sortPlaceholder ?? sortOptions![0].label
@@ -382,6 +395,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             )}
 
+            {toggles.length > 0 && (
+              <div className="-my-2 divide-y divide-gray-100">
+                {toggles.map((t) => <SwitchRow key={t.id} icon={t.icon} label={t.label} checked={t.checked} onChange={t.onChange} />)}
+              </div>
+            )}
+
             {extraFilters.map(filter => (
               <div key={filter.id} role="group" aria-label={filter.label}>
                 <h4 className={SECTION}>{filter.label}</h4>
@@ -479,8 +498,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 </>
               )}
 
-              {(extraFilters.length > 0 || sortWithFilters) && (
+              {(extraFilters.length > 0 || toggles.length > 0 || sortWithFilters) && (
                 <div className="hidden md:flex items-center gap-2 mr-3">
+                  {toggles.map((t) => (
+                    // Same height and type as the menus next to it; the whole pill toggles.
+                    <label key={t.id} className={`flex items-center gap-2.5 rounded-xl pl-4 pr-3 py-2.5 text-[12px] font-bold cursor-pointer whitespace-nowrap transition-colors border ${t.checked ? 'bg-primary-50 border-primary-100 text-primary-700' : 'bg-gray-50 border-transparent text-gray-900 hover:border-gray-200'}`}>
+                      {t.label}
+                      <span className="relative shrink-0">
+                        <input type="checkbox" role="switch" checked={t.checked} onChange={(e) => t.onChange(e.target.checked)} className="peer sr-only" />
+                        <span className={`block w-8 h-[18px] rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-gray-900 ${t.checked ? 'bg-primary-600' : 'bg-gray-300'}`} />
+                        <span className={`absolute left-0.5 top-0.5 w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${t.checked ? 'translate-x-[14px]' : ''}`} />
+                      </span>
+                    </label>
+                  ))}
                   {extraFilters.map(filter => (
                     <div key={filter.id} className="relative">
                       <select
