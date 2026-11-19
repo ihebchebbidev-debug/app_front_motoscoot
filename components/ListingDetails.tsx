@@ -30,6 +30,7 @@ import { ListingGallery } from './listing/ListingGallery';
 import { ListingSpecs } from './listing/ListingSpecs';
 
 import { ListingSimilarAds } from './listing/ListingSimilarAds';
+import { ListingCatalogLinks } from './listing/ListingCatalogLinks';
 import { ListingDetailsSkeleton } from './listing/ListingDetailsSkeleton';
 import { ListingSidebar } from './listing/ListingSidebar';
 import { ListingSellerCard } from './listing/ListingSellerCard';
@@ -414,6 +415,10 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
                       </div>
                     </Reveal>
                   )}
+
+                  {/* FICHE TECHNIQUE — the model's fiche and its brand (SEO audit
+                      2026-11-19, H3); same links as the HTML Google receives. */}
+                  <ListingCatalogLinks brand={listing.brand} model={listing.model} blockClassName={S.ContentBlock} bodyClassName={S.BlockBody} />
               </div>
             </div>
 
