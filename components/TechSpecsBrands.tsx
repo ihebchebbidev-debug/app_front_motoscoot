@@ -239,7 +239,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
     id: 'tunisia', label: 'Disponibles en Tunisie', checked: inTunisia, onChange: setInTunisia, icon: <MapPin size={20} />,
   }], [inTunisia]);
   const resetFilters = useCallback(() => { setActiveImporter(ALL_IMPORTERS); setBrandSearch(''); setInTunisia(false); }, []);
-  const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (brandSearch ? 1 : 0) + (inTunisia ? 1 : 0);
+  // The search shows itself on the page: not counted on « Filtres ».
+  const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (inTunisia ? 1 : 0);
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
   const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;
@@ -303,10 +304,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         onBack={() => onNavigate?.('home')}
       />
 
-      {/* Same bar as a brand's page: phones get one row (search + sort +
-          filters) that stays under the header while the list scrolls; from
-          768 px the importer menu, the search and the sort sit in the bar.
-          The wrapper holds the whole list, so the phone row can stick. */}
+      {/* Phones, like /annonces: the search field on its own row, then
+          « ⇅ <tri choisi> » and « Filtres <n> » as worded buttons (they were
+          two bare icons next to the search). From 768 px the importer menu,
+          the switch, the sort and the search sit in the bar. */}
       <div>
         <FilterBar
           categories={[]}
@@ -318,7 +319,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           searchPlaceholder="Rechercher"
           searchLabel="Rechercher une marque ou un modèle"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
-          phoneLayout="inline"
+          phoneSearch
           sortOptions={BRAND_VIEWS}
           sortPlacement="withFilters"
           sortValue={view}

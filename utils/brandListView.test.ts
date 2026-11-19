@@ -8,6 +8,8 @@ const page = readFileSync(new URL('../components/TechSpecsBrands.tsx', import.me
 test('the sorts of the brand list (« Disponibles en Tunisie » is a filter now)', () => {
   assert.deepEqual(BRAND_VIEWS.map((v) => v.label), ['Toutes les marques', 'Ordre alphabétique', 'Les plus consultées']);
   assert.equal(brandGridTitle('alpha'), 'Toutes les marques');
+  // Phone button: short words, never cut at 375 px.
+  assert.deepEqual(BRAND_VIEWS.map((v) => v.short), ['Toutes', 'A → Z', 'Plus vues']);
   assert.equal(brandGridTitle('popular'), 'Les plus consultées');
 });
 
@@ -30,10 +32,13 @@ test('importers: only those bringing in a shown brand, with counts', () => {
   assert.equal(importsBrand(importers[0], 'sym'), true);
 });
 
-test('the brand list uses the shared bar: sort, importer filter, sticky phone row', () => {
+test('the brand list uses the shared bar: sort, importer filter, worded phone buttons', () => {
   assert.match(page, /sortOptions=\{BRAND_VIEWS\}/);
   assert.match(page, /extraFilters=\{extraFilters\}/);
-  assert.match(page, /phoneLayout="inline"/);
+  // Phones like /annonces: search on its own row, then « ⇅ tri » + « Filtres ».
+  assert.match(page, /\n\s+phoneSearch\n/);
+  assert.doesNotMatch(page, /phoneLayout="inline"/);
+  assert.match(page, /const activeFilterCount = \(activeImporter !== ALL_IMPORTERS \? 1 : 0\) \+ \(inTunisia \? 1 : 0\);/);
   assert.doesNotMatch(page, /COUNTRIES|activeCountry/); // the hidden « Pays » filter is gone
   // The popular block only on arrival; « Toutes les marques » shows only the list.
   assert.match(page, /const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;/);
