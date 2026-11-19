@@ -124,7 +124,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const { data: brandRows } = useTechSpecsBrandRows({ availableInTunisia: false });
   const hubSummary = useMemo(() => hubSummaryParts(brandRows || []), [brandRows]);
   const hubMetaDescription = useMemo(() => hubDescription(brandRows), [brandRows]);
-  const tunisiaBrandsQuery = useTechSpecsBrands({ availableInTunisia: true });
+  const tunisiaBrandsQuery = useTechSpecsBrands({ availableInTunisia: true }, inTunisia);
   const {
     data: backendBrands = [],
     isLoading: brandsLoading,

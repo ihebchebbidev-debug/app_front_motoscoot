@@ -72,14 +72,21 @@ export const TechSpecsHero = memo(({
   return (
     <section className={S.Hero} style={{ ['--hero-bg' as any]: backgroundColor }}>
       <div className={S.BgContainer}>
-        <img
-          src={desktopUrl}
-          className={S.BgImage}
-          alt=""
-          // @ts-ignore
-          fetchPriority="high"
-          loading="eager"
-        />
+        {/* From 768 px only: phones hide this block, yet the browser still
+            downloaded the photo (56 Ko, high priority) ahead of the page's
+            own content. A <picture> source fetches it only on wide screens;
+            phones get a 1 px transparent placeholder (no request). */}
+        <picture>
+          <source media="(min-width: 768px)" srcSet={desktopUrl} />
+          <img
+            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            className={S.BgImage}
+            alt=""
+            // @ts-ignore
+            fetchPriority="high"
+            loading="eager"
+          />
+        </picture>
         <div
           className="absolute inset-0 opacity-95 mix-blend-multiply"
           style={{ background: `linear-gradient(to bottom, ${backgroundColor}, ${backgroundColor})` }}
