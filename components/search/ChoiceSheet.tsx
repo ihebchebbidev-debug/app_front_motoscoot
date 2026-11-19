@@ -165,7 +165,8 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
       if (e.key !== 'Tab' || !panel) return;
       const items = Array.from(
         panel.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'),
-      ).filter((el) => el.offsetParent !== null);
+      // tabIndex -1: the radio chips other than the chosen one (arrows reach them).
+      ).filter((el) => el.offsetParent !== null && el.tabIndex >= 0);
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
