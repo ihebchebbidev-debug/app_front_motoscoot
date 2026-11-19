@@ -175,3 +175,28 @@ export function highlightText(
         ),
   );
 }
+
+/**
+ * Local search over the catalogue, used when the server search fails (the
+ * API answered 500 to every /tech-specs/search, so « jet 14 » showed
+ * « 0 fiche » while the SYM Jet 14 sheets exist). Every word must match
+ * (same rule as matchesTechSpec); sheets whose brand + model hold the words
+ * come first, then newest year, then A → Z.
+ */
+export function searchTechSpecsLocally(specs: TechSpec[], query: string, limit = 30): TechSpec[] {
+  const tokens = queryTokens(query);
+  if (!tokens.length) return [];
+  const nameHits = (s: TechSpec) => {
+    const name = canonicalize(norm(`${s.brand} ${s.model}`));
+    return tokens.every((variants) => variants.some((v) => name.includes(v)));
+  };
+  return specs
+    .filter((s) => matchesTechSpec(s, query))
+    .map((s) => ({ s, byName: nameHits(s) }))
+    .sort((a, b) =>
+      Number(b.byName) - Number(a.byName)
+      || (Number(b.s.year) || 0) - (Number(a.s.year) || 0)
+      || `${a.s.brand} ${a.s.model}`.localeCompare(`${b.s.brand} ${b.s.model}`, 'fr'))
+    .slice(0, limit)
+    .map(({ s }) => s);
+}
