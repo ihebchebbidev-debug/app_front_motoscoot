@@ -52,6 +52,23 @@ export function placeMenu(
     : { side, bottom: viewport.height - field.top + MENU_GAP, left, width, maxHeight };
 }
 
+/**
+ * Arrow keys in a choice list (the list said « liste » to screen readers but
+ * only Tab moved): ↓ ↑ go to the next / previous choice, Home / End to the
+ * first / last. From outside the list (panel, search field) ↓ enters at the
+ * top, ↑ at the bottom. No wrap, as in a native list. null: not a move key.
+ */
+export function nextOptionIndex(key: string, from: number, count: number): number | null {
+  if (count === 0) return null;
+  if (key === 'Home') return 0;
+  if (key === 'End') return count - 1;
+  if (key === 'ArrowDown') return from < 0 ? 0 : Math.min(from + 1, count - 1);
+  if (key === 'ArrowUp') return from < 0 ? count - 1 : Math.max(from - 1, 0);
+  return null;
+}
+
+const OPTION_SELECTOR = 'button:not([disabled]), [role="option"]:not([aria-disabled="true"])';
+
 const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 const finePointer = () => typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
 
@@ -101,6 +118,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
   const panelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ startY: number; dy: number; samples: { y: number; t: number }[]; id: number } | null>(null);
   const draggedShut = useRef(false);
@@ -261,6 +279,20 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
     }
   }, []);
 
+  // Keyboard in the list (sheet and menu). In the search field only ↓ counts
+  // (← → Home End move the caret there).
+  const onListKeyDown = (e: React.KeyboardEvent) => {
+    if (!listbox || !listRef.current) return;
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' && e.key !== 'ArrowDown') return;
+    const options = Array.from(new Set(listRef.current.querySelectorAll<HTMLElement>(OPTION_SELECTOR)))
+      .filter((el) => el.offsetParent !== null);
+    const to = nextOptionIndex(e.key, options.indexOf(document.activeElement as HTMLElement), options.length);
+    if (to === null) return;
+    e.preventDefault();
+    options[to].focus();
+  };
+
   if (!mounted) return null;
 
   if (menu) {
@@ -274,6 +306,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         aria-label={label}
         className="ms-menu fixed z-[1000] bg-card rounded-xl shadow-xl ring-1 ring-black/[0.08] flex flex-col overflow-hidden"
         style={{ top: place.top, bottom: place.bottom, left: place.left, width: place.width, maxHeight: place.maxHeight }}
+        onKeyDown={onListKeyDown}
       >
         {search && (
           <div className="p-2 border-b border-gray-100">
@@ -296,7 +329,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
             />
           </div>
         )}
-        <div role="listbox" aria-label={label} className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-1.5">
+        <div ref={listRef} role="listbox" aria-label={label} className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-1.5">
           {children}
         </div>
       </div>,
@@ -323,6 +356,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         // URL bar). Bottom padding keeps the last row clear of the home indicator.
         className={`ms-sheet outline-none bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85dvh] ${tall ? 'h-[85dvh] md:h-auto' : ''} pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={onListKeyDown}
       >
         {/* Grabber + title: the part a finger drags down to close (phones). */}
         <div
@@ -371,7 +405,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
             />
           </div>
         )}
-        <div role={listbox ? 'listbox' : undefined} aria-label={listbox ? label : undefined} className="flex-1 overflow-y-auto overscroll-contain py-2">
+        <div ref={listRef} role={listbox ? 'listbox' : undefined} aria-label={listbox ? label : undefined} className="flex-1 overflow-y-auto overscroll-contain py-2">
           {children}
         </div>
         {footer}
