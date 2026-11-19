@@ -8,10 +8,11 @@
  *  (the owner wants both entries). */
 export type BrandView = 'default' | 'all' | 'alpha' | 'popular';
 
-export const BRAND_VIEWS: { value: BrandView; label: string }[] = [
-  { value: 'all', label: 'Toutes les marques' },
-  { value: 'alpha', label: 'Ordre alphabétique' },
-  { value: 'popular', label: 'Les plus consultées' },
+// `short`: the phone « ⇅ » button (« Ordre alphabétique » was cut at 375 px).
+export const BRAND_VIEWS: { value: BrandView; label: string; short: string }[] = [
+  { value: 'all', label: 'Toutes les marques', short: 'Toutes' },
+  { value: 'alpha', label: 'Ordre alphabétique', short: 'A → Z' },
+  { value: 'popular', label: 'Les plus consultées', short: 'Plus vues' },
 ];
 // « Disponibles en Tunisie » is no longer a sort: a switch in the filter bar
 // (TechSpecsBrands.tsx, owner 2026-11-19).

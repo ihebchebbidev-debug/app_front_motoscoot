@@ -17,6 +17,8 @@ test('phones: a search-only page shows the search field, not a « Filtres » but
   assert.match(bar, /\{\(onlySearch \|\| phoneSearch\) && \(\s*<div className="relative" role="search">/);
   assert.match(bar, /\{!onlySearch && \(\s*<div className="flex gap-2">/); // no Filtres button then
   assert.match(bar, /type="search"\s+enterKeyHint="search"/);
+  // Its full name for screen readers (« Rechercher une marque ou un modèle »).
+  assert.match(bar, /aria-label=\{searchLabel \|\| searchPlaceholder\}\s+placeholder=\{searchPlaceholder\}\s+value=\{searchQuery\}\s+onChange=\{\(e\) => onSearchChange\(e\.target\.value\)\}\s+className="w-full h-12/);
   assert.match(bar, /text-\[16px\]/); // no iOS zoom on focus
   assert.match(bar, /aria-label="Effacer la recherche"\s+className="absolute right-1 top-1\/2 -translate-y-1\/2 w-11 h-11/);
 });
@@ -56,4 +58,11 @@ test('model search results are real links that answer the finger within 100 ms',
   assert.doesNotMatch(page, /onClick=\{\(\) => handleSpecClick\(spec\)\}/);
   assert.match(page, /duration-100 ease-out active:scale-\[0\.97\] active:bg-gray-50/);
   assert.doesNotMatch(page, /delay=\{\(idx % 8\) \* 30\}/); // no slide-in on results
+});
+
+test('phones under 360 px: the chosen sort keeps its room (it read « A… » next to « Filtres 2 »)', () => {
+  assert.match(bar, /<span className="truncate">\{sortButtonLabel\}<\/span>/);
+  assert.match(bar, /const sortButtonLabel = chosenSort\?\.short \?\? sortLabel;/);
+  assert.match(bar, /ChevronDown size=\{16\} className="hidden min-\[360px\]:block text-gray-400 shrink-0"/);
+  assert.match(bar, /h-12 px-4 min-\[360px\]:px-6 bg-gray-900/);
 });

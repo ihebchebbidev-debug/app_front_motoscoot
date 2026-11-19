@@ -44,7 +44,10 @@ export interface FilterBarProps {
   searchWidth?: string;
   /** A real sort with any options (e.g. price, cylinder). When given, the
    *  phone sort button opens a sort panel with these options. */
-  sortOptions?: { value: string; label: string }[];
+  /** `short`: the words on the phone sort button when the label would be
+   *  cut (« A → Z » for « Ordre alphabétique »); the sheet and screen
+   *  readers keep the full label. */
+  sortOptions?: { value: string; label: string; short?: string }[];
   sortValue?: string;
   onSortValueChange?: (value: string) => void;
   /** Counts for the category options (same meaning as FilterOption.counts). */
@@ -126,6 +129,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     : sortBy === 'recent' ? 'Plus récentes' : 'Plus anciennes';
 
   const sortAriaLabel = hasCustomSort && !chosenSort && sortPlaceholder ? sortPlaceholder : `Trier : ${sortLabel}`;
+  const sortButtonLabel = chosenSort?.short ?? sortLabel;
   const inline = phoneLayout === 'inline' && !onlySearch;
   const sortWithFilters = hasCustomSort && sortPlacement === 'withFilters';
   // At the end of the bar (after the search) the sort makes the bar wrap
@@ -254,7 +258,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <input
               type="search"
               enterKeyHint="search"
-              aria-label={searchPlaceholder}
+              aria-label={searchLabel || searchPlaceholder}
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -277,20 +281,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           {hasSort && (
             <button
               onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
-              className="flex-1 min-w-0 flex items-center justify-between gap-2 h-12 px-4 bg-card border border-gray-100 rounded-2xl shadow-sm active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px] text-gray-900"
+              className="flex-1 min-w-0 flex items-center justify-between gap-2 h-12 px-3 min-[360px]:px-4 bg-card border border-gray-100 rounded-2xl shadow-sm active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px] text-gray-900"
               aria-label={sortAriaLabel}
               aria-haspopup="dialog"
             >
               <span className="flex items-center gap-2 min-w-0">
                 <ArrowUpDown size={16} className="text-gray-700 shrink-0" />
-                <span className="truncate">{sortLabel}</span>
+                <span className="truncate">{sortButtonLabel}</span>
               </span>
-              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+              {/* Under 360 px the chosen sort needs the room (it read « A… »). */}
+              <ChevronDown size={16} className="hidden min-[360px]:block text-gray-400 shrink-0" />
             </button>
           )}
           <button
             onClick={() => setIsSortMenuOpen(true)}
-            className={`${hasSort ? 'shrink-0' : 'flex-1'} flex items-center justify-center gap-2 h-12 px-6 bg-gray-900 text-white rounded-2xl shadow-md active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px]`}
+            className={`${hasSort ? 'shrink-0' : 'flex-1'} flex items-center justify-center gap-2 h-12 px-4 min-[360px]:px-6 bg-gray-900 text-white rounded-2xl shadow-md active:scale-[0.97] transition-transform duration-100 ease-out font-bold text-[15px]`}
             aria-label={filtersLabel}
             aria-haspopup="dialog"
           >
