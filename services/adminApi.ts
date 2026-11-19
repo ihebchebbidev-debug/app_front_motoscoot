@@ -431,6 +431,17 @@ export const adminApi = {
     apiClient.put<any>(`/admin/importers/${id}`, payload),
   deleteImporter: (id: string) => apiClient.delete(`/admin/importers/${id}`),
 
+  // ---------- Contacts brought to each importer (Appel, WhatsApp, Devis, Comparer) ----------
+  getLeadsSummary: (days = 30, signal?: AbortSignal) =>
+    apiClient.get<{ days: number; importers: ImporterLeadRow[] }>('/admin/leads/summary', { query: { days }, signal }),
+  getImporterLeads: (id: string, days = 30, signal?: AbortSignal) =>
+    apiClient.get<ImporterLeadDetail>(`/admin/leads/importers/${id}`, { query: { days }, signal }),
+  /** CSV of the quote requests (« ; », UTF-8 with BOM: opens in Excel). */
+  downloadImporterQuotesCsv: async (id: string, days = 30): Promise<Blob> => {
+    const res = await apiClient.request<Response>(`/admin/leads/importers/${id}/quotes.csv`, { method: 'GET', query: { days }, raw: true } as any);
+    return res.blob();
+  },
+
   // ---------- Tips (conseils) ----------
   getTips: (
     params?: { page?: number; limit?: number; search?: string; category?: string; difficulty?: string; status?: 'published' | 'draft'; sort?: 'views' },
@@ -466,3 +477,17 @@ export const garageOwnerApi = {
   replyToReview: (garageId: number | string, reviewId: number | string, reply: string) =>
     apiClient.patch(`/garages/${garageId}/reviews/${reviewId}/reply`, { reply }),
 };
+
+export interface LeadCounts { calls: number; whatsapp_taps: number; quotes: number; compares: number }
+export interface ImporterLeadRow extends LeadCounts {
+  id: string; name: string; phone?: string | null; email?: string | null; whatsapp?: string | null;
+  subscription_until?: string | null; subscribed: boolean;
+}
+export interface ImporterLeadDetail {
+  days: number;
+  importer: Omit<ImporterLeadRow, keyof LeadCounts>;
+  totals: LeadCounts;
+  models: (LeadCounts & { id: string; brand: string; model: string })[];
+  daily: { day: string; kind: string; n: number }[];
+  quotes: { id: number; brand: string; model: string; first_name: string; last_name: string; phone: string; email: string; created_at: string }[];
+}

@@ -5,15 +5,17 @@
  * The public fiche-technique details page renders the assigned importer's
  * contact card dynamically.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, Trash2, Edit3, X } from 'lucide-react';
+import { Building2, Plus, Trash2, Edit3, X, BarChart3 } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
 import { AdminTable } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import AdminImageUpload from './AdminImageUpload';
 import { displayPhone } from '../../utils/phoneUtils';
+import { ImporterLeadsPanel, leadsLine } from './ImporterLeadsPanel';
+import { subscriptionStatus } from '../../utils/importerSubscription';
 
 interface ImporterForm {
   id?: string;
@@ -28,11 +30,13 @@ interface ImporterForm {
   description: string;
   rating: string;
   is_active: boolean;
+  /** Abonnement: last day (YYYY-MM-DD), '' = none. */
+  subscription_until: string;
 }
 
 const empty = (): ImporterForm => ({
   name: '', logo_url: '', address: '', city: '', phone: '', whatsapp: '',
-  email: '', website: '', description: '', rating: '', is_active: true,
+  email: '', website: '', description: '', rating: '', is_active: true, subscription_until: '',
 });
 
 const inputCls =
@@ -62,6 +66,16 @@ const ImportersTab: React.FC = () => {
   });
   const importers = data?.importers || [];
 
+  // Contacts of the last 30 days for every importer (one request).
+  const { data: leads } = useQuery({
+    queryKey: ['admin', 'leads', 'summary', 30],
+    queryFn: ({ signal }) => adminApi.getLeadsSummary(30, signal),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const leadsById = useMemo(() => new Map((leads?.importers || []).map((r) => [r.id, r])), [leads]);
+  const [statsFor, setStatsFor] = useState<{ id: string; name: string } | null>(null);
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin', 'importers'] });
     qc.invalidateQueries({ queryKey: ['importers'] });
@@ -82,6 +96,7 @@ const ImportersTab: React.FC = () => {
     description: f.description || null,
     rating: f.rating ? Number(f.rating) : null,
     is_active: !!f.is_active,
+    subscription_until: f.subscription_until || null,
   });
 
   const create = useMutation({
@@ -122,6 +137,7 @@ const ImportersTab: React.FC = () => {
       description: i.description || '',
       rating: i.rating != null ? String(i.rating) : '',
       is_active: i.is_active !== false,
+      subscription_until: i.subscription_until ? String(i.subscription_until).slice(0, 10) : '',
     });
     setShowForm(true);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -208,6 +224,13 @@ const ImportersTab: React.FC = () => {
             onChange={(url) => setForm({ ...form, logo_url: url })}
           />
 
+          <Field
+            label="Fin d'abonnement"
+            hint="Jusqu'à cette date incluse, ses fiches montrent les boutons Appel, WhatsApp et Devis. Vide : pas d'abonnement."
+          >
+            <input type="date" value={form.subscription_until} onChange={(e) => setForm({ ...form, subscription_until: e.target.value })} className={inputCls} />
+          </Field>
+
           <label className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
             Actif (disponible pour assignation)
@@ -222,8 +245,12 @@ const ImportersTab: React.FC = () => {
         </form>
       )}
 
+      {statsFor && (
+        <ImporterLeadsPanel key={statsFor.id} importerId={statsFor.id} importerName={statsFor.name} onClose={() => setStatsFor(null)} />
+      )}
+
       <AdminTable
-        columns={['Importateur', 'Ville', 'Contact', 'Statut', 'Actions']}
+        columns={['Importateur', 'Ville', 'Contact', 'Abonnement', 'Contacts (30 j)', 'Statut', 'Actions']}
         loading={isLoading}
         rowCount={importers.length}
         empty="Aucun importateur."
@@ -253,12 +280,26 @@ const ImportersTab: React.FC = () => {
               {i.email && <div className="text-slate-400">{i.email}</div>}
             </td>
             <td className="p-3 text-xs">
+              {(() => {
+                const st = subscriptionStatus(i.subscription_until);
+                return (
+                  <span className={`px-2 py-0.5 rounded font-bold whitespace-nowrap ${st.tone === 'on' ? 'bg-emerald-100 text-emerald-800' : st.tone === 'soon' ? 'bg-amber-100 text-amber-800' : st.tone === 'off' ? 'bg-slate-200 text-slate-700' : 'text-slate-500'}`}>
+                    {st.label}
+                  </span>
+                );
+              })()}
+            </td>
+            <td className="p-3 text-xs text-slate-700">
+              {leadsById.get(i.id) ? leadsLine(leadsById.get(i.id)!) : '—'}
+            </td>
+            <td className="p-3 text-xs">
               <span className={`px-2 py-0.5 rounded font-bold ${i.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
                 {i.is_active ? 'Actif' : 'Inactif'}
               </span>
             </td>
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
+                <button onClick={() => { setStatsFor({ id: i.id, name: i.name }); if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg" aria-label={`Statistiques de ${i.name}`}><BarChart3 size={14} /></button>
                 <button onClick={() => startEdit(i)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" aria-label="Modifier"><Edit3 size={14} /></button>
                 <button onClick={() => del(i.id, i.name)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" aria-label="Supprimer"><Trash2 size={14} /></button>
               </div>
