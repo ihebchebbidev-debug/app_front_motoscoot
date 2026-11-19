@@ -45,3 +45,8 @@ test('phone top: 24 px title without slide-in, one sticky row, status only when 
   assert.match(page, /className=\{changed \? 'flex flex-wrap/);
   assert.match(page, /searchPlaceholder="Rechercher"\s+searchLabel=\{`Rechercher un modèle \$\{brandName\}`\}/);
 });
+
+test('the fiches-techniques hub title looks like a brand page title (owner: harmonize)', () => {
+  const hub = readFileSync(new URL('../components/TechSpecsBrands.tsx', import.meta.url), 'utf8');
+  assert.match(hub, /title=\{HUB_H1\}\s+titleSize="standard"/);
+});

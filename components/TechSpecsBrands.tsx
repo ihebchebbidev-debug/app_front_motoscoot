@@ -294,8 +294,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         schema={breadcrumbSchema}
       />
       
+      {/* Phones: same title as a brand's page (24 px, extra-bold), owner
+          2026-11-19; it was 32 px black. From 768 px both are the same. */}
       <TechSpecsHero 
         title={HUB_H1}
+        titleSize="standard"
         summary={hubSummary.length ? hubSummary : undefined}
         subtitle="Caractéristiques officielles et prix du neuf des modèles vendus en Tunisie."
         onNavigateHome={() => onNavigate?.('home')}
