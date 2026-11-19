@@ -39,7 +39,9 @@ export type PriceLabel = { kind: 'price'; text: string } | { kind: 'status'; tex
  */
 export function priceLabel(priceNew?: string): PriceLabel {
   const raw = (priceNew || '').trim();
-  if (!raw) return { kind: 'status', text: 'Prix non annoncé' };
+  // « — » is what the API mapping gives a sheet without a price
+  // (services/techSpecsApi.ts fmtPrice): it showed as a bare dash.
+  if (!raw || /^[-–—\s]+$/.test(raw)) return { kind: 'status', text: 'Prix non annoncé' };
   const n = priceValue(raw);
   // « Épuisé (29000 DT) » has a number but is a state first.
   if (n === null || /^[^\d]*[a-zéèàù]{4,}/i.test(raw.replace(/^à partir de/i, ''))) {
