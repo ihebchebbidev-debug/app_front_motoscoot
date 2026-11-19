@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { techSpecsApi, type TechSpecBrandRow } from '../services/techSpecsApi';
 import { TechSpec } from '../types';
+import { pickHubModels } from '../utils/techSpecsHubSeo';
 
 const retryStrategy = (failureCount: number, error: any) => {
   if (error?.status >= 400 && error?.status < 500) return false;
@@ -29,6 +30,23 @@ export const useAllTechSpecs = () => {
     retry: retryStrategy,
   });
 };
+
+/**
+ * « Modèles populaires » of /fiches-techniques: one model per brand, most
+ * visited brands first (utils/techSpecsHubSeo.ts, same pick as the HTML Google
+ * receives). Waits for `enabled` so the brand grid loads first.
+ */
+export const useHubPopularModels = (enabled = true) =>
+  useQuery<TechSpec[], Error, TechSpec[]>({
+    queryKey: ['tech-specs', 'popular', 'all'],
+    queryFn: ({ signal }) => techSpecsApi.getPopularAll(signal),
+    select: selectHubModels,
+    enabled,
+    staleTime: 1000 * 60 * 30,
+    retry: retryStrategy,
+  });
+const selectHubModels = (specs: TechSpec[]) =>
+  pickHubModels(specs, (s) => ({ brand: s.brand, image: s.image, price: s.priceNew }));
 
 /** Latest uploaded tech specs (newest fiches techniques). */
 export const useLatestTechSpecs = (limit = 3) => {

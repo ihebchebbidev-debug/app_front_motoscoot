@@ -28,7 +28,7 @@ test('no brand found: say it and offer to clear the search', () => {
 });
 
 test('type scale: sentence-case titles, readable counts and names, no 9-11 px text', () => {
-  assert.equal((page.match(/text-xl md:text-2xl font-bold text-gray-900 tracking-\[-0\.01em\] leading-tight/g) || []).length, 3);
+  assert.equal((page.match(/text-xl md:text-2xl font-bold text-gray-900 tracking-\[-0\.01em\] leading-tight/g) || []).length, 4); // + « Modèles populaires » (P3, 2026-11-19)
   assert.doesNotMatch(page, /font-\[900\] text-slate-900 uppercase/);
   assert.match(page, />\s*Marques populaires\s*</);
   assert.match(page, /\{filteredBrands\.length\} marque\{filteredBrands\.length > 1 \? 's' : ''\}/);
