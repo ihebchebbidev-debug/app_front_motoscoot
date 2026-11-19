@@ -7,10 +7,12 @@ import {
   ChevronDown,
   Search,
   Zap,
-  Filter
+  Filter,
+  MapPin
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTechSpecsBrands, useTechSpecsBrandRows, useTechSpecsSearch } from '../hooks/useTechSpecs';
+import type { FilterToggle } from './ui/FilterBar';
 import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts } from '../utils/techSpecsHubSeo';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
@@ -99,10 +101,12 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const [activeImporter, setActiveImporter] = useState(ALL_IMPORTERS);
   // « Trier » : the page opens on its selection (« Marques populaires » +
   // every brand A → Z); then every brand A → Z (« Toutes les marques » or
-  // « Ordre alphabétique »), most visited first, or only the brands sold in
-  // Tunisia (also what ?available_in_tunisia=true opens).
-  const [view, setView] = useState<BrandView>(availableInTunisia ? 'tunisia' : 'default');
-  const inTunisia = view === 'tunisia';
+  // « Ordre alphabétique ») or most visited first.
+  const [view, setView] = useState<BrandView>('default');
+  // « Disponibles en Tunisie » is a filter, not a sort (owner, 2026-11-19): a
+  // switch in the bar, combined with any sort and importer. It used to be the
+  // last « Trier » entry. ?available_in_tunisia=true still opens it switched on.
+  const [inTunisia, setInTunisia] = useState(availableInTunisia);
 
   const allBrandsQuery = useTechSpecsBrands({ availableInTunisia: false });
   // Same request as allBrandsQuery, with the counts: « 23 marques · 101 modèles »
@@ -221,11 +225,14 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
     value: activeImporter,
     onChange: setActiveImporter,
   }], [importerChoices, activeImporter]);
-  const resetFilters = useCallback(() => { setActiveImporter(ALL_IMPORTERS); setBrandSearch(''); }, []);
-  const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (brandSearch ? 1 : 0);
+  const toggles: FilterToggle[] = useMemo(() => [{
+    id: 'tunisia', label: 'Disponibles en Tunisie', checked: inTunisia, onChange: setInTunisia, icon: <MapPin size={20} />,
+  }], [inTunisia]);
+  const resetFilters = useCallback(() => { setActiveImporter(ALL_IMPORTERS); setBrandSearch(''); setInTunisia(false); }, []);
+  const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (brandSearch ? 1 : 0) + (inTunisia ? 1 : 0);
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
-  const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS;
+  const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;
 
   // Cards are real links (crawlable); the click only records the brand visit.
   const handleBrandClick = useCallback((brand: string) => {
@@ -308,6 +315,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           sortPlaceholder="Trier"
           onSortValueChange={(v) => setView(v as BrandView)}
           extraFilters={extraFilters}
+          toggles={toggles}
           activeFilterCount={activeFilterCount}
           onReset={resetFilters}
           applyLabel={`Voir ${filteredBrands.length} marque${filteredBrands.length > 1 ? 's' : ''}`}
@@ -420,7 +428,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           {/* ALL BRANDS GRID */}
           <div className="flex items-center justify-between mb-5 md:mb-10">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
-              {brandSearch ? `Résultats pour « ${brandSearch} »` : brandGridTitle(view)}
+              {brandSearch ? `Résultats pour « ${brandSearch} »` : inTunisia ? 'Disponibles en Tunisie' : brandGridTitle(view)}
             </h2>
             <span className="shrink-0 text-sm font-medium text-gray-600 tabular-nums">{filteredBrands.length} marque{filteredBrands.length > 1 ? 's' : ''}</span>
           </div>

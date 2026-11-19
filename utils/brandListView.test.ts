@@ -5,8 +5,8 @@ import { BRAND_VIEWS, brandGridTitle, orderBrands, uniqueBrands, importerOptions
 
 const page = readFileSync(new URL('../components/TechSpecsBrands.tsx', import.meta.url), 'utf8');
 
-test('the three views of the brand list', () => {
-  assert.deepEqual(BRAND_VIEWS.map((v) => v.label), ['Toutes les marques', 'Ordre alphabétique', 'Les plus consultées', 'Disponibles en Tunisie']);
+test('the sorts of the brand list (« Disponibles en Tunisie » is a filter now)', () => {
+  assert.deepEqual(BRAND_VIEWS.map((v) => v.label), ['Toutes les marques', 'Ordre alphabétique', 'Les plus consultées']);
   assert.equal(brandGridTitle('alpha'), 'Toutes les marques');
   assert.equal(brandGridTitle('popular'), 'Les plus consultées');
 });
@@ -36,8 +36,8 @@ test('the brand list uses the shared bar: sort, importer filter, sticky phone ro
   assert.match(page, /phoneLayout="inline"/);
   assert.doesNotMatch(page, /COUNTRIES|activeCountry/); // the hidden « Pays » filter is gone
   // The popular block only on arrival; « Toutes les marques » shows only the list.
-  assert.match(page, /const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS;/);
-  assert.match(page, /useState<BrandView>\(availableInTunisia \? 'tunisia' : 'default'\)/);
+  assert.match(page, /const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;/);
+  assert.match(page, /useState<BrandView>\('default'\)/);
   assert.match(page, /sortPlaceholder="Trier"/);
 });
 
