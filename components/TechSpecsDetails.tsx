@@ -170,12 +170,12 @@ const S = {
   // model, orange instead of black), then Comparer / WhatsApp / Appeler as
   // three equal light-grey buttons with small capitals.
   CardQuote: "w-full h-14 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary-600 text-white text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out hover:bg-primary-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
-  // Same type as the listing page buttons (ListingSellerCard: 12 px, extra-bold, normal case).
-  CardAction: "flex-1 min-w-0 h-12 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 text-gray-900 text-[12px] font-extrabold tracking-[0px] normal-case transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
-  // Next to the price: same light grey, sized to its content.
-  CardCompare: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-100 text-gray-900 transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
-  // Under ~1150 px the column is too narrow for the words: icons only.
-  CardActionLabel: "hidden min-[1150px]:inline",
+  // Icon buttons next to the price (owner, 2026-11-19): same 44 px light-grey
+  // square for Comparer, WhatsApp and Appeler, grey icons; on hover WhatsApp
+  // turns green and Appeler orange.
+  CardIcon: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition-[transform,background-color,color] duration-100 ease-out hover:bg-gray-200 hover:text-gray-900 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardIconWhatsapp: "hover:!text-[#1DA851] focus-visible:!text-[#1DA851]",
+  CardIconCall: "hover:!text-primary-600 focus-visible:!text-primary-600",
   // « Devis » always says its word next to its icon (owner, 2026-11-19): the
   // one action with a label, so it reads first; same height as the rounds.
   FloatQuotePill: "relative shrink-0 h-11 min-[400px]:h-12 pl-2.5 pr-3 min-[400px]:pl-3 min-[400px]:pr-3.5 inline-flex items-center gap-1 min-[400px]:gap-1.5 rounded-full text-white text-[0.875rem] min-[400px]:text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
@@ -703,42 +703,38 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                     ))}
                   </div>
 
-                  {/* PRICE & ACTIONS (owner, 2026-11-19): Comparer is about the model,
-                      so it sits next to the price; the three ways to reach the
-                      importer go together below — « Demander un devis » (orange,
-                      whole width), then WhatsApp and Appeler side by side. */}
+                  {/* PRICE & ACTIONS (owner, 2026-11-19): the price with three icon
+                      buttons beside it — Comparer (always), WhatsApp and Appeler
+                      (subscribed importer) — then « Demander un devis » (#E65400)
+                      on the whole width. In a narrow column the icons wrap
+                      under the price rather than cut it. */}
                   <div className="pt-6 border-t border-gray-100 flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-col flex-1 min-w-[5.5rem]">
                         <span className="text-[1.375rem] font-black text-gray-900 leading-none whitespace-nowrap">{spec.priceNew}</span>
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
                       </div>
-                      {/* Comparer: the balance alone (owner), its name for screen readers. */}
-                      <button type="button" onClick={handleCompare} className={S.CardCompare} aria-label="Comparer ce modèle" title="Comparer">
-                        <Scale size={20} strokeWidth={2} aria-hidden="true" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleCompare} className={S.CardIcon} aria-label="Comparer ce modèle" title="Comparer">
+                          <Scale size={20} strokeWidth={2} aria-hidden="true" />
+                        </button>
+                        {waHref && (
+                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp')} className={`${S.CardIcon} ${S.CardIconWhatsapp}`} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`} title="WhatsApp">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
+                          </a>
+                        )}
+                        {callHref && (
+                          <a href={callHref} onClick={() => trackLead(spec.id, 'call')} className={`${S.CardIcon} ${S.CardIconCall}`} aria-label={`Appeler ${spec.importer.name}`} title={`Appeler ${spec.importer.name}`}>
+                            <Phone size={20} strokeWidth={2} aria-hidden="true" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                     {canQuote && (
                       <button type="button" onClick={openQuote} className={S.CardQuote} aria-haspopup="dialog">
                         <FileText size={20} strokeWidth={2} aria-hidden="true" />
                         Demander un devis
                       </button>
-                    )}
-                    {(waHref || callHref) && (
-                      <div className="flex gap-2">
-                        {waHref && (
-                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp')} className={S.CardAction} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`}>
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" className="shrink-0 text-[#1DA851]"><path d={siWhatsapp.path} /></svg>
-                            <span aria-hidden="true" className={S.CardActionLabel}>WhatsApp</span>
-                          </a>
-                        )}
-                        {callHref && (
-                          <a href={callHref} onClick={() => trackLead(spec.id, 'call')} className={S.CardAction} aria-label={`Appeler ${spec.importer.name}`}>
-                            <Phone size={18} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-                            <span aria-hidden="true" className={S.CardActionLabel}>Appeler</span>
-                          </a>
-                        )}
-                      </div>
                     )}
                   </div>
                 </div>
