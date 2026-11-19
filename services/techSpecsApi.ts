@@ -239,6 +239,19 @@ export const techSpecsApi = {
       .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, 'fr'));
   },
 
+  /**
+   * Every published sheet, most visited brands first, newest model first
+   * (the « Modèles populaires » row of the home page picks one per brand).
+   */
+  async getPopularAll(signal?: AbortSignal): Promise<TechSpec[]> {
+    const data = await apiClient.get<BackendTechSpec[] | { specs: BackendTechSpec[] }>(
+      '/tech-specs/popular',
+      { query: { all: 1, limit: 2000 }, signal },
+    );
+    const arr = Array.isArray(data) ? data : data.specs || [];
+    return arr.map(mapBackendTechSpec);
+  },
+
   async getPopular(signal?: AbortSignal): Promise<TechSpec[]> {
     const data = await apiClient.get<BackendTechSpec[] | { specs: BackendTechSpec[] }>(
       '/tech-specs/popular',
