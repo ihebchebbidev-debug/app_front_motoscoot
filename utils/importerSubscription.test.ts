@@ -22,6 +22,8 @@ test('quick durations add months from the later of today and the current end', (
   assert.equal(extendSubscription('', 1, today), '2026-12-19');
   assert.equal(extendSubscription('2027-01-31', 1, today), '2027-02-28'); // end of a shorter month
   assert.equal(extendSubscription('2026-10-01', 12, today), '2027-11-19'); // expired: from today
+  assert.equal(extendSubscription('', 6, today), '2027-05-19');
+  assert.equal(extendSubscription('', 24, today), '2028-11-19');
 });
 
 test('one bar per day, zeros included; the summary to send the importer', () => {
@@ -37,7 +39,9 @@ test('one bar per day, zeros included; the summary to send the importer', () => 
 
 test('admin importers: subscription block with quick durations, icon counters, « Rapport » drawer', () => {
   assert.match(tab, /<legend className="px-1 text-\[11px\] font-bold text-slate-600">Abonnement<\/legend>/);
-  assert.match(tab, /extendSubscription\(form\.subscription_until, m as number\)/);
+  assert.match(tab, /\{\[1, 3, 6, 12, 24\]\.map\(\(m\) => \(/); // owner: 1, 3, 6, 12, 24 mois
+  assert.match(tab, /extendSubscription\(form\.subscription_until, m\)/);
+  assert.match(tab, />\{m\} mois<\/button>/);
   assert.match(tab, /aria-label="Contacts des 30 derniers jours"/);
   assert.match(tab, /aria-label=\{`Rapport de \$\{i\.name\}`\}><BarChart3 size=\{14\} aria-hidden="true" \/>Rapport<\/button>/);
   assert.match(tab, /\['Abonnés actifs', overview\.active\]/);

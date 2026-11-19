@@ -261,8 +261,10 @@ const ImportersTab: React.FC = () => {
                 <input type="date" value={form.subscription_until} onChange={(e) => setForm({ ...form, subscription_until: e.target.value })} className={`${inputCls} w-44`} />
               </label>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Prolonger l'abonnement">
-                {[[1, '+1 mois'], [3, '+3 mois'], [12, '+1 an']].map(([m, label]) => (
-                  <button key={m} type="button" onClick={() => setForm({ ...form, subscription_until: extendSubscription(form.subscription_until, m as number) })} className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50">{label}</button>
+                {/* Durations sold (owner, 2026-11-19): added to the current end,
+                    or to today when there is none or it has passed. */}
+                {[1, 3, 6, 12, 24].map((m) => (
+                  <button key={m} type="button" onClick={() => setForm({ ...form, subscription_until: extendSubscription(form.subscription_until, m) })} aria-label={`Prolonger de ${m} mois`} className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 tabular-nums">{m} mois</button>
                 ))}
                 {form.subscription_until && (
                   <button type="button" onClick={() => setForm({ ...form, subscription_until: '' })} className="px-3 py-2 rounded-lg text-xs font-bold text-red-700 hover:bg-red-50">Retirer</button>
