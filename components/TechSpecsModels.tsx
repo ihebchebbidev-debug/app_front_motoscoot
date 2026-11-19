@@ -235,6 +235,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
           categoryLabel="Type de moto"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
           sortOptions={TECH_SPEC_SORTS}
+          sortSheetTitle="Trier les modèles"
           sortValue={sort}
           onSortValueChange={(v) => setSort(v as TechSpecSort)}
           activeFilterCount={activeCount}

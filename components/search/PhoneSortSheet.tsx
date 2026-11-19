@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ArrowUpDown, Check, Navigation } from 'lucide-react';
+import { ArrowUpDown, Navigation } from 'lucide-react';
 import { ChoiceSheet } from './ChoiceSheet';
+import { SortOptionRow } from './SortOptionRow';
 import type { SortOption } from '../../hooks/useListingFilters';
 import { nextPhoneSort } from '../../utils/phoneSort';
 
@@ -73,34 +74,15 @@ export const PhoneSortSheet: React.FC<PhoneSortSheetProps> = ({ sortBy, onSortCh
       </button>
 
       <ChoiceSheet open={open} label="Trier les annonces" onClose={close} returnFocus={buttonRef}>
-        {options.map((o) => {
-          const checked = o.value === current;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              role="option"
-              aria-selected={checked}
-              onClick={() => pick(o.value)}
-              className={`w-full min-h-[52px] flex items-center gap-3 px-5 py-3 text-left transition-colors active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gray-900 ${
-                checked ? 'bg-primary-50' : ''
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center ${
-                  checked ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 bg-white'
-                }`}
-              >
-                {checked && <Check size={13} strokeWidth={3} />}
-              </span>
-              <span className={`flex-1 text-[15px] font-semibold ${checked ? 'text-primary-800' : 'text-gray-900'}`}>
-                {o.label}
-              </span>
-              {o.value === 'proximity' && <Navigation size={16} aria-hidden="true" className="shrink-0 text-gray-500" />}
-            </button>
-          );
-        })}
+        {options.map((o) => (
+          <SortOptionRow
+            key={o.value}
+            label={o.label}
+            checked={o.value === current}
+            onSelect={() => pick(o.value)}
+            trailing={o.value === 'proximity' ? <Navigation size={16} aria-hidden="true" className="shrink-0 text-gray-500" /> : undefined}
+          />
+        ))}
       </ChoiceSheet>
     </>
   );

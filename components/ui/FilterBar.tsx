@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, X, Check, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ChoiceSheet } from '../search/ChoiceSheet';
+import { SortOptionRow } from '../search/SortOptionRow';
 import { SwitchRow } from './SwitchRow';
 import { radioTabIndex, onRadioKeyDown } from '../../utils/radioChips';
 
@@ -78,6 +79,9 @@ export interface FilterBarProps {
   /** Shown while no sort is chosen (sortValue not among sortOptions), e.g.
    *  « Trier » on the brand list, which opens on its own selection. */
   sortPlaceholder?: string;
+  /** Title of the phone sort panel, named for what it sorts like
+   *  /annonces (« Trier les annonces »): « Trier les marques »… */
+  sortSheetTitle?: string;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -108,6 +112,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   searchLabel,
   sortPlacement = 'end',
   sortPlaceholder,
+  sortSheetTitle = 'Trier par',
 }) => {
   // « Scooter 6 » / greyed when nothing would show (the selected one stays usable).
   const countOf = (counts: Record<string, number> | undefined, opt: string) =>
@@ -320,25 +325,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </div>
       )}
 
-      {/* Sort panel (phones): one tap chooses and closes. */}
+      {/* Sort panel (phones): one tap chooses and closes. Same rows as the
+          /annonces sort panel (SortOptionRow): round mark, orange chosen row. */}
       {hasCustomSort && (
-        <ChoiceSheet open={isSortSheetOpen} label="Trier par" onClose={() => setIsSortSheetOpen(false)}>
-          {sortOptions!.map((opt) => {
-            const active = opt.value === sortValue;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                role="option"
-                aria-selected={active}
-                onClick={() => { onSortValueChange!(opt.value); setIsSortSheetOpen(false); }}
-                className={`w-full min-h-12 flex items-center justify-between gap-3 px-5 py-3 text-left text-[16px] active:bg-gray-100 transition-colors duration-100 ${active ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
-              >
-                {opt.label}
-                {active && <Check size={18} className="text-primary-700 shrink-0" aria-hidden="true" />}
-              </button>
-            );
-          })}
+        <ChoiceSheet open={isSortSheetOpen} label={sortSheetTitle} onClose={() => setIsSortSheetOpen(false)}>
+          {sortOptions!.map((opt) => (
+            <SortOptionRow
+              key={opt.value}
+              label={opt.label}
+              checked={opt.value === sortValue}
+              onSelect={() => { onSortValueChange!(opt.value); setIsSortSheetOpen(false); }}
+            />
+          ))}
         </ChoiceSheet>
       )}
 
