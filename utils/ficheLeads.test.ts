@@ -29,7 +29,7 @@ test('floating bar: Appel, WhatsApp and Devis only for a subscribed importer; ev
   assert.match(page, /trackLead\(spec\.id, 'compare'\);/);
   assert.match(page, /className=\{`\$\{S\.FloatRound\} \$\{S\.FloatWhatsapp\}`\}/);
   assert.match(page, /FloatWhatsapp: "bg-\[#25D366\]/);
-  assert.match(page, /<FileText size=\{20\}/);
+  assert.match(page, /<FileText size=\{18\}/);
   assert.match(page, /<QuoteRequestSheet[\s\S]*?returnFocus=\{quoteButtonRef\}/);
 });
 

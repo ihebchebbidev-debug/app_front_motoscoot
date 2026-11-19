@@ -155,18 +155,19 @@ const S = {
   Wrapper: "min-h-screen bg-page md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
-  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1 min-[360px]:gap-1.5 rounded-full",
+  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center justify-between min-[360px]:justify-start gap-1 min-[400px]:gap-1.5 rounded-full",
   FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
-  FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[360px]:pl-4 flex flex-col justify-center",
+    FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[400px]:pl-4 flex-col justify-center",
   // Round actions (owner, 2026-11-19), shown while the importer is subscribed:
   // call (glass), WhatsApp (brand green), devis (orange, the main action),
   // compare (glass, its word from 430 px). 48 px, 44 under 360 px.
-  FloatRound: "relative shrink-0 w-11 h-11 min-[360px]:w-12 min-[360px]:h-12 inline-flex items-center justify-center rounded-full text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
+  FloatRound: "relative shrink-0 w-11 h-11 min-[400px]:w-12 min-[400px]:h-12 inline-flex items-center justify-center rounded-full text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   FloatGlass: "bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20]",
   FloatWhatsapp: "bg-[#25D366] active:bg-[#1EBE5A] [@media(hover:hover)]:hover:bg-[#1EBE5A]",
   FloatQuote: "bg-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800",
-  FloatCompareRound: "min-[430px]:w-auto min-[430px]:px-4 min-[430px]:gap-1.5 font-semibold tracking-[0.01em]",
-  FloatCompare: "shrink-0 h-12 px-4 min-[360px]:pl-3.5 inline-flex items-center gap-1.5 rounded-full bg-orange-700 text-white font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
+  // « Devis » always says its word next to its icon (owner, 2026-11-19): the
+  // one action with a label, so it reads first; same height as the rounds.
+  FloatQuotePill: "relative shrink-0 h-11 min-[400px]:h-12 pl-2.5 pr-3 min-[400px]:pl-3 min-[400px]:pr-3.5 inline-flex items-center gap-1 min-[400px]:gap-1.5 rounded-full text-white text-[0.875rem] min-[400px]:text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   // Phones: no breadcrumb row (its 44 px go to the photo and the title); « ← » sits on the photo
@@ -491,7 +492,6 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const callHref = subscribed ? telHref(spec.importer?.phone) : null;
   const waHref = subscribed ? whatsappHref(spec.importer?.whatsapp, modelName, pageUrl) : null;
   const canQuote = subscribed;
-  const roundActions = !!(callHref || waHref || canQuote);
 
   return (
     <main className={S.Wrapper}>
@@ -750,10 +750,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
       <div className={S.FloatEdge} aria-hidden="true" />
       <div className={S.FloatBar} role="region" aria-label="Prix et actions">
-        <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
+        {/* Under 360 px, with the contact buttons, the four actions take the
+            row; the price stays in the page above. */}
+        <div className={`${S.FloatPrice} ${canQuote ? 'hidden min-[360px]:flex' : 'flex'}`} title={capsule.kind === 'text' ? capsule.main : undefined}>
           {capsule.kind === 'amount' ? (
             <>
-              <span className="text-[1rem] min-[360px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[1rem] min-[400px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
               <span className="text-[0.75rem] font-medium text-gray-300 leading-tight tracking-[0.01em] whitespace-nowrap truncate">{capsule.sub}</span>
             </>
           ) : capsule.kind === 'text' ? (
@@ -791,25 +793,18 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             ref={quoteButtonRef}
             type="button"
             onClick={() => setQuoteOpen(true)}
-            className={`${S.FloatRound} ${S.FloatQuote}`}
+            className={`${S.FloatQuotePill} ${S.FloatQuote}`}
             aria-label={`Demander un devis pour le ${modelName}`}
             aria-haspopup="dialog"
-            title="Demande de devis"
           >
-            <FileText size={20} strokeWidth={2.2} aria-hidden="true" />
+            <FileText size={18} strokeWidth={2.2} aria-hidden="true" />
+            <span aria-hidden="true">Devis</span>
           </button>
         )}
-        {roundActions ? (
-          <button type="button" className={`${S.FloatRound} ${S.FloatGlass} ${S.FloatCompareRound}`} onClick={handleCompare} aria-label="Comparer ce modèle">
-            <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
-            <span className="hidden min-[430px]:inline" aria-hidden="true">Comparer</span>
-          </button>
-        ) : (
-          <button type="button" className={S.FloatCompare} onClick={handleCompare}>
-            <Scale size={17} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
-            Comparer
-          </button>
-        )}
+        {/* « Comparer »: always a round button with the balance alone (owner). */}
+        <button type="button" className={`${S.FloatRound} ${S.FloatGlass}`} onClick={handleCompare} aria-label="Comparer ce modèle" title="Comparer">
+          <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
+        </button>
       </div>
 
       {canQuote && (
