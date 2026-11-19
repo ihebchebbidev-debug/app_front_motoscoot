@@ -10,7 +10,8 @@ import {
   Filter
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useTechSpecsBrands, useTechSpecsSearch } from '../hooks/useTechSpecs';
+import { useTechSpecsBrands, useTechSpecsBrandRows, useTechSpecsSearch } from '../hooks/useTechSpecs';
+import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts } from '../utils/techSpecsHubSeo';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
 import { useBrands } from '../hooks/useReferenceData';
@@ -104,6 +105,11 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const inTunisia = view === 'tunisia';
 
   const allBrandsQuery = useTechSpecsBrands({ availableInTunisia: false });
+  // Same request as allBrandsQuery, with the counts: « 23 marques · 101 modèles »
+  // under the title and in the description (utils/techSpecsHubSeo.ts).
+  const { data: brandRows } = useTechSpecsBrandRows({ availableInTunisia: false });
+  const hubSummary = useMemo(() => hubSummaryParts(brandRows || []), [brandRows]);
+  const hubMetaDescription = useMemo(() => hubDescription(brandRows), [brandRows]);
   const tunisiaBrandsQuery = useTechSpecsBrands({ availableInTunisia: true });
   const {
     data: backendBrands = [],
@@ -264,14 +270,15 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   return (
     <main className={S.Wrapper}>
       <SEO 
-        title="Fiches Techniques Moto & Scooter en Tunisie | Catalogue Complet" 
-        description="Consultez les fiches techniques, caractéristiques, performances et prix du neuf pour toutes les marques de motos et scooters en Tunisie (Peugeot, Piaggio, Voge...)."
+        title={hubPageTitle()}
+        description={hubMetaDescription}
         url="/fiches-techniques"
         schema={breadcrumbSchema}
       />
       
       <TechSpecsHero 
-        title="Fiches Techniques"
+        title={HUB_H1}
+        summary={hubSummary.length ? hubSummary : undefined}
         subtitle="Caractéristiques officielles et prix du neuf des modèles vendus en Tunisie."
         onNavigateHome={() => onNavigate?.('home')}
         breadcrumbCurrent="Fiches Techniques"
