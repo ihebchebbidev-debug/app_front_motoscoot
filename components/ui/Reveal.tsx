@@ -37,16 +37,19 @@ export const Reveal: React.FC<RevealProps> = ({
       : 'opacity-0 scale-95',
   };
 
+  // Only opacity and transform move (it used to animate every property). With the
+  // phone's « reduce motion » setting: no movement, a short fade, no
+  // stagger — the 700 ms slide of every tile ignored it.
   return (
     <div
       // @ts-ignore - elementRef est typé de manière générique
       ref={elementRef}
-      className={`transition-all ${className} ${animationStyles[animation]}`}
-      style={{ 
-        transitionDuration: `${duration}ms`,
-        transitionDelay: `${delay}ms`,
-        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)'
-      }}
+      className={`transition-[opacity,transform] [transition-duration:var(--reveal-ms)] [transition-delay:var(--reveal-delay)] motion-reduce:transform-none motion-reduce:[transition-duration:150ms] motion-reduce:[transition-delay:0ms] ${className} ${animationStyles[animation]}`}
+      style={{
+        ['--reveal-ms' as string]: `${duration}ms`,
+        ['--reveal-delay' as string]: `${delay}ms`,
+        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      } as React.CSSProperties}
     >
       {children}
     </div>
