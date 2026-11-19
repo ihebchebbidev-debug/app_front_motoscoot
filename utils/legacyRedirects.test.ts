@@ -30,8 +30,11 @@ test('the handler redirects instead of answering 404 or a duplicate', () => {
 });
 
 test('every public page has a link from the footer (no orphan)', () => {
-  assert.match(footer, /<FooterLink view="security">Sécurité<\/FooterLink>/);
-  assert.match(footer, /<FooterLink view="sitemap">Plan du site<\/FooterLink>/);
+  // The footer draws utils/footerLinks.ts (also in the HTML Google receives).
+  assert.match(footer, /FOOTER_INFO_LINKS\.map/);
+  const list = readFileSync(new URL('./footerLinks.ts', import.meta.url), 'utf8');
+  assert.match(list, /\{ view: 'security', href: '\/securite', label: 'Sécurité' \}/);
+  assert.match(list, /\{ view: 'sitemap', href: '\/plan-du-site', label: 'Plan du site' \}/);
 });
 
 test('old English and old guide addresses redirect permanently (vercel.json)', () => {

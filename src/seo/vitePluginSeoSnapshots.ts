@@ -18,6 +18,7 @@ import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
 import { HERO_DEFAULTS } from '../../config/heroDefaults';
 import { SPA_TITLE, SPA_DESCRIPTION, DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from './privatePages';
+import { footerLinksHtml } from '../../utils/footerLinks';
 import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing, type SnapshotEditorial, type SnapshotModel } from './snapshotLinks';
 
 interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
@@ -187,6 +188,7 @@ function renderFallback(snap: SeoSnapshot, hero: HeroImages, data: SnapshotData)
       <p>${escapeHtml(snap.intro)}</p>
       <p><a href="/">Retour à l'accueil Moto-Scoot.tn</a></p>
       ${renderLinkBlocks(linkBlocksFor(snap.path, data))}
+      ${footerLinksHtml(snap.path)}
     </div>
   `;
 }
