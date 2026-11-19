@@ -23,6 +23,7 @@ import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
+import { catalogBrand, listingCatalogLinks, LISTING_CATALOG_HEADING, type CatalogSpec, type ListingCatalogLink } from '../utils/listingCatalogLinks.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
 const SITE = 'https://www.moto-scoot.tn';
 const DEFAULT_OG = `${SITE}/og-banner.webp`;
@@ -92,7 +93,35 @@ interface Listing {
   updated_at?: string;
 }
 
+// The listing's fiche and brand page (SEO audit 2026-11-19, H3), as on the
+// page. Catalogue unavailable: no links, the listing still renders.
+// The brand list is read while the listing loads (no extra wait).
+async function fetchCatalogBrands(): Promise<string[]> {
+  try {
+    const r = await fetch(`${API_BASE}/tech-specs/brands`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (Array.isArray(data) ? data : data.brands || []).map((b: any) => String(typeof b === 'string' ? b : b?.brand || b?.name || '')).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchCatalogLinks(brandsPromise: Promise<string[]>, brand?: string | null, model?: string | null): Promise<ListingCatalogLink[]> {
+  try {
+    const brands = await brandsPromise;
+    const known = catalogBrand(brand, brands);
+    if (!known) return [];
+    const m = await fetch(`${API_BASE}/tech-specs/brands/${encodeURIComponent(known)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(3000) });
+    const specs: CatalogSpec[] = m.ok ? await m.json().then((d: any) => (Array.isArray(d) ? d : d.models || [])) : [];
+    return listingCatalogLinks({ brand, model }, brands, specs);
+  } catch {
+    return [];
+  }
+}
+
 export default async function handler(req: any, res: any) {
+  const catalogBrandsPromise = fetchCatalogBrands();
   try {
     const slugid =
       (req.query?.slugid as string) ||
@@ -212,11 +241,14 @@ export default async function handler(req: any, res: any) {
     // ListingGallery builds (buildSeoImageUrl with the listing title).
     const lcpImage = listing?.images?.[0] ? seoImagePath(listing.images[0], listing.title) : null;
 
+    const catalogLinks = listing ? await fetchCatalogLinks(catalogBrandsPromise, listing.brand, listing.model) : [];
+
     // ---- Body content (visible to non-JS crawlers + LLMs) ----
     const specRow = (label: string, value?: string | number | null) =>
       value != null && value !== '' ? `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd>` : '';
 
     const bodyHtml = listing ? `
+<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/annonces">Annonces</a> › ${escapeHtml(listing.title)}</nav>
 <h1>${escapeHtml(listing.title)}</h1>
 ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.price))}</p>` : ''}
 <dl>
@@ -231,6 +263,7 @@ ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.p
   ${specRow('Ville', listing.city)}
 </dl>
 ${listing.description ? `<h2>Description</h2><p>${escapeHtml(listing.description.slice(0, 1500))}</p>` : ''}
+${catalogLinks.length ? `<h2>${escapeHtml(LISTING_CATALOG_HEADING)}</h2><ul>${catalogLinks.map((l) => `<li><a href="${SITE}${l.href}">${escapeHtml(l.label)}</a></li>`).join('')}</ul>` : ''}
 ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${src}" alt="${escapeHtml(`${listing.title} – photo ${i + 1}`)}" loading="lazy" />`).join('')}` : ''}
 <p><a href="${canonical}">Voir l'annonce complète sur Moto-Scoot.tn</a></p>
 ` : `
