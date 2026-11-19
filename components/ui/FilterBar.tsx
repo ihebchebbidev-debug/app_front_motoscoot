@@ -65,6 +65,9 @@ export interface FilterBarProps {
    *  'inline': one row (search field + sort icon + filters icon) that stays
    *  under the site header while the list scrolls (fiches-techniques brand page). */
   phoneLayout?: 'stacked' | 'inline';
+  /** Inline phone row: the sort button also says the chosen sort
+   *  (« ⇅ A → Z », « ⇅ Trier ») from 360 px; just the icon below. */
+  inlineSortLabel?: boolean;
   /** Name of the search field for screen readers when the placeholder is short. */
   searchLabel?: string;
   /** From 768 px: where the sort menu sits. 'end' (default): after the
@@ -100,6 +103,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onReset,
   phoneSearch = false,
   phoneLayout = 'stacked',
+  inlineSortLabel = false,
   searchLabel,
   sortPlacement = 'end',
   sortPlaceholder,
@@ -218,12 +222,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <button
                   type="button"
                   onClick={() => (hasCustomSort ? setIsSortSheetOpen(true) : setIsSortMenuOpen(true))}
-                  className="relative shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-gray-200 bg-card text-gray-900 active:scale-[0.97] transition-transform duration-100 ease-out"
+                  className={`relative shrink-0 h-11 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-card text-gray-900 active:scale-[0.97] transition-transform duration-100 ease-out ${inlineSortLabel ? 'w-11 min-[360px]:w-auto min-[360px]:px-3' : 'w-11'}`}
                   aria-label={sortAriaLabel}
                   aria-haspopup="dialog"
                 >
                   <ArrowUpDown size={20} aria-hidden="true" />
-                  {sortChanged && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-700" aria-hidden="true" />}
+                  {inlineSortLabel && (
+                    <span className="hidden min-[360px]:inline text-[15px] font-semibold whitespace-nowrap" aria-hidden="true">{sortButtonLabel}</span>
+                  )}
+                  {sortChanged && <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-700 ${inlineSortLabel ? 'min-[360px]:hidden' : ''}`} aria-hidden="true" />}
                 </button>
               )}
               <button

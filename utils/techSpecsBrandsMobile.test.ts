@@ -66,3 +66,8 @@ test('phones under 360 px: the chosen sort keeps its room (it read « A… » ne
   assert.match(bar, /ChevronDown size=\{16\} className="hidden min-\[360px\]:block text-gray-400 shrink-0"/);
   assert.match(bar, /h-12 px-4 min-\[360px\]:px-6 bg-gray-900/);
 });
+
+test('one phone row: the sort button says the chosen sort from 360 px, the icon alone below', () => {
+  assert.match(bar, /\$\{inlineSortLabel \? 'w-11 min-\[360px\]:w-auto min-\[360px\]:px-3' : 'w-11'\}/);
+  assert.match(bar, /<span className="hidden min-\[360px\]:inline text-\[15px\] font-semibold whitespace-nowrap" aria-hidden="true">\{sortButtonLabel\}<\/span>/);
+});

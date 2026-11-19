@@ -304,10 +304,10 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         onBack={() => onNavigate?.('home')}
       />
 
-      {/* Phones, like /annonces: the search field on its own row, then
-          « ⇅ <tri choisi> » and « Filtres <n> » as worded buttons (they were
-          two bare icons next to the search). From 768 px the importer menu,
-          the switch, the sort and the search sit in the bar. */}
+      {/* Phones: one row (owner, 2026-11-19) — search, « ⇅ <tri choisi> »,
+          then the « Filtres » icon with its count; it stays under the header
+          while the list scrolls. From 768 px the importer menu, the switch,
+          the sort and the search sit in the bar. */}
       <div>
         <FilterBar
           categories={[]}
@@ -319,7 +319,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           searchPlaceholder="Rechercher"
           searchLabel="Rechercher une marque ou un modèle"
           searchWidth="w-full md:w-[400px] lg:w-[500px]"
-          phoneSearch
+          phoneLayout="inline"
+          inlineSortLabel
           sortOptions={BRAND_VIEWS}
           sortPlacement="withFilters"
           sortValue={view}
