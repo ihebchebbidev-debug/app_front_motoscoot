@@ -201,7 +201,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <div ref={sentinelRef} aria-hidden="true" className="md:hidden h-px -mb-px" />
           <div
             data-stuck={stuck ? '' : undefined}
-            className={`md:hidden sticky top-[calc(3.5rem+var(--admin-bar-h,0px))] z-30 w-full px-6 py-1.5 mt-1 bg-[#F8F9F9]/90 backdrop-blur-md border-b transition-colors duration-200 ${stuck ? 'border-gray-200' : 'border-transparent'}`}
+            className={`md:hidden sticky top-[calc(3.5rem+var(--admin-bar-h,0px))] z-30 w-full px-6 py-1.5 mt-1 bg-page/90 backdrop-blur-md border-b transition-colors duration-200 ${stuck ? 'border-gray-200' : 'border-transparent'}`}
           >
             <div className="flex gap-2">
               <div className="relative flex-1 min-w-0" role="search">
@@ -250,7 +250,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               >
                 <SlidersHorizontal size={20} aria-hidden="true" />
                 {activeFilterCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-primary-700 text-white text-[12px] font-bold leading-5 text-center tabular-nums ring-2 ring-[#F8F9F9]" aria-hidden="true">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-primary-700 text-white text-[12px] font-bold leading-5 text-center tabular-nums ring-2 ring-page" aria-hidden="true">
                     {activeFilterCount}
                   </span>
                 )}

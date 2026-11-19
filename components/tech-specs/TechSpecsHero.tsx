@@ -41,7 +41,7 @@ const S = {
   // Mobile keeps the clean white header (content-first, low visual noise).
   // Desktop/tablet mirrors the landing-page Hero: admin-configured background
   // image + primary-color overlay, with white text on top.
-  Hero: "relative w-full flex flex-col font-sans bg-[#F8F9F9] md:bg-primary-50 md:border-b-0 pt-[96px] pb-1 md:pt-28 md:pb-16 items-start text-left overflow-hidden",
+  Hero: "relative w-full flex flex-col font-sans bg-page md:bg-primary-50 md:border-b-0 pt-[96px] pb-1 md:pt-28 md:pb-16 items-start text-left overflow-hidden",
   BgContainer: "hidden md:block absolute inset-0 overflow-hidden z-0",
   BgImage: "absolute inset-0 w-full h-full object-cover",
   ContentWrapper: "relative z-10 flex flex-col w-full max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32",

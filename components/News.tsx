@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import { getUrlFromState } from '../utils/urlUtils';
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
+  Wrapper: "min-h-screen bg-page md:bg-muted font-sans",
   
   // Style Hero : Hauteur calibrée (48dvh/45vh), Alignement à GAUCHE
   Hero: "relative w-full flex flex-col font-sans overflow-hidden h-[calc(var(--vh,1vh)*48)] md:h-[45vh] justify-center items-start text-left",
@@ -199,7 +199,7 @@ const News: React.FC<BasePageProps> = ({ onNavigate, onGoHome, onSearch }) => {
       </div>
 
       <div className="hidden md:block">
-        <Section variant="none" className="bg-[#F8F9F9] md:bg-gray-50 pb-24 pt-16">
+        <Section variant="none" className="bg-page md:bg-gray-50 pb-24 pt-16">
           {isLoading ? (
             <div className={S.DesktopGrid}>
               {Array.from({ length: 6 }).map((_, i) => (

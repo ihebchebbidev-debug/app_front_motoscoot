@@ -95,6 +95,8 @@ export default {
           700: 'hsl(var(--warning-700))',
         },
         background: 'hsl(var(--background))',
+        // Phone page background (was the literal #F8F9F9 in 10 components).
+        page: 'hsl(var(--page) / <alpha-value>)',
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',

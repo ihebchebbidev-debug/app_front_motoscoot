@@ -133,7 +133,7 @@ const ArticleDetails: React.FC<ArticleDetailsProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9F9] md:bg-card font-sans pb-12">
+    <div className="min-h-screen bg-page md:bg-card font-sans pb-12">
       <SEO 
         title={article.title} 
         rawTitle={!titleFitsBrandSuffix(article.title)}
