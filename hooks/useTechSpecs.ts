@@ -97,8 +97,10 @@ const brandRowsQuery = (availableInTunisia: boolean) => ({
 });
 const brandNames = (rows: TechSpecBrandRow[]) => rows.map((r) => r.brand);
 
-export const useTechSpecsBrands = (options: TechSpecsVisibilityOptions = {}) =>
-  useQuery<TechSpecBrandRow[], Error, string[]>({ ...brandRowsQuery(options.availableInTunisia === true), select: brandNames });
+/** `enabled: false` waits (the brand list asks for the Tunisia list only
+ *  once its switch is on: it was fetched on every visit, unused). */
+export const useTechSpecsBrands = (options: TechSpecsVisibilityOptions = {}, enabled = true) =>
+  useQuery<TechSpecBrandRow[], Error, string[]>({ ...brandRowsQuery(options.availableInTunisia === true), select: brandNames, enabled });
 
 /** Brands with their number of models (« 23 marques · 101 modèles »). */
 export const useTechSpecsBrandRows = (options: TechSpecsVisibilityOptions = {}) =>
