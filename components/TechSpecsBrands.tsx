@@ -66,9 +66,11 @@ const S = {
   // Phones: 96 px logo boxes (were 64; the logo files carry wide margins, so
   // the drawing itself goes from ~29 to ~43 px) in a 132 px tile; the name
   // keeps its size. max-w-full: at 320 px a tile is 85 px wide.
-  CardCompact: "h-[132px] sm:h-[155px] gap-2 sm:gap-3",
+  // min-h + logos from the top: a 2-line name (« BMW Motorrad ») makes its
+  // row a little taller, every logo of the row stays on one line.
+  CardCompact: "min-h-[132px] sm:min-h-[155px] justify-start pt-1 gap-2 sm:gap-3",
   LogoCompact: "w-24 h-24 max-w-full sm:w-[115px] sm:h-[115px]",
-  BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full truncate px-2",
+  BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full line-clamp-2 leading-5 break-words px-2",
   
   // Filter Styles
   FilterGroup: "flex-1 flex items-center gap-2 px-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors group relative border-none appearance-none cursor-pointer font-bold text-slate-900 text-sm md:text-base outline-none",
@@ -81,7 +83,7 @@ const BrandCard = memo(({ brand, href, onClick, logoMap, compact = false }: { br
   <Link
     to={href}
     onClick={() => onClick(brand)}
-    className={compact ? S.Card.replace('h-[155px]', '').replace('gap-3', '') + ' ' + S.CardCompact : S.Card}
+    className={compact ? S.Card.replace('h-[155px]', '').replace('gap-3', '').replace('justify-center', '') + ' ' + S.CardCompact : S.Card}
     aria-label={`Voir les modèles ${brand}`}
   >
     <div className={compact ? S.LogoWrapper.replace('w-[115px] h-[115px]', S.LogoCompact) : S.LogoWrapper}>

@@ -48,7 +48,7 @@ test('phones: popular brands in 3 columns × 2 rows (6 brands, smaller logos und
   assert.match(page, /<div className=\{`\$\{S\.PopularGrid\} md:mb-16`\}>/);
   assert.match(page, /<div className="mb-12 md:mb-24">/); // tighter on phones
   assert.match(page, /LogoCompact: "w-24 h-24 max-w-full sm:w-\[115px\] sm:h-\[115px\]"/); // 96 px logo boxes on phones
-  assert.match(page, /CardCompact: "h-\[132px\] sm:h-\[155px\] gap-2 sm:gap-3"/);
+  assert.match(page, /CardCompact: "min-h-\[132px\] sm:min-h-\[155px\] justify-start pt-1 gap-2 sm:gap-3"/); // 132 px at least; a 2-line name adds a line
   assert.match(page, /BrandName: "text-sm font-semibold text-gray-900 /); // name unchanged
   assert.match(page, /const limit = 6;/);
 });
@@ -70,4 +70,10 @@ test('phones under 360 px: the chosen sort keeps its room (it read « A… » ne
 test('one phone row: the sort button says the chosen sort from 360 px, the icon alone below', () => {
   assert.match(bar, /\$\{inlineSortLabel \? 'w-11 min-\[360px\]:w-auto min-\[360px\]:px-3' : 'w-11'\}/);
   assert.match(bar, /<span className="hidden min-\[360px\]:inline text-\[15px\] font-semibold whitespace-nowrap" aria-hidden="true">\{sortButtonLabel\}<\/span>/);
+});
+
+test('brand tiles: a long name (« BMW Motorrad ») shows whole on 2 lines, logos of a row stay aligned', () => {
+  assert.match(page, /text-center w-full line-clamp-2 leading-5 break-words px-2/);
+  assert.match(page, /CardCompact: "min-h-\[132px\] sm:min-h-\[155px\] justify-start pt-1 gap-2 sm:gap-3"/);
+  assert.match(page, /\.replace\('justify-center', ''\) \+ ' ' \+ S\.CardCompact/);
 });
