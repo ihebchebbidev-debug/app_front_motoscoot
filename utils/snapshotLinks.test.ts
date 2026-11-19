@@ -40,7 +40,8 @@ test('the HTML is a plain list of escaped links', () => {
 
 test('every section link is a page that exists, and the plugin writes the blocks', () => {
   const paths = new Set(SEO_SNAPSHOTS.map((s) => s.path));
-  for (const l of SECTION_LINKS) assert.ok(paths.has(l.href) || l.href.startsWith('/prix/'), l.href);
+  // /prix/… and /fiches-techniques are rendered at each request by api/og-prerender.ts.
+  for (const l of SECTION_LINKS) assert.ok(paths.has(l.href) || l.href.startsWith('/prix/') || l.href === '/fiches-techniques', l.href);
   assert.match(plugin, /\$\{renderLinkBlocks\(linkBlocksFor\(snap\.path, data\)\)\}/);
   assert.match(plugin, /const \[brands, listings, articles, guides\] = await Promise\.all\(\[fetchBrands\(\), fetchListings\(\), fetchEditorial\('articles'\), fetchEditorial\('tips'\)\]\);/);
 });

@@ -43,15 +43,15 @@ test('description: true counts, only brands of the catalogue, at most 160 charac
   assert.doesNotMatch(fallback, /\d|SYM/);
 });
 
-test('the React page and the build HTML use these texts', () => {
+test('the React page and the HTML Google receives use these texts', () => {
   const page = read('../components/TechSpecsBrands.tsx');
   assert.match(page, /title=\{hubPageTitle\(\)\}/);
   assert.match(page, /description=\{hubMetaDescription\}/);
   assert.match(page, /title=\{HUB_H1\}/);
   assert.match(page, /summary=\{hubSummary\.length \? hubSummary : undefined\}/);
-  const snap = read('../src/seo/snapshots.ts');
-  assert.match(snap, /title: `\$\{hubPageTitle\(\)\} \| Moto-Scoot\.tn`/);
-  assert.match(snap, /description: hubDescription\(null\)/);
-  assert.match(snap, /h1: HUB_H1/);
-  assert.doesNotMatch(snap, /Suzuki, Kawasaki, BMW, KTM, Piaggio\. Caract/);
+  const ssr = read('../api/og-prerender.ts');
+  assert.match(ssr, /const title = `\$\{hubPageTitle\(now\)\} \| Moto-Scoot\.tn`;/);
+  assert.match(ssr, /const description = hubDescription\(rows\);/);
+  assert.match(ssr, /<h1>\$\{escapeHtml\(HUB_H1\)\}<\/h1>/);
+  assert.doesNotMatch(read('../src/seo/snapshots.ts'), /Suzuki, Kawasaki, BMW, KTM, Piaggio\. Caract/);
 });

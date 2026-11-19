@@ -1,5 +1,5 @@
-import { slugify } from '../../utils/slugify';
-import { wordCount, THIN_CONTENT_WORDS } from '../../utils/editorial';
+import { slugify } from '../../utils/slugify.js';
+import { wordCount, THIN_CONTENT_WORDS } from '../../utils/editorial.js';
 
 /**
  * Real links for the build-time HTML of the entry pages (SEO audit of
