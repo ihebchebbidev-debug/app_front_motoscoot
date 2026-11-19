@@ -954,6 +954,98 @@ async function sendBoostConfirmationEmail(opts) {
   return transporter.sendMail({ from: `"${FROM_NAME}" <${SMTP_USER}>`, to, subject, html, text });
 }
 
+/* ---------------- Demande de devis (fiche technique) ----------------
+ * Sent from devis@moto-scoot.tn with its own SMTP account. The password
+ * lives only in the server environment (QUOTE_SMTP_PASS), never in code.
+ * Until it is set, the mails leave from the main account (SMTP_USER) with
+ * the same Reply-To, so no request is lost; the request is stored anyway.
+ * Never « from » the visitor: that is spoofing (SPF/DMARC → spam). The
+ * visitor's address goes in Reply-To, so « Répondre » reaches them.
+ */
+const QUOTE_SMTP_USER = process.env.QUOTE_SMTP_USER || 'devis@moto-scoot.tn';
+const QUOTE_SMTP_PASS = process.env.QUOTE_SMTP_PASS || '';
+const QUOTE_FROM_NAME = process.env.QUOTE_FROM_NAME || 'Moto-Scoot.tn — Devis';
+/** Copy of every request for Moto-Scoot. */
+const QUOTE_ADMIN_TO = process.env.QUOTE_ADMIN_TO || 'devis@moto-scoot.tn';
+
+let quoteTransporter = null;
+function quoteSender() {
+  if (QUOTE_SMTP_PASS) {
+    quoteTransporter ??= nodemailer.createTransport({
+      host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT === 465,
+      auth: { user: QUOTE_SMTP_USER, pass: QUOTE_SMTP_PASS },
+      connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 15_000,
+    });
+    return { transport: quoteTransporter, from: `"${QUOTE_FROM_NAME}" <${QUOTE_SMTP_USER}>` };
+  }
+  return { transport: transporter, from: `"${QUOTE_FROM_NAME}" <${SMTP_USER}>` };
+}
+
+function quoteRequestTemplate({ importerName, brand, model, priceLabel, imageUrl, pageUrl, firstName, lastName, phone, email, forAdmin = false }) {
+  const modelName = `${brand || ''} ${model || ''}`.trim();
+  const fullName = `${firstName || ''} ${lastName || ''}`.trim();
+  const subject = `Demande de devis — ${modelName} (via moto-scoot.tn)`;
+  const greeting = forAdmin ? 'Copie Moto-Scoot.tn' : `Bonjour${importerName ? ` ${escapeHtml(importerName)}` : ''},`;
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0f172a;">Nouvelle demande de devis</h1>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#374151;">${greeting}<br/>
+      Un visiteur de Moto-Scoot.tn demande un devis pour le modèle suivant.${forAdmin && importerName ? ` Importateur : <strong>${escapeHtml(importerName)}</strong>.` : ''}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eef0f3;border-radius:12px;margin:0 0 18px;">
+      <tr>
+        ${imageUrl ? `<td width="120" style="vertical-align:middle;padding:10px;"><img src="${escapeHtml(imageUrl)}" alt="" width="110" style="display:block;width:110px;height:auto;"/></td>` : ''}
+        <td style="padding:14px 16px;vertical-align:middle;">
+          <div style="font-size:16px;font-weight:800;color:#0f172a;">${escapeHtml(modelName)}</div>
+          ${priceLabel ? `<div style="font-size:15px;font-weight:700;color:#c2410c;margin-top:4px;">${escapeHtml(priceLabel)}</div>` : ''}
+        </td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #ffd9b8;border-radius:12px;margin:0 0 22px;">
+      <tr><td style="padding:18px 20px;font-size:14px;color:#1a1a1a;line-height:1.8;">
+        <strong>Nom :</strong> ${escapeHtml(fullName)}<br/>
+        <strong>Téléphone :</strong> <a href="tel:${escapeHtml(phone)}" style="color:#c2410c;text-decoration:none;font-weight:700;">${escapeHtml(phone)}</a><br/>
+        <strong>E-mail :</strong> <a href="mailto:${escapeHtml(email)}" style="color:#c2410c;text-decoration:none;font-weight:700;">${escapeHtml(email)}</a><br/>
+        <span style="font-size:12px;color:#6b7280;">Le visiteur a accepté que ses coordonnées soient utilisées pour répondre à cette demande. Répondez directement à cet e-mail pour lui écrire.</span>
+      </td></tr>
+    </table>
+    ${pageUrl ? `<p style="text-align:center;margin:24px 0 0;"><a href="${escapeHtml(pageUrl)}" style="display:inline-block;background:#c2410c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;">Voir la fiche sur Moto-Scoot.tn</a></p>` : ''}`;
+  const text = `Demande de devis — ${modelName}\n\n${forAdmin ? 'Copie Moto-Scoot.tn' : `Bonjour${importerName ? ` ${importerName}` : ''},`}\n\nUn visiteur de Moto-Scoot.tn demande un devis pour ${modelName}${priceLabel ? ` (${priceLabel})` : ''}.\n\nNom : ${fullName}\nTéléphone : ${phone}\nE-mail : ${email}\n\nLe visiteur a accepté que ses coordonnées soient utilisées pour répondre à cette demande.\n${pageUrl ? `\nFiche : ${pageUrl}\n` : ''}`;
+  return { subject, html: brandedShell({ subject, eyebrow: 'Demande de devis', preheader: `${fullName} demande un devis pour ${modelName}`, bodyHtml: body }), text };
+}
+
+function quoteConfirmationTemplate({ firstName, importerName, brand, model, pageUrl }) {
+  const modelName = `${brand || ''} ${model || ''}`.trim();
+  const subject = `Votre demande de devis — ${modelName}`;
+  const who = importerName ? escapeHtml(importerName) : "l'importateur";
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0f172a;">Demande bien reçue</h1>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#374151;">Bonjour ${escapeHtml(firstName || '')},<br/>
+      Votre demande de devis pour le <strong>${escapeHtml(modelName)}</strong> a été transmise à ${who}. Il vous recontactera par téléphone ou par e-mail.</p>
+    ${pageUrl ? `<p style="text-align:center;margin:24px 0 0;"><a href="${escapeHtml(pageUrl)}" style="display:inline-block;background:#c2410c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;">Revoir la fiche</a></p>` : ''}`;
+  const text = `Bonjour ${firstName || ''},\n\nVotre demande de devis pour le ${modelName} a été transmise à ${importerName || "l'importateur"}. Il vous recontactera par téléphone ou par e-mail.\n${pageUrl ? `\n${pageUrl}\n` : ''}`;
+  return { subject, html: brandedShell({ subject, eyebrow: 'Demande de devis', preheader: `Transmise à ${importerName || "l'importateur"}`, bodyHtml: body }), text };
+}
+
+/**
+ * Importer (if it has an e-mail) + copy to Moto-Scoot, Reply-To the
+ * visitor; then the visitor's confirmation, Reply-To devis@. Resolves to
+ * which sends went through (never throws: the request is already stored).
+ */
+async function sendQuoteRequestEmails(opts) {
+  const { transport, from } = quoteSender();
+  const replyTo = opts.email;
+  const jobs = [];
+  if (opts.importerEmail) {
+    const m = quoteRequestTemplate(opts);
+    jobs.push(['importer', transport.sendMail({ from, to: opts.importerEmail, replyTo, ...m })]);
+  }
+  const copy = quoteRequestTemplate({ ...opts, forAdmin: true });
+  jobs.push(['admin', transport.sendMail({ from, to: QUOTE_ADMIN_TO, replyTo, ...copy })]);
+  const conf = quoteConfirmationTemplate(opts);
+  jobs.push(['visitor', transport.sendMail({ from, to: opts.email, replyTo: QUOTE_SMTP_USER, ...conf })]);
+  const settled = await Promise.allSettled(jobs.map(([, p]) => p));
+  return Object.fromEntries(jobs.map(([k], i) => [k, settled[i].status === 'fulfilled']));
+}
+
 module.exports = {
   transporter,
   isSMTPVerified,
@@ -967,5 +1059,6 @@ module.exports = {
   sendSimilarListingsEmail,
   sendNewsletterEmail,
   sendBoostConfirmationEmail,
-  _internals: { resetPasswordTemplate, welcomeTemplate, verificationTemplate, newMessageTemplate, listingApprovedTemplate, listingRejectedTemplate, callRequestTemplate, similarListingsTemplate, newsletterTemplate, boostConfirmationTemplate, SMTP_USER, SMTP_HOST, SMTP_PORT, FROM_NAME },
+  sendQuoteRequestEmails,
+  _internals: { quoteRequestTemplate, quoteConfirmationTemplate, QUOTE_SMTP_USER, QUOTE_ADMIN_TO, resetPasswordTemplate, welcomeTemplate, verificationTemplate, newMessageTemplate, listingApprovedTemplate, listingRejectedTemplate, callRequestTemplate, similarListingsTemplate, newsletterTemplate, boostConfirmationTemplate, SMTP_USER, SMTP_HOST, SMTP_PORT, FROM_NAME },
 };
