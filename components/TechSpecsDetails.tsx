@@ -473,7 +473,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   return (
     <main className={S.Wrapper}>
       <SEO 
-        title={techSpecTitle({ brand: spec.brand, model: spec.model })}
+        title={techSpecTitle({ brand: spec.brand, model: spec.model, price: spec.priceNew })}
         rawTitle
         description={techSpecDescription({ brand: spec.brand, model: spec.model, category: spec.category, price: spec.priceNew, cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight })}
         image={shareImage}

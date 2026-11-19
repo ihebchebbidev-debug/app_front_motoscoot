@@ -166,7 +166,7 @@ const parsePrice = parseSpecPrice;
 
 function pickTitle(kind: Kind, d: Doc | null): string {
   if (!d) return `${KIND_CONFIG[kind].label} | Moto-Scoot.tn`;
-  if (kind === 'fiche-technique') return techSpecTitle(d);
+  if (kind === 'fiche-technique') return techSpecTitle({ brand: d.brand, model: d.model, price: d.price_new });
   if (kind === 'garage') {
     return `${d.name || d.title || 'Garage'} — Garage Moto${d.city ? ` à ${d.city}` : ''} | Moto-Scoot.tn`;
   }

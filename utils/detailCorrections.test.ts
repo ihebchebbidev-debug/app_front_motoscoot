@@ -124,7 +124,7 @@ test('sheet title and description follow the agreed format in the crawler HTML',
 });
 test('sheet description leaves out missing values and converts kW to ch', async () => {
   const { techSpecDescription, techSpecTitle } = await import('./techSpecSeo');
-  assert.equal(techSpecTitle({ brand: 'SYM', model: 'Jet 14 EVO 125' }), 'SYM Jet 14 EVO 125 | Prix en Tunisie & Fiche Technique');
+  assert.equal(techSpecTitle({ brand: 'SYM', model: 'Jet 14 EVO 125', price: '9000' }), 'SYM Jet 14 EVO 125 | Prix en Tunisie & Fiche Technique');
   assert.equal(techSpecDescription({ brand: 'Honda', model: 'X-ADV', cc: '745 cc' }), 'Fiche technique de la Honda X-ADV en Tunisie. Caractéristiques : 745 cm³. Comparez et choisissez votre moto.');
   assert.ok(techSpecDescription({ brand: 'Zontes', model: '125 X', price: '9 000 DT', power: '10 kW' }).includes('13,6 ch'));
   assert.equal(techSpecDescription({ brand: 'A', model: 'B', cc: 'N/A' }).includes('N/A'), false);
