@@ -113,9 +113,17 @@ export function updateAnalyticsConsent(granted: boolean) {
   });
 }
 
+/**
+ * Back-office pages are never sent to Google Analytics (owner, 2026-11-19):
+ * /admin (79 « organic » sessions in 28 days, the team's own visits) and the
+ * admin-only API tester /test. Public pages are counted as before.
+ */
+export const isAnalyticsExcludedPath = (path: string) => /^\/(?:admin|test)(?:[/?#]|$)/.test(path || '');
+
 /** Track a page view manually (called on every SPA route change). */
 export function trackPageView(path: string, title?: string) {
   if (typeof window === 'undefined' || !window.gtag || !window.__ga4_loaded) return;
+  if (isAnalyticsExcludedPath(path)) return;
   window.gtag('event', 'page_view', {
     page_path: path,
     page_title: title || document.title,
@@ -126,5 +134,6 @@ export function trackPageView(path: string, title?: string) {
 /** Track a custom event. */
 export function trackEvent(name: string, params: Record<string, any> = {}) {
   if (typeof window === 'undefined' || !window.gtag || !window.__ga4_loaded) return;
+  if (isAnalyticsExcludedPath(window.location.pathname)) return;
   window.gtag('event', name, params);
 }
