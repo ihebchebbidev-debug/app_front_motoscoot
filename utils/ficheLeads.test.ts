@@ -44,13 +44,15 @@ test('quote sheet: the model card photo (as on the brand page), no price, the im
   assert.match(sheet, /text-\[12px\] leading-4 text-gray-600">Importateur : \{importerName\}/);
 });
 
-test('desktop card: price + Comparer (light grey), WhatsApp, Appel (orange); « Demander un devis » below (owner)', () => {
-  assert.doesNotMatch(page, />\s*Comparer ce modèle\s*</); // the big orange button is gone
-  assert.match(page, /className=\{`\$\{S\.CardRound\} \$\{S\.CardNeutral\}`\} aria-label="Comparer ce modèle"/);
-  assert.match(page, /className=\{`\$\{S\.CardRound\} \$\{S\.CardWhatsapp\}`\}/);
-  assert.match(page, /className=\{`\$\{S\.CardRound\} \$\{S\.CardCall\}`\}/);
-  assert.match(page, /CardCall: "bg-orange-700 text-white /);
-  assert.match(page, /CardQuote: "w-full h-12 [^"]*bg-gray-100 text-gray-900 /);
-  assert.match(page, /<FileText size=\{18\} strokeWidth=\{2\.2\} aria-hidden="true" \/>\s*Demander un devis\s*<\/button>/);
+test('desktop card (owner model): price, orange « Demander un devis », then Comparer / WhatsApp / Appeler', () => {
+  assert.doesNotMatch(page, />\s*Comparer ce modèle\s*</); // the old big orange compare button
+  assert.match(page, /CardQuote: "w-full h-14 [^"]*rounded-2xl bg-primary-700 text-white /);
+  assert.match(page, /<FileText size=\{20\} strokeWidth=\{2\} aria-hidden="true" \/>\s*Demander un devis\s*<\/button>/);
+  assert.match(page, /CardAction: "flex-1 [^"]*rounded-xl bg-gray-100 text-gray-800 [^"]*uppercase /);
+  assert.match(page, /onClick=\{handleCompare\} className=\{S\.CardAction\} aria-label="Comparer ce modèle">/);
+  assert.match(page, /<span aria-hidden="true" className=\{S\.CardActionLabel\}>Comparer<\/span>/);
+  assert.match(page, /<span aria-hidden="true" className=\{S\.CardActionLabel\}>WhatsApp<\/span>/);
+  assert.match(page, /<span aria-hidden="true" className=\{S\.CardActionLabel\}>Appeler<\/span>/);
+  assert.match(page, /CardActionLabel: "hidden min-\[1150px\]:inline"/); // icons only in a narrow column
   assert.match(page, /const openQuote = \(e: React\.MouseEvent<HTMLElement>\) => \{ quoteButtonRef\.current = e\.currentTarget; setQuoteOpen\(true\); \};/);
 });
