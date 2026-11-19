@@ -4,6 +4,7 @@
  * so both always send the same text.
  *
  * Titre :       {Marque} {Modèle} | Prix en Tunisie & Fiche Technique
+ *               (sans prix chiffré : {Marque} {Modèle} | Fiche Technique & Caractéristiques)
  * Description : Prix de la {Marque} {Modèle} en Tunisie : {Prix} DT.
  *               Fiche technique : {cylindrée} cm³, {puissance} ch, {poids} kg.
  *               Comparez et choisissez votre moto.
@@ -180,9 +181,17 @@ export function techSpecPriceBlock(s: TechSpecPriceBlockInput): TechSpecPriceBlo
   };
 }
 
-export function techSpecTitle({ brand, model }: TechSpecSeoInput): string {
+/**
+ * The title promises a price only when the sheet has one (owner, 2026-11-19):
+ * 50 of 101 sheets (« En arrivage », « Prochainement », empty) said « Prix en
+ * Tunisie » with no price on the page. Same rule as the description
+ * (parseSpecPrice): once a price is entered in the admin, « Prix » comes back.
+ */
+export function techSpecTitle({ brand, model, price }: TechSpecSeoInput): string {
   const name = [brand, model].filter(Boolean).join(' ').trim() || 'Fiche technique';
-  return `${name} | Prix en Tunisie & Fiche Technique`;
+  return priceNumber(price) !== null
+    ? `${name} | Prix en Tunisie & Fiche Technique`
+    : `${name} | Fiche Technique & Caractéristiques`;
 }
 
 export function techSpecDescription({ brand, model, category, price, cc, power, weight }: TechSpecSeoInput): string {
