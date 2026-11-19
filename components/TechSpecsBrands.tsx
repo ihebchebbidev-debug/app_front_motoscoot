@@ -15,7 +15,8 @@ import { useTechSpecsBrands, useTechSpecsBrandRows, useTechSpecsSearch } from '.
 import type { FilterToggle } from './ui/FilterBar';
 import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts } from '../utils/techSpecsHubSeo';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigationType } from 'react-router-dom';
+import { defaultHubState, readHubState, saveHubState } from '../utils/techSpecHubState';
 import { useBrands } from '../hooks/useReferenceData';
 import { Section } from './ui/Section';
 import { Reveal } from './ui/Reveal';
@@ -95,18 +96,27 @@ const BrandCard = memo(({ brand, href, onClick, logoMap, compact = false }: { br
 ));
 
 const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunisia = false }) => {
-  const [brandSearch, setBrandSearch] = useState("");
+  // Back from a brand (browser Back): the sort, importer, switch and search
+  // the visitor had set come back (utils/techSpecHubState.ts). A new visit
+  // from a link starts fresh.
+  const navigationType = useNavigationType();
+  const [initial] = useState(() =>
+    (navigationType === 'POP' && readHubState()) || defaultHubState(availableInTunisia));
+  const [brandSearch, setBrandSearch] = useState(initial.q);
   const deferredBrandSearch = useDeferredValue(brandSearch);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeImporter, setActiveImporter] = useState(ALL_IMPORTERS);
+  const [activeImporter, setActiveImporter] = useState(initial.importer);
   // « Trier » : the page opens on its selection (« Marques populaires » +
   // every brand A → Z); then every brand A → Z (« Toutes les marques » or
   // « Ordre alphabétique ») or most visited first.
-  const [view, setView] = useState<BrandView>('default');
+  const [view, setView] = useState<BrandView>(initial.view);
   // « Disponibles en Tunisie » is a filter, not a sort (owner, 2026-11-19): a
   // switch in the bar, combined with any sort and importer. It used to be the
   // last « Trier » entry. ?available_in_tunisia=true still opens it switched on.
-  const [inTunisia, setInTunisia] = useState(availableInTunisia);
+  const [inTunisia, setInTunisia] = useState(initial.inTunisia);
+  useEffect(() => {
+    saveHubState({ view, importer: activeImporter, inTunisia, q: brandSearch });
+  }, [view, activeImporter, inTunisia, brandSearch]);
 
   const allBrandsQuery = useTechSpecsBrands({ availableInTunisia: false });
   // Same request as allBrandsQuery, with the counts: « 23 marques · 101 modèles »

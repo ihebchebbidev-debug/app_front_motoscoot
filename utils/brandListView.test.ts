@@ -37,7 +37,7 @@ test('the brand list uses the shared bar: sort, importer filter, sticky phone ro
   assert.doesNotMatch(page, /COUNTRIES|activeCountry/); // the hidden « Pays » filter is gone
   // The popular block only on arrival; « Toutes les marques » shows only the list.
   assert.match(page, /const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;/);
-  assert.match(page, /useState<BrandView>\('default'\)/);
+  assert.match(page, /useState<BrandView>\(initial\.view\)/);
   assert.match(page, /sortPlaceholder="Trier"/);
 });
 

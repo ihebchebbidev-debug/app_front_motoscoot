@@ -10,7 +10,8 @@ const page = read('../components/TechSpecsBrands.tsx');
 const bar = read('../components/ui/FilterBar.tsx');
 
 test('the brands page has a Tunisia switch, separate from the sort', () => {
-  assert.match(page, /const \[inTunisia, setInTunisia\] = useState\(availableInTunisia\);/, '?available_in_tunisia=true opens it on');
+  assert.match(page, /const \[inTunisia, setInTunisia\] = useState\(initial\.inTunisia\);/);
+  assert.match(page, /\|\| defaultHubState\(availableInTunisia\)\);/, '?available_in_tunisia=true opens it on');
   assert.match(page, /id: 'tunisia', label: 'Disponibles en Tunisie', checked: inTunisia, onChange: setInTunisia/);
   assert.match(page, /toggles=\{toggles\}/);
   assert.match(page, /\} = inTunisia \? tunisiaBrandsQuery : allBrandsQuery;/, 'the switch picks the Tunisia list');
