@@ -165,6 +165,10 @@ const S = {
   FloatGlass: "bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20]",
   FloatWhatsapp: "bg-[#25D366] active:bg-[#1EBE5A] [@media(hover:hover)]:hover:bg-[#1EBE5A]",
   FloatQuote: "bg-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800",
+  // Desktop card (light surface): same actions as the phone capsule.
+  CardRound: "shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardNeutral: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+  CardQuote: "flex-1 min-w-[8.5rem] h-12 inline-flex items-center justify-center gap-2 rounded-full bg-orange-700 text-white text-[0.9375rem] font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-100 ease-out hover:bg-orange-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
   // « Devis » always says its word next to its icon (owner, 2026-11-19): the
   // one action with a label, so it reads first; same height as the rounds.
   FloatQuotePill: "relative shrink-0 h-11 min-[400px]:h-12 pl-2.5 pr-3 min-[400px]:pl-3 min-[400px]:pr-3.5 inline-flex items-center gap-1 min-[400px]:gap-1.5 rounded-full text-white text-[0.875rem] min-[400px]:text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
@@ -249,7 +253,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   const [shareOpen, setShareOpen] = useState(false);
   // « Demande de devis » sheet; focus goes back to its button on close.
   const [quoteOpen, setQuoteOpen] = useState(false);
-  const quoteButtonRef = useRef<HTMLButtonElement>(null);
+  // The « Devis » button that opened the sheet (phone capsule or desktop card).
+  const quoteButtonRef = useRef<HTMLElement | null>(null);
+  const openQuote = (e: React.MouseEvent<HTMLElement>) => { quoteButtonRef.current = e.currentTarget; setQuoteOpen(true); };
 
 
   useEffect(() => {
@@ -668,7 +674,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             <div className="sticky top-28 space-y-6">
               {/* HEADER INFO CARD (Desktop Only) */}
               <div>
-                <div className="hidden lg:block bg-card rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                <div className="hidden lg:block bg-card rounded-2xl border border-gray-100 shadow-sm p-6 xl:p-8">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-sans text-[14px] font-bold text-primary-600 tracking-[0px]">{spec.brand}</span>
                   </div>
@@ -690,19 +696,41 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                     ))}
                   </div>
 
-                  {/* PRICE & ACTION */}
+                  {/* PRICE & ACTIONS — same as the phone capsule (owner, 2026-11-19):
+                      Comparer always (round, balance); Devis with its word,
+                      Appel and WhatsApp while the importer is subscribed. */}
                   <div className="pt-6 border-t border-gray-100 flex flex-col gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-2xl font-black text-gray-900 leading-none truncate">{spec.priceNew}</span>
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-2xl font-black text-gray-900 leading-none truncate">{spec.priceNew}</span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
+                      </div>
+                      <button type="button" onClick={handleCompare} className={`${S.CardRound} ${S.CardNeutral}`} aria-label="Comparer ce modèle" title="Comparer">
+                        <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
                     </div>
-                    <Button 
-                      variant="primary" 
-                      className="w-full rounded-xl py-4 text-sm shadow-md shadow-orange-500/20 font-bold"
-                      onClick={handleCompare}
-                    >
-                      Comparer ce modèle
-                    </Button>
+                    {(canQuote || callHref || waHref) && (
+                      // Narrow column (1024-1279 px): Appel and WhatsApp wrap under
+                      // « Devis » rather than squeezing its word.
+                      <div className="flex flex-wrap items-center gap-2">
+                        {canQuote && (
+                          <button type="button" onClick={openQuote} className={S.CardQuote} aria-label={`Demander un devis pour le ${modelName}`} aria-haspopup="dialog">
+                            <FileText size={18} strokeWidth={2.2} aria-hidden="true" />
+                            <span aria-hidden="true">Devis</span>
+                          </button>
+                        )}
+                        {callHref && (
+                          <a href={callHref} onClick={() => trackLead(spec.id, 'call')} className={`${S.CardRound} ${S.CardNeutral}`} aria-label={`Appeler ${spec.importer.name}`} title={`Appeler ${spec.importer.name}`}>
+                            <Phone size={20} strokeWidth={2.2} aria-hidden="true" />
+                          </a>
+                        )}
+                        {waHref && (
+                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp')} className={`${S.CardRound} bg-[#25D366] text-white hover:bg-[#1EBE5A]`} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`} title="WhatsApp">
+                            <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -790,9 +818,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         )}
         {canQuote && (
           <button
-            ref={quoteButtonRef}
             type="button"
-            onClick={() => setQuoteOpen(true)}
+            onClick={openQuote}
             className={`${S.FloatQuotePill} ${S.FloatQuote}`}
             aria-label={`Demander un devis pour le ${modelName}`}
             aria-haspopup="dialog"
