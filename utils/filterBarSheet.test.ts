@@ -12,7 +12,7 @@ const models = readFileSync(new URL('../components/TechSpecsModels.tsx', import.
 
 test('both phone panels are the draggable sheet, not fixed overlays', () => {
   assert.match(bar, /import \{ ChoiceSheet \} from '\.\.\/search\/ChoiceSheet';/);
-  assert.match(bar, /<ChoiceSheet open=\{isSortSheetOpen\} label="Trier par"/);
+  assert.match(bar, /<ChoiceSheet open=\{isSortSheetOpen\} label=\{sortSheetTitle\}/);
   assert.match(bar, /<ChoiceSheet\s+open=\{isSortMenuOpen\}/);
   assert.doesNotMatch(bar, /fixed inset-0 z-\[150\]/);
   assert.doesNotMatch(bar, /document\.body\.style\.overflow/); // the sheet locks the page (iPhone too)

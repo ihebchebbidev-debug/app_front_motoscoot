@@ -325,6 +325,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           sortPlacement="withFilters"
           sortValue={view}
           sortPlaceholder="Trier"
+          sortSheetTitle="Trier les marques"
           onSortValueChange={(v) => setView(v as BrandView)}
           extraFilters={extraFilters}
           toggles={toggles}
