@@ -164,7 +164,8 @@ const S = {
   FloatRound: "relative shrink-0 w-11 h-11 min-[400px]:w-12 min-[400px]:h-12 inline-flex items-center justify-center rounded-full text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   FloatGlass: "bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20]",
   FloatWhatsapp: "bg-[#25D366] active:bg-[#1EBE5A] [@media(hover:hover)]:hover:bg-[#1EBE5A]",
-  FloatQuote: "bg-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800",
+  // Same orange as the desktop button (#E65400, primary-600): one orange.
+  FloatQuote: "bg-primary-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-primary-700 [@media(hover:hover)]:hover:bg-primary-700",
   // Desktop card (light surface): same actions as the phone capsule.
   // « Demander un devis »: the big orange button under the price (owner's
   // model, orange instead of black), then Comparer / WhatsApp / Appeler as
@@ -714,6 +715,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                         <span className="text-[1.375rem] font-black text-gray-900 leading-none whitespace-nowrap">{spec.priceNew}</span>
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
                       </div>
+                      {canQuote && (
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={handleCompare} className={S.CardIcon} aria-label="Comparer ce modèle" title="Comparer">
                           <Scale size={20} strokeWidth={2} aria-hidden="true" />
@@ -729,11 +731,18 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                           </a>
                         )}
                       </div>
+                      )}
                     </div>
-                    {canQuote && (
+                    {canQuote ? (
                       <button type="button" onClick={openQuote} className={S.CardQuote} aria-haspopup="dialog">
                         <FileText size={20} strokeWidth={2} aria-hidden="true" />
                         Demander un devis
+                      </button>
+                    ) : (
+                      // Importer not subscribed: Comparer alone, the orange button with its word (owner).
+                      <button type="button" onClick={handleCompare} className={S.CardQuote}>
+                        <Scale size={20} strokeWidth={2} aria-hidden="true" />
+                        Comparer
                       </button>
                     )}
                   </div>
@@ -833,10 +842,18 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             <span aria-hidden="true">Devis</span>
           </button>
         )}
-        {/* « Comparer »: always a round button with the balance alone (owner). */}
-        <button type="button" className={`${S.FloatRound} ${S.FloatGlass}`} onClick={handleCompare} aria-label="Comparer ce modèle" title="Comparer">
-          <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
-        </button>
+        {/* « Comparer »: a round balance next to the contact buttons; alone
+            (importer not subscribed), the orange pill with its word (owner). */}
+        {canQuote ? (
+          <button type="button" className={`${S.FloatRound} ${S.FloatGlass}`} onClick={handleCompare} aria-label="Comparer ce modèle" title="Comparer">
+            <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        ) : (
+          <button type="button" className={`${S.FloatQuotePill} ${S.FloatQuote} !h-12 !px-4 !gap-1.5 !text-[0.9375rem]`} onClick={handleCompare}>
+            <Scale size={18} strokeWidth={2.2} aria-hidden="true" />
+            Comparer
+          </button>
+        )}
       </div>
 
       {canQuote && (

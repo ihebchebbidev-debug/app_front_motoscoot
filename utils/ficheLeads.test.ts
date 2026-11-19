@@ -55,4 +55,6 @@ test('desktop card (owner): price + Comparer, WhatsApp, Appeler as grey icons (g
   assert.match(page, /CardQuote: "w-full h-14 [^"]*rounded-2xl bg-primary-600 text-white /); // #E65400
   assert.match(page, /<FileText size=\{20\} strokeWidth=\{2\} aria-hidden="true" \/>\s*Demander un devis\s*<\/button>/);
   assert.match(page, /const openQuote = \(e: React\.MouseEvent<HTMLElement>\) => \{ quoteButtonRef\.current = e\.currentTarget; setQuoteOpen\(true\); \};/);
+  // No subscription: Comparer alone, the big orange button with its word.
+  assert.match(page, /<button type="button" onClick=\{handleCompare\} className=\{S\.CardQuote\}>\s*<Scale size=\{20\}[^>]*\/>\s*Comparer\s*<\/button>/);
 });
