@@ -32,7 +32,7 @@ import { useNavigationType } from 'react-router-dom';
 const S = {
   // White from 768 px like the cards section: the filter bar sticks out 18 px
   // under the orange header, and a grey page background showed there as a band.
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-card font-sans",
+  Wrapper: "min-h-screen bg-page md:bg-card font-sans",
   Hero: "relative w-full flex flex-col font-sans overflow-hidden h-[calc(var(--vh,1vh)*48)] md:h-[45vh] justify-center items-start text-left",
   BgContainer: "absolute inset-0 overflow-hidden z-0",
   Overlay: "absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply",
@@ -244,7 +244,7 @@ const TechSpecsModels: React.FC<BasePageProps> = ({ brand: brandSlug = '', onNav
         />
       )}
 
-      <Section variant="none" className="bg-[#F8F9F9] md:bg-card pb-32 pt-3 md:pt-20">
+      <Section variant="none" className="bg-page md:bg-card pb-32 pt-3 md:pt-20">
         {modelsError && brandModels.length === 0 ? (
           <TechSpecsErrorRetry
             title="Modèles indisponibles"

@@ -8,6 +8,8 @@
     /* Surfaces / text */
     --background:         0 0% 100%;
     --foreground:         222 22% 11%;
+    /* Phone page background (#F8F9F9): written by hand in 10 components. */
+    --page:               180 7.7% 97.5%;
     --card:               0 0% 100%;
     --card-foreground:    222 22% 11%;
     --popover:            0 0% 100%;
@@ -72,6 +74,7 @@
 
   .dark {
     --background:         222 25% 7%;
+    --page:               222 25% 7%;
     --foreground:         210 20% 96%;
     --card:               222 22% 11%;
     --card-foreground:    210 20% 96%;

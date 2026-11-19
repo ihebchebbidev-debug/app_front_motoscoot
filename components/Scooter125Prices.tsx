@@ -20,7 +20,7 @@ import {
 const SITE = 'https://www.moto-scoot.tn';
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans",
+  Wrapper: "min-h-screen bg-page md:bg-muted font-sans",
   // Same card, header and table rows as the fiche spec sheet (TechSpecsDetails).
   ContentBlock: "bg-card rounded-2xl border border-border overflow-hidden shadow-sm",
   BlockHeader: "px-6 md:px-8 py-4 border-b border-border",
@@ -173,7 +173,7 @@ const Scooter125Prices: React.FC<BasePageProps> = ({ onNavigate }) => {
         breadcrumbCurrent={SCOOTER_125_BREADCRUMB}
       />
 
-      <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-4 md:pt-16 pb-20 md:pb-32">
+      <Section variant="none" className="bg-page md:bg-card pt-4 md:pt-16 pb-20 md:pb-32">
         {isError && specs.length === 0 ? (
           <TechSpecsErrorRetry
             title="Prix indisponibles"

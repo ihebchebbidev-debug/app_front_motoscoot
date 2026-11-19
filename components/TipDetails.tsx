@@ -89,7 +89,7 @@ const TipDetails: React.FC<TipDetailsProps> = ({ tipId, onNavigate, onBack }) =>
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9F9] md:bg-card font-sans pb-0">
+    <div className="min-h-screen bg-page md:bg-card font-sans pb-0">
       <SEO 
         title={tip.title} 
         rawTitle={!titleFitsBrandSuffix(tip.title)}

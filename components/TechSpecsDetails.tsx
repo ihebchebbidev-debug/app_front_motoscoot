@@ -147,7 +147,7 @@ const ImporterCard: React.FC<{ importer?: Importer | null }> = ({ importer }) =>
 };
 
 const S = {
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
+  Wrapper: "min-h-screen bg-page md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
   FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1.5 rounded-full",
@@ -407,7 +407,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   if (isError) {
     return (
       <main className={S.Wrapper}>
-        <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-32 pb-20">
+        <Section variant="none" className="bg-page md:bg-card pt-32 pb-20">
           <div className="max-w-2xl mx-auto">
             <TechSpecsErrorRetry
               title="Fiche technique indisponible"
@@ -429,7 +429,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   if (!spec) {
     return (
       <main className={S.Wrapper}>
-        <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-32 pb-20 text-center flex flex-col items-center justify-center min-h-[60vh]">
+        <Section variant="none" className="bg-page md:bg-card pt-32 pb-20 text-center flex flex-col items-center justify-center min-h-[60vh]">
           <SEO title="Modèle introuvable" description="Cette page n'existe pas ou n'est plus disponible." noIndex />
           <h1 className="text-2xl font-black text-foreground mb-4">Modèle introuvable</h1>
           <p className="text-muted-foreground mb-8">La fiche technique que vous recherchez n'existe pas ou a été supprimée.</p>

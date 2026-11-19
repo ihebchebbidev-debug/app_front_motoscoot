@@ -37,7 +37,7 @@ import { BRAND_VIEWS, brandGridTitle, ALL_IMPORTERS, orderBrands, uniqueBrands, 
 const S = {
   // White from 768 px like the cards section: the filter bar sticks out 18 px
   // under the orange header, and a grey page background showed there as a band.
-  Wrapper: "min-h-screen bg-[#F8F9F9] md:bg-card font-sans",
+  Wrapper: "min-h-screen bg-page md:bg-card font-sans",
   Hero: "relative w-full flex flex-col font-sans overflow-hidden h-[calc(var(--vh,1vh)*48)] md:h-[45vh] justify-center items-start text-left",
   BgContainer: "absolute inset-0 overflow-hidden z-0",
   Overlay: "absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply",
@@ -71,7 +71,7 @@ const S = {
   BrandName: "text-sm font-semibold text-gray-900 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors text-center w-full truncate px-2",
   
   // Filter Styles
-  FilterGroup: "flex-1 flex items-center gap-2 px-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors group relative border-none appearance-none cursor-pointer font-bold text-slate-900 text-sm md:text-base outline-none",
+  FilterGroup: "flex-1 flex items-center gap-2 px-4 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group relative border-none appearance-none cursor-pointer font-bold text-gray-900 text-sm md:text-base outline-none",
 };
 
 const DEFAULT_POPULAR_BRANDS = ["Peugeot Motorcycles", "Piaggio", "SYM", "Voge", "Kymco", "CFMoto"];
@@ -88,7 +88,7 @@ const BrandCard = memo(({ brand, href, onClick, logoMap, compact = false }: { br
       {logoMap[brand] ? (
         <img src={logoMap[brand]} alt={brand} className={S.LogoImage} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
       ) : (
-        <Layers size={32} className="text-slate-300" />
+        <Layers size={32} className="text-gray-300" />
       )}
     </div>
     <span className={S.BrandName}>{brand}</span>
@@ -349,7 +349,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
           matching models (any brand, any spec field) so they don't have to
           drill through brand → models manually. Hidden when no query. */}
       {deferredBrandSearch.trim().length >= 2 && (
-        <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-10 md:pt-14 pb-0">
+        <Section variant="none" className="bg-page md:bg-card pt-10 md:pt-14 pb-0">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
               Modèles correspondants
@@ -373,7 +373,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                   <Link
                     key={spec.id}
                     to={specHref(spec)}
-                    className="group flex items-center gap-3 w-full text-left bg-card border border-slate-100 hover:border-primary-200 hover:shadow-sm rounded-xl p-3 transition-[transform,background-color,border-color,box-shadow] duration-100 ease-out active:scale-[0.97] active:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
+                    className="group flex items-center gap-3 w-full text-left bg-card border border-gray-100 hover:border-primary-200 hover:shadow-sm rounded-xl p-3 transition-[transform,background-color,border-color,box-shadow] duration-100 ease-out active:scale-[0.97] active:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
                   >
                     {/* The whole bike, wheels included (cover cropped them). */}
                     <img
@@ -422,7 +422,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
         </Section>
       )}
 
-      <Section variant="none" className="bg-[#F8F9F9] md:bg-card pt-4 md:pt-24 pb-20 md:pb-32">
+      <Section variant="none" className="bg-page md:bg-card pt-4 md:pt-24 pb-20 md:pb-32">
         {/* Error + retry surface — shown only when the brands query failed
             and we have no cached data to fall back on. */}
         {brandsError && backendBrands.length === 0 && (
@@ -443,7 +443,7 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight">
                   Marques populaires
                 </h2>
-                <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
+                <div className="h-px flex-1 bg-gray-100 mx-8 hidden md:block"></div>
               </div>
               <div className={`${S.PopularGrid} md:mb-16`}>
                 {isLoading ? (
@@ -497,8 +497,8 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
               ))}
             </div>
           ) : (
-            <div className="py-16 md:py-24 px-6 text-center bg-card rounded-3xl border border-dashed border-slate-200">
-              <Search size={40} className="mx-auto text-slate-300 mb-4" aria-hidden="true" />
+            <div className="py-16 md:py-24 px-6 text-center bg-card rounded-3xl border border-dashed border-gray-200">
+              <Search size={40} className="mx-auto text-gray-300 mb-4" aria-hidden="true" />
               <h3 className="text-[18px] font-bold text-gray-900">Aucune marque pour « {brandSearch} »</h3>
               <p className="text-gray-600 text-[14px] mt-2">Vérifiez l'orthographe, ou cherchez un modèle (ex. « Jet 14 », « 125 cc »).</p>
               <button
