@@ -169,10 +169,11 @@ const S = {
   // « Demander un devis »: the big orange button under the price (owner's
   // model, orange instead of black), then Comparer / WhatsApp / Appeler as
   // three equal light-grey buttons with small capitals.
-  CardQuote: "w-full h-14 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary-700 text-white text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out hover:bg-primary-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
-  CardAction: "flex-1 min-w-0 h-12 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 text-gray-800 text-[0.6875rem] font-bold uppercase tracking-[0.06em] transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardQuote: "w-full h-14 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary-600 text-white text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out hover:bg-primary-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  // Same type as the listing page buttons (ListingSellerCard: 12 px, extra-bold, normal case).
+  CardAction: "flex-1 min-w-0 h-12 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 text-gray-900 text-[12px] font-extrabold tracking-[0px] normal-case transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
   // Next to the price: same light grey, sized to its content.
-  CardCompare: "shrink-0 h-11 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 text-gray-800 text-[0.6875rem] font-bold uppercase tracking-[0.06em] transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardCompare: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-100 text-gray-900 transition-[transform,background-color] duration-100 ease-out hover:bg-gray-200 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
   // Under ~1150 px the column is too narrow for the words: icons only.
   CardActionLabel: "hidden min-[1150px]:inline",
   // « Devis » always says its word next to its icon (owner, 2026-11-19): the
@@ -712,9 +713,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                         <span className="text-[1.375rem] font-black text-gray-900 leading-none whitespace-nowrap">{spec.priceNew}</span>
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
                       </div>
-                      <button type="button" onClick={handleCompare} className={S.CardCompare} aria-label="Comparer ce modèle">
-                        <Scale size={18} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-                        <span aria-hidden="true" className={S.CardActionLabel}>Comparer</span>
+                      {/* Comparer: the balance alone (owner), its name for screen readers. */}
+                      <button type="button" onClick={handleCompare} className={S.CardCompare} aria-label="Comparer ce modèle" title="Comparer">
+                        <Scale size={20} strokeWidth={2} aria-hidden="true" />
                       </button>
                     </div>
                     {canQuote && (

@@ -46,10 +46,12 @@ test('quote sheet: the model card photo (as on the brand page), no price, the im
 
 test('desktop card (owner): Comparer next to the price; Demander un devis, then WhatsApp and Appeler below', () => {
   assert.doesNotMatch(page, />\s*Comparer ce modèle\s*</); // the old big orange compare button
-  assert.match(page, /<button type="button" onClick=\{handleCompare\} className=\{S\.CardCompare\} aria-label="Comparer ce modèle">/);
-  assert.match(page, /CardQuote: "w-full h-14 [^"]*rounded-2xl bg-primary-700 text-white /);
+  assert.match(page, /CardQuote: "w-full h-14 [^"]*rounded-2xl bg-primary-600 text-white /); // #E65400 (owner)
   assert.match(page, /<FileText size=\{20\} strokeWidth=\{2\} aria-hidden="true" \/>\s*Demander un devis\s*<\/button>/);
-  assert.match(page, /CardAction: "flex-1 [^"]*rounded-xl bg-gray-100 text-gray-800 [^"]*uppercase /);
+  // Same type as the listing page buttons: 12 px, extra-bold, normal case.
+  assert.match(page, /CardAction: "flex-1 [^"]*text-\[12px\] font-extrabold tracking-\[0px\] normal-case /);
+  // Comparer: icon only.
+  assert.match(page, /className=\{S\.CardCompare\} aria-label="Comparer ce modèle" title="Comparer">\s*<Scale size=\{20\} strokeWidth=\{2\} aria-hidden="true" \/>\s*<\/button>/);
   assert.match(page, /<span aria-hidden="true" className=\{S\.CardActionLabel\}>WhatsApp<\/span>/);
   assert.match(page, /<span aria-hidden="true" className=\{S\.CardActionLabel\}>Appeler<\/span>/);
   assert.match(page, /const openQuote = \(e: React\.MouseEvent<HTMLElement>\) => \{ quoteButtonRef\.current = e\.currentTarget; setQuoteOpen\(true\); \};/);
