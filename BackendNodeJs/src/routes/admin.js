@@ -187,6 +187,13 @@ router.post  ('/importers',      importersCtrl.create);
 router.put   ('/importers/:id',  importersCtrl.update);
 router.delete('/importers/:id',  importersCtrl.remove);
 
+// Contacts brought to each importer by its fiches (Appel, WhatsApp, Devis,
+// Comparer) and the quote requests, to show a subscribed importer.
+const leadsCtrl = require('../controllers/techSpecLeadsController');
+router.get('/leads/summary', leadsCtrl.adminSummary);
+router.get('/leads/importers/:id', leadsCtrl.adminImporter);
+router.get('/leads/importers/:id/quotes.csv', leadsCtrl.adminQuotesCsv);
+
 // Tips (conseils) — list/add/edit are staff routes (top); delete admin-only.
 router.delete('/tips/:id', tipsCtrl.remove);
 

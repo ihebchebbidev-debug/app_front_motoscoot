@@ -6,6 +6,7 @@
  */
 const { query } = require('../config/database');
 const { buildUpdate, validateRequired } = require('../utils/queryHelpers');
+const { ensureSubscriptionColumn, parseSubscriptionUntil } = require('../utils/importerSubscription');
 
 const FIELDS = [
   'name', 'logo_url', 'address', 'city', 'phone', 'whatsapp',
@@ -77,6 +78,14 @@ async function create(req, res, next) {
       [name.trim(), logo_url, address, city, phone, whatsapp, email, website,
        description, rating, reviews_count, is_active],
     );
+    // Abonnement (end date), set apart: the column may need creating first.
+    if ('subscription_until' in req.body) {
+      const until = parseSubscriptionUntil(req.body.subscription_until);
+      if (until === undefined) return res.status(400).json({ error: "Date de fin d'abonnement invalide (AAAA-MM-JJ)" });
+      await ensureSubscriptionColumn();
+      const r = await query('UPDATE importers SET subscription_until = $1 WHERE id = $2 RETURNING *', [until, rows[0].id]);
+      return res.status(201).json(r.rows[0]);
+    }
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23505') {
@@ -88,7 +97,14 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const upd = buildUpdate(req.body, FIELDS);
+    const body = { ...req.body };
+    if ('subscription_until' in body) {
+      const until = parseSubscriptionUntil(body.subscription_until);
+      if (until === undefined) return res.status(400).json({ error: "Date de fin d'abonnement invalide (AAAA-MM-JJ)" });
+      await ensureSubscriptionColumn();
+      body.subscription_until = until;
+    }
+    const upd = buildUpdate(body, 'subscription_until' in body ? [...FIELDS, 'subscription_until'] : FIELDS);
     if (!upd) return res.status(400).json({ error: 'No fields to update' });
     upd.params.push(req.params.id);
     const { rows } = await query(

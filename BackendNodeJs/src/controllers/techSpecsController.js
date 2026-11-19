@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const { subscribedSql } = require('../utils/importerSubscription');
 const { buildUpdate, validateRequired } = require('../utils/queryHelpers');
 const { publishedSql, ensurePublishedColumn } = require('../utils/techSpecDrafts');
 const { normalizeItem, readBatch, slugKey } = require('../utils/techSpecImport');
@@ -31,7 +32,8 @@ const IMPORTER_JSON =
       'address', i.address, 'city', i.city, 'phone', i.phone,
       'whatsapp', i.whatsapp, 'email', i.email, 'website', i.website,
       'description', i.description, 'rating', i.rating,
-      'reviews_count', i.reviews_count
+      'reviews_count', i.reviews_count,
+      'subscribed', ${subscribedSql('i')}
     ) END AS importer`;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
