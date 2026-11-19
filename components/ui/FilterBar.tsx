@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, X, Check, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ChoiceSheet } from '../search/ChoiceSheet';
 import { SwitchRow } from './SwitchRow';
+import { radioTabIndex, onRadioKeyDown } from '../../utils/radioChips';
 
 /** Section title in the phone filters panel: sentence case, dark (it was
  *  12 px heavy capitals in light grey, 3:1). */
@@ -383,19 +384,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             )}
             {categories.length > 0 && (
-              <div role="group" aria-label={categoryLabel}>
-                <h4 className={SECTION}>{categoryLabel === 'Toutes les catégories' ? 'Catégories' : categoryLabel}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map(cat => {
+              <div>
+                <h4 id="fb-cat-title" className={SECTION}>{categoryLabel === 'Toutes les catégories' ? 'Catégories' : categoryLabel}</h4>
+                {/* One choice among several: radio buttons for screen readers
+                    (« Scooter, 3 sur 6, sélectionné »), the arrows move and
+                    pick. They used to be announced as on/off toggles. */}
+                <div role="radiogroup" aria-labelledby="fb-cat-title" onKeyDown={onRadioKeyDown} className="flex flex-wrap gap-2">
+                  {categories.map((cat, i) => {
                     const n = countOf(categoryCounts, cat);
                     const empty = n === 0 && activeCategory !== cat;
                     return (
                       <button
                         key={cat}
                         type="button"
+                        role="radio"
                         onClick={() => handleCategoryChange(cat)}
                         disabled={empty}
-                        aria-pressed={activeCategory === cat}
+                        aria-checked={activeCategory === cat}
+                        tabIndex={radioTabIndex(categories, i, (c) => c === activeCategory, (c) => countOf(categoryCounts, c) === 0 && activeCategory !== c)}
                         className={chip(activeCategory === cat, empty)}
                       >
                         {cat}
@@ -414,19 +420,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             )}
 
             {extraFilters.map(filter => (
-              <div key={filter.id} role="group" aria-label={filter.label}>
-                <h4 className={SECTION}>{filter.label}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {filter.options.map(opt => {
+              <div key={filter.id}>
+                <h4 id={`fb-${filter.id}-title`} className={SECTION}>{filter.label}</h4>
+                <div role="radiogroup" aria-labelledby={`fb-${filter.id}-title`} onKeyDown={onRadioKeyDown} className="flex flex-wrap gap-2">
+                  {filter.options.map((opt, i) => {
                     const n = countOf(filter.counts, opt);
                     const empty = n === 0 && filter.value !== opt;
                     return (
                       <button
                         key={opt}
                         type="button"
+                        role="radio"
                         onClick={() => filter.onChange(opt)}
                         disabled={empty}
-                        aria-pressed={filter.value === opt}
+                        aria-checked={filter.value === opt}
+                        tabIndex={radioTabIndex(filter.options, i, (o) => o === filter.value, (o) => countOf(filter.counts, o) === 0 && filter.value !== o)}
                         className={chip(filter.value === opt, empty)}
                       >
                         {opt}
@@ -439,12 +447,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             ))}
 
             {showSort && onSortChange && (
-              <div role="group" aria-label="Ordre d'affichage">
-                <h4 className={SECTION}>Ordre d'affichage</h4>
-                <div className="grid grid-cols-2 gap-3">
+              <div>
+                <h4 id="fb-order-title" className={SECTION}>Ordre d'affichage</h4>
+                <div role="radiogroup" aria-labelledby="fb-order-title" onKeyDown={onRadioKeyDown} className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    aria-pressed={sortBy === 'recent'}
+                    role="radio"
+                    aria-checked={sortBy === 'recent'}
+                    tabIndex={sortBy === 'oldest' ? -1 : 0}
                     onClick={() => onSortChange('recent')}
                     className={`flex items-center justify-between min-h-11 px-4 py-3 rounded-xl text-[14px] font-semibold transition-colors border ${sortBy === 'recent' ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-700 border-transparent'}`}
                   >
@@ -452,7 +462,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   </button>
                   <button
                     type="button"
-                    aria-pressed={sortBy === 'oldest'}
+                    role="radio"
+                    aria-checked={sortBy === 'oldest'}
+                    tabIndex={sortBy === 'oldest' ? 0 : -1}
                     onClick={() => onSortChange('oldest')}
                     className={`flex items-center justify-between min-h-11 px-4 py-3 rounded-xl text-[14px] font-semibold transition-colors border ${sortBy === 'oldest' ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-700 border-transparent'}`}
                   >
