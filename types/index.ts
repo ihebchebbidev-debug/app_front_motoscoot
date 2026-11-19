@@ -313,6 +313,10 @@ export interface Importer {
   is_active?: boolean;
   /** Optional: brands carried by this importer (returned when ?with_brands=true). */
   brands?: string[];
+  /** Fiche payload: subscription running today (Appel, WhatsApp, Devis buttons). */
+  subscribed?: boolean;
+  /** Admin: last day of the subscription (YYYY-MM-DD), null when none. */
+  subscription_until?: string | null;
 }
 
 export interface AdCampaign {

@@ -1,5 +1,5 @@
 import { displayPhone, telHref } from '../utils/phoneUtils';
-import React, { useEffect, useMemo, useState, memo, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
 import {
   Share2,
   Heart,
@@ -9,8 +9,13 @@ import {
   ChevronRight,
   Phone,
   Mail,
-  ArrowLeftRight
+  Scale,
+  FileText
 } from 'lucide-react';
+import { siWhatsapp } from 'simple-icons';
+import { QuoteRequestSheet } from './tech-specs/QuoteRequestSheet';
+import { trackLead } from '../services/techSpecLeadsApi';
+import { whatsappHref } from '../utils/ficheLeads';
 import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
 import { capsulePrice } from '../utils/capsulePrice';
 import { techSpecsApi } from '../services/techSpecsApi';
@@ -150,11 +155,17 @@ const S = {
   Wrapper: "min-h-screen bg-page md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
-  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1.5 rounded-full",
+  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1 min-[360px]:gap-1.5 rounded-full",
   FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
   FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[360px]:pl-4 flex flex-col justify-center",
-  // Call: a lighter disc on the dark glass (white icon, 52 px).
-  FloatCall: "shrink-0 w-[3.25rem] h-[3.25rem] inline-flex items-center justify-center rounded-full bg-white/[0.14] text-white ring-1 ring-inset ring-white/[0.10] transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
+  // Round actions (owner, 2026-11-19), shown while the importer is subscribed:
+  // call (glass), WhatsApp (brand green), devis (orange, the main action),
+  // compare (glass, its word from 430 px). 48 px, 44 under 360 px.
+  FloatRound: "relative shrink-0 w-11 h-11 min-[360px]:w-12 min-[360px]:h-12 inline-flex items-center justify-center rounded-full text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
+  FloatGlass: "bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20]",
+  FloatWhatsapp: "bg-[#25D366] active:bg-[#1EBE5A] [@media(hover:hover)]:hover:bg-[#1EBE5A]",
+  FloatQuote: "bg-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800",
+  FloatCompareRound: "min-[430px]:w-auto min-[430px]:px-4 min-[430px]:gap-1.5 font-semibold tracking-[0.01em]",
   FloatCompare: "shrink-0 h-12 px-4 min-[360px]:pl-3.5 inline-flex items-center gap-1.5 rounded-full bg-orange-700 text-white font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
@@ -235,6 +246,9 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
       .filter((m): m is TechSpec => !!m);
   }, [spec, catalogue]);
   const [shareOpen, setShareOpen] = useState(false);
+  // « Demande de devis » sheet; focus goes back to its button on close.
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const quoteButtonRef = useRef<HTMLButtonElement>(null);
 
 
   useEffect(() => {
@@ -377,6 +391,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
 
   const handleCompare = useCallback(() => {
     if (!spec) return;
+    trackLead(spec.id, 'compare');
     const stored = localStorage.getItem('compare_ids');
     let ids: string[] = [];
     if (stored) {
@@ -468,7 +483,15 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   // Floating capsule: the price as typed in the admin, sorted (utils/capsulePrice.ts),
   // and a call link to the importer's first number (utils/phoneUtils.ts telHref).
   const capsule = capsulePrice(spec.priceNew);
-  const callHref = telHref(spec.importer?.phone);
+  // Appel, WhatsApp and Devis only while the importer's subscription runs
+  // (owner, 2026-11-19; importers.subscription_until, API field `subscribed`).
+  const subscribed = spec.importer?.subscribed === true;
+  const modelName = `${spec.brand} ${spec.model}`.trim();
+  const pageUrl = `https://www.moto-scoot.tn${getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand} ${spec.model}` })}`;
+  const callHref = subscribed ? telHref(spec.importer?.phone) : null;
+  const waHref = subscribed ? whatsappHref(spec.importer?.whatsapp, modelName, pageUrl) : null;
+  const canQuote = subscribed;
+  const roundActions = !!(callHref || waHref || canQuote);
 
   return (
     <main className={S.Wrapper}>
@@ -730,7 +753,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
           {capsule.kind === 'amount' ? (
             <>
-              <span className="text-[1.0625rem] min-[360px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[1rem] min-[360px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
               <span className="text-[0.75rem] font-medium text-gray-300 leading-tight tracking-[0.01em] whitespace-nowrap truncate">{capsule.sub}</span>
             </>
           ) : capsule.kind === 'text' ? (
@@ -742,18 +765,67 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         {callHref && (
           <a
             href={callHref}
-            className={S.FloatCall}
+            onClick={() => trackLead(spec.id, 'call')}
+            className={`${S.FloatRound} ${S.FloatGlass}`}
             aria-label={`Appeler ${spec.importer.name}`}
             title={`Appeler ${spec.importer.name}`}
           >
-            <Phone size={21} strokeWidth={2.2} aria-hidden="true" />
+            <Phone size={20} strokeWidth={2.2} aria-hidden="true" />
           </a>
         )}
-        <button type="button" className={S.FloatCompare} onClick={handleCompare}>
-          <ArrowLeftRight size={17} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
-          Comparer
-        </button>
+        {waHref && (
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackLead(spec.id, 'whatsapp')}
+            className={`${S.FloatRound} ${S.FloatWhatsapp}`}
+            aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`}
+            title="WhatsApp"
+          >
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
+          </a>
+        )}
+        {canQuote && (
+          <button
+            ref={quoteButtonRef}
+            type="button"
+            onClick={() => setQuoteOpen(true)}
+            className={`${S.FloatRound} ${S.FloatQuote}`}
+            aria-label={`Demander un devis pour le ${modelName}`}
+            aria-haspopup="dialog"
+            title="Demande de devis"
+          >
+            <FileText size={20} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        )}
+        {roundActions ? (
+          <button type="button" className={`${S.FloatRound} ${S.FloatGlass} ${S.FloatCompareRound}`} onClick={handleCompare} aria-label="Comparer ce modèle">
+            <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
+            <span className="hidden min-[430px]:inline" aria-hidden="true">Comparer</span>
+          </button>
+        ) : (
+          <button type="button" className={S.FloatCompare} onClick={handleCompare}>
+            <Scale size={17} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
+            Comparer
+          </button>
+        )}
       </div>
+
+      {canQuote && (
+        <QuoteRequestSheet
+          open={quoteOpen}
+          onClose={() => setQuoteOpen(false)}
+          specId={spec.id}
+          brand={spec.brand}
+          model={spec.model}
+          image={shareImage}
+          priceText={capsule.kind === 'amount' ? capsule.main : capsule.kind === 'text' ? capsule.main : undefined}
+          importerName={spec.importer?.name}
+          pageUrl={pageUrl}
+          returnFocus={quoteButtonRef}
+        />
+      )}
 
       {spec && (
         <SocialShareModal

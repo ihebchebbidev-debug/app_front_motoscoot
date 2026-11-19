@@ -40,15 +40,18 @@ test('call link: always the first number, with +216 for a Tunisian one', () => {
   assert.equal(telHref('+33 1 23 45 67 89'), 'tel:+33123456789');
   assert.equal(telHref(''), null);
   assert.equal(telHref(null), null);
-  assert.match(page, /const callHref = telHref\(spec\.importer\?\.phone\);/);
+  // Only while the importer is subscribed (owner, 2026-11-19).
+  assert.match(page, /const callHref = subscribed \? telHref\(spec\.importer\?\.phone\) : null;/);
   assert.match(page, /<a href=\{telHref\(importer\.phone\) \|\| undefined\}/); // the importer card too
   assert.doesNotMatch(page, /tel:\$\{(spec\.)?importer\.phone/);
 });
 
-test('targets for the finger: call 52 px, « Comparer » 48 px (Apple 44 pt, Google 48 dp)', () => {
-  assert.match(page, /FloatCall: "shrink-0 w-\[3\.25rem\] h-\[3\.25rem\] /);
+test('targets for the finger: round actions 48 px (44 under 360 px), « Comparer » 48 px (Apple 44 pt, Google 48 dp)', () => {
+  assert.match(page, /FloatRound: "relative shrink-0 w-11 h-11 min-\[360px\]:w-12 min-\[360px\]:h-12 /);
   assert.match(page, /FloatCompare: "shrink-0 h-12 /);
-  assert.match(page, /onClick=\{handleCompare\}>\s*<ArrowLeftRight[^>]*className="max-\[359px\]:hidden" \/>\s*Comparer/);
+  // « Comparer » keeps its word, with a balance (owner); round with the contact buttons, the word from 430 px.
+  assert.match(page, /onClick=\{handleCompare\}>\s*<Scale[^>]*className="max-\[359px\]:hidden" \/>\s*Comparer/);
+  assert.match(page, /<span className="hidden min-\[430px\]:inline" aria-hidden="true">Comparer<\/span>/);
   assert.match(page, /pb-\[calc\(7rem\+env\(safe-area-inset-bottom\)\)\] md:pb-20/);
 });
 
