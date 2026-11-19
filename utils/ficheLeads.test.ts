@@ -32,3 +32,11 @@ test('floating bar: Appel, WhatsApp and Devis only for a subscribed importer; ev
   assert.match(page, /<FileText size=\{20\}/);
   assert.match(page, /<QuoteRequestSheet[\s\S]*?returnFocus=\{quoteButtonRef\}/);
 });
+
+test('quote sheet: the model card photo (as on the brand page), no price, the importer small', () => {
+  const sheet = readFileSync(new URL('../components/tech-specs/QuoteRequestSheet.tsx', import.meta.url), 'utf8');
+  assert.match(page, /cardImage=\{spec\.image\}/);
+  assert.match(sheet, /className="w-20 aspect-\[4\/3\] rounded-xl object-cover bg-white shrink-0"/);
+  assert.doesNotMatch(sheet, /priceText/);
+  assert.match(sheet, /text-\[12px\] leading-4 text-gray-600">Importateur : \{importerName\}/);
+});

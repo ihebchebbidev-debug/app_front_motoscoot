@@ -18,9 +18,9 @@ interface Props {
   specId: string | number;
   brand: string;
   model: string;
-  image?: string | null;
-  /** « 7 099 DT », « En arrivage »… as shown in the capsule. */
-  priceText?: string;
+  /** The model's own photo, the one of its card on the brand page
+   *  (TechSpecModelCard: spec.image), not a gallery or share picture. */
+  cardImage?: string | null;
   importerName?: string;
   pageUrl: string;
   /** Back to the « Devis » button on close. */
@@ -32,7 +32,7 @@ const FIELD = 'w-full h-12 px-3.5 rounded-xl border bg-card text-[16px] text-gra
 const LABEL = 'block mb-1.5 text-[14px] font-semibold text-gray-900';
 const ERROR = 'mt-1.5 text-[13px] leading-5 text-red-700';
 
-export const QuoteRequestSheet: React.FC<Props> = ({ open, onClose, specId, brand, model, image, priceText, importerName, pageUrl, returnFocus }) => {
+export const QuoteRequestSheet: React.FC<Props> = ({ open, onClose, specId, brand, model, cardImage, importerName, pageUrl, returnFocus }) => {
   const [form, setForm] = useState<QuoteForm>(EMPTY);
   const [errors, setErrors] = useState<QuoteErrors>({});
   const [trap, setTrap] = useState('');
@@ -125,20 +125,21 @@ export const QuoteRequestSheet: React.FC<Props> = ({ open, onClose, specId, bran
       )}
     >
       <div className="px-5 pt-3 pb-5">
-        {/* The model of the page, filled in automatically. */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50">
-          {image && (
+        {/* The model of the page, filled in automatically: its card photo
+            (same crop as on the brand page), its name, the importer small.
+            No price here (owner, 2026-11-19). */}
+        <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50">
+          {cardImage && (
             <img
-              src={getOptimizedImageUrl(image, 160, 120, 80, undefined, modelName)}
+              src={getOptimizedImageUrl(cardImage, 240, 180, 80, undefined, modelName)}
               alt=""
-              className="w-16 h-16 rounded-xl object-contain bg-white shrink-0"
+              className="w-20 aspect-[4/3] rounded-xl object-cover bg-white shrink-0"
               decoding="async"
             />
           )}
           <div className="min-w-0">
             <p className="text-[15px] leading-5 font-semibold text-gray-900 line-clamp-2">{modelName}</p>
-            {priceText && <p className="mt-0.5 text-[15px] leading-5 font-bold text-primary-700 tabular-nums">{priceText}</p>}
-            {importerName && <p className="mt-0.5 text-[13px] leading-5 text-gray-600">Importateur : {importerName}</p>}
+            {importerName && <p className="mt-0.5 text-[12px] leading-4 text-gray-600">Importateur : {importerName}</p>}
           </div>
         </div>
 

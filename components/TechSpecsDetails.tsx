@@ -819,8 +819,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           specId={spec.id}
           brand={spec.brand}
           model={spec.model}
-          image={shareImage}
-          priceText={capsule.kind === 'amount' ? capsule.main : capsule.kind === 'text' ? capsule.main : undefined}
+          cardImage={spec.image}
           importerName={spec.importer?.name}
           pageUrl={pageUrl}
           returnFocus={quoteButtonRef}
