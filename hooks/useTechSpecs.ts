@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { techSpecsApi, type TechSpecBrandRow } from '../services/techSpecsApi';
 import { TechSpec } from '../types';
-import { pickHubModels } from '../utils/techSpecsHubSeo';
+import { pickPopularModels } from '../utils/popularModels';
 
 const retryStrategy = (failureCount: number, error: any) => {
   if (error?.status >= 400 && error?.status < 500) return false;
@@ -32,21 +32,21 @@ export const useAllTechSpecs = () => {
 };
 
 /**
- * « Modèles populaires » of /fiches-techniques: one model per brand, most
- * visited brands first (utils/techSpecsHubSeo.ts, same pick as the HTML Google
- * receives). Waits for `enabled` so the brand grid loads first.
+ * « Modèles populaires » of the home page: one model per brand, most visited
+ * brands first (utils/popularModels.ts, same pick as the home HTML). Waits
+ * for `enabled` (the row near the screen) so the first paint does not pay it.
  */
-export const useHubPopularModels = (enabled = true) =>
+export const usePopularModelsRow = (enabled = true) =>
   useQuery<TechSpec[], Error, TechSpec[]>({
     queryKey: ['tech-specs', 'popular', 'all'],
     queryFn: ({ signal }) => techSpecsApi.getPopularAll(signal),
-    select: selectHubModels,
+    select: selectPopularModels,
     enabled,
     staleTime: 1000 * 60 * 30,
     retry: retryStrategy,
   });
-const selectHubModels = (specs: TechSpec[]) =>
-  pickHubModels(specs, (s) => ({ brand: s.brand, image: s.image, price: s.priceNew }));
+const selectPopularModels = (specs: TechSpec[]) =>
+  pickPopularModels(specs, (s) => ({ brand: s.brand, image: s.image, price: s.priceNew }));
 
 /** Latest uploaded tech specs (newest fiches techniques). */
 export const useLatestTechSpecs = (limit = 3) => {

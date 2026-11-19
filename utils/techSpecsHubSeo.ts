@@ -10,8 +10,6 @@
  * catalogue changes. Every brand named in the description exists in it.
  */
 
-import { priceValue } from './techSpecSort.js';
-
 export interface HubBrandRow { brand: string; modelsCount?: number | null }
 
 const NBSP = String.fromCharCode(0xa0);
@@ -73,39 +71,4 @@ export function hubDescription(rows: HubBrandRow[] | null | undefined): string {
     if (text.length <= MAX_DESCRIPTION) return text;
   }
   return what.length <= MAX_DESCRIPTION ? what : `${what.slice(0, MAX_DESCRIPTION - 1).trimEnd()}…`;
-}
-
-// ---------------------------------------------------------------------------
-// « Modèles populaires » (SEO audit of 2026-11-19, P3): fiche pages linked
-// from the hub, since the fiches are the pages that rank (Jet 14, Pulsion 125,
-// Liberty S). The site counts visits per brand, not per model, so the row
-// takes one model per brand, in the order of /api/tech-specs/popular (most
-// visited brands first, newest model first): 12 brands, not 9 SYM.
-
-export const HUB_MODELS_HEADING = 'Modèles populaires';
-export const HUB_MODELS_SUBTITLE = 'Un modèle par marque, des marques les plus consultées aux suivantes.';
-export const HUB_MODELS_MAX = 12;
-
-export interface HubModelSource { brand?: string | null; image?: string | null; price?: string | number | null }
-
-/**
- * One model per brand, keeping the given order (most visited brands first).
- * Within a brand: the first with a photo and a price in DT, else the first
- * with a photo. A model without a photo is never picked (the card needs one).
- */
-export function pickHubModels<T>(specs: T[], source: (s: T) => HubModelSource, max = HUB_MODELS_MAX): T[] {
-  const byBrand = new Map<string, T[]>();
-  for (const s of specs) {
-    const { brand, image } = source(s);
-    const key = String(brand || '').trim().toLowerCase();
-    if (!key || key === 'autre' || !String(image || '').trim()) continue;
-    if (!byBrand.has(key)) byBrand.set(key, []);
-    byBrand.get(key)!.push(s);
-  }
-  const picked: T[] = [];
-  for (const models of byBrand.values()) {
-    if (picked.length >= max) break;
-    picked.push(models.find((m) => priceValue(String(source(m).price ?? '')) !== null) ?? models[0]);
-  }
-  return picked;
 }

@@ -1,5 +1,6 @@
 import { slugify } from '../../utils/slugify.js';
 import { wordCount, THIN_CONTENT_WORDS } from '../../utils/editorial.js';
+import { pickPopularModels, POPULAR_MODELS_HEADING } from '../../utils/popularModels.js';
 
 /**
  * Real links for the build-time HTML of the entry pages (SEO audit of
@@ -112,8 +113,21 @@ export function editorialLinks(rows: SnapshotEditorial[], base: '/article' | '/g
   return out;
 }
 
+/** A sheet of /api/tech-specs/popular (most visited brands first). */
+export interface SnapshotModel { brand?: string | null; model?: string | null; slug?: string | null; image?: string | null; price_new?: string | number | null }
+
+/**
+ * Home « Modèles populaires » (owner, 2026-11-19): the same 12 fiches as the
+ * React row (utils/popularModels.ts), at the short address of each fiche.
+ */
+export function popularModelLinks(models: SnapshotModel[]): SnapshotLink[] {
+  return pickPopularModels(models.filter((m) => m.slug && /^[a-z0-9-]+$/.test(String(m.slug))), (m) => ({ brand: m.brand, image: m.image, price: m.price_new }))
+    .map((m) => ({ href: `/fiche-technique/${m.slug}`, label: [m.brand, m.model].filter(Boolean).join(' ') }));
+}
+
 export interface SnapshotLinkData {
   brands?: string[];
+  models?: SnapshotModel[];
   listings?: SnapshotListing[];
   articles?: SnapshotEditorial[];
   guides?: SnapshotEditorial[];
@@ -142,6 +156,8 @@ export function linkBlocksFor(path: string, data: SnapshotLinkData = {}): Snapsh
     if (latestArticles.length) blocks.unshift({ heading: 'Derniers articles', links: latestArticles });
     const latestListings = listingLinks(data.listings || []).slice(0, HOME_LATEST);
     if (latestListings.length) blocks.unshift({ heading: 'Dernières annonces', links: latestListings });
+    const models = popularModelLinks(data.models || []);
+    if (models.length) blocks.unshift({ heading: POPULAR_MODELS_HEADING, links: models });
   }
   const brands = BRAND_PAGES.has(path) ? brandLinks(data.brands || []) : [];
   if (brands.length) blocks.push({ heading: 'Marques', links: brands });

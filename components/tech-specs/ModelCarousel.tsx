@@ -8,7 +8,7 @@ import type { TechSpec } from '../../types';
  * pages) in a horizontal slider: swipe with scroll snap on phones, previous /
  * next buttons from md up, each card a real link reachable with Tab.
  * Used by « Modèles similaires » (fiche page) and « Modèles populaires »
- * (/fiches-techniques), so both rows look and behave the same.
+ * (home page), so both rows look and behave the same.
  */
 const DEFAULT_HEADING = 'font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground border-b-2 border-primary-600 pb-2';
 
@@ -19,8 +19,9 @@ export const ModelCarousel: React.FC<{
   /** One line under the heading (what the row is). */
   subtitle?: string;
   headingClassName?: string;
+  subtitleClassName?: string;
   className?: string;
-}> = ({ id, heading, models, subtitle, headingClassName = DEFAULT_HEADING, className = 'mt-8' }) => {
+}> = ({ id, heading, models, subtitle, headingClassName = DEFAULT_HEADING, subtitleClassName = 'mt-1 text-sm text-gray-600', className = 'mt-8' }) => {
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
   const updateEdges = useCallback(() => {
@@ -48,7 +49,7 @@ export const ModelCarousel: React.FC<{
           <h2 id={id} className={headingClassName}>
             {heading}
           </h2>
-          {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
+          {subtitle && <p className={subtitleClassName}>{subtitle}</p>}
         </div>
         <div className="hidden md:flex gap-2 shrink-0">
           <button type="button" className={arrow} onClick={() => slide(-1)} disabled={edges.start} aria-label="Modèles précédents"><ChevronLeft size={18} /></button>

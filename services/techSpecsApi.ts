@@ -241,7 +241,7 @@ export const techSpecsApi = {
 
   /**
    * Every published sheet, most visited brands first, newest model first
-   * (the « Modèles populaires » row of /fiches-techniques picks one per brand).
+   * (the « Modèles populaires » row of the home page picks one per brand).
    */
   async getPopularAll(signal?: AbortSignal): Promise<TechSpec[]> {
     const data = await apiClient.get<BackendTechSpec[] | { specs: BackendTechSpec[] }>(

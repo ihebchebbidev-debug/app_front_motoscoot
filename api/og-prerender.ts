@@ -25,7 +25,7 @@ import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, te
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
-import { HUB_H1, HUB_MODELS_HEADING, HUB_MODELS_SUBTITLE, hubDescription, hubPageTitle, hubSummaryParts, pickHubModels, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
+import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
 import { linkBlocksFor, renderLinkBlocks } from '../src/seo/snapshotLinks.js';
 import { ficheSlugCandidates, hasTunisiaParam } from '../utils/legacyRedirects.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
@@ -505,21 +505,7 @@ ${items}
 // brands are read from the API at each request, like the brand pages, with the
 // same title, description, H1 and summary as the React page
 // (utils/techSpecsHubSeo.ts) and the same link blocks as before (snapshotLinks.ts).
-// « Modèles populaires » (P3): the same models as the React row, as links
-// with their cylinder and price, like the model list of a brand page.
-function hubModelsHtml(specs: Doc[]): string {
-  const models = pickHubModels(specs, (m) => ({ brand: m.brand, image: m.image, price: m.price_new == null ? null : String(m.price_new) }));
-  if (!models.length) return '';
-  const items = models.map((m) => {
-    const url = `${SITE}/fiche-technique/${(m as any).slug || `${slugify([m.brand, m.model, m.year].filter(Boolean).join(' '))}-${m.id}`}`;
-    const price = parsePrice(m.price_new);
-    const facts = [m.engine?.cc, price ? `${fmtNum(price)} DT` : ''].filter(Boolean).join(' · ');
-    return `<li><a href="${url}">${escapeHtml([m.brand, m.model].filter(Boolean).join(' '))}</a>${facts ? ` : ${escapeHtml(String(facts))}` : ''}</li>`;
-  }).join('\n');
-  return `<section>\n<h2>${escapeHtml(HUB_MODELS_HEADING)}</h2>\n<p>${escapeHtml(HUB_MODELS_SUBTITLE)}</p>\n<ul>\n${items}\n</ul>\n</section>\n`;
-}
-
-export function renderHubHtml(rows: HubBrandRow[], now: Date = new Date(), popular: Doc[] = []): string {
+export function renderHubHtml(rows: HubBrandRow[], now: Date = new Date()): string {
   const canonical = `${SITE}/fiches-techniques`;
   const title = `${hubPageTitle(now)} | Moto-Scoot.tn`;
   const description = hubDescription(rows);
@@ -533,7 +519,6 @@ export function renderHubHtml(rows: HubBrandRow[], now: Date = new Date(), popul
     ],
   };
   const links = renderLinkBlocks(linkBlocksFor('/fiches-techniques', { brands: rows.map((r) => r.brand) }));
-  const models = hubModelsHtml(popular);
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -566,26 +551,12 @@ export function renderHubHtml(rows: HubBrandRow[], now: Date = new Date(), popul
 <nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › Fiches techniques</nav>
 <h1>${escapeHtml(HUB_H1)}</h1>
 ${summary ? `<p>${escapeHtml(summary)}</p>\n` : ''}<p>Prix du neuf et fiches techniques des motos et scooters vendus en Tunisie : cylindrée, puissance, couple, poids, consommation et équipements, marque par marque.</p>
-${models}${links}
+${links}
 </body>
 </html>`;
 }
 
-// Every published sheet, most visited brands first; none (row left out) when
-// the API does not answer: the page still renders with its brands.
-async function fetchPopularSpecs(): Promise<Doc[]> {
-  try {
-    const r = await fetch(`${API_BASE}/tech-specs/popular?all=1&limit=2000`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) });
-    if (!r.ok) return [];
-    const data = await r.json();
-    return Array.isArray(data) ? data : data.specs || [];
-  } catch {
-    return [];
-  }
-}
-
 async function renderHub(req: any, res: any) {
-  const popularPromise = fetchPopularSpecs();
   const r = await fetch(`${API_BASE}/tech-specs/brands`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
   if (!r.ok) throw new Error('Content service unavailable');
   const data = await r.json();
@@ -595,7 +566,7 @@ async function renderHub(req: any, res: any) {
   }).filter((b: HubBrandRow) => b.brand);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
-  res.status(200).send(await renderWithApp(req, renderHubHtml(rows, new Date(), await popularPromise)));
+  res.status(200).send(await renderWithApp(req, renderHubHtml(rows)));
 }
 
 // /prix/scooter-125-tunisie: the price guide generated from the sheets

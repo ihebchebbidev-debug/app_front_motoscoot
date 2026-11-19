@@ -10,9 +10,8 @@ import {
   Filter
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useTechSpecsBrands, useTechSpecsBrandRows, useTechSpecsSearch, useHubPopularModels } from '../hooks/useTechSpecs';
-import { ModelCarousel } from './tech-specs/ModelCarousel';
-import { HUB_H1, HUB_MODELS_HEADING, HUB_MODELS_SUBTITLE, hubDescription, hubPageTitle, hubSummaryParts } from '../utils/techSpecsHubSeo';
+import { useTechSpecsBrands, useTechSpecsBrandRows, useTechSpecsSearch } from '../hooks/useTechSpecs';
+import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts } from '../utils/techSpecsHubSeo';
 import { getOptimizedImageUrl, getUrlFromState, slugify } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
 import { useBrands } from '../hooks/useReferenceData';
@@ -227,7 +226,6 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
   const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS;
-  const { data: popularModels = [] } = useHubPopularModels(!isLoading);
 
   // Cards are real links (crawlable); the click only records the brand visit.
   const handleBrandClick = useCallback((brand: string) => {
@@ -417,20 +415,6 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
                 )}
               </div>
             </div>
-          )}
-
-          {/* « Modèles populaires » (SEO audit 2026-11-19, P3): one fiche per
-              brand, most visited brands first, each card a real link — the
-              fiches are the pages that rank. Loaded after the brand grid. */}
-          {showPopular && popularModels.length > 0 && (
-            <ModelCarousel
-              id="modeles-populaires"
-              heading={HUB_MODELS_HEADING}
-              subtitle={HUB_MODELS_SUBTITLE}
-              models={popularModels}
-              headingClassName="text-xl md:text-2xl font-bold text-gray-900 tracking-[-0.01em] leading-tight"
-              className="mb-12 md:mb-24"
-            />
           )}
 
           {/* ALL BRANDS GRID */}

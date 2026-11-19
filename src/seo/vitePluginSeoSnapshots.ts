@@ -18,7 +18,7 @@ import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
 import { HERO_DEFAULTS } from '../../config/heroDefaults';
 import { SPA_TITLE, SPA_DESCRIPTION, DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from './privatePages';
-import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing, type SnapshotEditorial } from './snapshotLinks';
+import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing, type SnapshotEditorial, type SnapshotModel } from './snapshotLinks';
 
 interface HeroImages { desktop_url: string; mobile_url: string; background_color: string }
 
@@ -103,7 +103,20 @@ async function fetchEditorial(endpoint: 'articles' | 'tips'): Promise<SnapshotEd
   }
 }
 
-export interface SnapshotData { brands: string[]; listings: SnapshotListing[]; articles: SnapshotEditorial[]; guides: SnapshotEditorial[] }
+// Every published sheet, most visited brands first, for the home « Modèles
+// populaires » links. None when the API is down: the home still builds.
+async function fetchPopularModels(): Promise<SnapshotModel[]> {
+  try {
+    const res = await fetch('https://motoscoot.ihebchebbi.pro/api/tech-specs/popular?all=1&limit=2000', { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.specs || [];
+  } catch {
+    return [];
+  }
+}
+
+export interface SnapshotData { brands: string[]; models: SnapshotModel[]; listings: SnapshotListing[]; articles: SnapshotEditorial[]; guides: SnapshotEditorial[] }
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -292,8 +305,8 @@ export function seoSnapshotsPlugin(): Plugin {
       // eslint-disable-next-line no-console
       console.log(`[seo-snapshots] hero images: ${heroRaw ? 'admin settings' : 'defaults (API unavailable)'}`);
 
-      const [brands, listings, articles, guides] = await Promise.all([fetchBrands(), fetchListings(), fetchEditorial('articles'), fetchEditorial('tips')]);
-      const data: SnapshotData = { brands, listings, articles, guides };
+      const [brands, models, listings, articles, guides] = await Promise.all([fetchBrands(), fetchPopularModels(), fetchListings(), fetchEditorial('articles'), fetchEditorial('tips')]);
+      const data: SnapshotData = { brands, models, listings, articles, guides };
       // eslint-disable-next-line no-console
       console.log(`[seo-snapshots] link lists: ${brands.length} brands, ${listings.length} listings, ${articles.length} articles, ${guides.length} guides`);
 
