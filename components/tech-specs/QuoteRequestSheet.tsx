@@ -126,23 +126,25 @@ export const QuoteRequestSheet: React.FC<Props> = ({ open, onClose, specId, bran
     >
       <div className="px-5 pt-3 pb-5">
         {/* The model of the page, filled in automatically: its card photo
-            (same crop as on the brand page), its name, the importer small.
-            No price here (owner, 2026-11-19). */}
-        <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50">
+            (same crop as on the brand page), brand and model in bold, the
+            importer small. No price (owner, 2026-11-19). Apple-like: one
+            hairline instead of a grey box, the photo carries the card, type
+            tightened as it grows. */}
+        <div className="flex items-center gap-4 p-3 rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_16px_-8px_rgba(15,23,42,0.12)]">
           {cardImage && (
             <img
-              src={getOptimizedImageUrl(cardImage, 240, 180, 80, undefined, modelName)}
+              src={getOptimizedImageUrl(cardImage, 360, 270, 80, undefined, modelName)}
               alt=""
-              className="w-20 aspect-[4/3] rounded-xl object-cover bg-white shrink-0"
+              className="w-28 min-[360px]:w-32 aspect-[4/3] rounded-[14px] object-cover bg-gray-50 ring-1 ring-inset ring-black/[0.05] shrink-0"
               decoding="async"
             />
           )}
           <div className="min-w-0">
-            <p className="text-[15px] leading-5 font-semibold text-gray-900 line-clamp-2">{modelName}</p>
-            {importerName && <p className="mt-0.5 text-[12px] leading-4 text-gray-600">Importateur : {importerName}</p>}
+            <p className="text-[13px] leading-4 font-bold text-gray-600 tracking-[0.01em]">{brand}</p>
+            <p className="mt-0.5 text-[17px] leading-[1.2] font-bold text-gray-900 tracking-[-0.01em] line-clamp-2">{model}</p>
+            {importerName && <p className="mt-1.5 text-[12px] leading-4 text-gray-600">Importateur : {importerName}</p>}
           </div>
         </div>
-
         {sent ? (
           <div className="pt-8 pb-4 text-center" role="status">
             <CheckCircle2 size={44} className="mx-auto text-green-700" aria-hidden="true" />

@@ -36,7 +36,10 @@ test('floating bar: Appel, WhatsApp and Devis only for a subscribed importer; ev
 test('quote sheet: the model card photo (as on the brand page), no price, the importer small', () => {
   const sheet = readFileSync(new URL('../components/tech-specs/QuoteRequestSheet.tsx', import.meta.url), 'utf8');
   assert.match(page, /cardImage=\{spec\.image\}/);
-  assert.match(sheet, /className="w-20 aspect-\[4\/3\] rounded-xl object-cover bg-white shrink-0"/);
+  // Bigger photo (112 px, 128 from 360 px), brand and model in bold.
+  assert.match(sheet, /className="w-28 min-\[360px\]:w-32 aspect-\[4\/3\] rounded-\[14px\] object-cover/);
+  assert.match(sheet, /font-bold text-gray-600 tracking-\[0\.01em\]">\{brand\}<\/p>/);
+  assert.match(sheet, /text-\[17px\] leading-\[1\.2\] font-bold text-gray-900 tracking-\[-0\.01em\] line-clamp-2">\{model\}<\/p>/);
   assert.doesNotMatch(sheet, /priceText/);
   assert.match(sheet, /text-\[12px\] leading-4 text-gray-600">Importateur : \{importerName\}/);
 });
