@@ -11,7 +11,8 @@ import { priceValue } from './techSpecSort.js';
  */
 
 export const POPULAR_MODELS_HEADING = 'Modèles populaires';
-export const POPULAR_MODELS_SUBTITLE = 'Un modèle par marque, des marques les plus consultées aux suivantes.';
+// Wording chosen by the owner (2026-11-19).
+export const POPULAR_MODELS_SUBTITLE = 'Motos et scooters en Tunisie les plus consultés sur notre plateforme.';
 export const POPULAR_MODELS_MAX = 12;
 
 export interface PopularModelSource { brand?: string | null; image?: string | null; price?: string | number | null }
