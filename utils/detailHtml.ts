@@ -1,4 +1,5 @@
 /** Shared, browser-safe HTML helpers for the existing hosting entry points. */
+import { footerLinksHtml } from './footerLinks.js';
 export function scriptSafeJson(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 }
@@ -14,7 +15,8 @@ export function mergeDetailShell(shell: string, detail: string): string {
     .replace(/<link\s+rel="(?:canonical|alternate)"[^>]*>/gi, '')
     .replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/gi, '')
     .replace('</head>', `${head}</head>`)
-    .replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root"><div data-seo-fallback>${body}</div></div>`);
+    // The footer's links too: it is drawn by React only (utils/footerLinks.ts).
+    .replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root"><div data-seo-fallback>${body}${footerLinksHtml()}</div></div>`);
 }
 
 export async function renderWithApp(req: any, detail: string): Promise<string> {

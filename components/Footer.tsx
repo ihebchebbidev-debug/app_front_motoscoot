@@ -20,6 +20,7 @@ import { SectionLabel } from './ui/Typography';
 import { Link } from 'react-router-dom';
 import { getUrlFromState } from '../utils/urlUtils';
 import Newsletter from './Newsletter';
+import { FOOTER_INFO_LINKS } from '../utils/footerLinks';
 
 interface FooterProps {
   onNavigate?: (view: string) => void;
@@ -92,14 +93,9 @@ const Footer: React.FC<FooterProps> = () => {
           <div>
             <FooterHeading>Informations</FooterHeading>
             <ul className="space-y-4 text-sm">
-              <FooterLink view="about">À propos de nous</FooterLink>
-              <FooterLink view="terms">Conditions Générales</FooterLink>
-              <FooterLink view="legal">Confidentialité</FooterLink>
-              <FooterLink view="cookies">Cookies</FooterLink>
-              <FooterLink view="faq">FAQ</FooterLink>
-              {/* /securite and /plan-du-site had no link from any page. */}
-              <FooterLink view="security">Sécurité</FooterLink>
-              <FooterLink view="sitemap">Plan du site</FooterLink>
+              {/* Same list as the HTML Google receives (utils/footerLinks.ts).
+                  /securite and /plan-du-site had no link from any page. */}
+              {FOOTER_INFO_LINKS.map((l) => <FooterLink key={l.view} view={l.view}>{l.label}</FooterLink>)}
             </ul>
           </div>
 
