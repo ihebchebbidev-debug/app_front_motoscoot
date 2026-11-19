@@ -25,6 +25,8 @@ import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, te
 import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
+import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
+import { linkBlocksFor, renderLinkBlocks } from '../src/seo/snapshotLinks.js';
 import { ficheSlugCandidates, hasTunisiaParam } from '../utils/legacyRedirects.js';
 import { isThinContent, THIN_CONTENT_ROBOTS, crawlerBodyHtml, realAuthorName, ORGANIZATION_NODE, editorialTitle } from '../utils/editorial.js';
 import {
@@ -497,6 +499,76 @@ ${items}
   res.status(200).send(await renderWithApp(req, html));
 }
 
+// The /fiches-techniques hub (SEO audit of 2026-11-19, P7). It used to be a
+// file written at build time, so a brand added in the admin stayed out of the
+// HTML until the next deploy (Vespa and 5 others on 2026-11-19). Now the
+// brands are read from the API at each request, like the brand pages, with the
+// same title, description, H1 and summary as the React page
+// (utils/techSpecsHubSeo.ts) and the same link blocks as before (snapshotLinks.ts).
+export function renderHubHtml(rows: HubBrandRow[], now: Date = new Date()): string {
+  const canonical = `${SITE}/fiches-techniques`;
+  const title = `${hubPageTitle(now)} | Moto-Scoot.tn`;
+  const description = hubDescription(rows);
+  const summary = hubSummaryParts(rows).join(' · ');
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Fiches techniques', item: canonical },
+    ],
+  };
+  const links = renderLinkBlocks(linkBlocksFor('/fiches-techniques', { brands: rows.map((r) => r.brand) }));
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(description)}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<link rel="canonical" href="${canonical}" />
+<link rel="alternate" href="${canonical}" hreflang="fr-TN" />
+<link rel="alternate" href="${canonical}" hreflang="x-default" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Moto-Scoot.tn" />
+<meta property="og:locale" content="fr_TN" />
+<meta property="og:title" content="${escapeHtml(title)}" />
+<meta property="og:description" content="${escapeHtml(description)}" />
+<meta property="og:url" content="${canonical}" />
+<meta property="og:image" content="${DEFAULT_OG}" />
+<meta property="og:image:secure_url" content="${DEFAULT_OG}" />
+<meta property="og:image:alt" content="${escapeHtml(title)}" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${escapeHtml(title)}" />
+<meta name="twitter:description" content="${escapeHtml(description)}" />
+<meta name="twitter:image" content="${DEFAULT_OG}" />
+
+<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
+</head>
+<body>
+<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › Fiches techniques</nav>
+<h1>${escapeHtml(HUB_H1)}</h1>
+${summary ? `<p>${escapeHtml(summary)}</p>\n` : ''}<p>Prix du neuf et fiches techniques des motos et scooters vendus en Tunisie : cylindrée, puissance, couple, poids, consommation et équipements, marque par marque.</p>
+${links}
+</body>
+</html>`;
+}
+
+async function renderHub(req: any, res: any) {
+  const r = await fetch(`${API_BASE}/tech-specs/brands`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+  if (!r.ok) throw new Error('Content service unavailable');
+  const data = await r.json();
+  const rows: HubBrandRow[] = (Array.isArray(data) ? data : data.brands || []).map((b: any) => {
+    const n = Number(b?.models_count);
+    return { brand: String(typeof b === 'string' ? b : b?.brand || b?.name || ''), modelsCount: Number.isFinite(n) ? n : null };
+  }).filter((b: HubBrandRow) => b.brand);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.status(200).send(await renderWithApp(req, renderHubHtml(rows)));
+}
+
 // /prix/scooter-125-tunisie: the price guide generated from the sheets
 // (utils/scooter125Guide.ts, same rows and text as the React page).
 // Every sheet sold in Tunisia (brand list, then each brand's models), as the
@@ -649,6 +721,10 @@ export default async function handler(req: any, res: any) {
   try {
     const kind = String(req.query?.kind || '').toLowerCase() as Kind;
     const slugid = String(req.query?.slugid || '');
+    if ((kind as string) === 'fiches-techniques') {
+      await renderHub(req, res);
+      return;
+    }
     if ((kind as string) === 'prix' && `/prix/${slugid.replace(/\/$/, '')}` === SCOOTER_125_PATH) {
       await renderScooter125(req, res);
       return;

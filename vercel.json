@@ -136,7 +136,7 @@
     },
     {
       "source": "/fiches-techniques",
-      "destination": "/fiches-techniques/index.html"
+      "destination": "/api/og-prerender?kind=fiches-techniques"
     },
     {
       "source": "/comparateur",

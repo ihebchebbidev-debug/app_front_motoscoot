@@ -1,5 +1,4 @@
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../../config/features';
-import { HUB_H1, hubDescription, hubPageTitle } from '../../utils/techSpecsHubSeo';
 
 /**
  * Static SEO snapshots for build-time prerender.
@@ -135,22 +134,9 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
       ]),
     ],
   },
-  {
-    path: '/fiches-techniques',
-    // Same words as the React page (utils/techSpecsHubSeo.ts). The counts are
-    // not known here: the description without numbers, the page adds them.
-    title: `${hubPageTitle()} | Moto-Scoot.tn`,
-    description: hubDescription(null),
-    h1: HUB_H1,
-    intro:
-      "Prix du neuf et fiches techniques des motos et scooters vendus en Tunisie : cylindrée, puissance, couple, poids, consommation et équipements, marque par marque.",
-    schemas: [
-      breadcrumb([
-        { name: 'Accueil', path: '/' },
-        { name: 'Fiches techniques', path: '/fiches-techniques' },
-      ]),
-    ],
-  },
+  // /fiches-techniques is no longer written at build time: api/og-prerender.ts
+  // renders it at each request with the brands of the moment (SEO audit of
+  // 2026-11-19, P7), like the brand pages.
   {
     path: '/comparateur',
     title: "Comparateur de Motos & Scooters | Moto-Scoot.tn",
