@@ -51,7 +51,9 @@ test('targets for the finger: round actions 48 px (44 under 400 px), « Devis »
   assert.match(page, /FloatQuotePill: "relative shrink-0 h-11 min-\[400px\]:h-12 /);
   assert.match(page, /<FileText size=\{18\}[^>]*\/>\s*<span aria-hidden="true">Devis<\/span>/);
   assert.match(page, /className=\{`\$\{S\.FloatRound\} \$\{S\.FloatGlass\}`\} onClick=\{handleCompare\} aria-label="Comparer ce modèle"/);
-  assert.doesNotMatch(page, />\s*Comparer\s*</); // no word on the compare button
+  // No word on the phone capsule's compare button (the desktop card has its own « Comparer »).
+  const capsule = page.slice(page.indexOf('aria-label="Prix et actions"'), page.indexOf('<QuoteRequestSheet'));
+  assert.doesNotMatch(capsule, />\s*Comparer\s*</);
   // Under 360 px with the contact buttons, the price leaves the capsule (it is in the page).
   assert.match(page, /\$\{canQuote \? 'hidden min-\[360px\]:flex' : 'flex'\}/);
   assert.match(page, /pb-\[calc\(7rem\+env\(safe-area-inset-bottom\)\)\] md:pb-20/);
