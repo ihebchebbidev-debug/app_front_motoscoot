@@ -1,4 +1,5 @@
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../../config/features';
+import { HUB_H1, hubDescription, hubPageTitle } from '../../utils/techSpecsHubSeo';
 
 /**
  * Static SEO snapshots for build-time prerender.
@@ -136,12 +137,13 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
   },
   {
     path: '/fiches-techniques',
-    title: "Fiches Techniques Motos & Scooters — Toutes Marques | Moto-Scoot.tn",
-    description:
-      "Base de données complète des fiches techniques moto et scooter : Yamaha, Honda, Suzuki, Kawasaki, BMW, KTM, Piaggio. Caractéristiques, performances, prix.",
-    h1: "Fiches Techniques Moto & Scooter",
+    // Same words as the React page (utils/techSpecsHubSeo.ts). The counts are
+    // not known here: the description without numbers, the page adds them.
+    title: `${hubPageTitle()} | Moto-Scoot.tn`,
+    description: hubDescription(null),
+    h1: HUB_H1,
     intro:
-      "Consultez les fiches techniques détaillées de toutes les motos et scooters disponibles en Tunisie : cylindrée, puissance, couple, poids, consommation, équipements et prix neuf.",
+      "Prix du neuf et fiches techniques des motos et scooters vendus en Tunisie : cylindrée, puissance, couple, poids, consommation et équipements, marque par marque.",
     schemas: [
       breadcrumb([
         { name: 'Accueil', path: '/' },

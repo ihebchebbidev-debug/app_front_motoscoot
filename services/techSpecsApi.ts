@@ -27,6 +27,8 @@ function visibilityQuery(availableInTunisia?: boolean) {
   return availableInTunisia ? { available_in_tunisia: true } : undefined;
 }
 
+export interface TechSpecBrandRow { brand: string; modelsCount: number | null }
+
 export interface BackendTechSpec {
   id: number;
   brand: string;
@@ -183,20 +185,27 @@ export function mapBackendTechSpec(b: BackendTechSpec): TechSpec {
 
 export const techSpecsApi = {
   async getBrands(options?: AbortSignal | TechSpecsVisibilityOptions): Promise<string[]> {
+    return (await techSpecsApi.getBrandRows(options)).map((r) => r.brand);
+  },
+
+  /** Brands with their number of models (null when the API does not say). */
+  async getBrandRows(options?: AbortSignal | TechSpecsVisibilityOptions): Promise<TechSpecBrandRow[]> {
     const { signal, availableInTunisia } = normalizeOptions(options);
     const data = await apiClient.get<any>('/tech-specs/brands', {
       signal,
       query: visibilityQuery(availableInTunisia),
     });
-    if (Array.isArray(data)) {
-      // Backend returns rows shaped like `{ brand, models_count }`
-      // (see techSpecsController.getBrands). Older payloads used `{ name }`
-      // or a plain string array — accept all three to stay future-proof.
-      return data
-        .map((b) => (typeof b === 'string' ? b : b.brand || b.name))
-        .filter(Boolean);
-    }
-    return data?.brands || [];
+    // Backend returns rows shaped like `{ brand, models_count }`
+    // (see techSpecsController.getBrands). Older payloads used `{ name }`
+    // or a plain string array — accept all three to stay future-proof.
+    const rows: unknown[] = Array.isArray(data) ? data : data?.brands || [];
+    return rows
+      .map((b: any) => {
+        const brand = typeof b === 'string' ? b : b?.brand || b?.name;
+        const n = typeof b === 'string' ? NaN : Number(b?.models_count);
+        return { brand: String(brand || ''), modelsCount: Number.isFinite(n) ? n : null };
+      })
+      .filter((r) => r.brand);
   },
 
   async getModels(brand: string, options?: AbortSignal | TechSpecsVisibilityOptions): Promise<TechSpec[]> {

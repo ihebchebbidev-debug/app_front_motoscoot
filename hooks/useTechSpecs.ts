@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { techSpecsApi } from '../services/techSpecsApi';
+import { techSpecsApi, type TechSpecBrandRow } from '../services/techSpecsApi';
 import { TechSpec } from '../types';
 
 const retryStrategy = (failureCount: number, error: any) => {
@@ -65,18 +65,25 @@ export const usePopularTechSpecsInfinite = (params?: { limit?: number }) => {
 
 type TechSpecsVisibilityOptions = { availableInTunisia?: boolean };
 
-export const useTechSpecsBrands = (options: TechSpecsVisibilityOptions = {}) => {
-  const availableInTunisia = options.availableInTunisia === true;
-  return useQuery<string[]>({
-    queryKey: ['tech-specs', 'brands', { availableInTunisia }],
-    queryFn: ({ signal }) => techSpecsApi.getBrands({ availableInTunisia, signal }),
-    // Keep short (2 min) so admin removals propagate quickly to public
-    // pages without forcing a hard refresh.
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: true,
-    retry: retryStrategy,
-  });
-};
+// One cached request per visibility: the brand names and the rows with
+// their counts are two views of it (no second call for the counts).
+const brandRowsQuery = (availableInTunisia: boolean) => ({
+  queryKey: ['tech-specs', 'brands', { availableInTunisia }],
+  queryFn: ({ signal }: { signal?: AbortSignal }) => techSpecsApi.getBrandRows({ availableInTunisia, signal }),
+  // Keep short (2 min) so admin removals propagate quickly to public
+  // pages without forcing a hard refresh.
+  staleTime: 1000 * 60 * 2,
+  refetchOnWindowFocus: true,
+  retry: retryStrategy,
+});
+const brandNames = (rows: TechSpecBrandRow[]) => rows.map((r) => r.brand);
+
+export const useTechSpecsBrands = (options: TechSpecsVisibilityOptions = {}) =>
+  useQuery<TechSpecBrandRow[], Error, string[]>({ ...brandRowsQuery(options.availableInTunisia === true), select: brandNames });
+
+/** Brands with their number of models (« 23 marques · 101 modèles »). */
+export const useTechSpecsBrandRows = (options: TechSpecsVisibilityOptions = {}) =>
+  useQuery<TechSpecBrandRow[]>(brandRowsQuery(options.availableInTunisia === true));
 
 export const useTechSpecsByBrand = (brand?: string, options: TechSpecsVisibilityOptions = {}) => {
   const availableInTunisia = options.availableInTunisia === true;
