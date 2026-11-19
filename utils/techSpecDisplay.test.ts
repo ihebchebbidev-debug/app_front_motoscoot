@@ -21,6 +21,7 @@ test('a price reads as a price, a state as a state', () => {
   assert.deepEqual(priceLabel('9000DT'), { kind: 'price', text: `9${NBSP}000${NBSP}DT` });
   assert.deepEqual(priceLabel('À partir de 35 000 DT'), { kind: 'price', text: `Dès${NBSP}35${NBSP}000${NBSP}DT` });
   assert.deepEqual(priceLabel('En arrivage'), { kind: 'status', text: 'En arrivage' });
+  assert.deepEqual(priceLabel('—'), { kind: 'status', text: 'Prix non annoncé' }); // no price from the API
   assert.deepEqual(priceLabel('Épuisé (29000 DT)'), { kind: 'status', text: 'Épuisé (29000 DT)' });
   assert.deepEqual(priceLabel(''), { kind: 'status', text: 'Prix non annoncé' });
 });

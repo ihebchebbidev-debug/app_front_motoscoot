@@ -20,7 +20,6 @@ import { defaultHubState, readHubState, saveHubState } from '../utils/techSpecHu
 import { useBrands } from '../hooks/useReferenceData';
 import { Section } from './ui/Section';
 import { Reveal } from './ui/Reveal';
-import { Badge } from './ui/Badge';
 import { TechSpecsHero } from './tech-specs/TechSpecsHero';
 import { BrandCardSkeleton } from './tech-specs/TechSpecsSkeletons';
 import { TechSpecsErrorRetry } from './tech-specs/TechSpecsErrorRetry';
@@ -32,6 +31,7 @@ import { apiClient } from '../services/apiClient';
 import { importersApi } from '../services/importersApi';
 import { Importer } from '../types';
 import { getHighlightTerms, highlightText } from '../utils/techSpecsSearch';
+import { ccLabel, powerLabel, priceLabel } from '../utils/techSpecDisplay';
 import { BRAND_VIEWS, brandGridTitle, ALL_IMPORTERS, orderBrands, uniqueBrands, importerOptions, importsBrand, type BrandView } from '../utils/brandListView';
 
 const S = {
@@ -243,6 +243,12 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
   const activeFilterCount = (activeImporter !== ALL_IMPORTERS ? 1 : 0) + (inTunisia ? 1 : 0);
   // The 3 × 2 « Marques populaires » block only on the plain list: with a
   // sort, a filter or a search the grid below already answers.
+  // 12 cards first, then « Voir les N fiches » shows the rest (the page
+  // used to say « affinez votre recherche »). A new search starts at 12.
+  const [showAllSpecs, setShowAllSpecs] = useState(false);
+  useEffect(() => { setShowAllSpecs(false); }, [deferredBrandSearch]);
+  const shownSpecs = showAllSpecs ? matchingSpecs : matchingSpecs.slice(0, 12);
+  const hiddenSpecCount = matchingSpecs.length - shownSpecs.length;
   const searchingModels = deferredBrandSearch.trim().length >= 2;
   const hideBrandGrid = !!brandSearch && searchingModels && filteredBrands.length === 0 && matchingSpecs.length > 0;
   const showPopular = !brandSearch && view === 'default' && activeImporter === ALL_IMPORTERS && !inTunisia;
@@ -353,47 +359,65 @@ const TechSpecsBrands: React.FC<BasePageProps> = ({ onNavigate, availableInTunis
             </span>
           </div>
           {matchingSpecs.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            // 3 columns at most: at 4 a card was ~240 px and most names were cut.
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {/* Real links (long press, new tab, crawlable), with press
-                  feedback as soon as the finger lands; no slide-in. */}
-              {matchingSpecs.slice(0, 12).map((spec) => (
+                  feedback as soon as the finger lands; no slide-in. No
+                  aria-label: screen readers read the name, price and specs. */}
+              {shownSpecs.map((spec) => {
+                const price = priceLabel(spec.priceNew);
+                // Same labels as a brand page's cards (« 12,6 ch », « 7 099 DT »).
+                const facts = [spec.year ? String(spec.year) : '', ccLabel(spec.engine?.cc), powerLabel(spec.engine?.power), spec.category || '']
+                  .filter((f) => f && f !== '—');
+                return (
                   <Link
                     key={spec.id}
                     to={specHref(spec)}
                     className="group flex items-center gap-3 w-full text-left bg-card border border-slate-100 hover:border-primary-200 hover:shadow-sm rounded-xl p-3 transition-[transform,background-color,border-color,box-shadow] duration-100 ease-out active:scale-[0.97] active:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900"
-                    aria-label={`Voir la fiche ${spec.brand} ${spec.model}`}
                   >
+                    {/* The whole bike, wheels included (cover cropped them). */}
                     <img
                       src={getOptimizedImageUrl(spec.image, 120, 90, 80, undefined, `${spec.brand} ${spec.model}`)}
-                      alt={`${spec.brand} ${spec.model}`}
-                      className="w-16 h-16 rounded-lg object-cover bg-slate-50 shrink-0"
+                      alt=""
+                      className="w-16 h-16 rounded-lg object-contain bg-gray-50 shrink-0"
                       loading="lazy"
                       decoding="async"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[0.9375rem] leading-5 font-semibold text-gray-900 truncate [@media(hover:hover)]:group-hover:text-primary-700 transition-colors">
+                      <p className="text-[0.9375rem] leading-5 font-semibold text-gray-900 line-clamp-2 [@media(hover:hover)]:group-hover:text-primary-700 transition-colors">
                         {highlightText(`${spec.brand} ${spec.model}`, highlightTerms)}
                       </p>
-                      <p className="text-[0.8125rem] leading-5 text-gray-600 truncate">
-                        {highlightText(spec.year, highlightTerms)} · {highlightText(spec.engine?.cc || '—', highlightTerms)} · {highlightText(spec.engine?.power || '—', highlightTerms)}
-                      </p>
-                      {spec.category && (
-                        <Badge variant="primary" className="mt-1 text-[0.6875rem] px-1.5 py-0 !font-semibold !normal-case !tracking-normal">
-                          {highlightText(spec.category, highlightTerms)}
-                        </Badge>
+                      {price.kind === 'price' ? (
+                        <p className="mt-0.5 text-[0.9375rem] leading-5 font-bold text-primary-700 tabular-nums">{highlightText(price.text, highlightTerms)}</p>
+                      ) : (
+                        <p className="mt-0.5 text-[0.8125rem] leading-5 font-medium text-gray-600">{price.text}</p>
                       )}
+                      {/* Each fact stays whole; a narrow card wraps between them
+                          (the category was cut: « Sco… »). */}
+                      <p className="text-[0.8125rem] leading-5 text-gray-600 tabular-nums">
+                        {facts.map((f, i) => (
+                          <React.Fragment key={i}>{i > 0 && ' · '}<span className="whitespace-nowrap">{highlightText(f, highlightTerms)}</span></React.Fragment>
+                        ))}
+                      </p>
                     </div>
                     <ChevronRight size={16} className="text-gray-400 group-hover:text-primary-700 shrink-0" aria-hidden="true" />
                   </Link>
-              ))}
+                );
+              })}
             </div>
           ) : !searchingSpecs ? (
             <p className="text-sm text-gray-600">Aucun modèle ne correspond à « {deferredBrandSearch} ».</p>
           ) : null}
-          {matchingSpecs.length > 12 && (
-            <p className="text-[0.8125rem] text-gray-600 mt-3 text-center">
-              Affichage des 12 premiers résultats — affinez votre recherche pour voir le reste.
-            </p>
+          {hiddenSpecCount > 0 && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllSpecs(true)}
+                className="min-h-11 px-5 rounded-xl border border-gray-200 bg-card text-[15px] font-semibold text-gray-900 active:scale-[0.97] transition-transform duration-100 ease-out"
+              >
+                Voir les {matchingSpecs.length} fiches
+              </button>
+            </div>
           )}
         </Section>
       )}
