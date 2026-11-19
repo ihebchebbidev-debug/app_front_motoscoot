@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -119,6 +119,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
   const panelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   const scrimRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ startY: number; dy: number; samples: { y: number; t: number }[]; id: number } | null>(null);
   const draggedShut = useRef(false);
@@ -343,12 +344,14 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
       data-state={state}
       className="ms-scrim fixed inset-0 z-[1000] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
     >
+      {/* The dialog is the panel, named by its visible title (the whole
+          scrim used to be the dialog, named by a copy of the title). */}
       <div
         ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         tabIndex={-1}
         data-state={draggedShut.current ? 'dragged' : state}
         // dvh: the visible height with the browser bars (85vh overflowed under the
@@ -369,7 +372,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
             <span className="h-1.5 w-10 rounded-full bg-gray-300" />
           </div>
           <div className="flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100">
-            <h3 className="text-base font-bold text-gray-900">{label}</h3>
+            <h2 id={titleId} className="text-base font-bold text-gray-900">{label}</h2>
             <div className="flex items-center gap-1 -my-2.5 -mr-2.5">
               {headerAction}
               <button

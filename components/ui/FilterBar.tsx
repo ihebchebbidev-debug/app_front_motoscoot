@@ -157,6 +157,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const searchOnPage = phoneSearch || inline;
   // « Filtres, 2 actifs »: the label used to override the badge, so screen
   // readers never heard how many filters were on.
+  // « Voir 21 marques » → « 21 marques »; nothing for a plain « Appliquer ».
+  const resultsAnnouncement = /^Voir\s/.test(applyLabel) ? applyLabel.replace(/^Voir\s+/, '') : '';
   const filtersLabel = activeFilterCount > 0 ? `Filtres, ${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}` : 'Filtres';
   // A sort other than the default is marked by a dot: the first option, or,
   // with a placeholder, any option chosen.
@@ -365,6 +367,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         >
           <div className="px-5 pt-2 pb-4 space-y-6">
+            {/* Screen readers hear the new count when a filter changes
+                (« 21 marques »): it only showed on the « Voir … » button. */}
+            {resultsAnnouncement && (
+              <p role="status" aria-live="polite" className="sr-only">{resultsAnnouncement}</p>
+            )}
             {!searchOnPage && (
               <div>
                 <h4 className={SECTION}>Recherche</h4>
