@@ -32,12 +32,12 @@ test('importers: only those bringing in a shown brand, with counts', () => {
   assert.equal(importsBrand(importers[0], 'sym'), true);
 });
 
-test('the brand list uses the shared bar: sort, importer filter, worded phone buttons', () => {
+test('the brand list uses the shared bar: sort, importer filter, one phone row with the chosen sort', () => {
   assert.match(page, /sortOptions=\{BRAND_VIEWS\}/);
   assert.match(page, /extraFilters=\{extraFilters\}/);
-  // Phones like /annonces: search on its own row, then « ⇅ tri » + « Filtres ».
-  assert.match(page, /\n\s+phoneSearch\n/);
-  assert.doesNotMatch(page, /phoneLayout="inline"/);
+  // Phones: one row — search, « ⇅ tri choisi », « Filtres » icon (owner 2026-11-19).
+  assert.match(page, /phoneLayout="inline"\n\s+inlineSortLabel\n/);
+  assert.doesNotMatch(page, /\n\s+phoneSearch\n/);
   assert.match(page, /const activeFilterCount = \(activeImporter !== ALL_IMPORTERS \? 1 : 0\) \+ \(inTunisia \? 1 : 0\);/);
   assert.doesNotMatch(page, /COUNTRIES|activeCountry/); // the hidden « Pays » filter is gone
   // The popular block only on arrival; « Toutes les marques » shows only the list.
