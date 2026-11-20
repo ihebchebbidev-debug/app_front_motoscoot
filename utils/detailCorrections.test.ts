@@ -393,3 +393,20 @@ test('sheet share image and gallery photos carry the same cache version as listi
     assert.equal(/\/m\/[a-z0-9-]+\/[ab]\.webp"/.test(result.body.replace(/<link rel="preload"[^>]*>/g, '')), false, 'no bare photo address left in previews or data');
   } finally { globalThis.fetch = original; }
 });
+test('one site name: home WebSite + Organization JSON-LD and every logo alt say "Moto-Scoot.tn"', () => {
+  const html = readFileSync('index.html', 'utf8');
+  const ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1]);
+  const byType = (t: string) => ld['@graph'].find((n: any) => n['@type'] === t);
+  for (const node of [byType('WebSite'), byType('Organization')]) {
+    assert.equal(node.name, 'Moto-Scoot.tn');
+    assert.deepEqual(node.alternateName, ['moto-scoot.tn']);
+  }
+  for (const f of ['components/layout/Header.tsx', 'components/Footer.tsx', 'components/ResetPassword.tsx', 'components/auth/LoginModal.tsx']) {
+    const src = readFileSync(f, 'utf8');
+    assert.equal(/alt="moto-scoot\.tn"/.test(src), false, f);
+    assert.ok(src.includes('alt="Moto-Scoot.tn"'), f);
+  }
+  for (const f of ['components/layout/Header.tsx', 'components/Footer.tsx']) {
+    assert.equal(readFileSync(f, 'utf8').includes(`aria-label="Retour à l'accueil"`), false, `${f}: the logo link is named by the logo alt`);
+  }
+});

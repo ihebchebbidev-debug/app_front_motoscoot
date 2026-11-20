@@ -56,11 +56,10 @@ const Footer: React.FC<FooterProps> = () => {
             <Link 
               to="/"
               className="flex flex-col items-start gap-4 cursor-pointer group focus:outline-none text-left" 
-              aria-label="Retour à l'accueil"
             >
                <img 
                  src={LOGO_WHITE}
-                 alt="moto-scoot.tn" width={373} height={48}
+                 alt="Moto-Scoot.tn" width={373} height={48}
                  loading="lazy" decoding="async"
                  className="h-6 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                />

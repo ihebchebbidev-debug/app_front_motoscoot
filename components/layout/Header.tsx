@@ -294,11 +294,10 @@ const Header: React.FC<HeaderProps> = ({
             to="/"
             className="flex items-center cursor-pointer group transition-transform active:scale-95" 
             onClick={closeMenus}
-            aria-label="Retour à l'accueil"
           >
             <img 
               src={isSolid ? LOGO_COLOR : LOGO_WHITE}
-              alt="moto-scoot.tn" width={373} height={48}
+              alt="Moto-Scoot.tn" width={373} height={48}
               // LCP element on listing pages: fetch it before the gallery thumbnails.
               fetchPriority="high"
               className="h-[23px] max-[360px]:h-[21px] md:h-7 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105"
@@ -465,7 +464,7 @@ const Header: React.FC<HeaderProps> = ({
         >
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
              <Link to="/" onClick={closeMenus} className="group">
-               <img src={LOGO_COLOR} alt="moto-scoot.tn" width={373} height={48} className="h-6 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105" />
+               <img src={LOGO_COLOR} alt="Moto-Scoot.tn" width={373} height={48} className="h-6 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105" />
              </Link>
              <button 
                onClick={() => setIsMobileSheetOpen(false)}

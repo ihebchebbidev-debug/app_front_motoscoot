@@ -192,7 +192,7 @@ const PageShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
     <div className="w-full max-w-md">
       <div className="flex justify-center mb-6">
-        <img src={LOGO_COLOR} alt="moto-scoot.tn" className="h-8 w-auto object-contain" />
+        <img src={LOGO_COLOR} alt="Moto-Scoot.tn" className="h-8 w-auto object-contain" />
       </div>
       {children}
     </div>
