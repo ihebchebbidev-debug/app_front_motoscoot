@@ -110,7 +110,10 @@ async function update(req, res, next) {
     if (!upd) return res.status(400).json({ error: 'No fields to update' });
     upd.params.push(req.params.id);
     const { rows } = await query(
-      `UPDATE importers SET ${upd.sets}, updated_at = NOW()
+      // buildUpdate already ends its SET list with « updated_at = NOW() »: a
+      // second one made PostgreSQL refuse every importer edit (« multiple
+      // assignments to same column », 500) — creating and deleting worked.
+      `UPDATE importers SET ${upd.sets}
         WHERE id = $${upd.nextIdx} RETURNING *`,
       upd.params,
     );
