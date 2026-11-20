@@ -82,7 +82,8 @@ async function create(req, res, next) {
     if ('subscription_until' in req.body) {
       const until = parseSubscriptionUntil(req.body.subscription_until);
       if (until === undefined) return res.status(400).json({ error: "Date de fin d'abonnement invalide (AAAA-MM-JJ)" });
-      await ensureSubscriptionColumn();
+      try { await ensureSubscriptionColumn(); }
+      catch (e) { if (e.publicMessage) return res.status(e.status || 503).json({ error: e.publicMessage }); throw e; }
       const r = await query('UPDATE importers SET subscription_until = $1 WHERE id = $2 RETURNING *', [until, rows[0].id]);
       return res.status(201).json(r.rows[0]);
     }
@@ -101,7 +102,8 @@ async function update(req, res, next) {
     if ('subscription_until' in body) {
       const until = parseSubscriptionUntil(body.subscription_until);
       if (until === undefined) return res.status(400).json({ error: "Date de fin d'abonnement invalide (AAAA-MM-JJ)" });
-      await ensureSubscriptionColumn();
+      try { await ensureSubscriptionColumn(); }
+      catch (e) { if (e.publicMessage) return res.status(e.status || 503).json({ error: e.publicMessage }); throw e; }
       body.subscription_until = until;
     }
     const upd = buildUpdate(body, 'subscription_until' in body ? [...FIELDS, 'subscription_until'] : FIELDS);
