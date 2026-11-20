@@ -5,15 +5,17 @@
  * The public fiche-technique details page renders the assigned importer's
  * contact card dynamically.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, Trash2, Edit3, X } from 'lucide-react';
+import { Building2, Plus, Trash2, Edit3, X, BarChart3, Phone, FileText, Scale } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
 import { AdminTable } from './AdminPrimitives';
 import { useConfirm } from './ConfirmDialog';
 import AdminImageUpload from './AdminImageUpload';
 import { displayPhone } from '../../utils/phoneUtils';
+import { ImporterLeadsPanel, WhatsappIcon } from './ImporterLeadsPanel';
+import { subscriptionStatus, extendSubscription, daysLeft } from '../../utils/importerSubscription';
 
 interface ImporterForm {
   id?: string;
@@ -28,11 +30,13 @@ interface ImporterForm {
   description: string;
   rating: string;
   is_active: boolean;
+  /** Abonnement: last day (YYYY-MM-DD), '' = none. */
+  subscription_until: string;
 }
 
 const empty = (): ImporterForm => ({
   name: '', logo_url: '', address: '', city: '', phone: '', whatsapp: '',
-  email: '', website: '', description: '', rating: '', is_active: true,
+  email: '', website: '', description: '', rating: '', is_active: true, subscription_until: '',
 });
 
 const inputCls =
@@ -62,6 +66,28 @@ const ImportersTab: React.FC = () => {
   });
   const importers = data?.importers || [];
 
+  // Contacts of the last 30 days for every importer (one request).
+  const { data: leads } = useQuery({
+    queryKey: ['admin', 'leads', 'summary', 30],
+    queryFn: ({ signal }) => adminApi.getLeadsSummary(30, signal),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const leadsById = useMemo(() => new Map((leads?.importers || []).map((r) => [r.id, r])), [leads]);
+  const [statsFor, setStatsFor] = useState<{ id: string; name: string; opener: HTMLElement | null } | null>(null);
+  // Header line: who pays, whose subscription ends soon, what the site brought this month.
+  const overview = useMemo(() => {
+    const rows = leads?.importers || [];
+    const subs = importers.map((i: any) => subscriptionStatus(i.subscription_until));
+    return {
+      active: subs.filter((x) => x.tone === 'on' || x.tone === 'soon').length,
+      soon: subs.filter((x) => x.tone === 'soon').length,
+      contacts: rows.reduce((t, r) => t + r.calls + r.whatsapp_taps + r.quotes + r.compares, 0),
+      quotes: rows.reduce((t, r) => t + r.quotes, 0),
+      ready: !!leads,
+    };
+  }, [importers, leads]);
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin', 'importers'] });
     qc.invalidateQueries({ queryKey: ['importers'] });
@@ -82,6 +108,7 @@ const ImportersTab: React.FC = () => {
     description: f.description || null,
     rating: f.rating ? Number(f.rating) : null,
     is_active: !!f.is_active,
+    subscription_until: f.subscription_until || null,
   });
 
   const create = useMutation({
@@ -122,6 +149,7 @@ const ImportersTab: React.FC = () => {
       description: i.description || '',
       rating: i.rating != null ? String(i.rating) : '',
       is_active: i.is_active !== false,
+      subscription_until: i.subscription_until ? String(i.subscription_until).slice(0, 10) : '',
     });
     setShowForm(true);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -152,6 +180,21 @@ const ImportersTab: React.FC = () => {
           {showForm ? 'Fermer' : 'Nouvel importateur'}
         </button>
       </div>
+
+      {/* What matters for the subscriptions, at a glance. */}
+      <dl className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          ['Abonnés actifs', overview.active],
+          ['Expirent sous 14 jours', overview.soon],
+          ['Contacts (30 jours)', overview.ready ? overview.contacts : '—'],
+          ['Demandes de devis (30 jours)', overview.ready ? overview.quotes : '—'],
+        ].map(([label, value]) => (
+          <div key={label as string} className="bg-white rounded-xl border border-slate-200 px-4 py-3">
+            <dt className="text-[11px] font-bold text-slate-500">{label}</dt>
+            <dd className={`mt-0.5 text-2xl font-black tabular-nums ${label === 'Expirent sous 14 jours' && Number(value) > 0 ? 'text-amber-700' : 'text-slate-900'}`}>{value}</dd>
+          </div>
+        ))}
+      </dl>
 
       <p className="text-[12px] text-slate-500">
         Gérez les importateurs/distributeurs officiels. Chaque fiche technique peut être assignée à un importateur — sa carte de contact apparaîtra automatiquement sur la page publique du modèle.
@@ -208,6 +251,38 @@ const ImportersTab: React.FC = () => {
             onChange={(url) => setForm({ ...form, logo_url: url })}
           />
 
+          {/* Abonnement: the date decides whether its fiches show Appel,
+              WhatsApp and Devis; quick buttons for the usual durations. */}
+          <fieldset className="rounded-xl border border-slate-200 p-4">
+            <legend className="px-1 text-[11px] font-bold text-slate-600">Abonnement</legend>
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="block">
+                <span className="block text-[11px] font-bold text-slate-600 mb-1">Fin d'abonnement</span>
+                <input type="date" value={form.subscription_until} onChange={(e) => setForm({ ...form, subscription_until: e.target.value })} className={`${inputCls} w-44`} />
+              </label>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Prolonger l'abonnement">
+                {/* Durations sold (owner, 2026-11-19): added to the current end,
+                    or to today when there is none or it has passed. */}
+                {[1, 3, 6, 12, 24].map((m) => (
+                  <button key={m} type="button" onClick={() => setForm({ ...form, subscription_until: extendSubscription(form.subscription_until, m) })} aria-label={`Prolonger de ${m} mois`} className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 tabular-nums">{m} mois</button>
+                ))}
+                {form.subscription_until && (
+                  <button type="button" onClick={() => setForm({ ...form, subscription_until: '' })} className="px-3 py-2 rounded-lg text-xs font-bold text-red-700 hover:bg-red-50">Retirer</button>
+                )}
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              {(() => {
+                const st = subscriptionStatus(form.subscription_until);
+                return st.tone === 'none'
+                  ? "Pas d'abonnement : ses fiches n'affichent pas les boutons Appel, WhatsApp et Devis."
+                  : st.tone === 'off'
+                    ? `${st.label} : les boutons Appel, WhatsApp et Devis ne s'affichent plus.`
+                    : `Boutons Appel, WhatsApp et Devis affichés sur ses fiches jusqu'au ${st.label.replace(/^(Jusqu'au|Expire le) /, '')} inclus.`;
+              })()}
+            </p>
+          </fieldset>
+
           <label className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
             Actif (disponible pour assignation)
@@ -222,8 +297,12 @@ const ImportersTab: React.FC = () => {
         </form>
       )}
 
+      {statsFor && (
+        <ImporterLeadsPanel key={statsFor.id} importerId={statsFor.id} importerName={statsFor.name} returnFocus={statsFor.opener} onClose={() => setStatsFor(null)} />
+      )}
+
       <AdminTable
-        columns={['Importateur', 'Ville', 'Contact', 'Statut', 'Actions']}
+        columns={['Importateur', 'Contact', 'Abonnement', 'Contacts (30 j)', 'Actions']}
         loading={isLoading}
         rowCount={importers.length}
         empty="Aucun importateur."
@@ -241,24 +320,61 @@ const ImportersTab: React.FC = () => {
                 )}
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 line-clamp-1">{i.name}</p>
-                  {i.rating != null && (
-                    <p className="text-[11px] text-slate-500">★ {Number(i.rating).toFixed(1)} · {i.reviews_count || 0} avis</p>
-                  )}
+                  {/* City, rating and « Inactif » under the name: two columns
+                      fewer, the counters and the « Rapport » button fit. */}
+                  <p className="text-[11px] text-slate-500">
+                    {[i.city, i.rating != null ? `★ ${Number(i.rating).toFixed(1)}` : ''].filter(Boolean).join(' · ') || '—'}
+                    {!i.is_active && <span className="ml-1.5 px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">Inactif</span>}
+                  </p>
                 </div>
               </div>
             </td>
-            <td className="p-3 text-sm">{i.city || '—'}</td>
             <td className="p-3 text-xs text-slate-600">
               {i.phone && <div>{displayPhone(i.phone)}</div>}
               {i.email && <div className="text-slate-400">{i.email}</div>}
             </td>
             <td className="p-3 text-xs">
-              <span className={`px-2 py-0.5 rounded font-bold ${i.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
-                {i.is_active ? 'Actif' : 'Inactif'}
-              </span>
+              {(() => {
+                const st = subscriptionStatus(i.subscription_until);
+                const left = daysLeft(i.subscription_until);
+                return (
+                  <div className="space-y-0.5">
+                    <span className={`inline-block px-2 py-0.5 rounded font-bold whitespace-nowrap ${st.tone === 'on' ? 'bg-emerald-100 text-emerald-800' : st.tone === 'soon' ? 'bg-amber-100 text-amber-800' : st.tone === 'off' ? 'bg-slate-200 text-slate-700' : 'text-slate-500'}`}>
+                      {st.tone === 'on' || st.tone === 'soon' ? 'Abonné' : st.tone === 'off' ? 'Expiré' : 'Aucun'}
+                    </span>
+                    {st.tone !== 'none' && (
+                      <p className="text-[11px] text-slate-500 whitespace-nowrap tabular-nums">
+                        {st.tone === 'off' ? st.label.replace('Expiré le', 'le') : `${st.label.replace(/^(Jusqu'au|Expire le)/, "jusqu'au")} · ${left} j`}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+            </td>
+            <td className="p-3 text-xs text-slate-700">
+              {(() => {
+                const r = leadsById.get(i.id);
+                if (!r) return <span className="text-slate-400">—</span>;
+                const items: [React.ReactNode, number, string][] = [
+                  [<Phone size={13} aria-hidden="true" />, r.calls, 'appels'],
+                  [<WhatsappIcon size={13} />, r.whatsapp_taps, 'WhatsApp'],
+                  [<FileText size={13} aria-hidden="true" />, r.quotes, 'devis'],
+                  [<Scale size={13} aria-hidden="true" />, r.compares, 'comparaisons'],
+                ];
+                return (
+                  <ul className="flex items-center gap-3" aria-label="Contacts des 30 derniers jours">
+                    {items.map(([icon, n, label]) => (
+                      <li key={label} className={`inline-flex items-center gap-1 tabular-nums ${n ? 'text-slate-900 font-bold' : 'text-slate-300'}`} title={`${n} ${label}`}>
+                        {icon}<span>{n}</span><span className="sr-only">{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
             </td>
             <td className="p-3 text-right">
               <div className="flex items-center justify-end gap-1">
+                <button onClick={(e) => setStatsFor({ id: i.id, name: i.name, opener: e.currentTarget })} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 mr-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50" aria-label={`Rapport de ${i.name}`}><BarChart3 size={14} aria-hidden="true" />Rapport</button>
                 <button onClick={() => startEdit(i)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" aria-label="Modifier"><Edit3 size={14} /></button>
                 <button onClick={() => del(i.id, i.name)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" aria-label="Supprimer"><Trash2 size={14} /></button>
               </div>
