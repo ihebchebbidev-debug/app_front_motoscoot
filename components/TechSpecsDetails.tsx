@@ -1,5 +1,5 @@
 import { displayPhone, telHref } from '../utils/phoneUtils';
-import React, { useEffect, useMemo, useState, memo, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
 import {
   Share2,
   Heart,
@@ -9,8 +9,13 @@ import {
   ChevronRight,
   Phone,
   Mail,
-  ArrowLeftRight
+  Scale,
+  FileText
 } from 'lucide-react';
+import { siWhatsapp } from 'simple-icons';
+import { QuoteRequestSheet } from './tech-specs/QuoteRequestSheet';
+import { trackLead } from '../services/techSpecLeadsApi';
+import { whatsappHref } from '../utils/ficheLeads';
 import { useTechSpec, useCatalogTechSpecs } from '../hooks/useTechSpecs';
 import { capsulePrice } from '../utils/capsulePrice';
 import { techSpecsApi } from '../services/techSpecsApi';
@@ -150,12 +155,31 @@ const S = {
   Wrapper: "min-h-screen bg-page md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
-  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center gap-1.5 rounded-full",
+  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center justify-between min-[360px]:justify-start gap-1 min-[400px]:gap-1.5 rounded-full",
   FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
-  FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[360px]:pl-4 flex flex-col justify-center",
-  // Call: a lighter disc on the dark glass (white icon, 52 px).
-  FloatCall: "shrink-0 w-[3.25rem] h-[3.25rem] inline-flex items-center justify-center rounded-full bg-white/[0.14] text-white ring-1 ring-inset ring-white/[0.10] transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
-  FloatCompare: "shrink-0 h-12 px-4 min-[360px]:pl-3.5 inline-flex items-center gap-1.5 rounded-full bg-orange-700 text-white font-semibold tracking-[0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] active:bg-orange-800 [@media(hover:hover)]:hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
+    FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[400px]:pl-4 flex-col justify-center",
+  // Round actions (owner, 2026-11-19), shown while the importer is subscribed:
+  // call (glass), WhatsApp (brand green), devis (orange, the main action),
+  // compare (glass, its word from 430 px). 48 px, 44 under 360 px.
+  FloatRound: "relative shrink-0 w-11 h-11 min-[400px]:w-12 min-[400px]:h-12 inline-flex items-center justify-center rounded-full text-white transition-[transform,background-color] duration-100 ease-out active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
+  FloatGlass: "bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] active:bg-white/[0.24] [@media(hover:hover)]:hover:bg-white/[0.20]",
+  FloatWhatsapp: "bg-[#25D366] active:bg-[#1EBE5A] [@media(hover:hover)]:hover:bg-[#1EBE5A]",
+  // Same orange as the desktop button (#E65400, primary-600): one orange.
+  FloatQuote: "bg-primary-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] active:bg-primary-700 [@media(hover:hover)]:hover:bg-primary-700",
+  // Desktop card (light surface): same actions as the phone capsule.
+  // « Demander un devis »: the big orange button under the price (owner's
+  // model, orange instead of black), then Comparer / WhatsApp / Appeler as
+  // three equal light-grey buttons with small capitals.
+  CardQuote: "w-full h-14 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary-600 text-white text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out hover:bg-primary-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  // Icon buttons next to the price (owner, 2026-11-19): same 44 px light-grey
+  // square for Comparer, WhatsApp and Appeler, grey icons; on hover WhatsApp
+  // turns green and Appeler orange.
+  CardIcon: "shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 transition-[transform,background-color,color] duration-100 ease-out hover:bg-gray-100 hover:text-gray-900 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2",
+  CardIconWhatsapp: "hover:!text-[#1DA851] focus-visible:!text-[#1DA851]",
+  CardIconCall: "hover:!text-primary-600 focus-visible:!text-primary-600",
+  // « Devis » always says its word next to its icon (owner, 2026-11-19): the
+  // one action with a label, so it reads first; same height as the rounds.
+  FloatQuotePill: "relative shrink-0 h-11 min-[400px]:h-12 pl-2.5 pr-3 min-[400px]:pl-3 min-[400px]:pr-3.5 inline-flex items-center gap-1 min-[400px]:gap-1.5 rounded-full text-white text-[0.875rem] min-[400px]:text-[0.9375rem] font-semibold tracking-[0.01em] transition-[transform,background-color] duration-100 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1F27]",
   // Top spacing matches the brand page (/fiches-techniques/<marque>): breadcrumb row 24px under the header on mobile, 40px from md.
   Container: "max-w-[1440px] mx-auto px-6 md:px-16 lg:px-32 pt-0 md:pt-9",
   // Phones: no breadcrumb row (its 44 px go to the photo and the title); « ← » sits on the photo
@@ -235,6 +259,11 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
       .filter((m): m is TechSpec => !!m);
   }, [spec, catalogue]);
   const [shareOpen, setShareOpen] = useState(false);
+  // « Demande de devis » sheet; focus goes back to its button on close.
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  // The « Devis » button that opened the sheet (phone capsule or desktop card).
+  const quoteButtonRef = useRef<HTMLElement | null>(null);
+  const openQuote = (e: React.MouseEvent<HTMLElement>) => { quoteButtonRef.current = e.currentTarget; setQuoteOpen(true); };
 
 
   useEffect(() => {
@@ -377,6 +406,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
 
   const handleCompare = useCallback(() => {
     if (!spec) return;
+    trackLead(spec.id, 'compare');
     const stored = localStorage.getItem('compare_ids');
     let ids: string[] = [];
     if (stored) {
@@ -468,7 +498,14 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   // Floating capsule: the price as typed in the admin, sorted (utils/capsulePrice.ts),
   // and a call link to the importer's first number (utils/phoneUtils.ts telHref).
   const capsule = capsulePrice(spec.priceNew);
-  const callHref = telHref(spec.importer?.phone);
+  // Appel, WhatsApp and Devis only while the importer's subscription runs
+  // (owner, 2026-11-19; importers.subscription_until, API field `subscribed`).
+  const subscribed = spec.importer?.subscribed === true;
+  const modelName = `${spec.brand} ${spec.model}`.trim();
+  const pageUrl = `https://www.moto-scoot.tn${getUrlFromState('tech-specs-details', { id: spec.id, specSlug: spec.slug, slug: `${spec.brand} ${spec.model}` })}`;
+  const callHref = subscribed ? telHref(spec.importer?.phone) : null;
+  const waHref = subscribed ? whatsappHref(spec.importer?.whatsapp, modelName, pageUrl) : null;
+  const canQuote = subscribed;
 
   return (
     <main className={S.Wrapper}>
@@ -645,7 +682,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             <div className="sticky top-28 space-y-6">
               {/* HEADER INFO CARD (Desktop Only) */}
               <div>
-                <div className="hidden lg:block bg-card rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                <div className="hidden lg:block bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-sans text-[14px] font-bold text-primary-600 tracking-[0px]">{spec.brand}</span>
                   </div>
@@ -667,19 +704,47 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                     ))}
                   </div>
 
-                  {/* PRICE & ACTION */}
+                  {/* PRICE & ACTIONS (owner, 2026-11-19): the price with three icon
+                      buttons beside it — Comparer (always), WhatsApp and Appeler
+                      (subscribed importer) — then « Demander un devis » (#E65400)
+                      on the whole width. In a narrow column the icons wrap
+                      under the price rather than cut it. */}
                   <div className="pt-6 border-t border-gray-100 flex flex-col gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-2xl font-black text-gray-900 leading-none truncate">{spec.priceNew}</span>
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-col flex-1 min-w-[5.5rem]">
+                        <span className="text-[1.375rem] font-black text-gray-900 leading-none whitespace-nowrap">{spec.priceNew}</span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">Prix public TTC</span>
+                      </div>
+                      {canQuote && (
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleCompare} className={S.CardIcon} aria-label="Comparer ce modèle" title="Comparer">
+                          <Scale size={20} strokeWidth={2} aria-hidden="true" />
+                        </button>
+                        {waHref && (
+                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp')} className={`${S.CardIcon} ${S.CardIconWhatsapp}`} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`} title="WhatsApp">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
+                          </a>
+                        )}
+                        {callHref && (
+                          <a href={callHref} onClick={() => trackLead(spec.id, 'call')} className={`${S.CardIcon} ${S.CardIconCall}`} aria-label={`Appeler ${spec.importer.name}`} title={`Appeler ${spec.importer.name}`}>
+                            <Phone size={20} strokeWidth={2} aria-hidden="true" />
+                          </a>
+                        )}
+                      </div>
+                      )}
                     </div>
-                    <Button 
-                      variant="primary" 
-                      className="w-full rounded-xl py-4 text-sm shadow-md shadow-orange-500/20 font-bold"
-                      onClick={handleCompare}
-                    >
-                      Comparer ce modèle
-                    </Button>
+                    {canQuote ? (
+                      <button type="button" onClick={openQuote} className={S.CardQuote} aria-haspopup="dialog">
+                        <FileText size={20} strokeWidth={2} aria-hidden="true" />
+                        Demander un devis
+                      </button>
+                    ) : (
+                      // Importer not subscribed: Comparer alone, the orange button with its word (owner).
+                      <button type="button" onClick={handleCompare} className={S.CardQuote}>
+                        <Scale size={20} strokeWidth={2} aria-hidden="true" />
+                        Comparer
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -727,10 +792,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
       <div className={S.FloatEdge} aria-hidden="true" />
       <div className={S.FloatBar} role="region" aria-label="Prix et actions">
-        <div className={S.FloatPrice} title={capsule.kind === 'text' ? capsule.main : undefined}>
+        {/* Under 360 px, with the contact buttons, the four actions take the
+            row; the price stays in the page above. */}
+        <div className={`${S.FloatPrice} ${canQuote ? 'hidden min-[360px]:flex' : 'flex'}`} title={capsule.kind === 'text' ? capsule.main : undefined}>
           {capsule.kind === 'amount' ? (
             <>
-              <span className="text-[1.0625rem] min-[360px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
+              <span className="text-[1rem] min-[400px]:text-[1.125rem] font-bold text-white leading-tight tabular-nums whitespace-nowrap">{capsule.main}</span>
               <span className="text-[0.75rem] font-medium text-gray-300 leading-tight tracking-[0.01em] whitespace-nowrap truncate">{capsule.sub}</span>
             </>
           ) : capsule.kind === 'text' ? (
@@ -742,18 +809,66 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         {callHref && (
           <a
             href={callHref}
-            className={S.FloatCall}
+            onClick={() => trackLead(spec.id, 'call')}
+            className={`${S.FloatRound} ${S.FloatGlass}`}
             aria-label={`Appeler ${spec.importer.name}`}
             title={`Appeler ${spec.importer.name}`}
           >
-            <Phone size={21} strokeWidth={2.2} aria-hidden="true" />
+            <Phone size={20} strokeWidth={2.2} aria-hidden="true" />
           </a>
         )}
-        <button type="button" className={S.FloatCompare} onClick={handleCompare}>
-          <ArrowLeftRight size={17} strokeWidth={2.4} aria-hidden="true" className="max-[359px]:hidden" />
-          Comparer
-        </button>
+        {waHref && (
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackLead(spec.id, 'whatsapp')}
+            className={`${S.FloatRound} ${S.FloatWhatsapp}`}
+            aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`}
+            title="WhatsApp"
+          >
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
+          </a>
+        )}
+        {canQuote && (
+          <button
+            type="button"
+            onClick={openQuote}
+            className={`${S.FloatQuotePill} ${S.FloatQuote}`}
+            aria-label={`Demander un devis pour le ${modelName}`}
+            aria-haspopup="dialog"
+          >
+            <FileText size={18} strokeWidth={2.2} aria-hidden="true" />
+            <span aria-hidden="true">Devis</span>
+          </button>
+        )}
+        {/* « Comparer »: a round balance next to the contact buttons; alone
+            (importer not subscribed), the orange pill with its word (owner). */}
+        {canQuote ? (
+          <button type="button" className={`${S.FloatRound} ${S.FloatGlass}`} onClick={handleCompare} aria-label="Comparer ce modèle" title="Comparer">
+            <Scale size={20} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        ) : (
+          <button type="button" className={`${S.FloatQuotePill} ${S.FloatQuote} !h-12 !px-4 !gap-1.5 !text-[0.9375rem]`} onClick={handleCompare}>
+            <Scale size={18} strokeWidth={2.2} aria-hidden="true" />
+            Comparer
+          </button>
+        )}
       </div>
+
+      {canQuote && (
+        <QuoteRequestSheet
+          open={quoteOpen}
+          onClose={() => setQuoteOpen(false)}
+          specId={spec.id}
+          brand={spec.brand}
+          model={spec.model}
+          cardImage={spec.image}
+          importerName={spec.importer?.name}
+          pageUrl={pageUrl}
+          returnFocus={quoteButtonRef}
+        />
+      )}
 
       {spec && (
         <SocialShareModal

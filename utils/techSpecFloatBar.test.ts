@@ -40,26 +40,37 @@ test('call link: always the first number, with +216 for a Tunisian one', () => {
   assert.equal(telHref('+33 1 23 45 67 89'), 'tel:+33123456789');
   assert.equal(telHref(''), null);
   assert.equal(telHref(null), null);
-  assert.match(page, /const callHref = telHref\(spec\.importer\?\.phone\);/);
+  // Only while the importer is subscribed (owner, 2026-11-19).
+  assert.match(page, /const callHref = subscribed \? telHref\(spec\.importer\?\.phone\) : null;/);
   assert.match(page, /<a href=\{telHref\(importer\.phone\) \|\| undefined\}/); // the importer card too
   assert.doesNotMatch(page, /tel:\$\{(spec\.)?importer\.phone/);
 });
 
-test('targets for the finger: call 52 px, « Comparer » 48 px (Apple 44 pt, Google 48 dp)', () => {
-  assert.match(page, /FloatCall: "shrink-0 w-\[3\.25rem\] h-\[3\.25rem\] /);
-  assert.match(page, /FloatCompare: "shrink-0 h-12 /);
-  assert.match(page, /onClick=\{handleCompare\}>\s*<ArrowLeftRight[^>]*className="max-\[359px\]:hidden" \/>\s*Comparer/);
+test('targets for the finger: round actions 48 px (44 under 400 px), « Devis » with its word, « Comparer » a round balance (owner)', () => {
+  assert.match(page, /FloatRound: "relative shrink-0 w-11 h-11 min-\[400px\]:w-12 min-\[400px\]:h-12 /);
+  assert.match(page, /FloatQuotePill: "relative shrink-0 h-11 min-\[400px\]:h-12 /);
+  assert.match(page, /<FileText size=\{18\}[^>]*\/>\s*<span aria-hidden="true">Devis<\/span>/);
+  assert.match(page, /className=\{`\$\{S\.FloatRound\} \$\{S\.FloatGlass\}`\} onClick=\{handleCompare\} aria-label="Comparer ce modèle"/);
+  // No word on the phone capsule's compare button (the desktop card has its own « Comparer »).
+  const capsule = page.slice(page.indexOf('aria-label="Prix et actions"'), page.indexOf('<QuoteRequestSheet'));
+  // With the contact buttons, Comparer is the round balance alone; without
+  // a subscription it is the orange pill with its word (owner).
+  assert.match(capsule, /\{canQuote \? \(\s*<button type="button" className=\{`\$\{S\.FloatRound\} \$\{S\.FloatGlass\}`\} onClick=\{handleCompare\} aria-label="Comparer ce modèle"/);
+  assert.match(capsule, /className=\{`\$\{S\.FloatQuotePill\} \$\{S\.FloatQuote\} [^`]*`\} onClick=\{handleCompare\}>\s*<Scale size=\{18\}[^>]*\/>\s*Comparer/);
+  // Under 360 px with the contact buttons, the price leaves the capsule (it is in the page).
+  assert.match(page, /\$\{canQuote \? 'hidden min-\[360px\]:flex' : 'flex'\}/);
   assert.match(page, /pb-\[calc\(7rem\+env\(safe-area-inset-bottom\)\)\] md:pb-20/);
 });
 
-test('contrast: dark glass on the light page, readable text, « Comparer » 5.4:1 (#C2410C)', () => {
+test('contrast: dark glass on the light page, readable text, orange pills in the site orange #E65400', () => {
   const capsule = css.match(/\.ms-capsule \{[^}]*\}/)?.[0] || '';
   assert.match(capsule, /background: rgba\(27, 31, 39, 0\.86\);/);
   assert.match(capsule, /backdrop-filter: blur\(24px\) saturate\(1\.6\);/);
   assert.match(capsule, /inset 0 1px 0 rgba\(255, 255, 255, 0\.12\)/); // light on the top edge
   assert.match(capsule, /animation: ms-capsule-in /); // materializes once
   assert.match(css, /@keyframes ms-capsule-in \{\s*from \{[^}]*backdrop-filter: blur\(0\) saturate\(1\);/);
-  assert.match(page, /FloatCompare: "[^"]*bg-orange-700 text-white /);
+  assert.match(page, /FloatQuote: "bg-primary-600 /); // one orange, as the desktop button (owner accepted 3.7:1)
+  assert.match(page, /FloatQuotePill: "[^"]*text-white /);
   assert.match(page, /font-bold text-white leading-tight tabular-nums whitespace-nowrap">\{capsule\.main\}/);
   assert.match(page, /font-medium text-gray-300 leading-tight tracking-\[0\.01em\] whitespace-nowrap truncate">\{capsule\.sub\}/);
   assert.doesNotMatch(page, /ms-capsule-well/); // no box inside the box
