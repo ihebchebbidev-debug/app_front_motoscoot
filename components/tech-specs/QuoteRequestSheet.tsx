@@ -4,6 +4,7 @@ import { ChoiceSheet } from '../search/ChoiceSheet';
 import { getOptimizedImageUrl } from '../../utils/urlUtils';
 import { validateQuoteForm, type QuoteErrors, type QuoteForm } from '../../utils/ficheLeads';
 import { requestQuote } from '../../services/techSpecLeadsApi';
+import { monitoring } from '../../utils/monitoring';
 
 /**
  * « Demande de devis » (owner, 2026-11-19): the model of the page on top,
@@ -72,6 +73,8 @@ export const QuoteRequestSheet: React.FC<Props> = ({ open, onClose, specId, bran
         phone: form.phone.trim(), email: form.email.trim(),
         consent: form.consent, website: trap, page_url: pageUrl,
       });
+      // Google Analytics: demande_devis (no name, phone or e-mail, utils/ga4Events.ts).
+      monitoring.trackEvent('SpecQuoteRequested', { specId, brand, model });
       setSentTo(r?.importer || importerName || '');
       setState('sent');
     } catch (err: any) {

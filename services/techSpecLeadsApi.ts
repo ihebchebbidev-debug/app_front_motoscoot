@@ -1,14 +1,27 @@
 import { apiClient, API_BASE_URL } from './apiClient';
 import { leadSessionId } from '../utils/ficheLeads';
+import { monitoring } from '../utils/monitoring';
 
 export type LeadKind = 'call' | 'whatsapp' | 'compare';
+
+const SPEC_LEAD_EVENT: Record<LeadKind, string> = {
+  call: 'SpecImporterCallInitiated',
+  whatsapp: 'SpecImporterWhatsAppInitiated',
+  compare: 'SpecCompareAdded',
+};
 
 /**
  * Counts a tap on Appel / WhatsApp / Comparer for the importer's figures.
  * keepalive: the call and WhatsApp links leave the page at once, a normal
  * request would be cancelled. Never blocks nor fails the tap.
  */
-export function trackLead(specId: string | number, kind: LeadKind): void {
+export function trackLead(
+  specId: string | number,
+  kind: LeadKind,
+  fiche?: { brand?: string | null; model?: string | null },
+): void {
+  // Also to Google Analytics (utils/ga4Events.ts): contact_importateur / comparer_modeles.
+  monitoring.trackEvent(SPEC_LEAD_EVENT[kind], { specId, brand: fiche?.brand, model: fiche?.model });
   try {
     void fetch(`${API_BASE_URL}/tech-specs/${encodeURIComponent(String(specId))}/lead`, {
       method: 'POST',

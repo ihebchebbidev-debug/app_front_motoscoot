@@ -44,3 +44,27 @@ test('monitoring forwards to GA4 and the deposit reports ListingPublished', () =
   const dep = readFileSync(new URL('../components/DepositAd.tsx', import.meta.url), 'utf8');
   assert.match(dep, /monitoring\.trackEvent\('ListingPublished'/);
 });
+
+// Owner, 2026-11-21: the fiches techniques (new models) have their own leads.
+test('fiche contacts, quote and compare reach GA4 with the fiche id', () => {
+  const fiche = { specId: 'abc', brand: 'SYM', model: 'Jet 14 125 AC E5' };
+  assert.deepEqual(toGa4Event('SpecImporterCallInitiated', fiche), { name: 'contact_importateur', params: { methode: 'appel', fiche_id: 'abc', marque: 'SYM', modele: 'Jet 14 125 AC E5' } });
+  assert.deepEqual(toGa4Event('SpecImporterWhatsAppInitiated', fiche), { name: 'contact_importateur', params: { methode: 'whatsapp', fiche_id: 'abc', marque: 'SYM', modele: 'Jet 14 125 AC E5' } });
+  assert.deepEqual(toGa4Event('SpecQuoteRequested', fiche), { name: 'demande_devis', params: { fiche_id: 'abc', marque: 'SYM', modele: 'Jet 14 125 AC E5' } });
+  assert.deepEqual(toGa4Event('SpecCompareAdded', fiche), { name: 'comparer_modeles', params: { fiche_id: 'abc', marque: 'SYM', modele: 'Jet 14 125 AC E5' } });
+});
+
+test('the quote form never sends the visitor details to GA4', () => {
+  const ev = toGa4Event('SpecQuoteRequested', { specId: 7, first_name: 'Sami', phone: '+21655000000', email: 'a@b.tn' });
+  assert.deepEqual(ev, { name: 'demande_devis', params: { fiche_id: '7' } });
+});
+
+test('every fiche lead path calls monitoring', () => {
+  const api = readFileSync(new URL('../services/techSpecLeadsApi.ts', import.meta.url), 'utf8');
+  assert.match(api, /monitoring\.trackEvent\(SPEC_LEAD_EVENT\[kind\]/);
+  const sheet = readFileSync(new URL('../components/tech-specs/QuoteRequestSheet.tsx', import.meta.url), 'utf8');
+  assert.match(sheet, /monitoring\.trackEvent\('SpecQuoteRequested', \{ specId, brand, model \}\)/);
+  const page = readFileSync(new URL('../components/TechSpecsDetails.tsx', import.meta.url), 'utf8');
+  assert.equal((page.match(/trackLead\(spec\.id, '(call|whatsapp|compare)', spec\)/g) || []).length, 5);
+  assert.doesNotMatch(page, /trackLead\(spec\.id, '(call|whatsapp|compare)'\)/);
+});
