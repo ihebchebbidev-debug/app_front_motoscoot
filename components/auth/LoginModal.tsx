@@ -612,6 +612,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
             </Button>
           </form>
 
+          {/* Acceptance of the CGU. Shown in both modes: "Continuer avec Google"
+              creates an account from the sign-in screen too. The link opens a
+              new tab so a half-filled form is not lost. */}
+          <p className="mt-5 text-center text-[13px] leading-relaxed text-gray-600 text-pretty">
+            {isSignUp ? 'En créant votre compte' : 'En continuant'}, vous acceptez les{' '}
+            <a
+              href="/conditions"
+              target="_blank"
+              rel="noopener"
+              className="font-semibold text-primary-700 underline decoration-primary-700/40 underline-offset-2 hover:decoration-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm"
+            >
+              conditions générales d'utilisation
+            </a>{' '}
+            de Moto-Scoot.tn.
+          </p>
+
           <div className="mt-8 pt-6 border-t border-gray-100 text-center pb-10">
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
