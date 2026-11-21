@@ -1,10 +1,11 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 
 /**
  * Shared pieces of the information pages (Conditions générales, Sécurité):
- * the orange hero and the "En bref" key-points box. One component each, so
- * the pages stay identical.
+ * the orange hero, the "En bref" key-points box and the sommaire (sticky
+ * list on large screens, folded menu on phones). One component each, so the
+ * pages stay identical.
  */
 
 export const InfoHero: React.FC<{ title: string; subtitle: string }> = ({ title, subtitle }) => (
@@ -38,3 +39,52 @@ export const KeyPoints: React.FC<{ id: string; title: string; items: readonly st
     {note && <p className="mt-4 text-sm text-gray-700">{note}</p>}
   </section>
 );
+
+export type TocItem = { id: string; title: string };
+
+// Called after the folded sommaire has closed, so the layout no longer moves.
+const scrollToSection = (id: string) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  history.replaceState(history.state, '', `#${id}`);
+  el.focus({ preventScroll: true });
+};
+
+export const TocList: React.FC<{ items: readonly TocItem[]; onPick?: () => void }> = ({ items, onPick }) => (
+  <ol className="space-y-0.5">
+    {items.map((s) => (
+      <li key={s.id}>
+        <a
+          href={`#${s.id}`}
+          onClick={(e) => {
+            if (!document.getElementById(s.id)) return;
+            e.preventDefault();
+            onPick?.();
+            requestAnimationFrame(() => scrollToSection(s.id));
+          }}
+          className="block rounded-lg px-3 py-2 text-[0.9375rem] leading-snug text-gray-700 transition-colors duration-150 [@media(hover:hover)]:hover:bg-primary-50 [@media(hover:hover)]:hover:text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        >
+          {s.title}
+        </a>
+      </li>
+    ))}
+  </ol>
+);
+
+/** Sommaire folded above the text on phones and tablets; closes on pick. */
+export const FoldedToc: React.FC<{ items: readonly TocItem[] }> = ({ items }) => {
+  const ref = React.useRef<HTMLDetailsElement>(null);
+  return (
+    <details ref={ref} className="group mt-5 rounded-2xl border border-gray-200 lg:hidden">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-3 font-bold text-gray-900 [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+        Sommaire
+        <ChevronDown size={20} className="text-gray-500 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <nav aria-label="Sommaire (mobile)" className="px-2 pb-3">
+        <TocList items={items} onPick={() => ref.current?.removeAttribute('open')} />
+      </nav>
+    </details>
+  );
+};

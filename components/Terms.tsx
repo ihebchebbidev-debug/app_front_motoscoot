@@ -1,8 +1,7 @@
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 import { READING_PROSE } from './ui/readingProse';
-import { InfoHero, KeyPoints } from './ui/InfoPage';
+import { InfoHero, KeyPoints, TocList, FoldedToc } from './ui/InfoPage';
 
 /**
  * Conditions générales d'utilisation (/conditions).
@@ -43,16 +42,6 @@ const SUMMARY = [
   'Ces conditions relèvent du droit tunisien.',
 ];
 
-// Called after the folded sommaire has closed, so the layout no longer moves.
-const scrollToSection = (id: string) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  history.replaceState(history.state, '', `#${id}`);
-  el.focus({ preventScroll: true });
-};
-
 const InternalLink: React.FC<{ view: string; href: string; onNavigate?: Nav; children: React.ReactNode }> = ({ view, href, onNavigate, children }) => (
   <a
     href={href}
@@ -66,27 +55,6 @@ const InternalLink: React.FC<{ view: string; href: string; onNavigate?: Nav; chi
   </a>
 );
 
-const TocList: React.FC<{ onPick?: () => void }> = ({ onPick }) => (
-  <ol className="space-y-0.5">
-    {SECTIONS.map((s) => (
-      <li key={s.id}>
-        <a
-          href={`#${s.id}`}
-          onClick={(e) => {
-            if (!document.getElementById(s.id)) return;
-            e.preventDefault();
-            onPick?.();
-            requestAnimationFrame(() => scrollToSection(s.id));
-          }}
-          className="block rounded-lg px-3 py-2 text-[0.9375rem] leading-snug text-gray-700 transition-colors duration-150 hover:bg-primary-50 hover:text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-        >
-          {s.title}
-        </a>
-      </li>
-    ))}
-  </ol>
-);
-
 const Section: React.FC<{ id: string; children: React.ReactNode }> = ({ id, children }) => (
   <section aria-labelledby={id}>
     <h2 id={id} tabIndex={-1} className="scroll-mt-28 focus:outline-none">
@@ -97,8 +65,6 @@ const Section: React.FC<{ id: string; children: React.ReactNode }> = ({ id, chil
 );
 
 const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
-  const tocRef = React.useRef<HTMLDetailsElement>(null);
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-16">
       <InfoHero
@@ -119,7 +85,7 @@ const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
           <nav aria-label="Sommaire" className="hidden lg:block">
             <div className="sticky top-28">
               <p className="px-3 mb-3 text-sm font-bold text-gray-900">Sommaire</p>
-              <TocList />
+              <TocList items={SECTIONS} />
             </div>
           </nav>
 
@@ -131,16 +97,7 @@ const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
 
               <KeyPoints id="en-bref" title="En bref" items={SUMMARY} note="Ce résumé ne remplace pas le texte complet ci-dessous." />
 
-              {/* Sommaire folded above the text on phones and tablets. */}
-              <details ref={tocRef} className="group mt-5 rounded-2xl border border-gray-200 lg:hidden">
-                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-3 font-bold text-gray-900 [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
-                  Sommaire
-                  <ChevronDown size={20} className="text-gray-500 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
-                </summary>
-                <nav aria-label="Sommaire (mobile)" className="px-2 pb-3">
-                  <TocList onPick={() => tocRef.current?.removeAttribute('open')} />
-                </nav>
-              </details>
+              <FoldedToc items={SECTIONS} />
 
               <div className={`${READING_PROSE} prose-base md:prose-lg mt-2 prose-h2:text-xl md:prose-h2:text-2xl`}>
                 <Section id="objet">
