@@ -40,7 +40,14 @@ test('French typography on /securite: no-break space inside « » and before : ?
 
 test('both information pages use the shared sommaire', () => {
   for (const f of ['components/Terms.tsx', 'components/Security.tsx']) {
-    assert.match(read(f), /<TocList items=\{SECTIONS\} \/>/, f);
+    assert.match(read(f), /<TocList items=\{SECTIONS\} tracked \/>/, f);
     assert.match(read(f), /<FoldedToc items=\{SECTIONS\} \/>/, f);
   }
+});
+
+test('information pages: title shows at once, folded sommaire opens with the menu curve, sticky one marks the section read', () => {
+  const ui = read('components/ui/InfoPage.tsx');
+  assert.doesNotMatch(ui, /animate-fade-in-up/, 'no 600 ms fade on the main title');
+  assert.match(ui, /aria-current=\{isActive \? 'location' : undefined\}/);
+  assert.match(read('src/styles/globals.css'), /\.ms-toc\[open\] > nav \{[^}]*ms-menu-in 150ms/);
 });

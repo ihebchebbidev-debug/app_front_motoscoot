@@ -73,7 +73,7 @@ export const ListingSidebar: React.FC<ListingSidebarProps> = ({
 
           <Link
             to="/securite"
-            className="inline-block text-[13px] font-bold text-primary-700 underline decoration-primary-700/40 underline-offset-2 hover:decoration-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm"
+            className="inline-block text-[13px] font-bold text-primary-700 underline decoration-primary-700/40 underline-offset-2 transition-colors duration-150 [@media(hover:hover)]:hover:decoration-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm"
           >
             Tous nos conseils de sécurité
           </Link>

@@ -139,7 +139,7 @@ const Security: React.FC<any> = ({ onGoHome, onNavigate }) => {
           <aside className="space-y-6 lg:[@media(min-height:50rem)]:sticky lg:[@media(min-height:50rem)]:top-28">
             <nav aria-label="Sommaire" className="hidden lg:block">
               <p className="px-3 mb-3 text-sm font-bold text-gray-900">Sommaire</p>
-              <TocList items={SECTIONS} />
+              <TocList items={SECTIONS} tracked />
             </nav>
 
           <section aria-labelledby="signaler" className="rounded-3xl md:rounded-[2.5rem] bg-neutral-900 px-5 py-8 sm:px-8 md:px-12 md:py-10 lg:rounded-3xl lg:px-7 lg:py-8 text-white">

@@ -85,7 +85,7 @@ const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
           <nav aria-label="Sommaire" className="hidden lg:block">
             <div className="sticky top-28">
               <p className="px-3 mb-3 text-sm font-bold text-gray-900">Sommaire</p>
-              <TocList items={SECTIONS} />
+              <TocList items={SECTIONS} tracked />
             </div>
           </nav>
 
