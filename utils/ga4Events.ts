@@ -8,8 +8,12 @@
  * event counts every buyer → seller contact. `annonce_publiee` counts the
  * deposits. Mark both as key events in GA4 › Admin › Events.
  *
- * Only non-personal parameters are forwarded (listing id, brand, model,
- * channel): never the seller's name, phone or the user id.
+ * On the fiches techniques (new models): `contact_importateur` (call or
+ * WhatsApp to the importer), `demande_devis` (quote form sent) and
+ * `comparer_modeles`.
+ *
+ * Only non-personal parameters are forwarded (listing or fiche id, brand,
+ * model, channel): never a name, phone, e-mail or the user id.
  */
 export type Ga4Event = { name: string; params: Record<string, string | number> };
 
@@ -20,10 +24,17 @@ const CONTACT_CHANNEL: Record<string, string> = {
   ListingCallbackRequested: 'rappel',
 };
 
+const IMPORTER_CHANNEL: Record<string, string> = {
+  SpecImporterCallInitiated: 'appel',
+  SpecImporterWhatsAppInitiated: 'whatsapp',
+};
+
 function pick(props: Record<string, unknown>): Record<string, string | number> {
   const out: Record<string, string | number> = {};
   const id = props.listingId ?? props.listing_id;
   if (typeof id === 'string' || typeof id === 'number') out.listing_id = String(id);
+  const specId = props.specId;
+  if (typeof specId === 'string' || typeof specId === 'number') out.fiche_id = String(specId);
   if (typeof props.brand === 'string' && props.brand) out.marque = props.brand;
   if (typeof props.model === 'string' && props.model) out.modele = props.model;
   return out;
@@ -34,6 +45,12 @@ export function toGa4Event(name: string, props: Record<string, unknown> = {}): G
   const channel = CONTACT_CHANNEL[name];
   if (channel) return { name: 'contact_vendeur', params: { methode: channel, ...pick(props) } };
   if (name === 'ListingPhoneRevealed') return { name: 'afficher_numero', params: pick(props) };
+  // Fiches techniques (motos et scooters neufs), owner 2026-11-21: the
+  // importer contacts and the quote form are the « leads » of a new model.
+  const importerChannel = IMPORTER_CHANNEL[name];
+  if (importerChannel) return { name: 'contact_importateur', params: { methode: importerChannel, ...pick(props) } };
+  if (name === 'SpecQuoteRequested') return { name: 'demande_devis', params: pick(props) };
+  if (name === 'SpecCompareAdded') return { name: 'comparer_modeles', params: pick(props) };
   if (name === 'ListingPublished') {
     const params: Record<string, string | number> = {};
     if (typeof props.category === 'string' && props.category) params.categorie = props.category;

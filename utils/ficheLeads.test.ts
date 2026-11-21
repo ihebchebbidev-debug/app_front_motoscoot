@@ -24,9 +24,9 @@ test('quote form: same rules as the server, messages that say how to fix', () =>
 
 test('floating bar: Appel, WhatsApp and Devis only for a subscribed importer; every tap counted', () => {
   assert.match(page, /const subscribed = spec\.importer\?\.subscribed === true;/);
-  assert.match(page, /onClick=\{\(\) => trackLead\(spec\.id, 'call'\)\}/);
-  assert.match(page, /onClick=\{\(\) => trackLead\(spec\.id, 'whatsapp'\)\}/);
-  assert.match(page, /trackLead\(spec\.id, 'compare'\);/);
+  assert.match(page, /onClick=\{\(\) => trackLead\(spec\.id, 'call', spec\)\}/);
+  assert.match(page, /onClick=\{\(\) => trackLead\(spec\.id, 'whatsapp', spec\)\}/);
+  assert.match(page, /trackLead\(spec\.id, 'compare', spec\);/);
   assert.match(page, /className=\{`\$\{S\.FloatRound\} \$\{S\.FloatWhatsapp\}`\}/);
   assert.match(page, /FloatWhatsapp: "bg-\[#25D366\]/);
   assert.match(page, /<FileText size=\{18\}/);

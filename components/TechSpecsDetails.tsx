@@ -406,7 +406,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
 
   const handleCompare = useCallback(() => {
     if (!spec) return;
-    trackLead(spec.id, 'compare');
+    trackLead(spec.id, 'compare', spec);
     const stored = localStorage.getItem('compare_ids');
     let ids: string[] = [];
     if (stored) {
@@ -721,12 +721,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                           <Scale size={20} strokeWidth={2} aria-hidden="true" />
                         </button>
                         {waHref && (
-                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp')} className={`${S.CardIcon} ${S.CardIconWhatsapp}`} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`} title="WhatsApp">
+                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => trackLead(spec.id, 'whatsapp', spec)} className={`${S.CardIcon} ${S.CardIconWhatsapp}`} aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`} title="WhatsApp">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d={siWhatsapp.path} /></svg>
                           </a>
                         )}
                         {callHref && (
-                          <a href={callHref} onClick={() => trackLead(spec.id, 'call')} className={`${S.CardIcon} ${S.CardIconCall}`} aria-label={`Appeler ${spec.importer.name}`} title={`Appeler ${spec.importer.name}`}>
+                          <a href={callHref} onClick={() => trackLead(spec.id, 'call', spec)} className={`${S.CardIcon} ${S.CardIconCall}`} aria-label={`Appeler ${spec.importer.name}`} title={`Appeler ${spec.importer.name}`}>
                             <Phone size={20} strokeWidth={2} aria-hidden="true" />
                           </a>
                         )}
@@ -809,7 +809,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
         {callHref && (
           <a
             href={callHref}
-            onClick={() => trackLead(spec.id, 'call')}
+            onClick={() => trackLead(spec.id, 'call', spec)}
             className={`${S.FloatRound} ${S.FloatGlass}`}
             aria-label={`Appeler ${spec.importer.name}`}
             title={`Appeler ${spec.importer.name}`}
@@ -822,7 +822,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackLead(spec.id, 'whatsapp')}
+            onClick={() => trackLead(spec.id, 'whatsapp', spec)}
             className={`${S.FloatRound} ${S.FloatWhatsapp}`}
             aria-label={`Écrire à ${spec.importer.name} sur WhatsApp`}
             title="WhatsApp"
