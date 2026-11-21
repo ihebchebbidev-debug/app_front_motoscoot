@@ -263,10 +263,10 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/conditions',
     title: "Conditions Générales d'Utilisation | Moto-Scoot.tn",
     description:
-      "Conditions générales d'utilisation de moto-scoot.tn : règles de publication d'annonces, comportement des utilisateurs, modération, responsabilités.",
-    h1: "Conditions Générales d'Utilisation",
+      "Conditions générales d'utilisation de moto-scoot.tn selon le droit tunisien : compte, règles de publication des annonces, modération, vente entre utilisateurs, données personnelles.",
+    h1: "Conditions générales d'utilisation",
     intro:
-      "Les conditions générales qui régissent l'utilisation de moto-scoot.tn — publication d'annonces, modération, droits et obligations des utilisateurs.",
+      "Moto-Scoot.tn met en relation acheteurs et vendeurs de motos et scooters en Tunisie, sans vendre de véhicule ni recevoir de paiement. Ces conditions fixent les règles du compte, des annonces, de la modération et des données personnelles.",
   },
   {
     path: '/cookies',
