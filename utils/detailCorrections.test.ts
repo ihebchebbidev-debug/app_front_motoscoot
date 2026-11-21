@@ -410,3 +410,15 @@ test('one site name: home WebSite + Organization JSON-LD and every logo alt say 
     assert.equal(readFileSync(f, 'utf8').includes(`aria-label="Retour à l'accueil"`), false, `${f}: the logo link is named by the logo alt`);
   }
 });
+test('CGU page: same h1 as its crawler snapshot, dated, 12 articles reachable from the sommaire, Tunisian law named', async () => {
+  const src = readFileSync('components/Terms.tsx', 'utf8');
+  const { SEO_SNAPSHOTS } = await import('../src/seo/snapshots');
+  const snap = SEO_SNAPSHOTS.find((s: { path: string }) => s.path === '/conditions')!;
+  assert.ok(src.includes(snap.h1), 'h1 matches the snapshot');
+  assert.match(src, /Dernière mise à jour/);
+  const ids = [...src.matchAll(/\{ id: '([a-z-]+)', title: '\d+\./g)].map((m) => m[1]);
+  assert.equal(ids.length, 12);
+  for (const id of ids) assert.ok(src.includes(`<Section id="${id}">`), id);
+  assert.match(src, /droit tunisien/);
+  assert.match(src, /loi organique n° 2004-63/);
+});
