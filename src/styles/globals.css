@@ -258,6 +258,13 @@
     .ms-capsule { animation: ms-fade-in 150ms ease-out backwards; }
   }
 
+  /* Folded sommaire of the information pages (components/ui/InfoPage.tsx):
+     the list opens from the button with the menu curve; reduced motion fades. */
+  .ms-toc[open] > nav { transform-origin: top center; animation: ms-menu-in 150ms cubic-bezier(0.23, 1, 0.32, 1) backwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-toc[open] > nav { animation: ms-fade-in 120ms ease-out backwards; }
+  }
+
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
