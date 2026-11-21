@@ -247,10 +247,10 @@ export const SEO_SNAPSHOTS: SeoSnapshot[] = [
     path: '/securite',
     title: "Conseils de Sécurité — Acheter & Vendre en Confiance | Moto-Scoot.tn",
     description:
-      "Tous nos conseils pour acheter ou vendre une moto en toute sécurité en Tunisie : éviter les arnaques, vérifier les documents, transactions sécurisées.",
-    h1: "Sécurité — Acheter et Vendre en Confiance",
+      "Conseils pour acheter ou vendre une moto d'occasion en toute sécurité en Tunisie : éviter les arnaques, vérifier les papiers, faire la mutation à l'ATTT.",
+    h1: "Sécurité : acheter et vendre en confiance",
     intro:
-      "Protégez-vous lors de vos transactions : nos recommandations pour identifier les annonces frauduleuses, vérifier les papiers du véhicule, organiser un essai et un paiement en toute sécurité.",
+      "Les bons réflexes pour acheter ou vendre une moto d'occasion en Tunisie : voir avant de payer, aucun acompte, vérifier la carte grise et le numéro de châssis, contrat signé à la municipalité et mutation à l'ATTT dans les 15 jours, arnaques courantes.",
   },
   {
     path: '/mentions-legales',

@@ -3,6 +3,8 @@ import { ShieldCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ListingSellerCard } from './ListingSellerCard';
 import AdBanner from '../common/AdBanner';
 import { Listing } from '../../types';
+import { Link } from 'react-router-dom';
+import { BUYER_SAFETY_TIPS } from '../../constants/safetyTips';
 
 interface ListingSidebarProps {
   listing: Listing;
@@ -25,13 +27,6 @@ export const ListingSidebar: React.FC<ListingSidebarProps> = ({
   onShare,
   onReport
 }) => {
-  const securityTips = [
-    "Méfiez-vous des offres trop belles pour être vraies.",
-    "Ne payez jamais sans avoir vu et testé le véhicule.",
-    "Rencontrez le vendeur dans un endroit sûr et fréquenté.",
-    "Contrôlez la carte grise et le numéro de série.",
-    "Évitez les transferts d'argent à distance."
-  ];
 
   return (
     <aside className={S.SidebarCol}>
@@ -68,13 +63,20 @@ export const ListingSidebar: React.FC<ListingSidebarProps> = ({
             Conseils de sécurité :
           </h3>
           <div className="space-y-1.5">
-            {securityTips.map((tip, idx) => (
+            {BUYER_SAFETY_TIPS.map((tip, idx) => (
               <div key={idx} className={S.TrustItem}>
                 <div className="w-1.5 h-1.5 rounded-full bg-primary-600 mt-1.5 shrink-0" />
                 <p className={S.TrustText}>{tip}</p>
               </div>
             ))}
           </div>
+
+          <Link
+            to="/securite"
+            className="inline-block text-[13px] font-bold text-primary-700 underline decoration-primary-700/40 underline-offset-2 hover:decoration-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm"
+          >
+            Tous nos conseils de sécurité
+          </Link>
 
           <p className={S.Disclaimer}>
             moto-scoot.tn est une plateforme de mise en relation. Nous déclinons toute responsabilité quant aux véhicules annoncés et aux transactions entre utilisateurs.
