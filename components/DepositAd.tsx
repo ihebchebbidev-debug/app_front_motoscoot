@@ -35,6 +35,7 @@ import { PriceEstimator } from './deposit/PriceEstimator';
 import SEO from './common/SEO';
 import { DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from '../src/seo/privatePages';
 import { analytics } from '../src/lib/posthog';
+import { monitoring } from '../utils/monitoring';
 
 /** Step fields that show their own error message under the field. */
 const FIELDS_WITH_INLINE_ERROR = new Set([
@@ -376,6 +377,7 @@ const DepositAd: React.FC<DepositAdProps> = ({ onNavigate }) => {
         contact_method: data.contactMethod || 'phone',
         has_equipment: data.equipment.length > 0,
       });
+      monitoring.trackEvent('ListingPublished', { category: data.category });
 
       // The draft is done: removed, and nothing is saved until a new deposit.
       markPublished();

@@ -3,7 +3,10 @@
  * Permet d'isoler la logique de log du code métier.
  */
 
-type LogLevel = 'info' | 'warn' | 'error' | 'fatal';
+import { trackEvent as trackGa4Event } from '../services/analytics';
+import { toGa4Event } from './ga4Events';
+
+type LogLevel ='info' | 'warn' | 'error' | 'fatal';
 
 interface EventContext {
   [key: string]: any;
@@ -36,7 +39,9 @@ class TelemetryService {
       return;
     }
 
-    // TODO: intégration réelle (ex: mixpanel.track(name, properties))
+    // Contacts, deposits and shares go to Google Analytics (utils/ga4Events.ts).
+    const ga = toGa4Event(name, properties);
+    if (ga) trackGa4Event(ga.name, ga.params);
   }
 
   /**
