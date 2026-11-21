@@ -1,7 +1,8 @@
 import React from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 import { READING_PROSE } from './ui/readingProse';
+import { InfoHero, KeyPoints } from './ui/InfoPage';
 
 /**
  * Conditions générales d'utilisation (/conditions).
@@ -100,22 +101,10 @@ const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-16">
-      <div className="relative w-full h-[35vh] md:h-[30vh] lg:h-[45vh] flex flex-col md:items-center md:justify-center px-6 font-sans overflow-hidden bg-primary-50">
-        <div className="absolute inset-0 overflow-hidden z-0">
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://www.moto-scoot.tn/hero-assets/-hero-background.webp')" }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply" />
-        </div>
-        <div className="relative z-10 flex flex-col justify-center items-center w-full max-w-[1280px] mx-auto h-full pt-20">
-          <div className="text-center px-4 md:mt-32">
-            <h1 className="text-3xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-sm tracking-tight leading-tight text-balance animate-fade-in-up">
-              Conditions générales d'utilisation
-            </h1>
-            <p className="text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto animate-fade-in-up">
-              Les règles pour publier, acheter et vendre sur Moto-Scoot.tn.
-            </p>
-          </div>
-        </div>
-      </div>
+      <InfoHero
+        title="Conditions générales d'utilisation"
+        subtitle="Les règles pour publier, acheter et vendre sur Moto-Scoot.tn."
+      />
 
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-10 md:py-16">
         <header className="mb-8 md:mb-12">
@@ -140,18 +129,7 @@ const Terms: React.FC<any> = ({ onGoHome, onNavigate }) => {
                 Dernière mise à jour : <time dateTime={UPDATED_AT.iso}>{UPDATED_AT.label}</time>
               </p>
 
-              <section aria-labelledby="en-bref" className="mt-5 rounded-2xl bg-primary-50 px-5 py-6 sm:px-7">
-                <h2 id="en-bref" className="text-lg font-extrabold text-gray-900">En bref</h2>
-                <ul className="mt-4 space-y-3">
-                  {SUMMARY.map((line) => (
-                    <li key={line} className="flex gap-3 text-[0.9375rem] leading-relaxed text-gray-800 sm:text-base">
-                      <Check size={18} strokeWidth={2.5} className="mt-[0.2rem] shrink-0 text-primary-700" aria-hidden="true" />
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-sm text-gray-700">Ce résumé ne remplace pas le texte complet ci-dessous.</p>
-              </section>
+              <KeyPoints id="en-bref" title="En bref" items={SUMMARY} note="Ce résumé ne remplace pas le texte complet ci-dessous." />
 
               {/* Sommaire folded above the text on phones and tablets. */}
               <details ref={tocRef} className="group mt-5 rounded-2xl border border-gray-200 lg:hidden">

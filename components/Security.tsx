@@ -1,48 +1,155 @@
 import React from 'react';
-import { Home, AlertTriangle, UserCheck, Smartphone, Mail, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, ArrowRight } from 'lucide-react';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
+import { READING_PROSE } from './ui/readingProse';
+import { InfoHero, KeyPoints } from './ui/InfoPage';
+import { BUYER_SAFETY_TIPS } from '../constants/safetyTips';
+
+/**
+ * Sécurité (/securite): how to buy and sell a used motorbike safely in
+ * Tunisia. Same hero and key-points box as the Conditions générales; the
+ * five buyer reflexes are shared with the box on every listing.
+ *
+ * Tunisian steps (contrat signé à la municipalité, mutation à l'ATTT dans
+ * les 15 jours) follow the Idaraty procedure sheets. Change UPDATED_AT
+ * with every change of substance.
+ */
+const UPDATED_AT = { label: '21 novembre 2026', iso: '2026-11-21' };
+
+const IDARATY_MUTATION = 'https://idaraty.tn/fr/procedures/mutation-dun-vehicule';
 
 const Security: React.FC<any> = ({ onGoHome, onNavigate }) => {
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-16">
-      <div className="relative w-full h-[35vh] md:h-[30vh] lg:h-[45vh] flex flex-col md:items-center md:justify-center px-6 font-sans overflow-hidden bg-primary-50">
-        <div className="absolute inset-0 overflow-hidden z-0">
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://www.moto-scoot.tn/hero-assets/-hero-background.webp')" }} />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-700 to-primary-600 opacity-95 mix-blend-multiply" />
-        </div>
-        <div className="relative z-10 flex flex-col justify-center items-center w-full max-w-[1280px] mx-auto h-full pt-20">
-          <div className="text-center px-4 md:mt-32">
-            <h1 className="text-3xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-sm tracking-tight leading-tight animate-fade-in-up">Sécurité</h1>
-            <p className="text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto animate-fade-in-up opacity-90">Conseils pour acheter et vendre sereinement.</p>
-          </div>
-        </div>
-      </div>
+      <InfoHero
+        title="Sécurité : acheter et vendre en confiance"
+        subtitle="Les bons réflexes pour une moto ou un scooter d'occasion en Tunisie."
+      />
 
-      <div className="max-w-[1280px] mx-auto px-6 py-12 md:py-16">
-        <header className="flex items-center justify-between mb-8 md:mb-12">
-           <PageBreadcrumb
-             parents={[
-               { label: 'Accueil', href: '/', onClick: onGoHome },
-             ]}
-             current={'Sécurité'}
-           />
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-10 md:py-16">
+        <header className="mb-8 md:mb-12">
+          <PageBreadcrumb parents={[{ label: 'Accueil', href: '/', onClick: onGoHome }]} current="Sécurité" />
         </header>
-        <div className="space-y-8 max-w-4xl">
-            <div className="bg-card p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                <div className="flex items-center gap-3 text-primary-600 mb-6"><UserCheck size={28} /><h2 className="text-2xl font-black m-0">Acheteurs</h2></div>
-                <ul className="space-y-6 text-gray-600 list-none p-0">
-                    <li className="flex gap-4"><div className="w-6 h-6 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 font-bold text-xs">1</div><p><strong>Pas d'acompte :</strong> Ne payez rien sans voir la moto.</p></li>
-                    <li className="flex gap-4"><div className="w-6 h-6 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 font-bold text-xs">2</div><p><strong>Lieux publics :</strong> Inspectez le véhicule de jour en public.</p></li>
+
+        <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-8 lg:space-y-0 xl:gap-10">
+          <article className="bg-card rounded-3xl md:rounded-[2.5rem] border border-gray-100 shadow-sm px-5 py-8 sm:px-8 md:px-12 md:py-12">
+            <div className="max-w-[68ch]">
+              <p className="text-sm text-gray-600">
+                Dernière mise à jour : <time dateTime={UPDATED_AT.iso}>{UPDATED_AT.label}</time>
+              </p>
+
+              <KeyPoints id="reflexes" title="Les 5 réflexes de l'acheteur" items={BUYER_SAFETY_TIPS} />
+
+              <div className={`${READING_PROSE} prose-base md:prose-lg mt-2 prose-h2:text-xl md:prose-h2:text-2xl`}>
+                <h2>Vous achetez</h2>
+                <ul>
+                  <li>
+                    <strong>Voir avant de payer.</strong> Examinez la moto, démarrez-la moteur froid et faites un essai. Ne payez
+                    rien à distance, même une partie du prix.
+                  </li>
+                  <li>
+                    <strong>Pas d'acompte.</strong> Un vendeur qui demande de l'argent pour « garder » la moto, ou qui vous presse
+                    de décider, doit vous alerter.
+                  </li>
+                  <li>
+                    <strong>Un lieu public.</strong> Rencontrez le vendeur de jour, dans un endroit fréquenté, avec un proche ou
+                    votre mécanicien.
+                  </li>
+                  <li>
+                    <strong>Les papiers.</strong> Comparez le numéro de châssis gravé sur le cadre avec celui de la carte grise, et
+                    le nom sur la carte grise avec la carte d'identité du vendeur.
+                  </li>
+                  <li>
+                    <strong>Le prix.</strong> Un prix très en dessous du marché cache souvent une arnaque ou un défaut. Comparez avec
+                    les autres annonces du même modèle.
+                  </li>
                 </ul>
+
+                <h2>Vous vendez</h2>
+                <ul>
+                  <li>
+                    <strong>L'argent d'abord.</strong> Remettez les clés et la carte grise seulement quand l'argent est réellement
+                    à vous. Une capture d'écran de virement ou un SMS ne prouve rien : vérifiez votre compte.
+                  </li>
+                  <li>
+                    <strong>Un essai encadré.</strong> Demandez à voir la carte d'identité et le permis de l'acheteur, et
+                    accompagnez-le pendant l'essai.
+                  </li>
+                  <li>
+                    <strong>Aucun code.</strong> Ne communiquez jamais un code reçu par SMS ni votre mot de passe, même à
+                    quelqu'un qui dit appeler de la part de Moto-Scoot.tn.
+                  </li>
+                  <li>
+                    <strong>Votre vie privée.</strong> Ne mettez dans l'annonce ni votre adresse, ni une photo de vos papiers.
+                  </li>
+                </ul>
+
+                <h2>Les papiers en Tunisie</h2>
+                <p>Dans l'ordre, pour une vente entre particuliers :</p>
+                <ol>
+                  <li>Vérifiez que le vendeur est bien le propriétaire inscrit sur la carte grise et que le numéro de châssis correspond.</li>
+                  <li>Demandez une attestation de non-gage : elle montre que la moto n'est pas gagée.</li>
+                  <li>Signez le contrat de vente en deux exemplaires, auprès des services de la municipalité.</li>
+                  <li>
+                    Faites la mutation à l'ATTT dans les 15 jours qui suivent la signature, avec la carte grise, le contrat et le
+                    certificat d'identification du véhicule.
+                  </li>
+                  <li>Assurez la moto avant de rouler.</li>
+                </ol>
+                <p className="!text-[0.9375rem] !text-gray-700">
+                  Les pièces demandées peuvent changer. Vérifiez la liste à jour auprès de l'ATTT ou sur la{' '}
+                  <a href={IDARATY_MUTATION} target="_blank" rel="noopener noreferrer">fiche « Mutation d'un véhicule » d'Idaraty</a>.
+                </p>
+
+                <h2>Les arnaques les plus courantes</h2>
+                <ul>
+                  <li>
+                    <strong>L'acompte pour réserver.</strong> Le « vendeur » encaisse l'acompte, puis ne répond plus.
+                  </li>
+                  <li>
+                    <strong>Le faux justificatif de paiement.</strong> Capture d'écran de virement, faux SMS de banque ou de La
+                    Poste : l'argent n'est jamais arrivé.
+                  </li>
+                  <li>
+                    <strong>Le lien reçu par SMS ou WhatsApp.</strong> La page imite un site connu pour voler vos codes ou votre
+                    carte bancaire. N'y saisissez rien.
+                  </li>
+                  <li>
+                    <strong>Le vendeur absent.</strong> Il serait à l'étranger et propose d'envoyer la moto après paiement. Il n'y
+                    a pas de moto.
+                  </li>
+                </ul>
+              </div>
             </div>
-            <div className="bg-neutral-900 p-8 md:p-12 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl">
-                <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-6"><AlertTriangle className="text-primary-500" size={32} /><h2 className="text-2xl md:text-3xl font-black m-0">Signaler</h2></div>
-                    <p className="text-gray-400 text-lg mb-8 leading-relaxed">Une annonce louche ? Aidez la communauté.</p>
-                    <button onClick={() => onNavigate?.('contact')} className="px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2"><Mail size={20} /> Modération</button>
-                </div>
+          </article>
+
+          <section aria-labelledby="signaler" className="rounded-3xl md:rounded-[2.5rem] bg-neutral-900 px-5 py-8 sm:px-8 md:px-12 md:py-10 lg:sticky lg:top-28 lg:rounded-3xl lg:px-7 lg:py-8 text-white">
+            <div className="max-w-[68ch]">
+              <div className="flex items-center gap-3">
+                <ShieldAlert size={26} className="shrink-0 text-primary-400" aria-hidden="true" />
+                <h2 id="signaler" className="text-xl md:text-2xl lg:text-xl font-extrabold tracking-tight">Un doute ? Signalez-le</h2>
+              </div>
+              <p className="mt-4 text-base lg:text-[0.9375rem] leading-relaxed text-gray-300">
+                Sur chaque annonce, le lien « Signaler un abus » prévient notre équipe de modération. Vous pouvez aussi nous écrire.
+                Si vous avez perdu de l'argent, déposez plainte auprès de la police et prévenez votre banque au plus vite.
+              </p>
+              <p className="mt-4 text-base lg:text-[0.9375rem] leading-relaxed font-semibold text-white">
+                Moto-Scoot.tn ne vous demandera jamais de paiement, de code reçu par SMS ni de mot de passe.
+              </p>
+              <a
+                href="/contact"
+                onClick={(e) => {
+                  if (!onNavigate || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate('contact');
+                }}
+                className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 font-bold text-white transition-[transform,background-color] duration-150 ease-out hover:bg-primary-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              >
+                Contacter la modération
+                <ArrowRight size={18} aria-hidden="true" />
+              </a>
             </div>
-            <div className="pt-12 flex justify-between items-center"><div className="flex items-center gap-2 text-gray-400"><ShieldCheck size={18} /><span className="text-sm">Sécurité Moto-Scoot.tn</span></div><button onClick={onGoHome} className="px-6 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold flex items-center gap-2"><Home size={18} /> Accueil</button></div>
+          </section>
         </div>
       </div>
     </div>
