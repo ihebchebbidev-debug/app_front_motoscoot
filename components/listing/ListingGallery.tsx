@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Heart, Share2, ArrowLeft } from 'lucide-react';
 
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
-import { galleryImageUrl } from '../../utils/seoImagePath';
+import { galleryImageUrl, galleryPhotoAlt } from '../../utils/seoImagePath';
 import { photoFit } from '../../utils/photoFit';
 import { Button } from '../ui/Button';
 
@@ -21,6 +21,10 @@ interface ListingGalleryProps {
    *  « partager » on the right. It stands in for the breadcrumb row, which
    *  the page hides on phones to give the photo and the title that space. */
   backLink?: { href: string; label: string; onClick?: () => void };
+  /** A row of thumbnails under the main photo (technical sheets, owner
+   *  2026-11-22): every photo is in the page, visible and described, so
+   *  search engines find all of them, not only the one on screen. */
+  thumbnails?: boolean;
 }
 
 const S = {
@@ -59,7 +63,8 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
   onShare,
   showFavorite = true,
   overlayTopLeft,
-  backLink
+  backLink,
+  thumbnails = false
 }) => {
   const [activeImg, setActiveImg] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -182,8 +187,9 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
             src={galleryImageUrl(activeSource, title)}
             onLoad={(e) => setFit(photoFit(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight))}
             className={`w-full h-full object-cover ${fit === 'contain' ? 'md:object-contain' : ''} animate-fade-in pointer-events-none`} 
-            alt={title}
+            alt={galleryPhotoAlt(title, activeIndex, images.length)}
             loading="eager"
+            fetchPriority={activeIndex === 0 ? 'high' : 'auto'}
           />
           
           <div className={S.Counter}>{images.length ? activeIndex + 1 : 0} / {images.length}</div>
@@ -247,6 +253,33 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
             )}
           </div>
         </div>
+
+        {thumbnails && images.length > 1 && (
+          <ul className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1" aria-label={`Photos de ${title}`}>
+            {images.map((img, idx) => (
+              <li key={img} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveImg(idx)}
+                  aria-label={`Afficher la photo ${idx + 1}`}
+                  aria-current={activeIndex === idx ? 'true' : undefined}
+                  className={`block w-20 h-[60px] md:w-24 md:h-[72px] rounded-xl overflow-hidden border-2 transition-[border-color,opacity] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 ${activeIndex === idx ? 'border-primary-600' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                >
+                  <img
+                    onError={imageFallback}
+                    src={getOptimizedImageUrl(img, 200, 150, 80, undefined, title)}
+                    alt={galleryPhotoAlt(title, idx, images.length)}
+                    width={200}
+                    height={150}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
       </div>
 

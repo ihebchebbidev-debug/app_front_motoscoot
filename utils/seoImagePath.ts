@@ -71,3 +71,12 @@ export function optimizeImageSource(resolved: string, width: number, height: num
 export function galleryImageUrl(url: string, title: string): string {
   return optimizeImageSource(seoImagePath(url, title) ?? url, 1200, 900, 90);
 }
+
+/**
+ * Text alternative of a gallery photo (owner, 2026-11-22): « SYM Jet 14 EVO
+ * 125 2026, photo 2 sur 8 ». Each photo gets its own description instead of
+ * the page title repeated; a single photo keeps the plain name.
+ */
+export function galleryPhotoAlt(title: string, index: number, total: number): string {
+  return total > 1 ? `${title}, photo ${index + 1} sur ${total}` : title;
+}

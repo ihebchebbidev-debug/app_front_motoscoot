@@ -307,6 +307,17 @@ export function techSpecShareImage(s: { image?: string | null; gallery?: Array<s
  * Shared with the crawler HTML so its preload asks for the very URL the
  * gallery then shows, and the photo is fetched once, before the JavaScript.
  */
+/**
+ * Photos of a technical sheet, in the order the gallery shows them: the
+ * sheet's own gallery, or the admin « image principale » when it has none.
+ * Shared by the page and the crawler HTML (owner, 2026-11-22: every photo
+ * in the page, not only the first).
+ */
+export function techSpecPhotos(s: { image?: string | null; gallery?: Array<string | null | undefined> | null }): string[] {
+  const extras = (s.gallery || []).filter((g): g is string => !!g);
+  return Array.from(new Set(extras.length > 0 ? extras : [s.image].filter((g): g is string => !!g)));
+}
+
 export function techSpecGalleryTitle(s: { brand?: unknown; model?: unknown; year?: unknown }): string {
   return `${s.brand} ${s.model} ${s.year}`;
 }
