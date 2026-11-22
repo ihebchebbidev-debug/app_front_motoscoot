@@ -22,7 +22,7 @@ import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detail
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
-import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
+import { galleryImageUrl, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
@@ -49,32 +49,6 @@ const escapeHtml = (s: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const toHttps = (url: string) => (url ? url.replace(/^http:\/\//i, 'https://') : url);
-
-// Slugs: the one rule shared with the app's links (utils/slugify.ts), so the
-// redirect below never sends an internal link elsewhere.
-
-// Rewrite backend storage hostnames to the public www.moto-scoot.tn domain AND
-// inject the listing / post slug into the path so every image URL exposed to
-// Google looks like  https://www.moto-scoot.tn/m/<slug>/<file>.webp  instead
-// of a meaningless UUID. The /m/<slug>/<file> path is proxied by vercel.json
-// straight back to the real upload, so bytes are unchanged — only the URL is
-// SEO-friendly. Falls back to the host-only rewrite when no slug is provided.
-// Same cache version as the listing pages (utils/seoImagePath.ts).
-const rewriteImageHost = (url: string, slug?: string | null): string => {
-  if (!url) return url;
-  let out = toHttps(url);
-  out = out.replace(/^https:\/\/(www\.)?motoscoot\.ihebchebbi\.pro\//i, `${SITE}/`);
-  const cleanSlug = slug ? slugify(slug) : '';
-  if (!cleanSlug) return out;
-  const m = out.match(/\/uploads\/([^?#]+)/i);
-  if (!m) return out;
-  const rest = m[1];
-  if (rest.startsWith('thumbnails/')) {
-    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}?v=${IMAGE_CACHE_VERSION}`;
-  }
-  return `${SITE}/m/${cleanSlug}/${rest}?v=${IMAGE_CACHE_VERSION}`;
-};
 const stripHtml = (s: string) => (s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 
@@ -472,14 +446,14 @@ async function renderBrand(req: any, res: any, brandSlug: string) {
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
 <meta property="og:url" content="${canonical}" />
-<meta property="og:image" content="${image}" />
-<meta property="og:image:secure_url" content="${image}" />
+<meta property="og:image" content="${escapeHtml(image)}" />
+<meta property="og:image:secure_url" content="${escapeHtml(image)}" />
 <meta property="og:image:alt" content="${escapeHtml(title)}" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${escapeHtml(title)}" />
 <meta name="twitter:description" content="${escapeHtml(description)}" />
-<meta name="twitter:image" content="${image}" />
+<meta name="twitter:image" content="${escapeHtml(image)}" />
 
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(itemListLd)}</script>
@@ -662,14 +636,14 @@ ${rows.map((r) => `<tr><th scope="row"><a href="${ficheUrl(r)}">${e(r.name)}</a>
 <meta property="og:title" content="${e(title)}" />
 <meta property="og:description" content="${e(description)}" />
 <meta property="og:url" content="${canonical}" />
-<meta property="og:image" content="${ogImage}" />
-<meta property="og:image:secure_url" content="${ogImage}" />
+<meta property="og:image" content="${escapeHtml(ogImage)}" />
+<meta property="og:image:secure_url" content="${escapeHtml(ogImage)}" />
 <meta property="og:image:alt" content="${e(heading)}" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${e(title)}" />
 <meta name="twitter:description" content="${e(description)}" />
-<meta name="twitter:image" content="${ogImage}" />
+<meta name="twitter:image" content="${escapeHtml(ogImage)}" />
 
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
 ${rows.length ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(itemListLd)}</script>` : ''}
@@ -842,7 +816,7 @@ export default async function handler(req: any, res: any) {
     // Articles and guides: the cover photo at the top is the LCP element; the
     // app shows cover_image || image as is (services/articlesApi, tipsApi).
     const coverPhoto = kind === 'article' || kind === 'guide' ? String(doc.cover_image || doc.image || '') : '';
-    const lcpImage = firstPhoto ? seoImagePath(firstPhoto, techSpecGalleryTitle(doc)) : /^https?:\/\//.test(coverPhoto) ? escapeHtml(coverPhoto) : null;
+    const lcpImage = firstPhoto ? galleryImageUrl(firstPhoto, techSpecGalleryTitle(doc)) : /^https?:\/\//.test(coverPhoto) ? coverPhoto : null;
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -853,7 +827,7 @@ export default async function handler(req: any, res: any) {
 <link rel="canonical" href="${canonical}" />
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
-${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
+${lcpImage ? `<link rel="preload" as="image" href="${escapeHtml(lcpImage)}" fetchpriority="high" />` : ''}
 
 <meta property="og:type" content="${ogType}" />
 ${ogType === 'article' && doc ? [
@@ -866,8 +840,8 @@ ${ogType === 'article' && doc ? [
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
 <meta property="og:url" content="${canonical}" />
-<meta property="og:image" content="${image}" />
-<meta property="og:image:secure_url" content="${image}" />
+<meta property="og:image" content="${escapeHtml(image)}" />
+<meta property="og:image:secure_url" content="${escapeHtml(image)}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="${escapeHtml(title)}" />
@@ -877,7 +851,7 @@ ${price ? `<meta property="product:price:amount" content="${price}" />\n<meta pr
 <meta name="twitter:site" content="@motoscoot_tn" />
 <meta name="twitter:title" content="${escapeHtml(title)}" />
 <meta name="twitter:description" content="${escapeHtml(description)}" />
-<meta name="twitter:image" content="${image}" />
+<meta name="twitter:image" content="${escapeHtml(image)}" />
 
 ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</script>` : ''}
 <script type="application/ld+json" data-ssr-ld>${scriptSafeJson(breadcrumbLd)}</script>
@@ -892,7 +866,7 @@ ${(() => {
 })()}`}
 ${related}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
-${image && image !== DEFAULT_OG ? `<img src="${image}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
+${image && image !== DEFAULT_OG ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
 <p><a href="${canonical}">Voir sur Moto-Scoot.tn</a></p>
 </body>
 </html>`;
