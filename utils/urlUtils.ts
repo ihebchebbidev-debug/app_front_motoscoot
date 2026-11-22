@@ -124,7 +124,7 @@ const ROUTE_MAP: RouteMapping[] = [
   // IDs may be numeric (legacy) or UUIDs (Postgres uuid_generate_v4).
   // The id segment is everything after the last "-" in the slug-id tail.
   { view: 'listing-details', path: '/annonce', pattern: /^\/annonce\/[a-z0-9-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)\/?$/i },
-  { view: 'article-details', path: '/article', pattern: /^\/article\/[a-z0-9-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i },
+  { view: 'article-details', path: '/article', pattern: /^\/article\/[a-z0-9-]*-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i },
   { view: 'tip-details', path: '/guide', pattern: /^\/guide\/[a-z0-9-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i },
   { view: 'garage-details', path: '/garage', pattern: /^\/garage\/[a-z0-9-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i },
   // Legacy long form (slug + UUID) first, then the short slug-only form.
