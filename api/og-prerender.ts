@@ -125,6 +125,15 @@ function pickImage(d: Doc | null, slug?: string | null): string {
   return rewriteImageHost(cand || DEFAULT_OG, slug);
 }
 
+// Catalogue pages (technical sheets, brand pages, sheet hub, 125 price guide).
+// Fresh for 10 minutes, then the cached copy is served at once while Vercel
+// rebuilds it in the background, for up to 7 days. With the former 1 hour,
+// Google (which visits each sheet less often) almost always hit a rebuild:
+// 2,0 s instead of 0,11 s. The page itself reloads the data in the browser,
+// so a visitor still sees the current price. Listings keep the short window:
+// a sold or removed listing must stop being served quickly.
+export const CATALOGUE_CACHE = 'public, s-maxage=600, stale-while-revalidate=604800';
+
 function pickGallery(d: Doc | null, slug?: string | null): string[] {
   if (!d) return [];
   const arr: string[] = [];
@@ -501,7 +510,7 @@ ${items}
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.setHeader('Cache-Control', CATALOGUE_CACHE);
   res.status(200).send(await renderWithApp(req, html));
 }
 
@@ -571,7 +580,7 @@ async function renderHub(req: any, res: any) {
     return { brand: String(typeof b === 'string' ? b : b?.brand || b?.name || ''), modelsCount: Number.isFinite(n) ? n : null };
   }).filter((b: HubBrandRow) => b.brand);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.setHeader('Cache-Control', CATALOGUE_CACHE);
   res.status(200).send(await renderWithApp(req, renderHubHtml(rows)));
 }
 
@@ -707,7 +716,7 @@ ${brandLinks ? `<ul>${brandLinks}<li><a href="${SITE}/fiches-techniques">Toutes 
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+  res.setHeader('Cache-Control', CATALOGUE_CACHE);
   res.status(200).send(await renderWithApp(req, html));
 }
 
@@ -913,7 +922,7 @@ ${kind !== 'fiche-technique' && image && image !== DEFAULT_OG ? `<img src="${esc
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     if (kind === 'garage' && !GARAGES_PUBLIC) res.setHeader('X-Robots-Tag', GARAGES_ROBOTS);
-    res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', kind === 'fiche-technique' ? CATALOGUE_CACHE : 'public, s-maxage=600, stale-while-revalidate=3600');
     res.status(200).send(await renderWithApp(req, html));
   } catch {
     res.setHeader('Cache-Control', 'no-store');
