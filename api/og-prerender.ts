@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo.js';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING } from '../utils/techSpecSeo.js';
 import { galleryImageUrl, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
@@ -357,11 +357,20 @@ ${priceRows}
     .map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
     .join('\n');
   const brandSlug = d.brand ? slugify(d.brand) : '';
+  // Questions fréquentes: same text as the page (utils/techSpecSeo.ts › techSpecFaq).
+  const faq = techSpecFaq({
+    brand: d.brand, model: d.model, category: d.category, price: d.price_new, updatedAt: d.updated_at,
+    topSpeed: d.top_speed, consumption: d.consumption, tank: d.dimensions?.tank, cc: d.engine?.cc,
+    power: d.engine?.power, weight: d.dimensions?.weight, availableInTunisia: d.available_in_tunisia,
+    importerName: d.importer?.name, importerCity: d.importer?.city,
+  });
+  const faqSection = faq.length ? `<section>\n<h2>${TECH_SPEC_FAQ_HEADING}</h2>\n${faq.map((f) => `<h3>${escapeHtml(f.question)}</h3>\n<p>${escapeHtml(f.answer)}</p>`).join('\n')}\n</section>` : '';
   return `<nav aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <a href="/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
 ${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
+${faqSection}
 <p>${escapeHtml(summary)}</p>
 ${block.pricesLink ? `<p><a href="${block.pricesLink.href}">${escapeHtml(block.pricesLink.label)}</a></p>` : ''}
 <ul>
