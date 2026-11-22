@@ -99,6 +99,8 @@ interface SpecForm {
   warranty: string;
   first_service: string;
   service_interval: string;
+  /** « Blanc, Noir mat, Bleu » — stored as a list (tech_specs.colors). */
+  colors: string;
   // Dimensions
   weight: string;
   seat_height: string;
@@ -120,7 +122,7 @@ const emptyForm = (): SpecForm => ({
   brakes_front: '', brakes_rear: '',
   tire_front: '', tire_rear: '',
   abs: '', tcs: '', riding_modes: '', quickshifter: '',
-  lighting: '', usb: '', dashboard: '', connectivity: '', cruise_control: '', keyless: '', other_equipment: '', warranty: '', first_service: '', service_interval: '',
+  lighting: '', usb: '', dashboard: '', connectivity: '', cruise_control: '', keyless: '', other_equipment: '', warranty: '', first_service: '', service_interval: '', colors: '',
   weight: '', seat_height: '', tank: '', length: '', wheelbase: '',
   consumption: '', top_speed: '',
 });
@@ -306,6 +308,7 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
       firstService: f.first_service,
       serviceInterval: f.service_interval,
     },
+    colors: f.colors.split(/[,;\n]/).map((c) => c.trim()).filter(Boolean),
     dimensions: {
       weight: f.weight,
       seatHeight: f.seat_height,
@@ -374,6 +377,7 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
       warranty: s.maintenance?.warranty || '',
       first_service: s.maintenance?.firstService || '',
       service_interval: s.maintenance?.serviceInterval || '',
+      colors: Array.isArray(s.colors) ? s.colors.join(', ') : '',
 
       weight: s.dimensions?.weight || s.weight || '',
       seat_height: s.dimensions?.seatHeight || s.seat_height || '',
@@ -684,6 +688,13 @@ export const TechSpecsTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tr
               <Field label="1ère révision"><input value={form.first_service} onChange={(e) => setForm({ ...form, first_service: e.target.value })} className={inputCls} placeholder="1 000 km" /></Field>
               <Field label="Révisions suivantes"><input value={form.service_interval} onChange={(e) => setForm({ ...form, service_interval: e.target.value })} className={inputCls} placeholder="Tous les 10 000 km" /></Field>
             </div>
+          </Section>
+
+          {/* COLOURS — « Caractéristiques » and « Questions fréquentes » of the public page */}
+          <Section title="Couleurs">
+            <Field label="Couleurs disponibles (séparées par des virgules)">
+              <input value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} className={inputCls} placeholder="Blanc, Noir mat, Bleu" />
+            </Field>
           </Section>
 
           {/* PERFORMANCE */}

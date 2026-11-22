@@ -3,6 +3,7 @@ const { subscribedSql } = require('../utils/importerSubscription');
 const { buildUpdate, validateRequired } = require('../utils/queryHelpers');
 const { publishedSql, ensurePublishedColumn } = require('../utils/techSpecDrafts');
 const { normalizeItem, readBatch, slugKey } = require('../utils/techSpecImport');
+const { normalizeColors, ensureColorsColumn } = require('../utils/techSpecColors');
 
 // Whitelisted columns the admin can update via PUT. Includes the JSONB
 // sub-objects (engine/chassis/electronics/dimensions) AND norm_logo so the
@@ -11,7 +12,7 @@ const SPEC_FIELDS = [
   'brand', 'model', 'year', 'category', 'price_new', 'image', 'gallery',
   'engine', 'chassis', 'electronics', 'dimensions',
   'consumption', 'top_speed', 'norm_logo', 'importer_id',
-  'available_in_tunisia', 'maintenance', 'is_published',
+  'available_in_tunisia', 'maintenance', 'is_published', 'colors',
 ];
 
 // Public-facing visibility filter. Used by /tech-specs/brands and
@@ -133,10 +134,14 @@ async function create(req, res, next) {
       available_in_tunisia = true,
       maintenance,
       is_published,
+      colors,
     } = req.body;
     // A draft can only be stored once the column exists; without it the
     // fiche is created as before (published).
     const draftCol = is_published === false && await ensurePublishedColumn(query);
+    // Colours are stored once the column exists; without it the fiche is saved without them.
+    const colorList = normalizeColors(colors);
+    const colorsCol = colorList.length > 0 && await ensureColorsColumn(query);
 
     // A unique-index race is retried, never exposed as a failed duplicate model save.
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -147,8 +152,8 @@ async function create(req, res, next) {
          (brand, model, year, category, price_new, image, gallery,
           engine, chassis, electronics, dimensions,
           consumption, top_speed, norm_logo, importer_id, available_in_tunisia, maintenance, slug
-          ${draftCol ? ', is_published' : ''})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18${draftCol ? ',FALSE' : ''})
+          ${draftCol ? ', is_published' : ''}${colorsCol ? ', colors' : ''})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18${draftCol ? ',FALSE' : ''}${colorsCol ? ',$19' : ''})
        RETURNING *`,
       [
         brand, model, year, category, price_new, image,
@@ -158,6 +163,7 @@ async function create(req, res, next) {
         available_in_tunisia !== false,
         maintenance || {},
         slug,
+        ...(colorsCol ? [colorList] : []),
       ]
     );
     res.status(201).json(rows[0]);
@@ -175,6 +181,10 @@ async function update(req, res, next) {
     if (body && 'is_published' in body) {
       if (await ensurePublishedColumn(query)) body = { ...body, is_published: body.is_published !== false };
       else { body = { ...body }; delete body.is_published; }
+    }
+    if (body && 'colors' in body) {
+      if (await ensureColorsColumn(query)) body = { ...body, colors: normalizeColors(body.colors) };
+      else { body = { ...body }; delete body.colors; }
     }
     const upd = buildUpdate(body, SPEC_FIELDS);
     if (!upd) return res.status(400).json({ error: 'No fields to update' });
@@ -216,6 +226,10 @@ async function importBatch(req, res, next) {
       taken.add(`${slugKey(r.brand)}|${slugKey(r.model)}|${r.year}`);
     }
 
+    // Colours of the lot are kept when the column exists (or can be added);
+    // a lot without colours does not touch the column.
+    const colorsCol = batch.list.some((x) => normalizeColors(x && x.colors).length > 0) && await ensureColorsColumn(query);
+
     const created = [];
     const skipped = [];
     const warnings = [];
@@ -236,14 +250,15 @@ async function importBatch(req, res, next) {
             `INSERT INTO tech_specs
                (brand, model, year, category, price_new, image, gallery,
                 engine, chassis, electronics, dimensions, maintenance,
-                consumption, top_speed, available_in_tunisia, slug, is_published)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,FALSE)
+                consumption, top_speed, available_in_tunisia, slug, is_published${colorsCol ? ', colors' : ''})
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,FALSE${colorsCol ? ',$17' : ''})
              RETURNING id, slug, brand, model, year`,
             [
               fiche.brand, fiche.model, fiche.year, fiche.category, fiche.price_new,
               fiche.image, fiche.gallery,
               fiche.engine, fiche.chassis, fiche.electronics, fiche.dimensions, fiche.maintenance,
               fiche.consumption, fiche.top_speed, fiche.available_in_tunisia, slug,
+              ...(colorsCol ? [fiche.colors] : []),
             ],
           );
           row = rows[0];

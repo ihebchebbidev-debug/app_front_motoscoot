@@ -277,6 +277,8 @@ export interface TechSpec {
     firstService?: string;
     serviceInterval?: string;
   };
+  /** Colours offered (« Blanc », « Noir mat »), in the admin's order. Empty when unknown. */
+  colors?: string[];
   /** Short public slug used in /fiche-technique/<slug>. */
   slug?: string;
   dimensions: {

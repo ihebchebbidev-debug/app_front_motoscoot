@@ -41,3 +41,14 @@ test('the template copied for ChatGPT lists every field of the form', async () =
   }
   assert.match(src, /jamais "à 8 600 tr\/min"/);
 });
+
+test('colours: a list or one text fills the « Couleurs » field (owner, 2026-11-22)', async () => {
+  assert.equal(mapJsonToForm({ ...fiche, colors: ['Blanc', ' Noir mat ', ''] }).partial.colors, 'Blanc, Noir mat');
+  assert.equal(mapJsonToForm({ ...fiche, colors: 'Bleu; Gris' }).partial.colors, 'Bleu, Gris');
+  assert.equal(mapJsonToForm({ ...fiche, colors: ['Blanc'] }).appliedCount, 42);
+  assert.equal(mapJsonToForm({ ...fiche, colors: [] }).partial.colors, undefined);
+  assert.equal(mapJsonToForm({ ...fiche, colors: 5 }).warnings[0].field, 'colors');
+  const src = (await import('node:fs')).readFileSync(new URL('../components/admin/TechSpecsJsonImport.tsx', import.meta.url), 'utf8');
+  assert.match(src, /colors: \[\] as string\[\]/);
+  assert.match(src, /- colors = tableau des couleurs/);
+});

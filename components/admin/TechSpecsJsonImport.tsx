@@ -31,6 +31,7 @@ const TEMPLATE = {
     cruiseControl: '', keyless: '', other: '',
   },
   maintenance: { warranty: '', firstService: '', serviceInterval: '' },
+  colors: [] as string[],
   dimensions: { weight: '', seatHeight: '', tank: '', length: '', wheelbase: '' },
   consumption: '',
   top_speed: '',
@@ -47,6 +48,7 @@ Règles :
 - Valeurs courtes, comme "Liquide", "6 vitesses", "Série", "Non", "Oui (série)".
 - Uniquement des données publiées par le constructeur ; si une donnée est inconnue, chaîne vide (n'invente rien).
 - price_new = nombre en DT (Dinar Tunisien) ou null si inconnu.
+- colors = tableau des couleurs proposées par le constructeur, noms courts en français (ex: ["Blanc", "Noir mat"]), ou tableau vide.
 - gallery = tableau d'URLs d'images publiques (ou tableau vide).
 - image = URL principale (ou chaîne vide).
 - Réponds en français.`;
@@ -250,6 +252,18 @@ export function mapJsonToForm(raw: AnyForm): ImportResult {
   ];
   for (const [key, label, nested, flat] of textFields) {
     optStr(key, label, pick(raw, nested, flat), 200);
+  }
+
+  // Colours: a list (["Blanc", "Noir mat"]) or one text, shown in the form as « Blanc, Noir mat ».
+  const colorsRaw = raw.colors ?? raw.couleurs;
+  if (colorsRaw !== undefined && colorsRaw !== null) {
+    const list = Array.isArray(colorsRaw) ? colorsRaw : typeof colorsRaw === 'string' ? colorsRaw.split(/[,;\n]/) : null;
+    if (!list) {
+      warnings.push({ field: 'colors', label: 'Couleurs', message: 'Doit être une liste de noms — ignoré', severity: 'warning' });
+    } else {
+      const names = list.filter((c): c is string => typeof c === 'string').map((c) => c.trim()).filter(Boolean);
+      if (names.length) out.colors = names.join(', ');
+    }
   }
 
   // Count only non-empty applied fields

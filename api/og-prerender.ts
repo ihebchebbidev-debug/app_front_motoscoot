@@ -97,6 +97,7 @@ interface Doc {
   electronics?: any;
   dimensions?: any;
   maintenance?: { warranty?: string; firstService?: string; serviceInterval?: string };
+  colors?: string[];
   importer?: { name?: string; city?: string } | null;
   consumption?: string;
   top_speed?: string;
@@ -332,6 +333,8 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
   ['Garantie constructeur', (d) => d.maintenance?.warranty],
   ['1ère révision', (d) => d.maintenance?.firstService],
   ['Révisions suivantes', (d) => d.maintenance?.serviceInterval],
+  // Same « Couleurs » group as the page.
+  ['Couleurs disponibles', (d) => (Array.isArray(d.colors) ? d.colors.filter((c) => typeof c === 'string' && c.trim()).join(', ') : '')],
 ];
 
 // Fiche technique body for crawlers that do not run JavaScript, in the same
@@ -398,6 +401,7 @@ ${photos.map((p, i) => `<img src="${escapeHtml(rewriteImageHost(p, photoTitle))}
     topSpeed: d.top_speed, consumption: d.consumption, tank: d.dimensions?.tank, cc: d.engine?.cc,
     power: d.engine?.power, weight: d.dimensions?.weight, availableInTunisia: d.available_in_tunisia,
     warranty: d.maintenance?.warranty, firstService: d.maintenance?.firstService, serviceInterval: d.maintenance?.serviceInterval,
+    colors: Array.isArray(d.colors) ? d.colors : [],
     importerName: d.importer?.name, importerCity: d.importer?.city,
   });
   const faqSection = faq.length ? `<section>\n<h2>${TECH_SPEC_FAQ_HEADING}</h2>\n${faq.map((f) => `<h3>${escapeHtml(f.question)}</h3>\n<p>${escapeHtml(f.answer)}</p>`).join('\n')}\n</section>` : '';

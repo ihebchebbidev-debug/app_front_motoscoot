@@ -171,6 +171,7 @@ export function mapBackendTechSpec(b: BackendTechSpec): TechSpec {
     chassis,
     electronics,
     maintenance,
+    colors: Array.isArray((b as any).colors) ? (b as any).colors.filter((c: unknown) => typeof c === 'string' && c.trim()).map((c: string) => c.trim()) : [],
     slug: (b as any).slug || undefined,
     dimensions,
     consumption: b.consumption,

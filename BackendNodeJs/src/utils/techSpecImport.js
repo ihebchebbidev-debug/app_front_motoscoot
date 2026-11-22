@@ -4,7 +4,7 @@
  *
  * Each item uses the same shape as the admin form payload
  * (components/admin/TechSpecsTab.tsx buildPayload): brand, model, year,
- * category, price_new, engine{}, chassis{}, electronics{}, maintenance{},
+ * category, price_new, engine{}, chassis{}, electronics{}, maintenance{}, colors[],
  * dimensions{}, consumption, top_speed, image, gallery.
  *
  * Rules:
@@ -16,6 +16,8 @@
  *     kept. A link to another site (constructor, competitor) is dropped
  *     with a warning — photos go through /api/uploads, never hotlinked.
  */
+
+const { normalizeColors } = require('./techSpecColors');
 
 const MAX_ITEMS = 50;
 
@@ -107,6 +109,7 @@ function normalizeItem(raw) {
       chassis: section(raw.chassis, SECTIONS.chassis),
       electronics: section(raw.electronics, SECTIONS.electronics),
       maintenance: section(raw.maintenance, SECTIONS.maintenance),
+      colors: normalizeColors(raw.colors),
       dimensions: section(raw.dimensions, SECTIONS.dimensions),
       consumption: str(raw.consumption, 50) || null,
       top_speed: str(raw.top_speed, 50) || null,

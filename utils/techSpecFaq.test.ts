@@ -73,6 +73,17 @@ test('warranty and servicing from « Garantie & Entretien », before « où ache
   assert.equal(techSpecFaq({ brand: 'SYM', model: 'X', category: 'Scooter', serviceInterval: '6000 km' })[0].answer, 'Révisions suivantes : 6\u00a0000\u00a0km.');
 });
 
+test('colours, as typed in the admin, before « où acheter » (owner, 2026-11-22)', () => {
+  const faq = techSpecFaq({ ...lmAdv, colors: ['Blanc', 'Noir mat', 'Bleu'] });
+  assert.deepEqual(faq.at(-2), {
+    question: 'Quelles sont les couleurs du Teyin LM ADV 125 ?',
+    answer: 'Le Teyin LM ADV 125 est proposé en 3 couleurs : Blanc, Noir mat et Bleu.',
+  });
+  assert.equal(techSpecFaq({ brand: 'Yamaha', model: 'MT-07', category: 'Roadster', colors: ['Icon Blue'] })[0].answer,
+    'La Yamaha MT-07 est proposée en une couleur : Icon Blue.');
+  assert.ok(!techSpecFaq({ ...lmAdv, colors: [' ', ''] }).some((f) => /couleurs/.test(f.question)));
+});
+
 test('admin free text is tidied, never rewritten', () => {
   assert.equal(faqFreeText('Honda France, 5 ans jusqu’au 31 mars 2025.'), 'Honda France, 5 ans jusqu’au 31 mars 2025');
   assert.equal(faqFreeText('6 Mois'), '6 mois');
@@ -88,12 +99,15 @@ test('the crawler HTML carries the same questions as the page', () => {
     engine: { cc: '124.6 cc', power: '9.2 ch' }, dimensions: { tank: '7 L', weight: '128 kg' },
     available_in_tunisia: true, importer: { name: 'Teyin Tunisie', city: 'Sfax' },
     maintenance: { warranty: '1 Ans', firstService: '1000 KM', serviceInterval: '' },
+    colors: ['Blanc', 'Gris'],
   } as any);
   assert.match(html, new RegExp(`<h2>${TECH_SPEC_FAQ_HEADING}</h2>`));
   assert.match(html, /<h3>Quelle est la vitesse maximale du Teyin LM ADV 125 \?<\/h3>\n<p>Sa vitesse maximale annoncée est de 95 km\/h\.<\/p>/);
   assert.match(html, /<h3>Quelle est la garantie du Teyin LM ADV 125 \?<\/h3>\n<p>Garantie constructeur annoncée : 1 an\.<\/p>/);
   // Same « Garantie & Entretien » rows as the page's table.
   assert.match(html, /<tr><th scope="row">Garantie constructeur<\/th><td>1 Ans<\/td><\/tr>/);
+  assert.match(html, /<tr><th scope="row">Couleurs disponibles<\/th><td>Blanc, Gris<\/td><\/tr>/);
+  assert.match(html, /<h3>Quelles sont les couleurs du Teyin LM ADV 125 \?<\/h3>\n<p>Le Teyin LM ADV 125 est proposé en 2 couleurs : Blanc et Gris\.<\/p>/);
   // After the similar models, before the summary sentence.
   assert.ok(html.indexOf(TECH_SPEC_FAQ_HEADING) < html.indexOf('Teyin LM ADV 125 : '));
 });
@@ -102,6 +116,8 @@ test('the page renders the shared FAQ with real headings, visible to every visit
   const page = readFileSync(new URL('../components/TechSpecsDetails.tsx', import.meta.url), 'utf8');
   assert.match(page, /const faq = techSpecFaq\(\{/);
   assert.match(page, /warranty: spec\.maintenance\?\.warranty, firstService: spec\.maintenance\?\.firstService, serviceInterval: spec\.maintenance\?\.serviceInterval/);
+  assert.match(page, /colors: spec\.colors,/);
+  assert.match(page, /<SpecRow label="Couleurs disponibles" value=\{spec\.colors\.join\(', '\)\} \/>/);
   assert.match(page, /<h2 id="questions-frequentes"[^>]*>\s*\{TECH_SPEC_FAQ_HEADING\}/);
   assert.match(page, /<h3 [^>]*>\{f\.question\}<\/h3>/);
   // Visible text, not a hidden keyword block.
