@@ -21,6 +21,7 @@ router.get('/access', staff, (req, res) => res.json({ role: req.staffRole }));
 
 router.get('/articles',      staff, adminContent.listArticles);
 router.post('/articles',     staff, articlesCtrl.create);
+router.post('/articles/drafts', staff, articlesCtrl.createDraft);
 router.put('/articles/:id',  staff, articlesCtrl.update);
 
 router.get('/tips',          staff, adminContent.listTips);

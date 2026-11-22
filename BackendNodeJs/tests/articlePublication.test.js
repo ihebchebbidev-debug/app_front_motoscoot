@@ -27,6 +27,11 @@ test('creation honors draft status and keeps the default for existing callers', 
   }
 });
 
+test('the dedicated draft endpoint forces an unpublished record even if the payload requests publication', async () => {
+  await run(controller.createDraft, { title: 'Article', category: 'Tech', slug: 'article', is_published: true });
+  assert.equal(calls[0].args.at(-1), false);
+});
+
 test('public detail only reads published articles and publishing stamps the first publication', async () => {
   assert.equal((await run(controller.getBySlug, {})).code, 404);
   assert.match(calls[0].sql, /AND a\.is_published = TRUE/);

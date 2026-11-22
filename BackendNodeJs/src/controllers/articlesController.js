@@ -70,6 +70,12 @@ async function create(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// A separate draft endpoint also prevents older servers from treating a draft as a publication.
+function createDraft(req, res, next) {
+  req.body = { ...req.body, is_published: false };
+  return create(req, res, next);
+}
+
 // JWT only carries { id, email } — admin status must be looked up live in
 // user_roles. Without this, admins could never moderate other authors' content.
 async function isAdmin(userId) {
@@ -120,4 +126,4 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getAll, getBySlug, create, update, remove };
+module.exports = { getAll, getBySlug, create, createDraft, update, remove };
