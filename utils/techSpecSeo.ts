@@ -421,3 +421,87 @@ export function techSpecFaq(s: TechSpecFaqInput): TechSpecFaqItem[] {
   }
   return faq;
 }
+
+export interface TechSpecVersionSource extends SimilarModelSource {
+  power?: string | null;
+  fuelSystem?: string | null;
+  brakesFront?: string | null;
+  brakesRear?: string | null;
+  weight?: string | null;
+}
+
+export interface TechSpecVersionRow {
+  /** Site-relative link; null for the sheet being read (shown in bold, no link). */
+  href: string | null;
+  name: string;
+  /** "9 000 DT", or « Prix non communiqué ». */
+  price: string;
+  fuel: string;
+  power: string;
+  brakes: string;
+  weight: string;
+}
+
+export interface TechSpecVersions {
+  /** « Les versions du SYM Jet 14 » */
+  heading: string;
+  rows: TechSpecVersionRow[];
+  /** Columns with at least one value (empty ones are left out of the table). */
+  columns: Array<'price' | 'fuel' | 'power' | 'brakes' | 'weight'>;
+}
+
+export const VERSION_COLUMN_LABELS: Record<TechSpecVersions['columns'][number], string> = {
+  price: 'Prix neuf', fuel: 'Alimentation', power: 'Puissance', brakes: 'Freins (avant / arrière)', weight: 'Poids',
+};
+
+const familyWords = (model: unknown) => String(model ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+// Same brand, same category and same first two words of the model: « F 900 R »
+// (roadster) and « F 900 GS » (trail) share two words but are not versions.
+const familyKey = (brand: unknown, model: unknown, category: unknown) =>
+  `${String(brand ?? '').trim().toLowerCase()}|${String(category ?? '').trim().toLowerCase()}|${familyWords(model).join(' ').toLowerCase().replace(/[^a-z0-9 ]/g, '')}`;
+
+/**
+ * « Les versions du SYM Jet 14 » (owner, 2026-11-22): every sheet of the same
+ * brand and category whose model starts with the same two words (« Jet 14 EVO 125 »,
+ * « Jet 14 125 AC E5 », « Jet 14 125 carburateur »), with links between them
+ * and what tells them apart. Google sent « sym jet 14 » (553 impressions,
+ * 7th) to the EVO sheet while the first results show the AC E5: the block
+ * links the variants so each search reaches its own sheet.
+ * Null when the model has no other version. Shared by the page and the
+ * crawler HTML (api/og-prerender.ts).
+ */
+export function techSpecVersions(current: TechSpecVersionSource, catalogue: TechSpecVersionSource[]): TechSpecVersions | null {
+  const key = familyKey(current.brand, current.model, current.category);
+  if (familyWords(current.model).length === 0) return null;
+  const seen = new Set<string>();
+  const members = [current, ...catalogue.filter((m) => familyKey(m.brand, m.model, m.category) === key)]
+    .filter((m) => {
+      const id = String(m.slug || m.id || '');
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  if (members.length < 2) return null;
+  const isCurrent = (m: TechSpecVersionSource) => (current.slug && m.slug === current.slug) || (current.id != null && String(m.id) === String(current.id));
+  const brakes = (m: TechSpecVersionSource) => {
+    const f = String(m.brakesFront ?? '').trim();
+    const r = String(m.brakesRear ?? '').trim();
+    return f || r ? `${f || '—'} / ${r || '—'}` : '';
+  };
+  const rows = members
+    .map((m) => ({ m, p: priceNumber(m.price) }))
+    .sort((a, b) => (a.p ?? Infinity) - (b.p ?? Infinity) || String(a.m.model).localeCompare(String(b.m.model), 'fr'))
+    .map(({ m }) => ({
+      href: isCurrent(m) || !m.slug ? null : `/fiche-technique/${m.slug}`,
+      name: [m.brand, m.model].filter(Boolean).join(' '),
+      price: formatDinars(m.price) ?? 'Prix non communiqué',
+      fuel: String(m.fuelSystem ?? '').trim(),
+      power: formatPowerCh(m.power),
+      brakes: brakes(m),
+      weight: firstNumber(m.weight) !== null ? `${fmt(firstNumber(m.weight)!)} kg` : '',
+    }));
+  const columns = (['price', 'fuel', 'power', 'brakes', 'weight'] as const).filter((c) => c === 'price' || rows.some((r) => r[c]));
+  const scooter = /scooter/i.test(String(current.category ?? ''));
+  const family = [current.brand, ...familyWords(current.model)].filter(Boolean).join(' ');
+  return { heading: `Les versions ${scooter ? 'du' : 'de la'} ${family}`, rows, columns: [...columns] };
+}

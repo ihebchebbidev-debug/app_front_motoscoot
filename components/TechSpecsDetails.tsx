@@ -33,7 +33,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecPhotos } from '../utils/techSpecSeo';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecVersions, VERSION_COLUMN_LABELS, type TechSpecVersionSource, techSpecPhotos } from '../utils/techSpecSeo';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
@@ -257,6 +257,16 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     return similarTechSpecs(source(spec), catalogue.map(source))
       .map((m) => bySlug.get(m.href))
       .filter((m): m is TechSpec => !!m);
+  }, [spec, catalogue]);
+  // « Les versions du SYM Jet 14 »: same rule and order as the crawler HTML (techSpecVersions).
+  const versions = useMemo(() => {
+    if (!spec) return null;
+    const source = (m: TechSpec): TechSpecVersionSource => ({
+      id: m.id, slug: m.slug, brand: m.brand, model: m.model, category: m.categoryLabel || m.category, cc: m.engine?.cc, price: m.priceNew,
+      power: m.engine?.power, fuelSystem: m.engine?.fuelSystem, brakesFront: m.chassis?.brakesFront, brakesRear: m.chassis?.brakesRear,
+      weight: m.dimensions?.weight,
+    });
+    return techSpecVersions(source(spec), catalogue.map(source));
   }, [spec, catalogue]);
   const [shareOpen, setShareOpen] = useState(false);
   // « Demande de devis » sheet; focus goes back to its button on close.
@@ -602,6 +612,45 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
 
             {/* "Prix neuf en Tunisie": same block as the crawler HTML (api/og-prerender.ts). */}
             <PriceBlock block={priceBlock} />
+
+            {/* « Les versions du … »: same table as the crawler HTML (api/og-prerender.ts). */}
+            {versions && (
+              <section aria-labelledby="versions-modele" className={`${S.ContentBlock} mb-6`}>
+                <div className="px-6 md:px-8 py-4 border-b border-border">
+                  <h2 id="versions-modele" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground">
+                    {versions.heading}
+                  </h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left font-sans text-[13px] md:text-sm">
+                    <thead className="bg-gray-50 text-gray-500">
+                      <tr>
+                        <th scope="col" className="px-4 md:px-6 py-3 font-bold">Version</th>
+                        {versions.columns.map((c) => (
+                          <th key={c} scope="col" className="px-4 py-3 font-bold whitespace-nowrap">{VERSION_COLUMN_LABELS[c]}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {versions.rows.map((r) => (
+                        <tr key={r.name} className={r.href ? '' : 'bg-primary-50/40'}>
+                          <th scope="row" className="px-4 md:px-6 py-3 font-bold text-gray-900 min-w-[10rem]">
+                            {r.href ? (
+                              <Link to={r.href} className="text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline">{r.name}</Link>
+                            ) : (
+                              <span aria-current="page">{r.name}</span>
+                            )}
+                          </th>
+                          {versions.columns.map((c) => (
+                            <td key={c} className="px-4 py-3 text-gray-700 whitespace-nowrap">{r[c] || '—'}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
 
             {/* DETAILED SPECS */}
             {/* Unified spec sheet — mirrors the printed dealer brochure look:
