@@ -16,7 +16,7 @@ import type { Plugin } from 'vite';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEO_SNAPSHOTS, SITE_ORIGIN, DEFAULT_OG, type SeoSnapshot } from './snapshots';
-import { HERO_DEFAULTS } from '../../config/heroDefaults';
+import { HERO_DEFAULTS, HERO_ALT, LOGO_ALT } from '../../config/heroDefaults';
 import { SPA_TITLE, SPA_DESCRIPTION, DEPOSIT_TITLE, DEPOSIT_DESCRIPTION } from './privatePages';
 import { footerLinksHtml } from '../../utils/footerLinks';
 import { linkBlocksFor, renderLinkBlocks, MAX_LISTING_LINKS, type SnapshotListing, type SnapshotEditorial, type SnapshotModel } from './snapshotLinks';
@@ -167,11 +167,11 @@ function renderHomeShell(hero: HeroImages): string {
   return `
     <div data-home-shell aria-hidden="true" style="position:relative;background:${escapeHtml(hero.background_color)}">
       <div style="position:absolute;top:0;left:0;right:0;z-index:2;height:64px;display:flex;align-items:center;padding:0 16px">
-        <img src="https://www.moto-scoot.tn/site-logo/logo-white.svg" alt="" width="120" height="28" style="height:28px;width:auto" onerror="this.style.display='none'" />
+        <img src="https://www.moto-scoot.tn/site-logo/logo-white.svg" alt="${escapeHtml(LOGO_ALT)}" width="120" height="28" style="height:28px;width:auto" onerror="this.style.display='none'" />
       </div>
       <picture>
         <source media="(min-width: 768px)" srcset="${escapeHtml(hero.desktop_url)}" />
-        <img src="${escapeHtml(hero.mobile_url)}" alt="" fetchpriority="high" decoding="async" style="display:block;width:100%;height:min(88vh,720px);object-fit:cover" />
+        <img src="${escapeHtml(hero.mobile_url)}" alt="${escapeHtml(HERO_ALT)}" fetchpriority="high" decoding="async" style="display:block;width:100%;height:min(88vh,720px);object-fit:cover" />
       </picture>
     </div>`;
 }

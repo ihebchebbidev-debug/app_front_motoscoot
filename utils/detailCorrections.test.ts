@@ -452,8 +452,13 @@ test('manufacturer photos keep their original URL in mixed technical-sheet galle
       assert.ok(result.body.includes(`rel="preload" as="image" href="${photo}"`));
       assert.ok(result.body.includes(`property="og:image" content="${photo}"`));
       assert.ok(result.body.includes(`name="twitter:image" content="${photo}"`));
-      assert.ok(result.body.includes(`<img src="${photo}"`));
-      assert.ok(result.body.includes(`"${photo}"`), 'original URL in structured data');
+      // Owner, 2026-11-22: a photo hosted on another site can answer 403 to
+      // crawlers (SE Ranking « 4XX images »): it stays out of the crawler-only
+      // gallery and of the Product data. The page still shows it.
+      assert.ok(!result.body.includes(`<img src="${photo}"`), 'not in the crawler gallery');
+      const ld = /application\/ld\+json[^<]*/.exec(result.body)?.[0] || '';
+      assert.ok(ld.includes(`/m/${spec.slug}-${spec.year}/local.webp?v=2`), 'site photo in structured data');
+      assert.ok(!ld.includes(photo), 'not in structured data');
       assert.ok(result.body.includes(`/m/${spec.slug}-${spec.year}/local.webp?v=2`));
     });
   }

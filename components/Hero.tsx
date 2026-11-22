@@ -5,6 +5,7 @@ import { CategoryNav } from './search/CategoryNav';
 import { useListingsCount } from '../hooks/useListings';
 import { useHeroImages } from '../hooks/useHeroImages';
 import { useHeroTexts } from '../hooks/useHeroTexts';
+import { HERO_ALT } from '../config/heroDefaults';
 
 // --- STYLES (Pattern "S") ---
 const S = {
@@ -87,7 +88,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch, onNavigate }) => {
           <img
             src={mobileUrl}
             className={S.BgImage}
-            alt=""
+            alt={HERO_ALT}
             // @ts-ignore
             fetchPriority="high"
             loading="eager"

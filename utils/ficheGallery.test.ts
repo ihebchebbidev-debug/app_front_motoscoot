@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { galleryPhotoAlt } from './seoImagePath';
+import { galleryPhotoAlt, isOwnImage } from './seoImagePath';
 import { techSpecPhotos, techSpecShareImage } from './techSpecSeo';
 import { renderFicheBody } from '../api/og-prerender';
 
@@ -52,4 +52,23 @@ test('the sheet page shows every photo as a described thumbnail; main photo firs
   const page = readFileSync(new URL('../components/TechSpecsDetails.tsx', import.meta.url), 'utf8');
   assert.match(page, /title=\{techSpecGalleryTitle\(spec\)\}\s*thumbnails/);
   assert.match(page, /return techSpecPhotos\(spec\);/);
+});
+
+// Owner, 2026-11-22 (« je veux être à 100 % » in SE Ranking): photos linked
+// from another site (Moto Morini answers 403, BMW times out) were counted as
+// « 4XX images ». The crawler HTML and the Product data only list photos
+// served by the site; the page still shows every photo to visitors.
+test('photos hosted on another site stay out of the crawler HTML', () => {
+  const html = renderFicheBody({ ...sheet, gallery: ['https://motomorini.eu/wp-content/uploads/x.png', ...sheet.gallery] } as any);
+  assert.doesNotMatch(html, /motomorini\.eu/);
+  assert.match(html, /photo 1 sur 3/);
+  assert.equal(isOwnImage('https://www.bmw-motorrad.fr/a.jpg'), false);
+  assert.equal(isOwnImage('/uploads/a.webp'), true);
+  assert.equal(isOwnImage('https://motoscoot.ihebchebbi.pro/uploads/a.webp'), true);
+});
+
+test('Product data: the page photos, in the same order, none from another site', () => {
+  const api = readFileSync(new URL('../api/og-prerender.ts', import.meta.url), 'utf8');
+  assert.match(api, /const gallery = Array\.from\(new Set\(techSpecPhotos\(d\)\.filter\(isOwnImage\)/);
+  assert.doesNotMatch(api, /function pickGallery/);
 });
