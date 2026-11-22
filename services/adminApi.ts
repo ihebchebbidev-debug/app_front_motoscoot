@@ -6,7 +6,7 @@
  * Every call requires an authenticated request with an admin JWT
  * (the backend enforces this via `authenticate` + `requireAdmin`).
  */
-import { apiClient, deleteWithPayload } from './apiClient';
+import { apiClient, deleteWithPayload, type ApiError } from './apiClient';
 
 export interface AdminStats {
   users: { total: number; banned: number };
@@ -381,7 +381,17 @@ export const adminApi = {
       '/admin/articles',
       { query: params as any, signal },
     ),
-  createArticle: (payload: any) => apiClient.post<any>('/admin/articles', payload),
+  createArticle: async (payload: any) => {
+    if (payload.is_published !== false) return apiClient.post<any>('/admin/articles', payload);
+    try {
+      return await apiClient.post<any>('/admin/articles/drafts', payload);
+    } catch (error) {
+      if ((error as ApiError).status === 404) {
+        throw new Error('L’enregistrement des brouillons est indisponible sur le serveur. Gardez cet éditeur ouvert pour réessayer.');
+      }
+      throw error;
+    }
+  },
   updateArticle: (id: number | string, payload: any) =>
     apiClient.put<any>(`/admin/articles/${id}`, payload),
   deleteArticle: (id: number | string) => apiClient.delete(`/admin/articles/${id}`),

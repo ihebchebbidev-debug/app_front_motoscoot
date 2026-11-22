@@ -19,7 +19,8 @@ import AdminImageUpload from './AdminImageUpload';
 import RichTextEditor from './RichTextEditor';
 import { sanitizeRichHtml } from '../../utils/richHtml';
 
-const ARTICLE_CATEGORIES = ['Nouveautés', 'Essais', 'Tech', 'Scooters', 'Électrique'];
+import ArticleJsonLdImport from './ArticleJsonLdImport';
+import { ARTICLE_CATEGORIES } from '../../utils/articleJsonLd';
 
 interface ArticleForm {
   id?: number | string;
@@ -55,6 +56,7 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | 'published' | 'draft'>('');
   const [sort, setSort] = useState<'' | 'views'>('');
+  const [showImport, setShowImport] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<ArticleForm>(emptyForm());
 
@@ -111,6 +113,7 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
   };
 
   const startEdit = (a: any) => {
+    setShowImport(false);
     setForm({
       id: a.id,
       title: a.title || '',
@@ -148,14 +151,28 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
         <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
           <FileText size={20} /> Actualités
         </h2>
-        <button
-          onClick={() => { setForm(emptyForm()); setShowForm((s) => !s); }}
-          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-bold"
-        >
-          {showForm ? <X size={16} /> : <Plus size={16} />}
-          {showForm ? 'Fermer' : 'Nouvel article'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {!showForm && (
+            <button type="button" aria-expanded={showImport} onClick={() => setShowImport(!showImport)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800">
+              {showImport ? 'Fermer l’import' : 'Importer un article (JSON-LD)'}
+            </button>
+          )}
+          <button
+            onClick={() => { setShowImport(false); setForm(emptyForm()); setShowForm((s) => !s); }}
+            className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-bold"
+          >
+            {showForm ? <X size={16} /> : <Plus size={16} />}
+            {showForm ? 'Fermer' : 'Nouvel article'}
+          </button>
+        </div>
       </div>
+
+      {showImport && <ArticleJsonLdImport sanitize={sanitizeRichHtml} onImport={article => {
+        setForm({ ...emptyForm(), ...article, slug: slugify(article.title) || 'article-' + crypto.randomUUID() });
+        setShowForm(true);
+        setShowImport(false);
+      }} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <input
@@ -291,7 +308,7 @@ export const ArticlesTab: React.FC<{ canDelete?: boolean }> = ({ canDelete = tru
               Annuler
             </button>
             <button disabled={submitting} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold disabled:opacity-60">
-              {submitting ? '…' : isEditing ? 'Enregistrer' : 'Créer'}
+              {submitting ? '…' : isEditing ? 'Enregistrer' : form.is_published ? 'Créer' : 'Enregistrer le brouillon'}
             </button>
           </div>
         </form>

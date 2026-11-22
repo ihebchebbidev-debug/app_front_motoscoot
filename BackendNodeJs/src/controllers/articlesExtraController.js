@@ -13,7 +13,7 @@ const trackView = makeTrackView('articles');
 async function toggleLike(req, res, next) {
   try {
     const { where, value } = bySlugOrId(req.params.slug);
-    const a = await query(`SELECT id FROM articles WHERE ${where}`, [value]);
+    const a = await query(`SELECT id FROM articles WHERE ${where} AND is_published = TRUE`, [value]);
     if (a.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     const articleId = a.rows[0].id;
     // Atomic like / unlike — single round trip prevents the SELECT-then-INSERT
@@ -39,7 +39,7 @@ async function toggleLike(req, res, next) {
 async function getComments(req, res, next) {
   try {
     const { where, value } = bySlugOrId(req.params.slug);
-    const a = await query(`SELECT id FROM articles WHERE ${where}`, [value]);
+    const a = await query(`SELECT id FROM articles WHERE ${where} AND is_published = TRUE`, [value]);
     if (a.rows.length === 0) return res.json([]);
     const { rows } = await query(
       `SELECT c.*, u.full_name AS author_name, u.avatar_url AS author_avatar
@@ -56,7 +56,7 @@ async function addComment(req, res, next) {
     const { content, parent_id } = req.body;
     if (!content) return res.status(400).json({ error: 'content required' });
     const { where, value } = bySlugOrId(req.params.slug);
-    const a = await query(`SELECT id FROM articles WHERE ${where}`, [value]);
+    const a = await query(`SELECT id FROM articles WHERE ${where} AND is_published = TRUE`, [value]);
     if (a.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     const { rows } = await query(
       `INSERT INTO article_comments (article_id, user_id, parent_id, content)
@@ -107,7 +107,7 @@ async function getFeatured(req, res, next) {
 async function getRelated(req, res, next) {
   try {
     const { where, value } = bySlugOrId(req.params.slug);
-    const a = await query(`SELECT id, category FROM articles WHERE ${where}`, [value]);
+    const a = await query(`SELECT id, category FROM articles WHERE ${where} AND is_published = TRUE`, [value]);
     if (a.rows.length === 0) return res.json([]);
     const { rows } = await query(
       `SELECT id, slug, title, image, category, summary, published_at, read_time

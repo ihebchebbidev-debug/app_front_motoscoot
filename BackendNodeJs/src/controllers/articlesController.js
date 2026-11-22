@@ -39,7 +39,7 @@ async function getBySlug(req, res, next) {
     const { where, value } = bySlugOrId(req.params.slug);
     const { rows } = await query(
       `SELECT a.*, u.full_name as author_name, u.avatar_url as author_avatar
-       FROM articles a LEFT JOIN users u ON a.author_id = u.id WHERE ${where}`,
+       FROM articles a LEFT JOIN users u ON a.author_id = u.id WHERE ${where} AND a.is_published = TRUE`,
       [value]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Article not found' });
@@ -59,14 +59,21 @@ async function create(req, res, next) {
     if (err) return res.status(400).json({ error: err });
 
     const { title, slug, summary, content, category, image, tags, is_featured, read_time } = req.body;
+    const published = req.body.is_published !== false;
     const safeTags = Array.isArray(tags) ? tags.filter((s) => typeof s === 'string') : [];
     const { rows } = await query(
       `INSERT INTO articles (author_id, title, slug, summary, content, category, image, tags, is_featured, read_time, is_published, published_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, true, NOW()) RETURNING *`,
-      [req.user.id, title, slug, summary, content, category, image, safeTags, is_featured || false, read_time]
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CASE WHEN $11 THEN NOW() END) RETURNING *`,
+      [req.user.id, title, slug, summary, content, category, image, safeTags, is_featured || false, read_time, published]
     );
     res.status(201).json(rows[0]);
   } catch (err) { next(err); }
+}
+
+// A separate draft endpoint also prevents older servers from treating a draft as a publication.
+function createDraft(req, res, next) {
+  req.body = { ...req.body, is_published: false };
+  return create(req, res, next);
 }
 
 // JWT only carries { id, email } — admin status must be looked up live in
@@ -95,6 +102,9 @@ async function update(req, res, next) {
     const upd = buildUpdate(req.body, ARTICLE_FIELDS);
     if (!upd) return res.status(400).json({ error: 'No fields to update' });
 
+    if (req.body.is_published === true) {
+      upd.sets += ', published_at = COALESCE(published_at, NOW())';
+    }
     upd.params.push(req.params.id);
     const { rows } = await query(
       `UPDATE articles SET ${upd.sets} WHERE id = $${upd.nextIdx} RETURNING *`, upd.params
@@ -116,4 +126,4 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getAll, getBySlug, create, update, remove };
+module.exports = { getAll, getBySlug, create, createDraft, update, remove };
