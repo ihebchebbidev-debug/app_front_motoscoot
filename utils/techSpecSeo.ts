@@ -425,8 +425,6 @@ export function techSpecFaq(s: TechSpecFaqInput): TechSpecFaqItem[] {
 export interface TechSpecVersionSource extends SimilarModelSource {
   power?: string | null;
   fuelSystem?: string | null;
-  brakesFront?: string | null;
-  brakesRear?: string | null;
   weight?: string | null;
 }
 
@@ -438,7 +436,6 @@ export interface TechSpecVersionRow {
   price: string;
   fuel: string;
   power: string;
-  brakes: string;
   weight: string;
 }
 
@@ -447,11 +444,11 @@ export interface TechSpecVersions {
   heading: string;
   rows: TechSpecVersionRow[];
   /** Columns with at least one value (empty ones are left out of the table). */
-  columns: Array<'price' | 'fuel' | 'power' | 'brakes' | 'weight'>;
+  columns: Array<'price' | 'fuel' | 'power' | 'weight'>;
 }
 
 export const VERSION_COLUMN_LABELS: Record<TechSpecVersions['columns'][number], string> = {
-  price: 'Prix neuf', fuel: 'Alimentation', power: 'Puissance', brakes: 'Freins (avant / arrière)', weight: 'Poids',
+  price: 'Prix neuf', fuel: 'Alimentation', power: 'Puissance', weight: 'Poids',
 };
 
 const familyWords = (model: unknown) => String(model ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
@@ -464,7 +461,7 @@ const familyKey = (brand: unknown, model: unknown, category: unknown) =>
  * « Les versions du SYM Jet 14 » (owner, 2026-11-22): every sheet of the same
  * brand and category whose model starts with the same two words (« Jet 14 EVO 125 »,
  * « Jet 14 125 AC E5 », « Jet 14 125 carburateur »), with links between them
- * and what tells them apart. Google sent « sym jet 14 » (553 impressions,
+ * and what tells them apart (no brakes column: owner, 2026-11-22). Google sent « sym jet 14 » (553 impressions,
  * 7th) to the EVO sheet while the first results show the AC E5: the block
  * links the variants so each search reaches its own sheet.
  * Null when the model has no other version. Shared by the page and the
@@ -483,11 +480,6 @@ export function techSpecVersions(current: TechSpecVersionSource, catalogue: Tech
     });
   if (members.length < 2) return null;
   const isCurrent = (m: TechSpecVersionSource) => (current.slug && m.slug === current.slug) || (current.id != null && String(m.id) === String(current.id));
-  const brakes = (m: TechSpecVersionSource) => {
-    const f = String(m.brakesFront ?? '').trim();
-    const r = String(m.brakesRear ?? '').trim();
-    return f || r ? `${f || '—'} / ${r || '—'}` : '';
-  };
   const rows = members
     .map((m) => ({ m, p: priceNumber(m.price) }))
     .sort((a, b) => (a.p ?? Infinity) - (b.p ?? Infinity) || String(a.m.model).localeCompare(String(b.m.model), 'fr'))
@@ -497,10 +489,9 @@ export function techSpecVersions(current: TechSpecVersionSource, catalogue: Tech
       price: formatDinars(m.price) ?? 'Prix non communiqué',
       fuel: String(m.fuelSystem ?? '').trim(),
       power: formatPowerCh(m.power),
-      brakes: brakes(m),
       weight: firstNumber(m.weight) !== null ? `${fmt(firstNumber(m.weight)!)} kg` : '',
     }));
-  const columns = (['price', 'fuel', 'power', 'brakes', 'weight'] as const).filter((c) => c === 'price' || rows.some((r) => r[c]));
+  const columns = (['price', 'fuel', 'power', 'weight'] as const).filter((c) => c === 'price' || rows.some((r) => r[c]));
   const scooter = /scooter/i.test(String(current.category ?? ''));
   const family = [current.brand, ...familyWords(current.model)].filter(Boolean).join(' ');
   return { heading: `Les versions ${scooter ? 'du' : 'de la'} ${family}`, rows, columns: [...columns] };

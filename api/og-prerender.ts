@@ -609,7 +609,7 @@ async function fetchTunisiaCatalogue(): Promise<Doc[]> {
 const versionSource = (m: Doc): TechSpecVersionSource => ({
   id: m.id, slug: (m as any).slug, brand: m.brand, model: m.model, category: m.category, cc: m.engine?.cc, price: m.price_new,
   power: m.engine?.power, fuelSystem: m.engine?.fuelSystem || m.engine?.fuel_system,
-  brakesFront: m.chassis?.brakesFront, brakesRear: m.chassis?.brakesRear, weight: m.dimensions?.weight,
+  weight: m.dimensions?.weight,
 });
 async function relatedModelsFor(d: Doc): Promise<{ similar: SimilarModel[]; versions: TechSpecVersions | null }> {
   try {

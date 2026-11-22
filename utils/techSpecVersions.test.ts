@@ -8,9 +8,9 @@ import { renderFicheBody } from '../api/og-prerender';
 // sheet while Google's first results show the Jet 14 AC E5. Each Jet 14 sheet
 // now lists its versions, with links and what tells them apart.
 
-const evo: TechSpecVersionSource = { id: 'e', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', category: 'Scooter', price: '9000', power: '12,6 ch', fuelSystem: 'Injection électronique', brakesFront: 'Disque', brakesRear: 'Disque', weight: '136 kg' };
-const acE5: TechSpecVersionSource = { id: 'a', slug: 'sym-jet-14-125-ac-e5', brand: 'SYM', model: 'Jet 14 125 AC E5', category: 'Scooter', price: '8700', power: '10,2 ch (7,5 kW)', fuelSystem: 'Injection électronique', brakesFront: 'Disque', brakesRear: 'Tambour', weight: '128 kg' };
-const carbu: TechSpecVersionSource = { id: 'c', slug: 'sym-jet-14-125-carburateur', brand: 'SYM', model: 'Jet 14 125 carburateur', category: 'Scooter', price: '7099', power: '8,8 ch', fuelSystem: 'Carburateur', brakesFront: 'Disque', brakesRear: 'Tambour', weight: '' };
+const evo: TechSpecVersionSource = { id: 'e', slug: 'sym-jet-14-evo-125', brand: 'SYM', model: 'Jet 14 EVO 125', category: 'Scooter', price: '9000', power: '12,6 ch', fuelSystem: 'Injection électronique', weight: '136 kg' };
+const acE5: TechSpecVersionSource = { id: 'a', slug: 'sym-jet-14-125-ac-e5', brand: 'SYM', model: 'Jet 14 125 AC E5', category: 'Scooter', price: '8700', power: '10,2 ch (7,5 kW)', fuelSystem: 'Injection électronique', weight: '128 kg' };
+const carbu: TechSpecVersionSource = { id: 'c', slug: 'sym-jet-14-125-carburateur', brand: 'SYM', model: 'Jet 14 125 carburateur', category: 'Scooter', price: '7099', power: '8,8 ch', fuelSystem: 'Carburateur', weight: '' };
 const others: TechSpecVersionSource[] = [
   { id: 'x', slug: 'sym-jet-x-125', brand: 'SYM', model: 'Jet X 125', category: 'Scooter', price: '9399' },
   { id: 'r', slug: 'sym-jet-4-rx-125', brand: 'SYM', model: 'Jet 4 RX 125', category: 'Scooter', price: '6900' },
@@ -25,9 +25,10 @@ test('the three Jet 14 sheets list each other, cheapest first, the current one w
     ['SYM Jet 14 125 AC E5', '/fiche-technique/sym-jet-14-125-ac-e5'],
     ['SYM Jet 14 EVO 125', null],
   ]);
-  assert.deepEqual(v.columns, ['price', 'fuel', 'power', 'brakes', 'weight']);
+  // No brakes column (owner, 2026-11-22).
+  assert.deepEqual(v.columns, ['price', 'fuel', 'power', 'weight']);
   assert.equal(v.rows[1].price, '8 700 DT');
-  assert.equal(v.rows[1].brakes, 'Disque / Tambour');
+  assert.ok(!('brakes' in v.rows[1]));
   assert.equal(v.rows[1].power, '10,2 ch');
   assert.equal(v.rows[0].weight, '');
 });

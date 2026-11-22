@@ -263,7 +263,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     if (!spec) return null;
     const source = (m: TechSpec): TechSpecVersionSource => ({
       id: m.id, slug: m.slug, brand: m.brand, model: m.model, category: m.categoryLabel || m.category, cc: m.engine?.cc, price: m.priceNew,
-      power: m.engine?.power, fuelSystem: m.engine?.fuelSystem, brakesFront: m.chassis?.brakesFront, brakesRear: m.chassis?.brakesRear,
+      power: m.engine?.power, fuelSystem: m.engine?.fuelSystem,
       weight: m.dimensions?.weight,
     });
     return techSpecVersions(source(spec), catalogue.map(source));
