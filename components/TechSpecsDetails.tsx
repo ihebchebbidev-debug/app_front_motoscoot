@@ -33,7 +33,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING } from '../utils/techSpecSeo';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecPhotos } from '../utils/techSpecSeo';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
@@ -291,9 +291,8 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
   // there is no gallery at all so the page never shows an empty viewer.
   const images = useMemo(() => {
     if (!spec) return [];
-    const extras = (spec.gallery || []).filter(Boolean) as string[];
-    const all = extras.length > 0 ? extras : [spec.image].filter(Boolean) as string[];
-    return Array.from(new Set(all));
+    // Same photos and order as the crawler HTML (utils/techSpecSeo.ts › techSpecPhotos).
+    return techSpecPhotos(spec);
   }, [spec]);
   // Shared preview = the photo the page opens on (first gallery photo).
   const shareImage = spec ? techSpecShareImage(spec) || undefined : undefined;
@@ -548,6 +547,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                 <ListingGallery
                   images={images}
                   title={techSpecGalleryTitle(spec)}
+                  thumbnails
                   brand={spec.brand}
                   model={spec.model}
                   favorited={specFavorited}

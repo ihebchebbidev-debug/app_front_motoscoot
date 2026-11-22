@@ -4,9 +4,8 @@
  * function so search engines and LLM bots receive a fully-stamped HTML
  * document — not the empty SPA shell.
  *
- * Real users never hit this endpoint: the rewrite only matches when the
- * request UA looks like a crawler. Humans go straight to /index.html and
- * hydrate the React app normally.
+ * Every visitor gets this HTML (vercel.json rewrites the path for all user
+ * agents, AGENTS.md); the React app replaces the crawler body once it runs.
  *
  * Path shape we expect:  /<kind>/<slug>-<id>
  *   kind ∈ article | guide | garage | fiche-technique
@@ -21,8 +20,8 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING } from '../utils/techSpecSeo.js';
-import { galleryImageUrl, rewriteImageHost } from '../utils/seoImagePath.js';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecPhotos } from '../utils/techSpecSeo.js';
+import { galleryImageUrl, galleryPhotoAlt, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
@@ -357,6 +356,20 @@ ${priceRows}
     .map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
     .join('\n');
   const brandSlug = d.brand ? slugify(d.brand) : '';
+  // Every photo of the gallery, each with its own description, at the
+  // versioned public address used by the JSON-LD (rewriteImageHost, ?v=2).
+  // This HTML reaches every visitor (AGENTS.md) until React replaces it: the
+  // photos sit in <noscript>, read by crawlers without JavaScript and never
+  // downloaded by browsers that run the page, which shows them itself as
+  // described thumbnails (ListingGallery › thumbnails).
+  const photoTitle = techSpecGalleryTitle(d);
+  const photos = techSpecPhotos(d);
+  const photosSection = photos.length ? `<section>
+<h2>Photos ${escapeHtml(name)}</h2>
+<noscript>
+${photos.map((p, i) => `<img src="${escapeHtml(rewriteImageHost(p, photoTitle))}" alt="${escapeHtml(galleryPhotoAlt(photoTitle, i, photos.length))}" width="1200" height="900" loading="lazy" />`).join('\n')}
+</noscript>
+</section>` : '';
   // Questions fréquentes: same text as the page (utils/techSpecSeo.ts › techSpecFaq).
   const faq = techSpecFaq({
     brand: d.brand, model: d.model, category: d.category, price: d.price_new, updatedAt: d.updated_at,
@@ -367,6 +380,7 @@ ${priceRows}
   const faqSection = faq.length ? `<section>\n<h2>${TECH_SPEC_FAQ_HEADING}</h2>\n${faq.map((f) => `<h3>${escapeHtml(f.question)}</h3>\n<p>${escapeHtml(f.answer)}</p>`).join('\n')}\n</section>` : '';
   return `<nav aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <a href="/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
+${photosSection}
 ${priceSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
 ${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
@@ -875,7 +889,7 @@ ${(() => {
 })()}`}
 ${related}
 ${kind === 'garage' ? (doc.reviews || []).map(review => `<section><h2>${escapeHtml(review.author_name || 'Utilisateur')}</h2><p>${escapeHtml(String(review.rating || ''))} / 5</p><p>${escapeHtml(review.content || '')}</p></section>`).join('') : ''}
-${image && image !== DEFAULT_OG ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
+${kind !== 'fiche-technique' && image && image !== DEFAULT_OG ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />` : ''}
 <p><a href="${canonical}">Voir sur Moto-Scoot.tn</a></p>
 </body>
 </html>`;
