@@ -96,6 +96,7 @@ interface Doc {
   chassis?: any;
   electronics?: any;
   dimensions?: any;
+  maintenance?: { warranty?: string; firstService?: string; serviceInterval?: string };
   importer?: { name?: string; city?: string } | null;
   consumption?: string;
   top_speed?: string;
@@ -327,6 +328,10 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
   ['Pneu arrière', (d) => d.chassis?.tireRear],
   ['ABS', (d) => d.electronics?.abs],
   ['Antipatinage', (d) => d.electronics?.tcs],
+  // Same « Garantie & Entretien » group as the page.
+  ['Garantie constructeur', (d) => d.maintenance?.warranty],
+  ['1ère révision', (d) => d.maintenance?.firstService],
+  ['Révisions suivantes', (d) => d.maintenance?.serviceInterval],
 ];
 
 // Fiche technique body for crawlers that do not run JavaScript, in the same
@@ -392,6 +397,7 @@ ${photos.map((p, i) => `<img src="${escapeHtml(rewriteImageHost(p, photoTitle))}
     brand: d.brand, model: d.model, category: d.category, price: d.price_new, updatedAt: d.updated_at,
     topSpeed: d.top_speed, consumption: d.consumption, tank: d.dimensions?.tank, cc: d.engine?.cc,
     power: d.engine?.power, weight: d.dimensions?.weight, availableInTunisia: d.available_in_tunisia,
+    warranty: d.maintenance?.warranty, firstService: d.maintenance?.firstService, serviceInterval: d.maintenance?.serviceInterval,
     importerName: d.importer?.name, importerCity: d.importer?.city,
   });
   const faqSection = faq.length ? `<section>\n<h2>${TECH_SPEC_FAQ_HEADING}</h2>\n${faq.map((f) => `<h3>${escapeHtml(f.question)}</h3>\n<p>${escapeHtml(f.answer)}</p>`).join('\n')}\n</section>` : '';
