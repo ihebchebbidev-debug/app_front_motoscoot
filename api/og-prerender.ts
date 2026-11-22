@@ -390,8 +390,8 @@ ${photos.map((p, i) => `<img src="${escapeHtml(rewriteImageHost(p, photoTitle))}
 <h1>${escapeHtml(name)}</h1>
 ${photosSection}
 ${priceSection}
-${versionsSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
+${versionsSection}
 ${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
 ${faqSection}
 <p>${escapeHtml(summary)}</p>
