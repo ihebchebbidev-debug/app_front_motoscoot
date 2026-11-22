@@ -21,7 +21,7 @@
 
 import { renderWithApp, scriptSafeJson } from '../utils/detailHtml.js';
 import { listingTitle, listingDescription, isNewCondition } from '../utils/listingSeo.js';
-import { seoImagePath, IMAGE_CACHE_VERSION } from '../utils/seoImagePath.js';
+import { galleryImageUrl, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { catalogBrand, listingCatalogLinks, LISTING_CATALOG_HEADING, type CatalogSpec, type ListingCatalogLink } from '../utils/listingCatalogLinks.js';
 const API_BASE = 'https://motoscoot.ihebchebbi.pro/api';
@@ -38,35 +38,6 @@ const escapeHtml = (s: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-
-const toHttps = (url: string) => (url ? url.replace(/^http:\/\//i, 'https://') : url);
-
-// Slugs: the one rule shared with the app's links (utils/slugify.ts). The
-// canonical below must equal the link the app builds, or every internal link
-// 301s (a title ending in « ! » used to give « …-sym--12 »). Image slugs keep
-// their 60-character cap, as before.
-const imageSlug = (s: string): string => slugify(s).slice(0, 60);
-
-// Rewrite backend storage hostnames to www.moto-scoot.tn AND inject the
-// listing slug so the image URL exposed to Google is
-//   https://www.moto-scoot.tn/m/<slug>/<file>.webp
-// (vercel.json proxies /m/<slug>/<file> back to the real upload).
-// Cache version: utils/seoImagePath.ts (shared with the other detail pages).
-
-const rewriteImageHost = (url: string, slug?: string | null): string => {
-  if (!url) return url;
-  let out = toHttps(url);
-  out = out.replace(/^https:\/\/(www\.)?motoscoot\.ihebchebbi\.pro\//i, `${SITE}/`);
-  const cleanSlug = slug ? imageSlug(slug) : '';
-  if (!cleanSlug) return out;
-  const m = out.match(/\/uploads\/([^?#]+)/i);
-  if (!m) return out;
-  const rest = m[1];
-  if (rest.startsWith('thumbnails/')) {
-    return `${SITE}/m/${cleanSlug}/t/${rest.slice('thumbnails/'.length)}?v=${IMAGE_CACHE_VERSION}`;
-  }
-  return `${SITE}/m/${cleanSlug}/${rest}?v=${IMAGE_CACHE_VERSION}`;
-};
 
 const formatPrice = (n: number | null | undefined) =>
   typeof n === 'number' ? `${n.toLocaleString('fr-FR')} DT` : '';
@@ -179,10 +150,10 @@ export default async function handler(req: any, res: any) {
       ? listingDescription(seoInput)
       : "Découvrez les annonces de motos et scooters d'occasion sur Moto-Scoot.tn.";
 
-    const imgSlug = listing ? [listing.brand, listing.model, listing.year].filter(Boolean).join('-') || listing.title : '';
+    const imgSlug = listing ? slugify([listing.brand, listing.model, listing.year].filter(Boolean).join('-') || listing.title).slice(0, 60) : '';
     const image = rewriteImageHost(listing?.images?.[0] || DEFAULT_OG, imgSlug);
     const allImages = (listing?.images || []).map(u => rewriteImageHost(u, imgSlug)).slice(0, 6);
-    const brandLogo = listing?.brand_logo ? rewriteImageHost(listing.brand_logo, listing.brand ? `${imageSlug(listing.brand)}-logo` : '') : '';
+    const brandLogo = listing?.brand_logo ? rewriteImageHost(listing.brand_logo, listing.brand ? `${slugify(listing.brand)}-logo`.slice(0, 60) : '') : '';
     const brandNode = listing?.brand ? { '@type': 'Brand', name: listing.brand, ...(brandLogo ? { logo: brandLogo } : {}) } : undefined;
 
     // ---- JSON-LD: one Product + Vehicle node + Breadcrumbs ----
@@ -239,7 +210,7 @@ export default async function handler(req: any, res: any) {
     // The gallery's first photo is the LCP element: start it with the HTML
     // instead of after the JS bundle and the listing API call. Same URL as
     // ListingGallery builds (buildSeoImageUrl with the listing title).
-    const lcpImage = listing?.images?.[0] ? seoImagePath(listing.images[0], listing.title) : null;
+    const lcpImage = listing?.images?.[0] ? galleryImageUrl(listing.images[0], listing.title) : null;
 
     const catalogLinks = listing ? await fetchCatalogLinks(catalogBrandsPromise, listing.brand, listing.model) : [];
 
@@ -264,7 +235,7 @@ ${listing.price ? `<p><strong>Prix :</strong> ${escapeHtml(formatPrice(listing.p
 </dl>
 ${listing.description ? `<h2>Description</h2><p>${escapeHtml(listing.description.slice(0, 1500))}</p>` : ''}
 ${catalogLinks.length ? `<h2>${escapeHtml(LISTING_CATALOG_HEADING)}</h2><ul>${catalogLinks.map((l) => `<li><a href="${SITE}${l.href}">${escapeHtml(l.label)}</a></li>`).join('')}</ul>` : ''}
-${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${src}" alt="${escapeHtml(`${listing.title} – photo ${i + 1}`)}" loading="lazy" />`).join('')}` : ''}
+${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${escapeHtml(src)}" alt="${escapeHtml(`${listing.title} – photo ${i + 1}`)}" loading="lazy" />`).join('')}` : ''}
 <p><a href="${canonical}">Voir l'annonce complète sur Moto-Scoot.tn</a></p>
 ` : `
 <h1>Annonce non disponible</h1>
@@ -279,7 +250,7 @@ ${allImages.length ? `<h2>Photos</h2>${allImages.map((src, i) => `<img src="${sr
 <meta name="description" content="${escapeHtml(description)}" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <link rel="canonical" href="${canonical}" />
-${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="high" />` : ''}
+${lcpImage ? `<link rel="preload" as="image" href="${escapeHtml(lcpImage)}" fetchpriority="high" />` : ''}
 <link rel="alternate" href="${canonical}" hreflang="fr-TN" />
 <link rel="alternate" href="${canonical}" hreflang="x-default" />
 
@@ -289,8 +260,8 @@ ${lcpImage ? `<link rel="preload" as="image" href="${lcpImage}" fetchpriority="h
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
 <meta property="og:url" content="${canonical}" />
-<meta property="og:image" content="${image}" />
-<meta property="og:image:secure_url" content="${image}" />
+<meta property="og:image" content="${escapeHtml(image)}" />
+<meta property="og:image:secure_url" content="${escapeHtml(image)}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="${escapeHtml(listing?.title || 'Moto-Scoot.tn')}" />
@@ -302,7 +273,7 @@ ${listing?.condition ? `<meta property="product:condition" content="${isNewCondi
 <meta name="twitter:site" content="@motoscoot_tn" />
 <meta name="twitter:title" content="${escapeHtml(title)}" />
 <meta name="twitter:description" content="${escapeHtml(description)}" />
-<meta name="twitter:image" content="${image}" />
+<meta name="twitter:image" content="${escapeHtml(image)}" />
 
 ${allLd.map(ld => `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</script>`).join('\n')}
 </head>

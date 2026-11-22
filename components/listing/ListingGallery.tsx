@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X, Heart, Share2, ArrowLeft } from 'lucide-react';
 
 import { getOptimizedImageUrl, PLACEHOLDER_LISTING } from '../../utils/urlUtils';
+import { galleryImageUrl } from '../../utils/seoImagePath';
 import { photoFit } from '../../utils/photoFit';
 import { Button } from '../ui/Button';
 
@@ -178,7 +179,7 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({
           <img
             key={activeSource}
             onError={imageFallback}
-            src={getOptimizedImageUrl(activeSource, 1200, 900, 90, undefined, title)}
+            src={galleryImageUrl(activeSource, title)}
             onLoad={(e) => setFit(photoFit(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight))}
             className={`w-full h-full object-cover ${fit === 'contain' ? 'md:object-contain' : ''} animate-fade-in pointer-events-none`} 
             alt={title}

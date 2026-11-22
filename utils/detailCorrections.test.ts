@@ -422,3 +422,39 @@ test('CGU page: same h1 as its crawler snapshot, dated, 12 articles reachable fr
   assert.match(src, /droit tunisien/);
   assert.match(src, /loi organique n° 2004-63/);
 });
+
+test('only local uploads and thumbnails use the Moto-Scoot media proxy', async () => {
+  const { galleryImageUrl, rewriteImageHost } = await import('./seoImagePath');
+  const external = 'https://manufacturer.example/uploads/model.webp?ref=www.moto-scoot.tn&size=2';
+  assert.equal(galleryImageUrl(external, 'Moto'), external);
+  assert.equal(rewriteImageHost(external, 'Moto'), external);
+  assert.equal(galleryImageUrl('/uploads/model.webp', 'Moto'), '/m/moto/model.webp');
+  assert.equal(galleryImageUrl('https://moto-scoot.tn/uploads/thumbnails/model.webp', 'Moto'), '/m/moto/t/model.webp');
+  assert.equal(rewriteImageHost('https://motoscoot.ihebchebbi.pro/uploads/model.webp', 'Moto'), 'https://www.moto-scoot.tn/m/moto/model.webp?v=2');
+});
+
+test('manufacturer photos keep their original URL in mixed technical-sheet galleries', async (t) => {
+  const { seoImagePath } = await import('./seoImagePath');
+  const fixtures = [
+    { slug: 'moto-morini-x-cape-650', brand: 'Moto Morini', model: 'X-CAPE 650', year: 2025, photo: 'https://motomorini.eu/wp-content/uploads/2023/07/xcape-gallery-2-767x767.jpg' },
+    { slug: 'moto-morini-x-cape-1200', brand: 'Moto Morini', model: 'X-CAPE 1200', year: 2026, photo: 'https://motomorini.eu/wp-content/uploads/2024/11/X-CAPE_Artic-White-angle-left-1280x890.png' },
+    { slug: 'sanya-y125-8c', brand: 'Sanya', model: 'Y125-8C', year: 2024, photo: 'https://sanya.tn/wp-content/uploads/2025/12/sanya-y125-8c-img-2.png' },
+  ];
+  for (const { photo, ...spec } of fixtures) {
+    await t.test(spec.slug, async (t) => {
+      assert.equal(seoImagePath(photo, spec.model), null);
+      t.mock.method(globalThis, 'fetch', async () => Response.json({
+        ...spec, id: 'abc', image: '/uploads/cover.webp', gallery: [photo, '/uploads/local.webp'],
+      }));
+      const result = responseCapture();
+      await detailHandler({ query: { kind: 'fiche-technique', slugid: spec.slug }, appShell: '<html><head></head><body><div id="root"></div></body></html>' }, result);
+      assert.equal(result.code, 200);
+      assert.ok(result.body.includes(`rel="preload" as="image" href="${photo}"`));
+      assert.ok(result.body.includes(`property="og:image" content="${photo}"`));
+      assert.ok(result.body.includes(`name="twitter:image" content="${photo}"`));
+      assert.ok(result.body.includes(`<img src="${photo}"`));
+      assert.ok(result.body.includes(`"${photo}"`), 'original URL in structured data');
+      assert.ok(result.body.includes(`/m/${spec.slug}-${spec.year}/local.webp?v=2`));
+    });
+  }
+});

@@ -1,5 +1,5 @@
 import { slugify } from './slugify';
-import { seoImagePath } from './seoImagePath';
+import { seoImagePath, optimizeImageSource } from './seoImagePath';
 export { slugify };
 
 // Branded fallback images (orange theme) generated for the marketplace.
@@ -83,22 +83,7 @@ export const getOptimizedImageUrl = (
 
   const resolved = seoSlug ? buildSeoImageUrl(url, seoSlug) : resolveUploadUrl(url);
 
-  if (resolved.includes('unsplash.com')) {
-    const baseUrl = resolved.split('?')[0];
-    return `${baseUrl}?auto=format&fit=crop&w=${width}&h=${height}&q=${quality}`;
-  }
-
-  if (resolved.includes('placehold.co')) {
-    return resolved;
-  }
-
-  const isInternal = resolved.includes('magma-studio.tn') || resolved.includes('www.moto-scoot.tn');
-  if (isInternal) {
-    const sep = resolved.includes('?') ? '&' : '?';
-    return `${resolved}${sep}tr=w-${width},h-${height},q-${quality},c-cover`;
-  }
-
-  return resolved;
+  return optimizeImageSource(resolved, width, height, quality);
 };
 
 import { getListingNumber, getSpecSlug } from './publicIds';
