@@ -310,3 +310,103 @@ export function techSpecShareImage(s: { image?: string | null; gallery?: Array<s
 export function techSpecGalleryTitle(s: { brand?: unknown; model?: unknown; year?: unknown }): string {
   return `${s.brand} ${s.model} ${s.year}`;
 }
+
+export const TECH_SPEC_FAQ_HEADING = 'Questions fréquentes';
+
+export interface TechSpecFaqInput {
+  brand?: string | null;
+  model?: string | null;
+  /** Category as typed in the admin ("Scooter", "Roadster"): « du » scooter, « de la » moto. */
+  category?: string | null;
+  price?: number | string | null;
+  updatedAt?: string | null;
+  topSpeed?: string | null;
+  consumption?: string | null;
+  tank?: string | null;
+  cc?: string | null;
+  power?: string | null;
+  weight?: string | null;
+  availableInTunisia?: boolean | null;
+  importerName?: string | null;
+  importerCity?: string | null;
+}
+
+export interface TechSpecFaqItem { question: string; answer: string }
+
+/**
+ * Questions fréquentes of a technical sheet (owner, 2026-11-22), written from
+ * the fields already filled in the admin, nothing to type. They answer the
+ * Google searches that reach the sheets (Search Console, 3 months): « prix »
+ * (27 % of impressions), « vitesse max » (2,6 %, 1,3 % CTR), « fiche
+ * technique / puissance / poids », « consommation ». A question appears only
+ * when its value is known: no invented price, speed or consumption.
+ * Shared by the page (components/TechSpecsDetails.tsx) and the crawler HTML
+ * (api/og-prerender.ts) so both show the same text.
+ */
+export function techSpecFaq(s: TechSpecFaqInput): TechSpecFaqItem[] {
+  const name = [s.brand, s.model].filter(Boolean).join(' ').trim();
+  if (!name) return [];
+  const scooter = /scooter/i.test(String(s.category ?? ''));
+  const ofName = `${scooter ? 'du' : 'de la'} ${name}`;
+  const theName = `${scooter ? 'le' : 'la'} ${name}`;
+  const TheName = `${scooter ? 'Le' : 'La'} ${name}`;
+  const faq: TechSpecFaqItem[] = [];
+
+  const price = formatDinars(s.price);
+  const checked = s.updatedAt ? new Date(s.updatedAt) : null;
+  const checkedLabel = checked && !Number.isNaN(checked.getTime()) ? `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCFullYear()}` : '';
+  if (price) {
+    faq.push({
+      question: `Quel est le prix ${ofName} en Tunisie ?`,
+      answer: `${TheName} est affiché${scooter ? '' : 'e'} à ${price} TTC en Tunisie, prix du neuf${checkedLabel ? ` relevé en ${checkedLabel}` : ''}.`,
+    });
+  } else if (/arrivage/i.test(String(s.price ?? ''))) {
+    faq.push({
+      question: `Quel est le prix ${ofName} en Tunisie ?`,
+      answer: `${TheName} est annoncé${scooter ? '' : 'e'} en arrivage en Tunisie : son prix n’est pas encore connu.`,
+    });
+  }
+
+  const speed = firstNumber(s.topSpeed);
+  if (speed !== null) {
+    faq.push({ question: `Quelle est la vitesse maximale ${ofName} ?`, answer: `Sa vitesse maximale annoncée est de ${fmt(speed)} km/h.` });
+  }
+
+  const conso = firstNumber(s.consumption);
+  if (conso !== null) {
+    faq.push({ question: `Combien consomme ${theName} ?`, answer: `Sa consommation annoncée est de ${fmt(conso)} L/100 km.` });
+  }
+
+  const tank = firstNumber(s.tank);
+  if (tank !== null && conso !== null && conso < 30) {
+    const range = Math.round((tank / conso) * 100 / 10) * 10;
+    faq.push({
+      question: `Quelle est l’autonomie ${ofName} ?`,
+      answer: `Avec un réservoir de ${fmt(tank)} L et une consommation de ${fmt(conso)} L/100 km, son autonomie théorique est d’environ ${fmt(range)} km.`,
+    });
+  }
+
+  const cc = firstNumber(s.cc);
+  const power = formatPowerCh(s.power);
+  if (cc !== null) {
+    faq.push({
+      question: `Quelle est la cylindrée ${ofName} ?`,
+      answer: `${TheName} a un moteur de ${fmt(cc)} cm³${power ? ` qui développe ${power}` : ''}.`,
+    });
+  }
+
+  const weight = firstNumber(s.weight);
+  if (weight !== null) {
+    faq.push({ question: `Combien pèse ${theName} ?`, answer: `Son poids annoncé est de ${fmt(weight)} kg.` });
+  }
+
+  if (s.importerName) {
+    faq.push({
+      question: `Où acheter ${theName} en Tunisie ?`,
+      answer: `${TheName} est distribué${scooter ? '' : 'e'} en Tunisie par ${s.importerName}${s.importerCity ? `, basé à ${s.importerCity}` : ''}.`,
+    });
+  } else if (s.availableInTunisia === false) {
+    faq.push({ question: `${TheName} est-${scooter ? 'il' : 'elle'} vendu${scooter ? '' : 'e'} en Tunisie ?`, answer: `Ce modèle n’est pas commercialisé en Tunisie à ce jour.` });
+  }
+  return faq;
+}

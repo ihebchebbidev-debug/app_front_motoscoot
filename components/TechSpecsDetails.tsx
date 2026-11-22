@@ -33,7 +33,7 @@ import AdBanner from './common/AdBanner';
 import { ListingGallery } from './listing/ListingGallery';
 import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle } from '../utils/techSpecSeo';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING } from '../utils/techSpecSeo';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
@@ -491,6 +491,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     price: spec.priceNew, updatedAt: spec.updatedAt, availableInTunisia: spec.availableInTunisia,
     importerName: spec.importer?.name, importerCity: spec.importer?.city,
   });
+  const faq = techSpecFaq({
+    brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, price: spec.priceNew,
+    updatedAt: spec.updatedAt, topSpeed: spec.topSpeed, consumption: spec.consumption, tank: spec.dimensions?.tank,
+    cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight,
+    availableInTunisia: spec.availableInTunisia, importerName: spec.importer?.name, importerCity: spec.importer?.city,
+  });
   const priceNumber = parseSpecPrice(spec.priceNew) ?? 0;
   const monthlyPayment = priceNumber ? Math.round(priceNumber / 60) : null;
 
@@ -767,6 +773,26 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             </div>
           </div>
         </div>
+
+        {/* Questions fréquentes, written from the sheet's own fields: same text as
+            the crawler HTML (utils/techSpecSeo.ts › techSpecFaq). */}
+        {faq.length > 0 && (
+          <section aria-labelledby="questions-frequentes" className={`${S.ContentBlock} mt-8 md:mt-12`}>
+            <div className="px-6 md:px-8 py-4 border-b border-border">
+              <h2 id="questions-frequentes" className="font-sans text-[15px] font-extrabold uppercase tracking-[0.06em] text-foreground">
+                {TECH_SPEC_FAQ_HEADING}
+              </h2>
+            </div>
+            <div className="px-6 md:px-8 py-2 divide-y divide-border">
+              {faq.map((f) => (
+                <div key={f.question} className="py-4">
+                  <h3 className="font-sans text-[15px] md:text-base font-bold text-gray-900">{f.question}</h3>
+                  <p className="mt-1 font-sans text-[14px] md:text-[15px] text-gray-600 leading-relaxed">{f.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Summary, last on the page: same sentence as the crawler HTML (api/og-prerender.ts). */}
         <p className="font-sans text-[14px] md:text-[15px] text-gray-600 leading-relaxed mt-8 md:mt-12">
