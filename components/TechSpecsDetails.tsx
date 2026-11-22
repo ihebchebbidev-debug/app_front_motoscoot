@@ -504,6 +504,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     brand: spec.brand, model: spec.model, category: spec.categoryLabel || spec.category, price: spec.priceNew,
     updatedAt: spec.updatedAt, topSpeed: spec.topSpeed, consumption: spec.consumption, tank: spec.dimensions?.tank,
     cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight,
+    warranty: spec.maintenance?.warranty, firstService: spec.maintenance?.firstService, serviceInterval: spec.maintenance?.serviceInterval,
     availableInTunisia: spec.availableInTunisia, importerName: spec.importer?.name, importerCity: spec.importer?.city,
   });
   const priceNumber = parseSpecPrice(spec.priceNew) ?? 0;

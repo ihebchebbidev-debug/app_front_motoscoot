@@ -337,6 +337,10 @@ export interface TechSpecFaqInput {
   cc?: string | null;
   power?: string | null;
   weight?: string | null;
+  /** « Garantie & Entretien » fields of the admin, free text (« 2 ans, kilométrage illimité »). */
+  warranty?: string | null;
+  firstService?: string | null;
+  serviceInterval?: string | null;
   availableInTunisia?: boolean | null;
   importerName?: string | null;
   importerCity?: string | null;
@@ -345,11 +349,31 @@ export interface TechSpecFaqInput {
 export interface TechSpecFaqItem { question: string; answer: string }
 
 /**
+ * A free-text admin value made readable inside a sentence, without changing
+ * what it says: « 1000 KM » → « 1 000 km », « 1 Ans » → « 1 an », « Tous Les »
+ * → « tous les », no final period (the sentence adds it). Empty when blank.
+ */
+export function faqFreeText(value: unknown): string {
+  let v = String(value ?? '').replace(/\s+/g, ' ').trim().replace(/[.;,\s]+$/, '');
+  if (!v) return '';
+  // Thousands only in distances (« 2025 » in « avril 2025 » is a year).
+  v = v.replace(/\b(\d{4,})\s*km\b/gi, (_, n) => `${n.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')}\u00a0km`);
+  v = v.replace(/(\d)\s*km\b/gi, '$1\u00a0km');
+  v = v.replace(/\b1\s+ans\b/gi, '1 an').replace(/\b(\d+)\s+Ans\b/g, '$1 ans').replace(/\b(\d+)\s+Mois\b/g, '$1 mois');
+  v = v.replace(/^Tou[st] les\b/i, 'tous les');
+  // Common opening words read mid-sentence (« Première révision : entre 500 et 1 200 km »); names keep their capital.
+  v = v.replace(/^(Entre|Vidanges?|Jusqu’à|Jusqu'à|Selon|Chaque|Après)\b/, (w) => w.toLowerCase());
+  return v;
+}
+
+
+/**
  * Questions fréquentes of a technical sheet (owner, 2026-11-22), written from
  * the fields already filled in the admin, nothing to type. They answer the
  * Google searches that reach the sheets (Search Console, 3 months): « prix »
  * (27 % of impressions), « vitesse max » (2,6 %, 1,3 % CTR), « fiche
- * technique / puissance / poids », « consommation ». A question appears only
+ * technique / puissance / poids », « consommation ». Warranty and servicing
+ * (owner, 2026-11-22) come from « Garantie & Entretien ». A question appears only
  * when its value is known: no invented price, speed or consumption.
  * Shared by the page (components/TechSpecsDetails.tsx) and the crawler HTML
  * (api/og-prerender.ts) so both show the same text.
@@ -409,6 +433,20 @@ export function techSpecFaq(s: TechSpecFaqInput): TechSpecFaqItem[] {
   const weight = firstNumber(s.weight);
   if (weight !== null) {
     faq.push({ question: `Combien pèse ${theName} ?`, answer: `Son poids annoncé est de ${fmt(weight)} kg.` });
+  }
+
+  const warranty = faqFreeText(s.warranty);
+  if (warranty) {
+    faq.push({ question: `Quelle est la garantie ${ofName} ?`, answer: `Garantie constructeur annoncée : ${warranty}.` });
+  }
+
+  const firstService = faqFreeText(s.firstService);
+  const serviceInterval = faqFreeText(s.serviceInterval);
+  if (firstService || serviceInterval) {
+    faq.push({
+      question: `Quand faire la révision ${ofName} ?`,
+      answer: [firstService && `Première révision : ${firstService}.`, serviceInterval && `Révisions suivantes : ${serviceInterval}.`].filter(Boolean).join(' '),
+    });
   }
 
   if (s.importerName) {
