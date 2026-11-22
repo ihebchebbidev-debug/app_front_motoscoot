@@ -21,7 +21,7 @@
 import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detailHtml.js';
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
-import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING } from '../utils/techSpecSeo.js';
+import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecVersions, VERSION_COLUMN_LABELS, type TechSpecVersions, type TechSpecVersionSource } from '../utils/techSpecSeo.js';
 import { galleryImageUrl, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
@@ -330,7 +330,7 @@ const SPEC_ROWS: Array<[string, (d: Doc) => unknown]> = [
 // comparator.
 // Internal links are site-relative ("/fiches-techniques/sym"): same pages, and
 // what the SEO checks that count href="/…" expect.
-export function renderFicheBody(d: Doc, similar: SimilarModel[] = []): string {
+export function renderFicheBody(d: Doc, similar: SimilarModel[] = [], versions: TechSpecVersions | null = null): string {
   const name = [d.brand, d.model].filter(Boolean).join(' ');
   const block = techSpecPriceBlock({
     brand: d.brand, model: d.model, category: d.category, cc: d.engine?.cc, price: d.price_new, updatedAt: d.updated_at,
@@ -345,6 +345,14 @@ export function renderFicheBody(d: Doc, similar: SimilarModel[] = []): string {
 <h2>${TECH_SPEC_PRICE_LABEL}</h2>
 <table>
 ${priceRows}
+</table>
+</section>` : '';
+  // « Les versions du SYM Jet 14 »: same table as the page (utils/techSpecSeo.ts › techSpecVersions).
+  const versionsSection = versions ? `<section>
+<h2>${escapeHtml(versions.heading)}</h2>
+<table>
+<tr><th scope="col">Version</th>${versions.columns.map((c) => `<th scope="col">${escapeHtml(VERSION_COLUMN_LABELS[c])}</th>`).join('')}</tr>
+${versions.rows.map((r) => `<tr><th scope="row">${r.href ? `<a href="${r.href}">${escapeHtml(r.name)}</a>` : `<strong>${escapeHtml(r.name)}</strong>`}</th>${versions.columns.map((c) => `<td>${escapeHtml(r[c] || '—')}</td>`).join('')}</tr>`).join('\n')}
 </table>
 </section>` : '';
   const summary = techSpecSummary({
@@ -368,6 +376,7 @@ ${priceRows}
   return `<nav aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <a href="/fiches-techniques">Fiches techniques</a>${brandSlug ? ` › <a href="/fiches-techniques/${brandSlug}">${escapeHtml(String(d.brand))}</a>` : ''} › ${escapeHtml(name)}</nav>
 <h1>${escapeHtml(name)}</h1>
 ${priceSection}
+${versionsSection}
 ${rows ? `<h2>Caractéristiques</h2>\n<table>\n<caption>Fiche technique ${escapeHtml(name)}</caption>\n${rows}\n</table>` : ''}
 ${similar.length ? `<section>\n<h2>${SIMILAR_MODELS_HEADING}</h2>\n<table>\n${similar.map((m) => `<tr><th scope="row"><a href="${m.href}">${escapeHtml(m.name)}</a></th><td>${escapeHtml(m.price)}</td></tr>`).join('\n')}\n</table>\n</section>` : ''}
 ${faqSection}
@@ -572,14 +581,22 @@ async function fetchTunisiaCatalogue(): Promise<Doc[]> {
   return lists.flat();
 }
 
-// "Modèles similaires" of a sheet; none (section left out) when the catalogue is unavailable.
-async function similarModelsFor(d: Doc): Promise<SimilarModel[]> {
+// "Modèles similaires" and « Les versions du … » of a sheet, from one catalogue
+// load; none (sections left out) when the catalogue is unavailable.
+const versionSource = (m: Doc): TechSpecVersionSource => ({
+  id: m.id, slug: (m as any).slug, brand: m.brand, model: m.model, category: m.category, cc: m.engine?.cc, price: m.price_new,
+  power: m.engine?.power, fuelSystem: m.engine?.fuelSystem || m.engine?.fuel_system,
+  brakesFront: m.chassis?.brakesFront, brakesRear: m.chassis?.brakesRear, weight: m.dimensions?.weight,
+});
+async function relatedModelsFor(d: Doc): Promise<{ similar: SimilarModel[]; versions: TechSpecVersions | null }> {
   try {
     const catalogue = await fetchTunisiaCatalogue();
-    const source = (m: Doc) => ({ id: m.id, slug: (m as any).slug, brand: m.brand, model: m.model, category: m.category, cc: m.engine?.cc, price: m.price_new });
-    return similarTechSpecs(source(d), catalogue.map(source));
+    return {
+      similar: similarTechSpecs(versionSource(d), catalogue.map(versionSource)),
+      versions: techSpecVersions(versionSource(d), catalogue.map(versionSource)),
+    };
   } catch {
-    return [];
+    return { similar: [], versions: null };
   }
 }
 
@@ -815,7 +832,7 @@ export default async function handler(req: any, res: any) {
 
     const thin = (kind === 'article' || kind === 'guide') && isThinContent(String(doc.content || doc.body || ''));
     const related = kind === 'article' || kind === 'guide' ? await relatedLinksHtml(kind, doc) : '';
-    const similar = kind === 'fiche-technique' ? await similarModelsFor(doc) : [];
+    const { similar, versions } = kind === 'fiche-technique' ? await relatedModelsFor(doc) : { similar: [], versions: null };
     const robots = kind === 'garage' && !GARAGES_PUBLIC ? GARAGES_ROBOTS
       : thin ? THIN_CONTENT_ROBOTS
       : 'index, follow, max-image-preview:large, max-snippet:-1';
@@ -867,7 +884,7 @@ ${ld ? `<script type="application/ld+json" data-ssr-ld>${scriptSafeJson(ld)}</sc
 </head>
 <body>
 ${kind === 'article' || kind === 'guide' ? `<nav aria-label="Fil d'Ariane"><a href="${SITE}/">Accueil</a> › <a href="${SITE}/${kind === 'article' ? 'actualites' : 'conseils'}">${kind === 'article' ? 'Actualités' : 'Conseils'}</a> › ${escapeHtml(heading)}</nav>` : ''}
-${kind === 'fiche-technique' ? renderFicheBody(doc, similar) : `<h1>${escapeHtml(heading)}</h1>
+${kind === 'fiche-technique' ? renderFicheBody(doc, similar, versions) : `<h1>${escapeHtml(heading)}</h1>
 <p>${escapeHtml(description)}</p>
 ${(() => {
   const body = crawlerBodyHtml(String(doc.content || doc.body || doc.description || ''));
