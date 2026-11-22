@@ -57,13 +57,14 @@ test('a motorcycle reads « de la », empty columns are left out', () => {
   assert.deepEqual(v.columns, ['price']);
 });
 
-test('the crawler HTML shows the table after the price, with links to the other versions', () => {
+test('the crawler HTML shows the table under « Caractéristiques », with links to the other versions', () => {
   const versions = techSpecVersions(evo, [acE5, carbu])!;
   const html = renderFicheBody({ brand: 'SYM', model: 'Jet 14 EVO 125', category: 'Scooter', price_new: '9000', engine: { cc: '125 cc' } } as any, [], versions);
   assert.match(html, /<h2>Les versions du SYM Jet 14<\/h2>/);
   assert.match(html, /<a href="\/fiche-technique\/sym-jet-14-125-ac-e5">SYM Jet 14 125 AC E5<\/a>/);
   assert.match(html, /<strong>SYM Jet 14 EVO 125<\/strong>/);
-  assert.ok(html.indexOf('Prix neuf en Tunisie') < html.indexOf('Les versions du') && html.indexOf('Les versions du') < html.indexOf('Caractéristiques'));
+  // Owner, 2026-11-22: the versions go under the « Caractéristiques » table.
+  assert.ok(html.indexOf('Prix neuf en Tunisie') < html.indexOf('<h2>Caractéristiques</h2>') && html.indexOf('<h2>Caractéristiques</h2>') < html.indexOf('Les versions du'));
   assert.doesNotMatch(renderFicheBody({ brand: 'SYM', model: 'Jet X 125' } as any), /Les versions/);
 });
 
@@ -71,6 +72,8 @@ test('the page uses the same rule and catalogue as the crawler HTML', () => {
   const page = readFileSync(new URL('../components/TechSpecsDetails.tsx', import.meta.url), 'utf8');
   assert.match(page, /return techSpecVersions\(source\(spec\), catalogue\.map\(source\)\);/);
   assert.match(page, /<h2 id="versions-modele"[^>]*>\s*\{versions\.heading\}/);
+  // Same order on the page: under « Caractéristiques », before the similar models.
+  assert.ok(page.indexOf('Caractéristiques\n') < page.indexOf('id="versions-modele"') && page.indexOf('id="versions-modele"') < page.indexOf('<ModelCarousel id="modeles-similaires"'));
   const api = readFileSync(new URL('../api/og-prerender.ts', import.meta.url), 'utf8');
   assert.match(api, /versions: techSpecVersions\(versionSource\(d\), catalogue\.map\(versionSource\)\)/);
 });
