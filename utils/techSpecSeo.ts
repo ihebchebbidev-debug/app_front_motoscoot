@@ -341,6 +341,8 @@ export interface TechSpecFaqInput {
   warranty?: string | null;
   firstService?: string | null;
   serviceInterval?: string | null;
+  /** Colours offered (tech_specs.colors), in the admin's order. */
+  colors?: ReadonlyArray<string> | null;
   availableInTunisia?: boolean | null;
   importerName?: string | null;
   importerCity?: string | null;
@@ -446,6 +448,16 @@ export function techSpecFaq(s: TechSpecFaqInput): TechSpecFaqItem[] {
     faq.push({
       question: `Quand faire la révision ${ofName} ?`,
       answer: [firstService && `Première révision : ${firstService}.`, serviceInterval && `Révisions suivantes : ${serviceInterval}.`].filter(Boolean).join(' '),
+    });
+  }
+
+  // « Quelles sont les couleurs du … ? » (owner, 2026-11-22): names as typed in the admin.
+  const colors = (s.colors || []).map((c) => String(c ?? '').trim()).filter(Boolean);
+  if (colors.length) {
+    const list = colors.length === 1 ? colors[0] : `${colors.slice(0, -1).join(', ')} et ${colors[colors.length - 1]}`;
+    faq.push({
+      question: `Quelles sont les couleurs ${ofName} ?`,
+      answer: `${TheName} est proposé${scooter ? '' : 'e'} en ${colors.length === 1 ? 'une couleur' : `${colors.length} couleurs`} : ${list}.`,
     });
   }
 

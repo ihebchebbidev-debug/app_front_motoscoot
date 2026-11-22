@@ -505,6 +505,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
     updatedAt: spec.updatedAt, topSpeed: spec.topSpeed, consumption: spec.consumption, tank: spec.dimensions?.tank,
     cc: spec.engine?.cc, power: spec.engine?.power, weight: spec.dimensions?.weight,
     warranty: spec.maintenance?.warranty, firstService: spec.maintenance?.firstService, serviceInterval: spec.maintenance?.serviceInterval,
+    colors: spec.colors,
     availableInTunisia: spec.availableInTunisia, importerName: spec.importer?.name, importerCity: spec.importer?.city,
   });
   const priceNumber = parseSpecPrice(spec.priceNew) ?? 0;
@@ -684,6 +685,12 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
                       <SpecRow label="Garantie constructeur" value={spec.maintenance?.warranty} />
                       <SpecRow label="1ère révision" value={spec.maintenance?.firstService} />
                       <SpecRow label="Révisions suivantes" value={spec.maintenance?.serviceInterval} />
+                    </SpecGroup>
+                  )}
+
+                  {spec.colors && spec.colors.length > 0 && (
+                    <SpecGroup title="Couleurs">
+                      <SpecRow label="Couleurs disponibles" value={spec.colors.join(', ')} />
                     </SpecGroup>
                   )}
                 </div>
