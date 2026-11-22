@@ -21,7 +21,7 @@ import { renderWithApp, scriptSafeJson, detailIdentifier } from '../utils/detail
 import { verifiedReviewMarkup } from '../utils/reviewUtils.js';
 import { GARAGES_PUBLIC, GARAGES_ROBOTS } from '../config/features.js';
 import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModel, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecVersions, VERSION_COLUMN_LABELS, type TechSpecVersions, type TechSpecVersionSource, techSpecPhotos } from '../utils/techSpecSeo.js';
-import { galleryImageUrl, galleryPhotoAlt, rewriteImageHost } from '../utils/seoImagePath.js';
+import { galleryImageUrl, galleryPhotoAlt, isOwnImage, rewriteImageHost } from '../utils/seoImagePath.js';
 import { slugify } from '../utils/slugify.js';
 import { brandPageH1, brandSummaryText } from '../utils/techSpecBrandHeading.js';
 import { HUB_H1, hubDescription, hubPageTitle, hubSummaryParts, type HubBrandRow } from '../utils/techSpecsHubSeo.js';
@@ -136,14 +136,6 @@ function pickImage(d: Doc | null, slug?: string | null): string {
 // a sold or removed listing must stop being served quickly.
 export const CATALOGUE_CACHE = 'public, s-maxage=600, stale-while-revalidate=604800';
 
-function pickGallery(d: Doc | null, slug?: string | null): string[] {
-  if (!d) return [];
-  const arr: string[] = [];
-  if (d.image) arr.push(d.image);
-  if (Array.isArray(d.gallery)) arr.push(...d.gallery);
-  if (Array.isArray(d.images)) arr.push(...d.images);
-  return Array.from(new Set(arr.map(u => rewriteImageHost(u, slug)).filter(Boolean))).slice(0, 6);
-}
 
 // Same price rule as the page (utils/techSpecSeo.ts).
 const parsePrice = parseSpecPrice;
@@ -229,7 +221,9 @@ function buildJsonLd(kind: Kind, d: Doc | null, canonical: string, image: string
   if (kind === 'fiche-technique') {
     const price = parsePrice(d.price_new);
     const name = [d.brand, d.model, d.year].filter(Boolean).join(' ') || title;
-    const gallery = pickGallery(d, pickSlug(kind, d));
+    // The same photos as the page, in the same order (techSpecPhotos), served
+    // by the site: the card image used to come first and the 6th photo was cut.
+    const gallery = Array.from(new Set(techSpecPhotos(d).filter(isOwnImage).map((u) => rewriteImageHost(u, pickSlug(kind, d)))));
     const brandSlug = d.brand ? slugify(d.brand) : '';
     const brandLogoRaw = d.brand_logo || d.logo || d.logo_url || '';
     const brandLogo = brandLogoRaw ? rewriteImageHost(brandLogoRaw, brandSlug ? `${brandSlug}-logo` : '') : '';
@@ -388,7 +382,8 @@ ${versions.rows.map((r) => `<tr><th scope="row">${r.href ? `<a href="${r.href}">
   // downloaded by browsers that run the page, which shows them itself as
   // described thumbnails (ListingGallery › thumbnails).
   const photoTitle = techSpecGalleryTitle(d);
-  const photos = techSpecPhotos(d);
+  // Only photos served by the site: a hotlinked constructor photo can answer 403.
+  const photos = techSpecPhotos(d).filter(isOwnImage);
   const photosSection = photos.length ? `<section>
 <h2>Photos ${escapeHtml(name)}</h2>
 <noscript>

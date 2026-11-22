@@ -45,6 +45,19 @@ export function rewriteImageHost(url: string, slug?: string | null): string {
     .replace(/^https:\/\/(?:www\.)?motoscoot\.ihebchebbi\.pro\//i, `${SITE_ORIGIN}/`);
 }
 
+/**
+ * True when the photo is served by the site itself (our /uploads pipeline,
+ * read as /m/<slug>/<file>). A link to another site (constructor page…) can
+ * answer 403 or time out for crawlers: SE Ranking counted Moto Morini photos
+ * as « 4XX images » (owner, 2026-11-22). AGENTS.md: photos go through
+ * /api/uploads, never hotlinked.
+ */
+export function isOwnImage(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const resolved = rewriteImageHost(url, 'photo');
+  return resolved.startsWith(`${SITE_ORIGIN}/`) || (resolved.startsWith('/') && !resolved.startsWith('//'));
+}
+
 export function optimizeImageSource(resolved: string, width: number, height: number, quality: number): string {
   if (!/^(?:https?:)?\/\//i.test(resolved)) return resolved;
   let host: string;
