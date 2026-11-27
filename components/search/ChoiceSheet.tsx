@@ -364,7 +364,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         className={`ms-sheet outline-none bg-card w-full rounded-t-2xl max-h-[85dvh] pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl ${
           aside
             // Split window: picture card inset on the left, form on the right.
-            ? `md:w-[calc(100%-48px)] md:max-w-[1000px] md:max-h-none md:h-[min(760px,calc(100dvh-48px))] md:rounded-[28px] md:flex-row md:p-3 ${tall ? 'h-[85dvh]' : ''}`
+            ? `md:w-[calc(100%-48px)] md:max-w-[1000px] md:max-h-none md:h-[min(800px,calc(100dvh-48px))] md:rounded-[28px] md:flex-row md:p-3 ${tall ? 'h-[85dvh]' : ''}`
             : `md:max-w-md md:rounded-2xl ${tall ? 'h-[85dvh] md:h-auto' : ''}`
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -376,10 +376,12 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           </div>
         )}
         {/* Without an aside this wrapper takes no space (display: contents). */}
-        <div className={aside ? 'flex flex-col flex-1 min-w-0 min-h-0' : 'contents'}>
+        <div className={aside ? 'relative flex flex-col flex-1 min-w-0 min-h-0' : 'contents'}>
         {/* Grabber + title: the part a finger drags down to close (phones). */}
         <div
-          className="touch-none md:touch-auto select-none"
+          // Split window: the close button floats in the corner (the title is
+          // in the content), so the form gets the whole height.
+          className={`touch-none md:touch-auto select-none ${aside ? 'md:absolute md:top-2 md:right-2 md:z-10' : ''}`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -388,7 +390,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           <div className="md:hidden flex justify-center pt-2.5 pb-1" aria-hidden="true">
             <span className="h-1.5 w-10 rounded-full bg-gray-300" />
           </div>
-          <div className={`flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100 ${aside ? 'md:border-b-0 md:pb-0 md:pt-2 md:pr-4 md:justify-end' : ''}`}>
+          <div className={`flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100 ${aside ? 'md:border-b-0 md:p-0 md:justify-end' : ''}`}>
             <h2 id={titleId} className={`text-base font-bold text-gray-900 ${aside ? 'md:sr-only' : ''}`}>{label}</h2>
             <div className="flex items-center gap-1 -my-2.5 -mr-2.5">
               {headerAction}
@@ -424,7 +426,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
             />
           </div>
         )}
-        <div ref={listRef} role={listbox ? 'listbox' : undefined} aria-label={listbox ? label : undefined} className="flex-1 overflow-y-auto overscroll-contain py-2">
+        <div ref={listRef} role={listbox ? 'listbox' : undefined} aria-label={listbox ? label : undefined} className={`flex-1 overflow-y-auto overscroll-contain py-2 ${aside ? 'md:py-0' : ''}`}>
           {children}
         </div>
         {footer}

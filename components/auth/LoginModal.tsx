@@ -372,7 +372,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   return (
     <ChoiceSheet
       open={isOpen}
-      label={isSignUp ? 'Créer un compte' : 'Bienvenue sur moto-scoot.tn'}
+      label={isSignUp ? 'Créer un compte' : 'Bienvenue'}
       onClose={onClose}
       listbox={false}
       tall
@@ -383,32 +383,32 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           13 px help and errors, sentence-case buttons. */}
       <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
-        <div ref={contentRef} className="px-6 pt-4 md:px-10 lg:px-14 md:pt-2 md:max-w-[480px] md:mx-auto">
-          <div className="text-center mb-8 md:text-left md:pb-7 md:border-b md:border-gray-100">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-4 border border-primary-100 overflow-hidden md:w-auto md:h-auto md:bg-transparent md:border-0 md:rounded-none md:mb-6">
+        <div ref={contentRef} className="px-6 pt-4 md:px-10 lg:px-14 md:pt-6 md:max-w-[480px] md:mx-auto">
+          <div className="hidden md:block mb-3 md:mb-4 md:text-left md:pb-3 md:border-b md:border-gray-100">
+            <div className="inline-flex items-center justify-center overflow-hidden mb-3 [@media(max-height:780px)]:hidden">
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
-                className="w-8 h-8 object-contain md:w-10 md:h-10"
+                className="w-8 h-8 object-contain"
                 alt="Moto-Scoot.tn"
               />
             </div>
             {/* The window's name is the header title (hidden from 768 px);
                 this is the same words shown large, so not read twice. */}
             <p aria-hidden="true" className="hidden md:block text-gray-900 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2.5 text-balance">
-              {isSignUp ? 'Créer un compte' : <>Bienvenue sur <span className="whitespace-nowrap">moto-scoot.tn</span></>}
+              {isSignUp ? 'Créer un compte' : 'Bienvenue'}
             </p>
             <p className="text-gray-500 text-sm font-medium md:text-[15px]">
               {isSignUp ? 'Rejoignez la communauté moto-scoot.tn' : 'Connectez-vous pour gérer vos annonces.'}
             </p>
           </div>
 
-          <div className="flex items-center justify-center mb-8 md:mb-7">
+          <div className="flex items-center justify-center mb-4">
             <button
               type="button"
               onClick={handleGoogleClick}
               disabled={googleBusy}
               aria-busy={googleBusy}
-              className="flex items-center justify-center gap-2 w-full max-w-[320px] md:max-w-none h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-semibold text-[15px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 w-full h-[52px] min-h-[52px] border border-gray-300 rounded-xl text-foreground font-bold text-[16px] font-sans hover:bg-gray-50 active:scale-[0.98] transition-[background-color,transform] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {googleBusy ? (
                 <>
@@ -424,9 +424,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </button>
           </div>
 
-          {error && errorAt === 'google' && <ErrorNote message={error} className="-mt-4 mb-6" />}
+          {error && errorAt === 'google' && <ErrorNote message={error} className="-mt-2 mb-5" />}
 
-          <div className="relative flex items-center justify-center mb-8">
+          <div className="relative flex items-center justify-center mb-3">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
             <span className="relative px-4 bg-card text-[13px] font-medium text-gray-500">ou</span>
           </div>
@@ -521,7 +521,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               </div>
             )}
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4">
               <Input
                 label="Adresse e-mail"
                 type="email"
@@ -552,7 +552,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   className={inputCompactClass}
                 />
                 {!isSignUp && (
-                  <div className="flex justify-end -mt-1">
+                  <div className="flex justify-end -mt-2 -mb-2">
                     <button
                       type="button"
                       onClick={handleForgotPassword}
@@ -586,7 +586,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             <Button
               type="submit"
               fullWidth
-              className="mt-4 h-[52px] text-[16px]"
+              className="mt-1 h-[52px] text-[16px]"
               disabled={loading || !notRobot}
             >
               {loading ? (
@@ -610,7 +610,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           {/* Acceptance of the CGU. Shown in both modes: "Continuer avec Google"
               creates an account from the sign-in screen too. The link opens a
               new tab so a half-filled form is not lost. */}
-          <p className="mt-5 text-center text-[13px] leading-relaxed text-gray-600 text-pretty">
+          <p className="mt-3 text-center text-[13px] leading-relaxed text-gray-600 text-pretty">
             {isSignUp ? 'En créant votre compte' : 'En continuant'}, vous acceptez les{' '}
             <a
               href="/conditions"
@@ -623,7 +623,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             de Moto-Scoot.tn.
           </p>
 
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center pb-10">
+          <div className="mt-3 pt-3 border-t border-gray-100 text-center pb-2">
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
               <button

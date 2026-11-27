@@ -21,12 +21,12 @@ const CloudflareLogo: React.FC = () => (
   <div className="flex flex-col items-end leading-none">
     <div className="flex items-center gap-1.5">
       <span
-        className="text-[13px] font-extrabold tracking-[0.04em] text-[#404041]"
+        className="text-[11px] font-extrabold tracking-[0.04em] text-[#404041]"
         style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
       >
         CLOUDFLARE
       </span>
-      <svg width="22" height="14" viewBox="0 0 64 40" aria-hidden="true">
+      <svg width="18" height="11" viewBox="0 0 64 40" aria-hidden="true">
         {/* Simplified Cloudflare cloud (orange/yellow gradient) */}
         <defs>
           <linearGradient id="cf-grad" x1="0" y1="0" x2="0" y2="1">
@@ -45,7 +45,7 @@ const CloudflareLogo: React.FC = () => (
       </svg>
     </div>
     <div
-      className="text-[10.5px] font-normal text-[#404041] mt-0.5"
+      className="text-[9.5px] font-normal text-[#404041] mt-px"
       style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
     >
       Privacy <span className="mx-0.5">•</span> Terms
@@ -55,13 +55,13 @@ const CloudflareLogo: React.FC = () => (
 
 const DottedSpinner: React.FC = () => (
   // 12-dot ring rotating like the real Turnstile spinner.
-  <div className="relative w-[26px] h-[26px] animate-[cf-spin_1s_linear_infinite]">
+  <div className="relative w-[22px] h-[22px] shrink-0 animate-[cf-spin_1s_linear_infinite]">
     {Array.from({ length: 12 }).map((_, i) => (
       <span
         key={i}
         className="absolute left-1/2 top-1/2 w-[3px] h-[3px] rounded-full bg-[#3a9b3a]"
         style={{
-          transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-11px)`,
+          transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-9px)`,
           opacity: 0.25 + (i / 12) * 0.75,
         }}
       />
@@ -92,7 +92,8 @@ const CloudflareTurnstileMock: React.FC<Props> = ({ checked, onChange, error }) 
   };
 
   const label =
-    state === 'verifying' ? 'Verifying...' : state === 'success' ? 'Success!' : 'Verify you are human';
+    // French and short: fits the compact 48 px row without being cut.
+    state === 'verifying' ? 'Vérification…' : state === 'success' ? 'Vérifié' : 'Je suis humain';
 
   return (
     <div
@@ -107,23 +108,23 @@ const CloudflareTurnstileMock: React.FC<Props> = ({ checked, onChange, error }) 
       }}
       aria-pressed={state === 'success'}
       aria-label="Cloudflare verification"
-      className={`mt-5 select-none flex items-center justify-between gap-4 px-5 py-4 rounded-[10px] border bg-[#fafafa] transition-colors ${
+      // Compact: the height of a field (48 px) instead of 70, one line.
+      className={`select-none flex items-center justify-between gap-3 h-12 pl-3.5 pr-4 rounded-xl border bg-[#fafafa] transition-colors ${
         error ? 'border-red-300' : 'border-[#e5e5e5]'
       } ${state === 'idle' ? 'cursor-pointer hover:bg-[#f3f3f3]' : 'cursor-default'}`}
-      style={{ minHeight: 70 }}
     >
-      <div className="flex items-center gap-4 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         {state === 'verifying' ? (
           <DottedSpinner />
         ) : state === 'success' ? (
-          <div className="w-[26px] h-[26px] rounded-full bg-[#3a9b3a] flex items-center justify-center">
-            <Check size={16} className="text-white" strokeWidth={3.5} />
+          <div className="w-[22px] h-[22px] rounded-full bg-[#3a9b3a] flex items-center justify-center shrink-0">
+            <Check size={14} className="text-white" strokeWidth={3.5} />
           </div>
         ) : (
-          <div className="w-[26px] h-[26px] rounded-[5px] border-2 border-[#bdbdbd] bg-white" />
+          <div className="w-[22px] h-[22px] rounded-[5px] border-2 border-[#bdbdbd] bg-white shrink-0" />
         )}
         <span
-          className="text-[15px] text-[#404041] font-normal truncate"
+          className="text-[14px] text-[#404041] font-normal truncate"
           style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
         >
           {label}
