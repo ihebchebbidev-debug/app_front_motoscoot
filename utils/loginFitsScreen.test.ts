@@ -20,7 +20,7 @@ test('Google and « Se connecter » are the same size and shape', () => {
 });
 
 test('phones: emblem, « Bienvenue » and the promise shown large; header keeps only the close', () => {
-  assert.match(modal, /<div className="text-center mb-6 \[@media\(max-height:700px\)\]:mb-4 md:text-left/);
+  assert.match(modal, /<div className="text-center mb-6 \[@media\(max-height:700px\)\]:mb-3 md:text-left/);
   assert.match(modal, /w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100/);
   assert.match(sheet, /\? 'absolute top-1\.5 right-5 z-10 flex items-center md:static md:p-0'/);
 });
