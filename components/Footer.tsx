@@ -1,21 +1,7 @@
 import React from 'react';
-import { Facebook, Instagram, Linkedin, MapPin, Mail, Phone, Twitter, Youtube, Music2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { siteSettingsApi, SOCIAL_NETWORKS } from '../services/siteSettingsApi';
-
-const SOCIAL_ICONS = { facebook: Facebook, instagram: Instagram, tiktok: Music2, youtube: Youtube, linkedin: Linkedin, x: Twitter } as const;
-
-/** Footer social links managed from the backoffice; unset networks are hidden. */
-function useSocialItems() {
-  const { data } = useQuery({
-    queryKey: ['site-settings', 'social-links'],
-    queryFn: ({ signal }) => siteSettingsApi.getSocialLinks(signal),
-    staleTime: 1000 * 60 * 10,
-  });
-  return SOCIAL_NETWORKS
-    .filter(({ key }) => typeof data?.[key] === 'string' && data[key])
-    .map(({ key, label }) => ({ key, label, href: data![key] as string, Icon: SOCIAL_ICONS[key] }));
-}
+import { MapPin, Mail, Phone } from 'lucide-react';
+// Social links managed from the backoffice; shared with the login window.
+import { useSocialLinks } from '../hooks/useSocialLinks';
 import { SectionLabel } from './ui/Typography';
 import { Link } from 'react-router-dom';
 import { getUrlFromState } from '../utils/urlUtils';
@@ -44,7 +30,7 @@ const FooterLink = ({ view, children, isPrimary = false, icon, className }: Reac
 );
 
 const Footer: React.FC<FooterProps> = () => {
-  const socialItems = useSocialItems();
+  const socialItems = useSocialLinks();
   const LOGO_WHITE = "https://www.moto-scoot.tn/site-logo/logo-white.svg";
 
   return (
