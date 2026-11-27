@@ -21,6 +21,14 @@ import { TypeScaleProvider } from '../ui/TypeScale';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import { HumanCheck } from './HumanCheck';
 import { useSocialLinks } from '../../hooks/useSocialLinks';
+import { BrandSocialIcon } from '../ui/BrandSocialIcon';
+
+/** Light wash of each brand's colour behind its logo (as in the share window). */
+const SOCIAL_WASH: Partial<Record<string, string>> = {
+  facebook: 'bg-[#0866FF]/10 hover:bg-[#0866FF]/15',
+  instagram: 'bg-[#FF0069]/10 hover:bg-[#FF0069]/15',
+  tiktok: 'bg-black/[0.06] hover:bg-black/10',
+};
 import type { LoginMode } from '../../context/NavigationContext';
 import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
@@ -80,6 +88,41 @@ const LOGIN_PHOTO =
   'https://images.unsplash.com/photo-1695014192162-e1d282ff5b40?auto=format&fit=crop&w=900&h=1300&q=70';
 const LOGIN_PHOTO_CREDIT = 'Photo : Daniel / Unsplash';
 
+/**
+ * The site's social accounts (set in the backoffice, same links as the
+ * footer): real logos in their own colours, 44 px round targets, opened in a
+ * new tab so a half-filled form is not lost. `onPhoto`: white discs so the
+ * logos stand out on the dark picture.
+ */
+const LoginSocialLinks: React.FC<{ onPhoto?: boolean; inline?: boolean; className?: string }> = ({ onPhoto = false, inline = false, className }) => {
+  const socialLinks = useSocialLinks();
+  if (socialLinks.length === 0) return null;
+  return (
+    <div className={clsx('flex', inline ? 'flex-row items-center gap-3' : 'flex-col gap-2.5', className)}>
+      <p className={clsx('text-[12px] font-medium', onPhoto ? 'text-white/85' : 'text-gray-500')}>Suivez Moto-Scoot</p>
+      <ul className="flex items-center gap-3" aria-label="Moto-Scoot sur les réseaux sociaux">
+        {socialLinks.map(({ key, label, href, Icon }) => (
+          <li key={key}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${label} (nouvel onglet)`}
+              className={clsx(
+                'w-11 h-11 rounded-full flex items-center justify-center transition-[transform,background-color] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+                onPhoto ? 'bg-white shadow-sm' : (SOCIAL_WASH[key] ?? 'bg-gray-100'),
+              )}
+            >
+              {/* Other networks (YouTube, LinkedIn, X) keep a plain icon. */}
+              {key in SOCIAL_WASH ? <BrandSocialIcon network={key} size={22} /> : <Icon size={20} className="text-gray-700" />}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const LoginAside: React.FC<{ isSignUp: boolean }> = ({ isSignUp }) => (
   <div className="relative h-full overflow-hidden rounded-[20px] bg-[#0b0b0c]">
     <img
@@ -88,16 +131,21 @@ const LoginAside: React.FC<{ isSignUp: boolean }> = ({ isSignUp }) => (
       decoding="async"
       className="absolute inset-0 h-full w-full object-cover"
     />
-    {/* Dark at the top for the headline, and at the bottom for the credit. */}
-    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/50" />
-    <p className="relative px-8 pt-9 lg:px-10 lg:pt-11 text-white text-[28px] lg:text-[36px] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+    {/* Dark at the top for the headline, and at the bottom for the links. */}
+    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/60" aria-hidden="true" />
+    {/* Decoration: the page's promise, not read aloud. */}
+    <p aria-hidden="true" className="relative px-8 pt-9 lg:px-10 lg:pt-11 text-white text-[28px] lg:text-[36px] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
       {isSignUp
         ? 'Vendez votre moto ou votre scooter, gratuitement.'
         : 'Retrouvez vos annonces, vos messages et vos favoris.'}
     </p>
-    {LOGIN_PHOTO_CREDIT && (
-      <p className="absolute bottom-5 left-8 lg:left-10 text-[12px] font-medium text-white/80">{LOGIN_PHOTO_CREDIT}</p>
-    )}
+    {/* Bottom of the window: social links on the left, photo credit right. */}
+    <div className="absolute inset-x-0 bottom-0 px-8 pb-7 lg:px-10 lg:pb-8 flex items-end justify-between gap-4">
+      <LoginSocialLinks onPhoto />
+      {LOGIN_PHOTO_CREDIT && (
+        <p aria-hidden="true" className="text-[11px] font-medium text-white/70 pb-1">{LOGIN_PHOTO_CREDIT}</p>
+      )}
+    </div>
   </div>
 );
 
@@ -156,7 +204,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const [notRobot, setNotRobot] = useState(false);
   const [robotError, setRobotError] = useState(false);
   const humanCheckRef = useRef<HTMLInputElement>(null);
-  const socialLinks = useSocialLinks();
 
   const clerkGoogle = useClerkGoogleSignIn();
   const { addToast } = useToast();
@@ -388,8 +435,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           13 px help and errors, sentence-case buttons. */}
       <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
-        <div ref={contentRef} className="px-6 pt-4 md:px-10 lg:px-14 md:pt-6 md:max-w-[480px] md:mx-auto">
-          <div className="hidden md:block mb-3 md:mb-4 md:text-left md:pb-3 md:border-b md:border-gray-100">
+        <div ref={contentRef} className="min-h-full flex flex-col px-6 pt-4 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
+          <div className="hidden md:block md:mb-6 md:text-left md:pb-6 md:border-b md:border-gray-100">
             <div className="inline-flex items-center justify-center overflow-hidden mb-3 [@media(max-height:780px)]:hidden">
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
@@ -399,7 +446,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
             {/* The window's name is the header title (hidden from 768 px);
                 this is the same words shown large, so not read twice. */}
-            <p aria-hidden="true" className="hidden md:block text-gray-900 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2.5 text-balance">
+            <p aria-hidden="true" className="hidden md:block text-gray-900 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2 text-balance">
               {isSignUp ? 'Créer un compte' : 'Bienvenue'}
             </p>
             <p className="text-gray-500 text-sm font-medium md:text-[15px]">
@@ -407,7 +454,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </p>
           </div>
 
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mb-4 md:mb-5">
             <button
               type="button"
               onClick={handleGoogleClick}
@@ -431,7 +478,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           {error && errorAt === 'google' && <ErrorNote message={error} className="-mt-2 mb-5" />}
 
-          <div className="relative flex items-center justify-center mb-3">
+          <div className="relative flex items-center justify-center mb-4 md:mb-5">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
             <span className="relative px-4 bg-card text-[13px] font-medium text-gray-500">ou</span>
           </div>
@@ -459,7 +506,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           {/* noValidate: the form's own French messages, under each field,
               instead of the browser's bubbles. */}
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 md:space-y-5">
             {isSignUp && (
               <div className="space-y-4 animate-scale-in">
                 {userType === 'individual' ? (
@@ -526,7 +573,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-4 md:space-y-5">
               <Input
                 label="Adresse e-mail"
                 type="email"
@@ -558,7 +605,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 />
                 {/* « Je suis humain » on the left, « Mot de passe oublié ? »
                     on the right: one row instead of a separate block. */}
-                <div className="flex items-start justify-between gap-3 -mt-2 -mb-2">
+                <div className="flex items-start justify-between gap-3 -mb-1">
                   <HumanCheck
                     ref={humanCheckRef}
                     checked={notRobot}
@@ -616,7 +663,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           {/* Acceptance of the CGU. Shown in both modes: "Continuer avec Google"
               creates an account from the sign-in screen too. The link opens a
               new tab so a half-filled form is not lost. */}
-          <p className="mt-3 text-center text-[13px] leading-relaxed text-gray-600 text-pretty">
+          <p className="mt-3 md:mt-4 text-center text-[13px] leading-relaxed text-gray-500 text-pretty">
             {isSignUp ? 'En créant votre compte' : 'En continuant'}, vous acceptez les{' '}
             <a
               href="/conditions"
@@ -629,7 +676,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             de Moto-Scoot.tn.
           </p>
 
-          <div className="mt-3 pt-3 border-t border-gray-100 text-center pb-2">
+          <div className="mt-4 pt-4 md:mt-6 md:pt-5 border-t border-gray-100 text-center">
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
               <button
@@ -640,30 +687,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               </button>
             </p>
 
-            {/* The site's social accounts (set in the backoffice, same links
-                as the footer). 44 px round targets, opened in a new tab so a
-                half-filled form is not lost. */}
-            {socialLinks.length > 0 && (
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <span className="text-[13px] text-gray-500">Suivez-nous</span>
-                <ul className="flex items-center gap-1" aria-label="Moto-Scoot sur les réseaux sociaux">
-                  {socialLinks.map(({ key, label, href, Icon }) => (
-                    <li key={key}>
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`${label} (nouvel onglet)`}
-                        className="w-11 h-11 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                      >
-                        <Icon size={20} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
+
+          {/* Phones (no picture): the social links at the bottom of the sheet.
+              Tablet / desktop: at the bottom of the picture (LoginAside). */}
+          <LoginSocialLinks inline className="md:hidden mt-auto justify-center pt-3 pb-2" />
         </div>
       </TypeScaleProvider>
     </ChoiceSheet>
