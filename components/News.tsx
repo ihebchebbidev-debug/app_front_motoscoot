@@ -42,7 +42,7 @@ const S = {
   // Grille et cartes
   DesktopGrid: "hidden md:grid grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10",
   ArticleCard: "group cursor-pointer flex flex-col h-full bg-card p-3.5 rounded-2xl shadow-sm hover:shadow-md hover:border-primary-100 border border-gray-100 transition-all duration-500",
-  ImageWrapper: "relative aspect-[16/10] overflow-hidden rounded-t-[14px] -mt-3.5 -mx-3.5 bg-card mb-6 p-0",
+  ImageWrapper: "relative aspect-[16/10] overflow-hidden rounded-t-[14px] -mt-3.5 -mx-3.5 bg-gray-100 mb-6 p-0",
   ArticleTitle: "text-base md:text-lg font-[900] text-foreground leading-[1.2] tracking-tight mb-4 group-hover:text-primary-600 transition-colors line-clamp-2",
   ArticleSummary: "text-gray-500 text-sm font-medium line-clamp-3 leading-relaxed mb-8",
   

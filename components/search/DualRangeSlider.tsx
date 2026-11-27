@@ -122,7 +122,7 @@ export const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
             onChange={e => setMinVal(e.target.value === '' ? min : Number(e.target.value))} 
             className={`w-full pl-2 pr-7 py-3 bg-muted border border-gray-200 rounded-xl text-[13px] font-bold text-gray-900 text-center outline-none focus:bg-card focus:border-primary-600 transition-all ${hideSpinnersClasses}`} 
           />
-          {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold uppercase tracking-wide pointer-events-none">{unit}</span>}
+          {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-[12px] lg:text-gray-400 lg:text-[10px] font-bold uppercase tracking-wide pointer-events-none">{unit}</span>}
         </div>
         <div className="relative group">
           <input 
@@ -132,7 +132,7 @@ export const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
             onChange={e => setMaxVal(e.target.value === '' ? max : Number(e.target.value))} 
             className={`w-full pl-2 pr-7 py-3 bg-muted border border-gray-200 rounded-xl text-[13px] font-bold text-gray-900 text-center outline-none focus:bg-card focus:border-primary-600 transition-all ${hideSpinnersClasses}`} 
           />
-          {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold uppercase tracking-wide pointer-events-none">{unit}</span>}
+          {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-[12px] lg:text-gray-400 lg:text-[10px] font-bold uppercase tracking-wide pointer-events-none">{unit}</span>}
         </div>
       </div>
     </div>

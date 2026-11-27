@@ -36,7 +36,7 @@ const TikTokIcon = ({ size = 20 }: { size?: number }) => (
 const S = {
   SidebarCard: (isPro: boolean, className: string = "") => `bg-card rounded-[24px] border ${isPro ? 'border-primary-100 border-t-4 border-t-primary-600' : 'border-gray-100'} shadow-sm overflow-hidden flex flex-col ${className}`,
   PriceSection: "hidden md:block px-6 py-4 bg-gray-50/50 border-b border-gray-100",
-  PriceLabel: "text-[12px] font-black text-gray-400 uppercase tracking-widest mb-1 block",
+  PriceLabel: "text-[12px] font-black text-gray-500 uppercase tracking-widest mb-1 block",
   PriceValue: "text-[28px] md:text-[30px] font-black text-primary-600 tracking-tighter leading-none",
   
   SellerContent: "p-6 space-y-4 flex-1 flex flex-col",
@@ -46,7 +46,7 @@ const S = {
   AvatarImg: "w-full h-full object-cover rounded-[100px]",
   
   SellerName: "font-sans font-[800] text-[18px] text-foreground leading-tight tracking-[0px] block mb-0.5 truncate",
-  VerifiedMention: "text-[12px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5",
+  VerifiedMention: "text-[12px] font-bold text-gray-500 uppercase tracking-wider block mb-0.5",
   
   ProStats: "flex items-center justify-between py-3 border-y border-gray-50",
   StatItem: "flex flex-col",

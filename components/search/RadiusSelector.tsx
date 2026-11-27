@@ -59,7 +59,7 @@ export const RadiusSelector: React.FC<RadiusSelectorProps> = ({ value, onChange,
       {userLocation && (
         <div className="mt-3">
           <RadiusMapPreview center={userLocation} radiusKm={value} />
-          <p className="text-[10px] font-semibold text-gray-400 mt-1.5 px-1">
+          <p className="text-[12px] lg:text-[10px] font-semibold text-gray-500 lg:text-gray-400 mt-1.5 px-1">
             Aperçu : la zone bleue représente votre rayon de recherche.
           </p>
         </div>

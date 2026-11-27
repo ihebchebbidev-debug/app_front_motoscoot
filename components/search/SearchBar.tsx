@@ -78,7 +78,7 @@ const Field: React.FC<FieldProps> = ({
           aria-label={label}
           aria-description={isDisabled ? disabledHint : undefined}
           title={isDisabled ? undefined : display || undefined}
-          className="flex-1 min-w-0 text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-gray-900 truncate disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none"
+          className="flex-1 min-w-0 self-stretch text-left bg-transparent text-[14px] md:text-[14.5px] font-medium text-gray-900 truncate disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none"
         >
           {display || <span className="text-gray-500 font-normal">{placeholder || label}</span>}
         </button>
@@ -87,7 +87,7 @@ const Field: React.FC<FieldProps> = ({
             type="button"
             onClick={(e) => { e.stopPropagation(); onClear(); }}
             aria-label={`Effacer ${label}`}
-            className="p-0.5 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            className="self-stretch -mr-1.5 px-1.5 flex items-center rounded-full text-gray-500 hover:text-gray-900"
           >
             <X size={14} />
           </button>
@@ -101,7 +101,7 @@ const Field: React.FC<FieldProps> = ({
             aria-label={isOpen ? `Fermer ${label}` : `Ouvrir ${label}`}
             aria-expanded={isOpen}
             disabled={isDisabled}
-            className="p-0.5 text-gray-500 hover:text-gray-900 disabled:pointer-events-none"
+            className="self-stretch -mr-1.5 px-1.5 flex items-center text-gray-500 hover:text-gray-900 disabled:pointer-events-none"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>

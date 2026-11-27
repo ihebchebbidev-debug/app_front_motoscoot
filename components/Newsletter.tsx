@@ -54,13 +54,13 @@ const Newsletter: React.FC<NewsletterProps> = ({ variant = 'section', className 
           onChange={(e) => setEmail(e.target.value)}
           placeholder="votre@email.com"
           aria-label="Adresse email"
-          className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-primary-600"
+          className="w-full h-11 pl-9 pr-3 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-base md:text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary-600"
         />
       </div>
       <button
         type="submit"
         disabled={subscribe.isPending}
-        className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold h-11 px-5 rounded-lg text-sm transition-colors disabled:opacity-60"
       >
         {subscribe.isPending ? <Loader2 size={16} className="animate-spin" /> : null}
         S'inscrire
