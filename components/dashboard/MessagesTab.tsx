@@ -173,17 +173,17 @@ const MessagesTab: React.FC = () => {
       {/* Header */}
       <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg md:text-xl font-black text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
             <MessageSquare size={20} className="text-primary-600" />
             Messages
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-[13px] text-gray-600 mt-0.5 tabular-nums">
             {conversations.length} conversation{conversations.length > 1 ? 's' : ''}
           </p>
         </div>
         <div
-          className={`shrink-0 flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold uppercase px-2 md:px-2.5 py-1 rounded-full ${
-            connected ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-400'
+          className={`shrink-0 flex items-center gap-1.5 text-xs font-medium px-2 md:px-2.5 py-1 rounded-full ${
+            connected ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-600'
           }`}
           title={connected ? 'Temps réel actif' : 'Hors ligne'}
         >
@@ -226,7 +226,7 @@ const MessagesTab: React.FC = () => {
                     isActive ? 'bg-orange-50/60' : ''
                   }`}
                 >
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center font-black shrink-0 overflow-hidden">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center font-semibold shrink-0 overflow-hidden">
                     {cp.avatar ? (
                       <img src={cp.avatar} alt={cp.name || ''} className="w-full h-full object-cover" />
                     ) : (
@@ -235,16 +235,16 @@ const MessagesTab: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-sm text-gray-900 truncate">{cp.name || 'Utilisateur'}</span>
-                      <span className="text-[10px] text-gray-400 shrink-0">{fmtTime(c.last_message_at)}</span>
+                      <span className="font-semibold text-[15px] text-gray-900 truncate">{cp.name || 'Utilisateur'}</span>
+                      <span className="text-xs text-gray-500 shrink-0 tabular-nums">{fmtTime(c.last_message_at)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">
-                      {c.listing_title ? <span className="text-gray-400">{c.listing_title} · </span> : null}
+                    <p className="text-[13px] text-gray-600 truncate mt-0.5">
+                      {c.listing_title ? <span className="text-gray-500">{c.listing_title} · </span> : null}
                       {c.last_message_content || '—'}
                     </p>
                   </div>
                   {cp.unread > 0 && (
-                    <span className="ml-2 w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                    <span className="ml-2 w-5 h-5 rounded-full bg-primary-600 text-white text-[11px] font-bold tabular-nums flex items-center justify-center shrink-0">
                       {cp.unread}
                     </span>
                   )}
@@ -257,7 +257,7 @@ const MessagesTab: React.FC = () => {
         {/* Conversation pane */}
         <section className={`${activeId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
           {!active ? (
-            <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+            <div className="flex-1 flex items-center justify-center text-gray-600 text-sm">
               Sélectionnez une conversation
             </div>
           ) : (
@@ -270,7 +270,7 @@ const MessagesTab: React.FC = () => {
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center font-black shrink-0 overflow-hidden text-sm">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white flex items-center justify-center font-semibold shrink-0 overflow-hidden text-sm">
                   {counterpart(active).avatar ? (
                     <img src={counterpart(active).avatar!} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -278,11 +278,11 @@ const MessagesTab: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-bold text-gray-900 truncate text-sm md:text-base">
+                  <h2 className="font-semibold text-gray-900 truncate text-[15px] md:text-base">
                     {counterpart(active).name || 'Utilisateur'}
                   </h2>
                   {active.listing_title && (
-                    <p className="text-[11px] md:text-xs text-gray-500 truncate">{active.listing_title}</p>
+                    <p className="text-[13px] text-gray-600 truncate">{active.listing_title}</p>
                   )}
                 </div>
               </div>
@@ -296,13 +296,13 @@ const MessagesTab: React.FC = () => {
                     while a previous page is being fetched. */}
                 {isLoadingMore && (
                   <div className="flex justify-center py-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 bg-card px-3 py-1 rounded-full border border-gray-100">
+                    <span className="text-xs font-medium text-gray-600 bg-card px-3 py-1 rounded-full border border-gray-100">
                       Chargement des messages plus anciens…
                     </span>
                   </div>
                 )}
                 {!hasMore && messages.length >= 50 && !isLoadingMore && (
-                  <p className="text-center text-[10px] text-gray-300 py-1">
+                  <p className="text-center text-xs text-gray-500 py-1">
                     — Début de la conversation —
                   </p>
                 )}
@@ -332,10 +332,10 @@ const MessagesTab: React.FC = () => {
                             <img src={m.image_url} alt="" className="rounded-lg max-w-full mb-1" />
                           ) : null}
                           {m.type === 'offer' && m.offer_amount != null ? (
-                            <span className="font-black">💰 Offre : {m.offer_amount.toLocaleString('fr-FR')} DT</span>
+                            <span className="font-semibold">💰 Offre : {m.offer_amount.toLocaleString('fr-FR')} DT</span>
                           ) : null}
                           {m.content && <span>{m.content}</span>}
-                          <div className={`text-[10px] mt-1 flex items-center gap-1 ${mine ? 'text-orange-100 justify-end' : 'text-gray-400'}`}>
+                          <div className={`text-[11px] mt-1 flex items-center gap-1 tabular-nums ${mine ? 'text-orange-50 justify-end' : 'text-gray-500'}`}>
                             <span>{fmtTime(m.created_at)}</span>
                             {mine && (
                               m.is_read ? (
