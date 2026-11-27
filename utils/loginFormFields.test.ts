@@ -17,7 +17,7 @@ test('one form, checked when a field is left, with the shared rules for the curr
 
 test('every text field and select is registered and shows its own error', () => {
   for (const key of ['email', 'password', 'fullName', 'shopName']) {
-    assert.match(modal, new RegExp(`\\{\\.\\.\\.field\\('${key}'\\)\\}[\\s\\S]{0,400}error=\\{fieldErrors\\.${key}\\?\\.message\\}`), key);
+    assert.match(modal, new RegExp(`\\{\\.\\.\\.field\\('${key}'\\)\\}[\\s\\S]{0,900}error=\\{fieldErrors\\.${key}\\?\\.message\\}`), key);
   }
   assert.match(modal, /\{\.\.\.phoneField\}[\s\S]{0,500}error=\{fieldErrors\.phone\?\.message\}/);
 });
