@@ -23,6 +23,8 @@ test('a click event passed as the mode opens the sign-in screen', () => {
 
 test('every opening starts on the requested screen, at the top', () => {
   assert.match(modal, /if \(isOpen\) setIsSignUp\(initialMode === 'signup'\);/);
-  assert.match(modal, /scrollRef\.current\.scrollTop = 0;[\s\S]{0,20}\}, \[isSignUp, isOpen\]\);/);
-  assert.match(modal, /<div ref=\{scrollRef\} className="[^"]*overflow-y-auto/);
+  assert.match(modal, /scroller\.scrollTop = 0;[\s\S]{0,20}\}, \[isSignUp, isOpen\]\);/);
+  // The sheet's scrolling body is the parent of the login content.
+  assert.match(modal, /const scroller = contentRef\.current\?\.parentElement;/);
+  assert.match(modal, /<div ref=\{contentRef\}/);
 });
