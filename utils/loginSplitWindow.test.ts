@@ -8,8 +8,11 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'u
 const sheet = read('components/search/ChoiceSheet.tsx');
 const modal = read('components/auth/LoginModal.tsx');
 
-test('the picture panel shows only from 768 px and is not read aloud', () => {
-  assert.match(sheet, /<div className="hidden md:block [^"]*" aria-hidden="true">\s*\{aside\}/);
+test('the picture panel shows only from 768 px; its decoration is not read aloud', () => {
+  // The panel holds the social links, so only its decoration is aria-hidden.
+  assert.match(sheet, /<div className="hidden md:block w-\[42%\] lg:w-\[46%\] shrink-0">\s*\{aside\}/);
+  assert.match(modal, /<img\s+src=\{LOGIN_PHOTO\}\s+alt=""/);
+  assert.match(modal, /<p aria-hidden="true" className="relative px-8/);
 });
 
 test('sheets without a picture keep their exact layout (wrapper takes no space)', () => {

@@ -18,9 +18,19 @@ test('one shared source for the social links', () => {
   assert.doesNotMatch(footer, /Music2/, 'TikTok is the TikTok glyph, not a music note');
 });
 
-test('login window: 44 px links, named, opened in a new tab', () => {
+test('login window: real logos in their colours, 44 px, named, new tab', () => {
   assert.match(modal, /aria-label=\{`\$\{label\} \(nouvel onglet\)`\}/);
   assert.match(modal, /target="_blank"\s+rel="noopener noreferrer"/);
-  assert.match(modal, /className="w-11 h-11 rounded-full/);
-  assert.match(modal, /Suivez-nous/);
+  assert.match(modal, /'w-11 h-11 rounded-full/);
+  assert.match(modal, /<BrandSocialIcon network=\{key\}/);
+  const brand = read('components/ui/BrandSocialIcon.tsx');
+  assert.match(brand, /fill=\{`#\$\{siFacebook\.hex\}`\}/);
+  assert.match(brand, /radialGradient/);
+  assert.match(brand, /#25F4EE[\s\S]*#FE2C55/);
+});
+
+test('at the bottom: of the picture on tablet / desktop, of the sheet on phones', () => {
+  assert.match(modal, /<LoginSocialLinks onPhoto \/>/);
+  assert.match(modal, /<LoginSocialLinks inline className="md:hidden mt-auto/);
+  assert.match(modal, /className="min-h-full flex flex-col/);
 });

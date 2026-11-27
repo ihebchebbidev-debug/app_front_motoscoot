@@ -371,7 +371,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         onKeyDown={onListKeyDown}
       >
         {aside && (
-          <div className="hidden md:block w-[42%] lg:w-[46%] shrink-0" aria-hidden="true">
+          <div className="hidden md:block w-[42%] lg:w-[46%] shrink-0">
             {aside}
           </div>
         )}

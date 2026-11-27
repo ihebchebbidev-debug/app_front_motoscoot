@@ -21,7 +21,7 @@ test('a real, labelled checkbox with a 44 px row, ticked at once', () => {
 });
 
 test('it sits on the « Mot de passe oublié ? » row', () => {
-  assert.match(modal, /<div className="flex items-start justify-between gap-3 -mt-2 -mb-2">\s*<HumanCheck/);
+  assert.match(modal, /<div className="flex items-start justify-between gap-3 -mb-1">\s*<HumanCheck/);
   assert.match(modal, /<HumanCheck[\s\S]{0,1200}'Mot de passe oublié \?'/);
 });
 

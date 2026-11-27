@@ -20,7 +20,7 @@ test('Google and « Se connecter » are the same size and shape', () => {
 });
 
 test('phones: the sheet header names the screen, so no repeated intro', () => {
-  assert.match(modal, /<div className="hidden md:block mb-3 md:mb-4 md:text-left/);
+  assert.match(modal, /<div className="hidden md:block md:mb-6 md:text-left/);
 });
 
 test('short screens drop the small logo; the split window floats its close button', () => {
