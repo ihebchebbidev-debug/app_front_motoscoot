@@ -19,7 +19,7 @@ import { Input } from '../ui/Input';
 import { PasswordInput } from '../ui/PasswordInput';
 import { TypeScaleProvider } from '../ui/TypeScale';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
-import CloudflareTurnstileMock from './CloudflareTurnstileMock';
+import { HumanCheck } from './HumanCheck';
 import type { LoginMode } from '../../context/NavigationContext';
 import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
@@ -154,6 +154,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   // form submission until the user actively confirms the box.
   const [notRobot, setNotRobot] = useState(false);
   const [robotError, setRobotError] = useState(false);
+  const humanCheckRef = useRef<HTMLInputElement>(null);
 
   const clerkGoogle = useClerkGoogleSignIn();
   const { addToast } = useToast();
@@ -299,9 +300,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorAt('form');
+    // The button stays active; an unticked box is said right under it and
+    // gets the focus (a greyed-out button did not say why).
     if (!notRobot) {
       setRobotError(true);
-      setError('Veuillez confirmer que vous n\u2019\u00eates pas un robot.');
+      humanCheckRef.current?.focus();
       return;
     }
     setRobotError(false);
@@ -551,34 +554,35 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   hint={isSignUp ? `${PASSWORD_MIN} caractères minimum.` : undefined}
                   className={inputCompactClass}
                 />
-                {!isSignUp && (
-                  <div className="flex justify-end -mt-2 -mb-2">
+                {/* « Je suis humain » on the left, « Mot de passe oublié ? »
+                    on the right: one row instead of a separate block. */}
+                <div className="flex items-start justify-between gap-3 -mt-2 -mb-2">
+                  <HumanCheck
+                    ref={humanCheckRef}
+                    checked={notRobot}
+                    onChange={(v) => {
+                      setNotRobot(v);
+                      if (v) setRobotError(false);
+                    }}
+                    error={robotError ? 'Cochez la case pour continuer.' : undefined}
+                  />
+                  {!isSignUp && (
                     <button
                       type="button"
                       onClick={handleForgotPassword}
                       disabled={forgotLoading}
                       // 44 px tall: easy to hit with a thumb.
-                      className="min-h-[44px] px-1 inline-flex items-center text-[14px] font-semibold text-primary-700 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="shrink-0 whitespace-nowrap min-h-[44px] px-1 inline-flex items-center text-[14px] font-semibold text-primary-700 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {forgotLoading ? 'Envoi en cours…' : 'Mot de passe oublié ?'}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
                 {!isSignUp && error && errorAt === 'forgot' && (
                   <ErrorNote message={error} />
                 )}
               </div>
             </div>
-
-            {/* Cloudflare Turnstile-style anti-bot check (visual only) */}
-            <CloudflareTurnstileMock
-              checked={notRobot}
-              onChange={(v) => {
-                setNotRobot(v);
-                if (v) setRobotError(false);
-              }}
-              error={robotError}
-            />
 
             <div ref={submitAreaRef}>
             {error && errorAt === 'form' && <ErrorNote message={error} className="mt-5" />}
@@ -587,7 +591,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               type="submit"
               fullWidth
               className="mt-1 h-[52px] text-[16px]"
-              disabled={loading || !notRobot}
+              disabled={loading}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
