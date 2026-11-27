@@ -85,7 +85,7 @@ const S = {
   // see where the selection went. Reduced motion: it jumps, no slide.
   MobilePill: "absolute top-1.5 bottom-1.5 left-1.5 w-[calc((100%-0.75rem)/5)] rounded-full bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] pointer-events-none transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
   
-  Content: "flex-1 w-full min-w-0 transition-all duration-300",
+  Content: "flex-1 w-full min-w-0",
 };
 
 const SidebarNavItem = memo(({ item, active, onClick, badge }: { item: DashboardNavItem, active: boolean, onClick: () => void, badge?: number }) => (
@@ -395,7 +395,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                 </div>
               </div>
             }>
-              <div className="animate-fade-in outline-none">
+              <div className="ms-tab-in outline-none">
                 {/* Mobile-only greeting card — gives users a sense of identity
                     on small screens since the desktop sidebar profile is hidden. */}
                 {user && activeMenu !== 'my-ads' && activeMenu !== 'messages' && activeMenu !== 'favorites' && (
