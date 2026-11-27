@@ -20,6 +20,7 @@ import { PasswordInput } from '../ui/PasswordInput';
 import { TypeScaleProvider } from '../ui/TypeScale';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import { HumanCheck } from './HumanCheck';
+import { useSocialLinks } from '../../hooks/useSocialLinks';
 import type { LoginMode } from '../../context/NavigationContext';
 import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
@@ -155,6 +156,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const [notRobot, setNotRobot] = useState(false);
   const [robotError, setRobotError] = useState(false);
   const humanCheckRef = useRef<HTMLInputElement>(null);
+  const socialLinks = useSocialLinks();
 
   const clerkGoogle = useClerkGoogleSignIn();
   const { addToast } = useToast();
@@ -637,6 +639,30 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 {isSignUp ? 'Se connecter' : "S'inscrire gratuitement"}
               </button>
             </p>
+
+            {/* The site's social accounts (set in the backoffice, same links
+                as the footer). 44 px round targets, opened in a new tab so a
+                half-filled form is not lost. */}
+            {socialLinks.length > 0 && (
+              <div className="mt-2 flex items-center justify-center gap-2">
+                <span className="text-[13px] text-gray-500">Suivez-nous</span>
+                <ul className="flex items-center gap-1" aria-label="Moto-Scoot sur les réseaux sociaux">
+                  {socialLinks.map(({ key, label, href, Icon }) => (
+                    <li key={key}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${label} (nouvel onglet)`}
+                        className="w-11 h-11 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      >
+                        <Icon size={20} />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </TypeScaleProvider>
