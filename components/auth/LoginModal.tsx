@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import {
   X,
   Mail,
@@ -115,6 +115,54 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
     }
     return () => {
       document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Keyboard, as in the other windows of the site (ChoiceSheet): focus goes
+  // into the window (the panel itself, so the phone keyboard does not pop
+  // up), Tab stays inside, Escape closes, and focus returns to the control
+  // that opened it.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useEffect(() => {
+    if (!isOpen) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const frame = requestAnimationFrame(() => {
+      const panel = panelRef.current;
+      if (panel && !panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      const panel = panelRef.current;
+      if (e.key !== 'Tab' || !panel) return;
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null && el.tabIndex >= 0);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', onKey);
+      if (opener && opener !== document.body && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, [isOpen]);
 
@@ -303,10 +351,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
       className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in transition-all"
       role="dialog"
       aria-modal="true"
+      aria-labelledby={titleId}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="bg-card w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-lg md:rounded-3xl overflow-hidden relative shadow-2xl animate-fade-in-up flex flex-col"
+        ref={panelRef}
+        tabIndex={-1}
+        className="outline-none bg-card w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-lg md:rounded-3xl overflow-hidden relative shadow-2xl animate-fade-in-up flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -326,7 +377,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                 alt="Moto-Scoot.tn"
               />
             </div>
-            <h2 className={`text-gray-900 mb-2 ${isSignUp ? 'text-2xl md:text-3xl font-black tracking-tight' : 'text-[24px] font-extrabold tracking-normal font-sans'}`}>
+            <h2 id={titleId} className={`text-gray-900 mb-2 ${isSignUp ? 'text-2xl md:text-3xl font-black tracking-tight' : 'text-[24px] font-extrabold tracking-normal font-sans'}`}>
               {isSignUp ? 'Créer un compte' : 'Bienvenue sur moto-scoot.tn'}
             </h2>
             <p className="text-gray-500 text-sm font-medium">
