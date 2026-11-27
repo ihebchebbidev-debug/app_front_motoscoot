@@ -43,6 +43,17 @@ interface LoginModalProps {
 
 type UserType = 'individual' | 'pro';
 
+/** Next to which control an error is shown. */
+type ErrorPlace = 'google' | 'forgot' | 'form';
+
+/** Error shown where it happened; role="alert" so screen readers read it. */
+const ErrorNote: React.FC<{ message: string; className?: string }> = ({ message, className = '' }) => (
+  <div role="alert" className={`p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-fade-in ${className}`}>
+    <AlertCircle size={18} className="text-red-600 mt-0.5 shrink-0" aria-hidden="true" />
+    <p className="text-[13px] font-bold text-red-800 leading-snug">{message}</p>
+  </div>
+);
+
 /** How long a Google tap waits for Clerk to finish loading. */
 const GOOGLE_WAIT_MS = 15000;
 
@@ -128,6 +139,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   // has finished, so the freshly-uploaded shop_logo is already persisted by
   // the time the dashboard mounts.
   const { login, register, exchangeClerk, loading, error, setError } = useAuth({});
+  // Where the error is shown: next to the control that caused it, so it is on
+  // screen under the visitor's finger (the sign-up button is ~600 px below
+  // the top of the form on a phone).
+  const [errorAt, setErrorAt] = useState<ErrorPlace>('form');
+  const submitAreaRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -197,8 +213,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   }, [isSignUp, userType, setError]);
 
   useEffect(() => {
-    if (clerkGoogle.error) setError(clerkGoogle.error);
+    if (!clerkGoogle.error) return;
+    setErrorAt('google');
+    setError(clerkGoogle.error);
   }, [clerkGoogle.error, setError]);
+
+  // A sign-in / sign-up error appears just above the button: bring both into
+  // view if the visitor scrolled away (no smooth scroll for reduced motion).
+  useEffect(() => {
+    if (!error || errorAt !== 'form') return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    submitAreaRef.current?.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+  }, [error, errorAt]);
 
   // After Clerk redirect-back, exchange the Clerk session for our backend JWT
   useEffect(() => {
@@ -233,6 +259,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     }
     const timer = window.setTimeout(() => {
       setGoogleWaiting(false);
+      setErrorAt('google');
       setError('Google ne répond pas pour le moment. Vérifiez votre connexion internet puis réessayez.');
     }, GOOGLE_WAIT_MS);
     return () => window.clearTimeout(timer);
@@ -243,6 +270,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorAt('form');
     if (!notRobot) {
       setRobotError(true);
       setError('Veuillez confirmer que vous n\u2019\u00eates pas un robot.');
@@ -333,6 +361,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   };
 
   const handleForgotPassword = async () => {
+    setErrorAt('forgot');
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       setError('Saisissez votre adresse e-mail puis cliquez à nouveau sur « Mot de passe oublié ».');
@@ -363,6 +392,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   };
 
   const handleSocialLogin = async (provider: 'google' | 'apple') => {
+    setErrorAt('google');
     try {
       const result = await clerkGoogle.start(provider);
       if (result?.token) onLogin('user');
@@ -380,6 +410,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
       canStart: clerkGoogle.canStart,
     });
     if (action === 'ignore') return;
+    setErrorAt('google');
     setError(null);
     if (action === 'wait') setGoogleWaiting(true);
     else void handleSocialLogin('google');
@@ -465,6 +496,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </button>
           </div>
 
+          {error && errorAt === 'google' && <ErrorNote message={error} className="-mt-4 mb-6" />}
+
           <div className="relative flex items-center justify-center mb-8">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
             <span className="relative px-4 bg-card text-[12px] font-black text-gray-300 uppercase tracking-[0.2em]">OU EMAIL</span>
@@ -488,13 +521,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 <Briefcase size={16} />
                 Professionnel
               </button>
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-fade-in">
-              <AlertCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
-              <p className="text-[13px] font-bold text-red-800 leading-snug">{error}</p>
             </div>
           )}
 
@@ -714,6 +740,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                     </button>
                   </div>
                 )}
+                {!isSignUp && error && errorAt === 'forgot' && (
+                  <ErrorNote message={error} />
+                )}
               </div>
             </div>
 
@@ -726,6 +755,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               }}
               error={robotError}
             />
+
+            <div ref={submitAreaRef}>
+            {error && errorAt === 'form' && <ErrorNote message={error} className="mt-5" />}
 
             <Button
               type="submit"
@@ -748,6 +780,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 </>
               )}
             </Button>
+            </div>
           </form>
 
           {/* Acceptance of the CGU. Shown in both modes: "Continuer avec Google"
