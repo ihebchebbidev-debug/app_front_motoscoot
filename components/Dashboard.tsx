@@ -73,14 +73,17 @@ const S = {
   `,
   
   // Phones: the account tabs in the floating capsule of the spec sheet
-  // (components/ui/FloatingCapsule). Active tab on a light glass pill.
+  // (components/ui/FloatingCapsule). Five equal tabs; the active one sits on
+  // a single light glass pill that slides between them (MobilePill).
   MobileNavBtn: (active: boolean) => `
     relative flex-1 min-w-0 h-full flex flex-col items-center justify-center gap-0.5 rounded-full
-    transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.94] ${CAPSULE_FOCUS}
-    ${active
-      ? 'bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] text-white'
-      : 'text-gray-300 [@media(hover:hover)]:hover:text-white'}
+    transition-[transform,color] duration-150 ease-out active:scale-[0.96] ${CAPSULE_FOCUS}
+    ${active ? 'text-white' : 'text-gray-300 [@media(hover:hover)]:hover:text-white'}
   `,
+  // One pill for the five tabs: 1/5 of the capsule's inner width (6 px
+  // padding each side), moved with transform only, 200 ms ease-out so you
+  // see where the selection went. Reduced motion: it jumps, no slide.
+  MobilePill: "absolute top-1.5 bottom-1.5 left-1.5 w-[calc((100%-0.75rem)/5)] rounded-full bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] pointer-events-none transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
   
   Content: "flex-1 w-full min-w-0 transition-all duration-300",
 };
@@ -281,6 +284,8 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
     return favoriteListings || [];
   }, [favoriteListings]);
 
+  const activeIndex = NAV_ITEMS.findIndex(item => item.id === activeMenu);
+
   if (!isLoggedIn) return null;
 
   return (
@@ -341,7 +346,10 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
 
         {/* Administration stays in the desktop sidebar; on phones it is a
             link in the Profil tab, so the capsule keeps 5 readable tabs. */}
-        <FloatingCapsule hideFrom="md" as="nav" aria-label="Mon compte" className="justify-between gap-0.5">
+        <FloatingCapsule hideFrom="md" as="nav" aria-label="Mon compte" className="justify-between">
+          {activeIndex >= 0 && (
+            <span aria-hidden="true" className={S.MobilePill} style={{ transform: `translateX(${activeIndex * 100}%)` }} />
+          )}
           {NAV_ITEMS.map(item => {
             const isActive = activeMenu === item.id;
             const badge =
@@ -363,7 +371,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                 <span className="relative">
                   <item.icon size={20} strokeWidth={isActive ? 2.25 : 2} aria-hidden="true" />
                   {badge > 0 && (
-                    <span aria-hidden="true" className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary-600 ring-2 ring-[#1B1F27] text-white text-[11px] font-bold flex items-center justify-center tabular-nums">
+                    <span aria-hidden="true" className="ms-badge-in absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary-600 ring-2 ring-[#1B1F27] text-white text-[11px] font-bold flex items-center justify-center tabular-nums">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
