@@ -406,7 +406,7 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
                   ) : (
                     <button
                       type="button"
-                      onClick={triggerLogin}
+                      onClick={() => triggerLogin()}
                       className="group relative w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-gray-50 border border-gray-100 hover:bg-primary-50 hover:border-primary-200 transition-all duration-200"
                       aria-label="Se connecter pour voir les réseaux sociaux"
                     >

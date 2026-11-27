@@ -65,6 +65,7 @@ const AppContent: React.FC = () => {
     isLoggedIn, 
     setIsLoggedIn, 
     isLoginModalOpen, 
+    loginModalMode,
     closeLoginModal,
     navigateTo,
     triggerLogin,
@@ -183,6 +184,7 @@ const AppContent: React.FC = () => {
         <Suspense fallback={null}>
           <ClerkIsland
             isOpen={isLoginModalOpen}
+            initialMode={loginModalMode}
             onClose={handleLoginClose}
             onLogin={handleLoginSuccess}
           />

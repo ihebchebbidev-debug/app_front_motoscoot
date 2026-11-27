@@ -9,16 +9,21 @@ import { authApi } from '../services/authApi';
 import { analytics } from '../src/lib/posthog';
 import { readSearchBackContext } from '../utils/searchBackContext';
 
+/** Which screen the login window opens on. */
+export type LoginMode = 'login' | 'signup';
+
 export interface NavigationContextType {
   currentView: ViewStateName;
   params: NavigationParams;
   isLoggedIn: boolean;
   navigateTo: (view: ViewStateName, params?: NavigationParams) => void;
   goBack: () => void;
-  triggerLogin: () => void;
+  /** Opens the login window; « signup » opens it on « Créer un compte ». */
+  triggerLogin: (mode?: LoginMode) => void;
   logout: () => Promise<void>;
   setIsLoggedIn: (val: boolean) => void;
   isLoginModalOpen: boolean;
+  loginModalMode: LoginMode;
   closeLoginModal: () => void;
 }
 
@@ -73,6 +78,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [isLoggedIn]);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState<LoginMode>('login');
 
   // Save the current scroll position before navigating away. We track scroll
   // continuously (throttled via rAF) so the most recent value is captured for
@@ -170,7 +176,10 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     navigateTo(backMap[viewState.view] || 'home');
   }, [viewState.view, navigateTo, navigate]);
 
-  const triggerLogin = useCallback(() => {
+  const triggerLogin = useCallback((mode?: LoginMode) => {
+    // Some buttons pass triggerLogin straight to onClick: the click event is
+    // not a mode, so anything but « signup » opens the sign-in screen.
+    setLoginModalMode(mode === 'signup' ? 'signup' : 'login');
     setIsLoginModalOpen(true);
   }, []);
 
@@ -199,6 +208,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     logout,
     setIsLoggedIn,
     isLoginModalOpen,
+    loginModalMode,
     closeLoginModal,
   };
 
