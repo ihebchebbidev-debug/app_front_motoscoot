@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, useId } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  X,
   Mail,
   Lock,
   ArrowRight,
@@ -15,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ChoiceSheet } from '../search/ChoiceSheet';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
@@ -76,7 +76,8 @@ const GoogleIcon = () => (
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', onClose, onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  // The sheet scrolls the parent of this block.
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Each opening starts on the screen its button named (« Se connecter » or
   // « S'inscrire »), not on the one left open last time. Typed values stay.
@@ -87,7 +88,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   // Switching between sign-in and sign-up starts at the top: the link is at
   // the bottom, and the new screen opened half-scrolled, title hidden.
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    const scroller = contentRef.current?.parentElement;
+    if (scroller) scroller.scrollTop = 0;
   }, [isSignUp, isOpen]);
   const [userType, setUserType] = useState<UserType>('individual');
   const [isDragging, setIsDragging] = useState(false);
@@ -145,65 +147,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const [errorAt, setErrorAt] = useState<ErrorPlace>('form');
   const submitAreaRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll while modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  // Keyboard, as in the other windows of the site (ChoiceSheet): focus goes
-  // into the window (the panel itself, so the phone keyboard does not pop
-  // up), Tab stays inside, Escape closes, and focus returns to the control
-  // that opened it.
-  const panelRef = useRef<HTMLDivElement>(null);
-  const titleId = useId();
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-  useEffect(() => {
-    if (!isOpen) return;
-    const opener = document.activeElement as HTMLElement | null;
-    const frame = requestAnimationFrame(() => {
-      const panel = panelRef.current;
-      if (panel && !panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
-    });
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      const panel = panelRef.current;
-      if (e.key !== 'Tab' || !panel) return;
-      const items = Array.from(
-        panel.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
-        ),
-      ).filter((el) => el.offsetParent !== null && el.tabIndex >= 0);
-      if (!items.length) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      const active = document.activeElement;
-      if (e.shiftKey && (active === first || active === panel || !panel.contains(active))) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', onKey);
-      if (opener && opener !== document.body && document.contains(opener)) opener.focus({ preventScroll: true });
-    };
-  }, [isOpen]);
+  // Scroll lock, focus, Tab, Escape, return focus, drag-to-close and the
+  // exit animation come from the shared ChoiceSheet, as in every other
+  // window of the site (sort, filters, quote request).
 
   // Reset error when switching modes
   useEffect(() => {
@@ -265,8 +211,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleWaiting, clerkGoogle.canStart, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,28 +380,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const inputCompactClass = '!py-3 !rounded-xl';
 
   return (
-    <div
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in transition-all"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <ChoiceSheet
+      open={isOpen}
+      label={isSignUp ? 'Créer un compte' : 'Bienvenue sur moto-scoot.tn'}
+      onClose={onClose}
+      listbox={false}
+      tall
     >
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="outline-none bg-card w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-lg md:rounded-3xl overflow-hidden relative shadow-2xl animate-fade-in-up flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2.5 text-gray-500 hover:text-gray-900 bg-gray-100/50 hover:bg-gray-100 rounded-full transition-all z-20 active:scale-90"
-          aria-label="Fermer"
-        >
-          <X size={24} strokeWidth={2.5} />
-        </button>
-
-        <div ref={scrollRef} className="p-6 md:p-10 overflow-y-auto no-scrollbar flex-1 pt-16 md:pt-10">
+        <div ref={contentRef} className="px-6 md:px-8 pt-4">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-4 border border-primary-100 overflow-hidden">
               <img
@@ -466,9 +396,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 alt="Moto-Scoot.tn"
               />
             </div>
-            <h2 id={titleId} className={`text-gray-900 mb-2 ${isSignUp ? 'text-2xl md:text-3xl font-black tracking-tight' : 'text-[24px] font-extrabold tracking-normal font-sans'}`}>
-              {isSignUp ? 'Créer un compte' : 'Bienvenue sur moto-scoot.tn'}
-            </h2>
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Rejoignez la communauté moto-scoot.tn' : 'Connectez-vous pour gérer vos annonces.'}
             </p>
@@ -816,8 +743,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </ChoiceSheet>
   );
 };
 
