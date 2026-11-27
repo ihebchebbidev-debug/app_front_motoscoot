@@ -6,17 +6,15 @@ import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { ModelCarousel } from './tech-specs/ModelCarousel';
 import { ModelCardSkeleton } from './tech-specs/TechSpecsSkeletons';
 import { getUrlFromState } from '../utils/urlUtils';
+import { SECTION_HEADING, SECTION_SUBTITLE, SECTION_SPACING } from './home/SectionHeader';
 import { POPULAR_MODELS_HEADING, POPULAR_MODELS_SUBTITLE } from '../utils/popularModels';
 
 interface PopularModelsProps {
   onNavigate?: (view: any, params?: any) => void;
 }
 
-const S = {
-  // Same as the other home sections (Marques populaires, Annonces récentes).
-  Heading: 'text-[36px] font-extrabold text-gray-900 tracking-normal',
-  Subtitle: 'text-gray-500 mt-2 text-[17px] font-normal tracking-normal',
-};
+// Same heading as the other home sections (components/home/SectionHeader).
+const S = { Heading: SECTION_HEADING, Subtitle: SECTION_SUBTITLE };
 
 /**
  * Home page « Modèles populaires » (owner, 2026-11-19): 12 fiches, one per
@@ -35,7 +33,7 @@ const PopularModels: React.FC<PopularModelsProps> = () => {
   if (!waiting && (isError || models.length === 0)) return null;
 
   return (
-    <section ref={elementRef as React.RefObject<HTMLElement>} className="py-16 md:py-20 bg-card overflow-hidden">
+    <section ref={elementRef as React.RefObject<HTMLElement>} className={`${SECTION_SPACING} bg-card overflow-hidden`}>
       <div className="max-w-7xl mx-auto px-6 md:px-20 lg:px-32">
         {waiting ? (
           <div aria-hidden="true">
@@ -59,7 +57,7 @@ const PopularModels: React.FC<PopularModelsProps> = () => {
           />
         )}
 
-        <div className="mt-12 flex flex-col items-center gap-3">
+        <div className="mt-8 md:mt-12 flex flex-col items-center gap-3">
           <Link
             to={getUrlFromState('tech-specs-brands')}
             className="group inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-600 hover:bg-primary-700 text-white text-[13px] font-extrabold uppercase tracking-wider shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] hover:shadow-[0_10px_25px_-6px_rgba(255,107,0,0.6)] active:scale-[0.98] transition-all duration-200"

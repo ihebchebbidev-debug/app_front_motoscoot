@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useLatestTechSpecs } from '../hooks/useTechSpecs';
 import { ModelCard } from './home/ModelCard';
 import { Button } from './ui/Button';
+import { SectionHeader, SECTION_SPACING } from './home/SectionHeader';
 import { SkeletonCard } from './ui/Skeleton';
 
 interface LatestTechSpecsProps {
@@ -23,26 +24,22 @@ const LatestTechSpecs: React.FC<LatestTechSpecsProps> = ({ onNavigate }) => {
   }));
 
   return (
-    <section className="py-16 md:py-20 bg-background overflow-hidden">
+    <section className={`${SECTION_SPACING} bg-background overflow-hidden`}>
       <div className="max-w-7xl mx-auto px-6 md:px-20 lg:px-32">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-          <div>
-            <h2 className="text-[36px] font-extrabold text-gray-900 tracking-normal">
-              Les nouveautés
-            </h2>
-            <p className="text-gray-500 mt-2 text-[17px] font-normal tracking-normal">
-              Les nouveautés moto et scooter à découvrir dès maintenant en Tunisie.
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate?.('tech-specs-brands')}
-            className="hidden md:flex text-primary-600 hover:bg-primary-50"
-            rightIcon={<ArrowRight className="w-5 h-5 ml-1" />}
-          >
-            Voir tout
-          </Button>
-        </div>
+        <SectionHeader
+          title="Les nouveautés"
+          subtitle="Les nouveautés moto et scooter à découvrir dès maintenant en Tunisie."
+          action={
+            <Button
+              variant="ghost"
+              onClick={() => onNavigate?.('tech-specs-brands')}
+              className="hidden md:flex text-primary-600 hover:bg-primary-50"
+              rightIcon={<ArrowRight className="w-5 h-5 ml-1" />}
+            >
+              Voir tout
+            </Button>
+          }
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
           {isLoading
@@ -64,7 +61,7 @@ const LatestTechSpecs: React.FC<LatestTechSpecsProps> = ({ onNavigate }) => {
         </div>
 
         {!isLoading && items.length > 0 && (
-          <div className="mt-12 flex justify-center md:hidden">
+          <div className="mt-8 flex justify-center md:hidden">
             <button
               type="button"
               onClick={() => onNavigate?.('tech-specs-brands')}
