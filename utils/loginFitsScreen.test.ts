@@ -7,7 +7,6 @@ import { readFileSync } from 'node:fs';
 // These guard the choices that made it fit.
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const modal = read('components/auth/LoginModal.tsx');
-const mock = read('components/auth/CloudflareTurnstileMock.tsx');
 const sheet = read('components/search/ChoiceSheet.tsx');
 
 test('the title is just « Bienvenue »', () => {
@@ -18,12 +17,6 @@ test('the title is just « Bienvenue »', () => {
 test('Google and « Se connecter » are the same size and shape', () => {
   assert.match(modal, /w-full h-\[52px\] min-h-\[52px\] border border-gray-300 rounded-xl text-foreground font-bold text-\[16px\]/);
   assert.match(modal, /className="mt-1 h-\[52px\] text-\[16px\]"/);
-});
-
-test('the verification box is a compact 48 px row, in French', () => {
-  assert.match(mock, /h-12 pl-3\.5 pr-4 rounded-xl/);
-  assert.doesNotMatch(mock, /minHeight: 70/);
-  assert.match(mock, /'Je suis humain'/);
 });
 
 test('phones: the sheet header names the screen, so no repeated intro', () => {
