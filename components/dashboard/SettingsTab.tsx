@@ -27,7 +27,6 @@ import { Select } from '../ui/Select';
 import { useUser } from '../../context/UserContext';
 import { useToast } from '../../context/ToastContext';
 import { Badge } from '../ui/Badge';
-import { Reveal } from '../ui/Reveal';
 import { uploadsApi } from '../../services/uploadsApi';
 import { compressImage } from '../../utils/imageCompression';
 import { useGovernorates } from '../../hooks/useReferenceData';
@@ -249,7 +248,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
   };
 
   return (
-    <div className="animate-fade-in max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
+    <div className="max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
 
       {/* SECTION 1: HEADER — hidden on mobile because Dashboard already shows a
           "Bonjour, FirstName" card above the Profil tab on small screens. */}
@@ -319,7 +318,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[21px]">
 
         {/* SECTION 2: PERSONAL INFO */}
-        <Reveal animation="fade-in-up" delay={50}>
+        <div>
           <div className={S.FullCard}>
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
@@ -355,10 +354,10 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
 
         {/* SECTION 3: CONTACT & SECURITY */}
-        <Reveal animation="fade-in-up" delay={100}>
+        <div>
           <div className={S.FullCard}>
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
@@ -396,10 +395,10 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
 
         {/* SECTION 4: ADDRESS + MAP */}
-        <Reveal animation="fade-in-up" delay={120}>
+        <div>
           <div className={S.FullCard}>
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
@@ -456,11 +455,11 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               )}
             </div>
           </div>
-        </Reveal>
+        </div>
 
         {/* SECTION 4b: PRO SHOP — only for Pro accounts */}
         {isPro && (
-          <Reveal animation="fade-in-up" delay={130}>
+          <div>
             <div className={S.FullCard}>
               <div className={S.SectionHeader}>
                 <h2 className={S.SectionTitle}>
@@ -539,11 +538,11 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
                 </div>
               </div>
             </div>
-          </Reveal>
+          </div>
         )}
 
         {/* SECTION 5: PASSWORD */}
-        <Reveal animation="fade-in-up" delay={140}>
+        <div>
           <div className={S.FullCard}>
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
@@ -580,7 +579,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
 
         {/* SUBMIT */}
         <div className="pb-12 flex flex-col items-start px-2 md:px-0">

@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Input } from '../ui/Input';
-import { Reveal } from '../ui/Reveal';
 import { Button } from '../ui/Button';
 import { useToast } from '../../context/ToastContext';
 import { useMyListings, useDeleteListing, useSetListingStatus } from '../../hooks/useMyListings';
@@ -148,7 +147,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="space-y-6 md:space-y-8 relative animate-fade-in">
+    <div className="space-y-6 md:space-y-8 relative">
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Mes annonces</h1>
@@ -279,8 +278,8 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
           </div>
 
           <div className="md:hidden space-y-4">
-            {paginatedAds.map((ad, idx) => (
-              <Reveal key={ad.id} delay={idx * 50} animation="fade-in-up">
+            {paginatedAds.map((ad) => (
+              <div key={ad.id}>
                 <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="flex gap-3 p-3">
                     <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-100">
@@ -319,7 +318,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
                     </button>
                   </div>
                 </div>
-              </Reveal>
+              </div>
             ))}
           </div>
 

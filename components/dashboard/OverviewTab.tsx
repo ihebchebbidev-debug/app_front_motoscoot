@@ -2,7 +2,6 @@ import React, { memo, useMemo } from 'react';
 import {
   TrendingUp,
 } from 'lucide-react';
-import { Reveal } from '../ui/Reveal';
 import { Skeleton } from '../ui/Skeleton';
 import { useUserStats } from '../../hooks/useUserStats';
 import { useUser } from '../../context/UserContext';
@@ -76,7 +75,7 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
   const avgViewsPerAd = totalAds > 0 ? Math.round(totalViews / totalAds) : 0;
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in">
+    <div className="space-y-6 md:space-y-8">
       <div className="hidden md:block">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {user?.firstName ? `Bienvenue, ${user.firstName} 👋` : 'Tableau de bord'}
@@ -88,7 +87,7 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
 
       {/* Primary KPI grid: 4 cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
-        <Reveal animation="fade-in-up" delay={50}>
+        <div>
           <StatCard
             label="Annonces en ligne"
             value={fmt(totalAds)}
@@ -98,8 +97,8 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'my-ads' })}
           />
-        </Reveal>
-        <Reveal animation="fade-in-up" delay={100}>
+        </div>
+        <div>
           <StatCard
             label="Vues cumulées"
             value={fmt(totalViews)}
@@ -109,8 +108,8 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'my-ads' })}
           />
-        </Reveal>
-        <Reveal animation="fade-in-up" delay={150}>
+        </div>
+        <div>
           <StatCard
             label="Contacts reçus"
             value={fmt(totalContacts)}
@@ -120,8 +119,8 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'messages' })}
           />
-        </Reveal>
-        <Reveal animation="fade-in-up" delay={200}>
+        </div>
+        <div>
           <StatCard
             label="Mises en favori"
             value={fmt(adFavorites)}
@@ -131,11 +130,11 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'favorites' })}
           />
-        </Reveal>
+        </div>
       </div>
 
       {/* Performance summary */}
-      <Reveal animation="fade-in-up" delay={250}>
+      <div>
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-5 md:p-7">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -183,7 +182,7 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             </div>
           </div>
         </div>
-      </Reveal>
+      </div>
     </div>
   );
 };

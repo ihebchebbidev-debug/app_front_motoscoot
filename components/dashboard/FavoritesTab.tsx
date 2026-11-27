@@ -11,7 +11,7 @@ interface FavoritesTabProps {
 
 const FavoritesTab: React.FC<FavoritesTabProps> = ({ listings, onToggleFavorite, onNavigate }) => {
   return (
-    <div className="animate-fade-in">
+    <div>
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Ma sélection</h1>
@@ -26,12 +26,11 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ listings, onToggleFavorite,
 
       {listings.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {listings.map((listing, idx) => (
+          {listings.map((listing) => (
             <article 
               key={listing.id} 
               onClick={() => onNavigate('listing-details', { id: listing.id, title: listing.title })}
-              className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 cursor-pointer h-full flex flex-col animate-fade-in-up" 
-              style={{ animationDelay: `${idx * 100}ms` }}
+              className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 cursor-pointer h-full flex flex-col"
             >
               <div className="relative aspect-[4/3] bg-card overflow-hidden">
                 <img 
