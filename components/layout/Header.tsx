@@ -300,7 +300,7 @@ const Header: React.FC<HeaderProps> = ({
               alt="Moto-Scoot.tn" width={373} height={48}
               // LCP element on listing pages: fetch it before the gallery thumbnails.
               fetchPriority="high"
-              className="h-[23px] max-[360px]:h-[21px] md:h-7 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105"
+              className="h-[23px] max-[360px]:h-[21px] md:h-7 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
             />
           </Link>
 
@@ -399,8 +399,8 @@ const Header: React.FC<HeaderProps> = ({
                 </>
               ) : (
                 <div className="flex items-center gap-1">
-                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Connexion"><LogIn size={20} /></button>
-                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Inscription"><UserPlus size={20} /></button>
+                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Connexion" aria-label="Connexion"><LogIn size={20} /></button>
+                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Inscription" aria-label="Inscription"><UserPlus size={20} /></button>
                 </div>
               )}
 
@@ -464,7 +464,7 @@ const Header: React.FC<HeaderProps> = ({
         >
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
              <Link to="/" onClick={closeMenus} className="group">
-               <img src={LOGO_COLOR} alt="Moto-Scoot.tn" width={373} height={48} className="h-6 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:scale-105" />
+               <img src={LOGO_COLOR} alt="Moto-Scoot.tn" width={373} height={48} className="h-6 w-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" />
              </Link>
              <button 
                onClick={() => setIsMobileSheetOpen(false)}

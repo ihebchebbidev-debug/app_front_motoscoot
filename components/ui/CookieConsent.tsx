@@ -161,7 +161,7 @@ export const CookieConsent: React.FC = () => {
               type="button"
               onClick={handleReject}
               aria-label="Refuser les cookies optionnels"
-              className="shrink-0 -mr-1 -mt-1 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="shrink-0 -mr-3 -mt-3 h-11 w-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -172,7 +172,7 @@ export const CookieConsent: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowDetails((v) => !v)}
-              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center justify-center gap-2 min-h-11 px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <Settings className="h-4 w-4" />
               {showDetails ? 'Masquer les détails' : 'Personnaliser'}

@@ -19,7 +19,7 @@ const S = {
   TrustTitle: "text-[12px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 md:font-sans md:font-[800] md:text-[14px] md:text-foreground md:leading-[16px] md:tracking-[0px] md:uppercase",
   TrustItem: "flex items-start gap-3",
   TrustText: "text-[12px] font-medium text-gray-500 leading-relaxed",
-  Disclaimer: "text-[12px] font-bold text-gray-400 leading-relaxed pt-3 border-t border-gray-50 italic"
+  Disclaimer: "text-[13px] font-medium text-gray-600 leading-relaxed pt-3 border-t border-gray-100"
 };
 
 export const ListingSidebar: React.FC<ListingSidebarProps> = ({ 

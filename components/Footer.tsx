@@ -34,7 +34,7 @@ const FooterLink = ({ view, children, isPrimary = false, icon, className }: Reac
   <li className={className}>
     <Link 
       to={getUrlFromState(view)} 
-      className={`transition-colors flex items-center gap-2 focus:outline-none hover:underline text-left ${isPrimary ? 'text-primary-600 font-black' : 'text-gray-400 hover:text-white font-medium'}`}
+      className={`transition-colors flex items-center gap-2 py-1.5 focus:outline-none hover:underline focus-visible:underline text-left ${isPrimary ? 'text-primary-600 font-black' : 'text-gray-400 hover:text-white font-medium'}`}
     >
       {!isPrimary && !icon && <span className="w-1 h-1 rounded-full bg-gray-600"></span>}
       {icon}
@@ -80,7 +80,7 @@ const Footer: React.FC<FooterProps> = () => {
           {/* Quick Links */}
           <div>
             <FooterHeading>Navigation</FooterHeading>
-            <ul className="space-y-4 text-sm">
+            <ul className="space-y-1 text-sm">
               <FooterLink view="home">Accueil</FooterLink>
               <FooterLink view="search">Annonces</FooterLink>
               <FooterLink view="news">Actualités</FooterLink>
@@ -91,7 +91,7 @@ const Footer: React.FC<FooterProps> = () => {
           {/* Legal / Info */}
           <div>
             <FooterHeading>Informations</FooterHeading>
-            <ul className="space-y-4 text-sm">
+            <ul className="space-y-1 text-sm">
               {/* Same list as the HTML Google receives (utils/footerLinks.ts).
                   /securite and /plan-du-site had no link from any page. */}
               {FOOTER_INFO_LINKS.map((l) => <FooterLink key={l.view} view={l.view}>{l.label}</FooterLink>)}

@@ -328,8 +328,8 @@ const ListingDetails: React.FC<BasePageProps> = ({ listingId }) => {
                         <span className="sr-only md:not-sr-only">{listing.brand} </span>{listing.model}
                       </h1>
                       
-                      <div className="flex items-center gap-2 text-gray-400 text-[12px] md:text-[12px] font-bold tracking-widest mt-1">
-                        <Clock size={14}/> Publiée {listing.date}
+                      <div className="flex items-center gap-2 text-gray-500 text-[12px] md:text-[12px] font-bold tracking-widest mt-1">
+                        <Clock size={14}/> Publiée {listing.date ? listing.date.charAt(0).toLowerCase() + listing.date.slice(1) : ''}
                       </div>
                     </div>
                     
