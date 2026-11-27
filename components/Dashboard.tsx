@@ -34,6 +34,7 @@ import navFavorites from '../src/assets/nav-favorites.webp';
 import navProfile from '../src/assets/nav-profile.webp';
 import navAdmin from '../src/assets/nav-admin.webp';
 import SEO from './common/SEO';
+import { TypeScaleProvider } from './ui/TypeScale';
 
 const MOBILE_NAV_ICONS: Record<string, string> = {
   overview: navOverview,
@@ -77,7 +78,7 @@ const S = {
   Sidebar: "hidden md:flex w-[280px] h-[75vh] bg-card rounded-2xl border border-gray-100 flex-shrink-0 flex-col sticky top-28 z-40 shadow-sm overflow-hidden",
   NavSection: "px-4 py-6",
   NavBtn: (active: boolean) => `
-    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group outline-none
+    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all group outline-none
     ${active 
       ? 'bg-primary-600 text-white shadow-lg shadow-orange-600/20' 
       : 'text-muted-foreground hover:text-primary-600 hover:bg-orange-50/50'}
@@ -86,7 +87,7 @@ const S = {
   MobileNav: "fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-xl border-t border-gray-100 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden flex justify-around items-center shadow-[0_-10px_30px_rgba(0,0,0,0.08)]",
   MobileNavBtn: (active: boolean) => `
     flex flex-col items-center gap-1 transition-all active:scale-95 flex-1 py-1.5 rounded-xl
-    ${active ? 'text-primary-600' : 'text-gray-400'}
+    ${active ? 'text-primary-600' : 'text-gray-600'}
   `,
   
   Content: "flex-1 w-full min-w-0 transition-all duration-300",
@@ -101,9 +102,9 @@ const SidebarNavItem = memo(({ item, active, onClick, badge }: { item: Dashboard
     aria-selected={active}
   >
     <item.icon size={16} strokeWidth={2} />
-    <span className="uppercase flex-1 text-left">{item.label}</span>
+    <span className="flex-1 text-left">{item.label}</span>
     {badge != null && badge > 0 && (
-      <span className={`min-w-[20px] text-center px-1.5 py-0.5 rounded-md text-[10px] font-extrabold tabular-nums ${
+      <span className={`min-w-[20px] text-center px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums ${
         active ? 'bg-white/25 text-white' : 'bg-primary-600 text-white'
       }`}>
         {badge > 99 ? '99+' : badge}
@@ -178,10 +179,10 @@ const UserProfileSidebar = memo(() => {
           </div>
         </div>
         <div className="flex flex-col min-w-0">
-          <h3 className="font-bold text-gray-900 text-base truncate leading-tight">
+          <p className="font-semibold text-gray-900 text-base truncate leading-tight">
             {user.firstName} {user.lastName}
-          </h3>
-          <span className="text-gray-400 text-[9px] font-bold uppercase bg-card px-2 py-0.5 rounded-full border border-gray-100 w-fit mt-1">
+          </p>
+          <span className="text-gray-600 text-xs font-medium bg-card px-2 py-0.5 rounded-full border border-gray-200 w-fit mt-1">
             {user.memberType}
           </span>
         </div>
@@ -291,7 +292,8 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
   if (!isLoggedIn) return null;
 
   return (
-    <div className={S.Wrapper} style={{ letterSpacing: '0px' }}>
+    <TypeScaleProvider tone="calm">
+    <div className={S.Wrapper}>
       <SEO title="Mon compte" description="Tableau de bord Moto-Scoot.tn — gérez vos annonces, messages et favoris." noIndex url="/mon-compte" />
       <div className={S.MainContainer}>
         <aside className={S.Sidebar}>
@@ -330,14 +332,14 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
             <button 
               onClick={handleDeleteAccountClick} 
               disabled={isDeleting}
-              className="flex items-center gap-3 text-[12px] font-extrabold uppercase tracking-wider text-gray-400 hover:text-red-600 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 size={16} className="group-hover:scale-110 transition-transform" /> 
               <span>{isDeleting ? 'Suppression…' : 'Supprimer le compte'}</span>
             </button>
             <button 
               onClick={handleLogoutClick} 
-              className="flex items-center gap-3 text-[12px] font-extrabold uppercase tracking-wider text-gray-400 hover:text-gray-900 transition-colors group"
+              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
             >
               <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> 
               <span>Déconnexion</span>
@@ -372,12 +374,12 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                     <item.icon size={22} strokeWidth={2} />
                   )}
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary-600 text-white text-[9px] font-extrabold flex items-center justify-center tabular-nums">
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary-600 text-white text-[11px] font-bold flex items-center justify-center tabular-nums">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[9px] font-bold uppercase text-foreground">{item.label}</span>
+                <span className="text-xs font-medium">{item.label}</span>
               </button>
             );
           })}
@@ -432,14 +434,14 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Bonjour</p>
-                      <h2 className="text-base font-extrabold text-gray-900 truncate leading-tight">
+                      <p className="text-[13px] text-gray-600">Bonjour</p>
+                      <p className="text-base font-semibold text-gray-900 truncate leading-tight">
                         {user.firstName} {user.lastName}
-                      </h2>
+                      </p>
                     </div>
                     <button
                       onClick={handleLogoutClick}
-                      className="shrink-0 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-gray-400 hover:text-red-600 active:scale-95 transition-all px-3 py-2 rounded-xl bg-gray-50"
+                      className="shrink-0 flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-red-600 active:scale-95 transition-all px-3 min-h-[44px] rounded-xl bg-gray-50"
                       aria-label="Se déconnecter"
                     >
                       <LogOut size={14} />
@@ -463,8 +465,8 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                     so users need a way to delete their account from the Profil tab. */}
                 {activeMenu === 'settings' && (
                   <div className="md:hidden mt-6 bg-card rounded-2xl border border-red-100 shadow-sm p-5">
-                    <h3 className="text-sm font-extrabold text-foreground mb-1">Zone sensible</h3>
-                    <p className="text-xs text-gray-500 mb-4">La suppression du compte est définitive.</p>
+                    <h2 className="text-base font-semibold text-foreground mb-1">Zone sensible</h2>
+                    <p className="text-[13px] text-gray-600 mb-4">La suppression du compte est définitive.</p>
                     <button
                       onClick={handleDeleteAccountClick}
                       disabled={isDeleting}
@@ -482,6 +484,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
       </div>
       {confirmDialog}
     </div>
+    </TypeScaleProvider>
   );
 };
 

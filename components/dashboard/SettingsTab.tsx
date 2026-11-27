@@ -238,18 +238,18 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
   const S = {
     FullCard: 'bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full',
     SectionHeader: 'px-6 md:px-10 py-5 border-b border-gray-50 bg-gray-50/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4',
-    SectionTitle: 'text-lg font-bold text-gray-900 flex items-center gap-3',
+    SectionTitle: 'text-base md:text-lg font-semibold text-gray-900 flex items-center gap-3',
     ContentGrid: 'p-6 md:p-10',
     HeaderWrapper: 'relative bg-card px-6 md:px-10 py-6 border-b border-gray-100 flex flex-row items-center gap-6',
     PhotoContainer: 'flex flex-col items-center gap-1.5 shrink-0',
     InfoGroup: 'flex-1 flex flex-col justify-center min-w-0',
-    MainHeading: 'text-2xl md:text-3xl font-black text-gray-900 leading-none',
+    MainHeading: 'text-2xl md:text-[28px] font-bold tracking-tight text-gray-900 leading-tight',
     SubInfo: 'flex flex-col items-start gap-1.5 mt-2',
-    SubInfoItem: 'flex items-center gap-2 text-[12px] md:text-[12px] font-bold text-gray-400 uppercase',
+    SubInfoItem: 'flex items-center gap-2 text-[13px] text-gray-600',
   };
 
   return (
-    <div className="animate-fade-in font-['Inter'] max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]" style={{ letterSpacing: '0px' }}>
+    <div className="animate-fade-in max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
 
       {/* SECTION 1: HEADER — hidden on mobile because Dashboard already shows a
           "Bonjour, FirstName" card above the Profil tab on small screens. */}
@@ -293,18 +293,18 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
           <div className={S.InfoGroup}>
             <div className="flex items-center gap-2">
               <h1 className={S.MainHeading}>{user?.firstName} {user?.lastName}</h1>
-              <Badge variant="success" size="xs" className="px-2 py-0.5 rounded-md font-extrabold tracking-[1px] text-[8px] hidden sm:inline-flex">
-                VÉRIFIÉ
+              <Badge variant="success" size="xs" className="px-2 py-0.5 rounded-md font-semibold hidden sm:inline-flex">
+                Vérifié
               </Badge>
             </div>
 
             <div className={S.SubInfo}>
               <div className={S.SubInfoItem}>
-                <UserCheck size={12} className="text-orange-50" strokeWidth={2} />
+                <UserCheck size={14} className="text-primary-600" strokeWidth={2} />
                 <span>{user?.memberType}</span>
               </div>
               <div className={S.SubInfoItem}>
-                <Calendar size={12} className="text-orange-50" strokeWidth={2} />
+                <Calendar size={14} className="text-primary-600" strokeWidth={2} />
                 {user?.createdAt ? (
                   <span>Membre depuis {memberSinceLabel}</span>
                 ) : (
@@ -324,28 +324,28 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
                 <div className="p-2 bg-orange-50 text-primary-600 rounded-lg"><User size={18} /></div>
-                Informations Personnelles
+                Informations personnelles
               </h2>
             </div>
             <div className={S.ContentGrid}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 <Input
-                  label="PRÉNOM"
+                  label="Prénom"
                   {...register('firstName')}
                   error={errors.firstName?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                 />
                 <Input
-                  label="NOM"
+                  label="Nom"
                   {...register('lastName')}
                   error={errors.lastName?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                 />
                 <Select
-                  label="GOUVERNORAT"
+                  label="Gouvernorat"
                   {...register('governorate')}
                   error={errors.governorate?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm pr-10"
+                  className="bg-gray-50/50 border-gray-100 pr-10"
                 >
                   <option value="" disabled>Choisir votre gouvernorat</option>
                   {governorates.map((gov) => (
@@ -368,32 +368,28 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             </div>
             <div className={S.ContentGrid}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                <div className="relative">
-                  <Input
-                    label="ADRESSE EMAIL"
-                    {...register('email')}
-                    error={errors.email?.message}
-                    className="bg-gray-50/30 border-gray-100 pr-12 font-bold opacity-60 text-sm"
-                    leftIcon={<Mail size={16} className="text-gray-400" />}
-                    readOnly
-                  />
-                  <div className="absolute right-4 top-[40px] text-emerald-500" title="Email vérifié">
-                    <CheckCircle2 size={14} />
-                  </div>
-                </div>
                 <Input
-                  label="TÉLÉPHONE"
+                  label="Adresse e-mail"
+                  {...register('email')}
+                  error={errors.email?.message}
+                  className="bg-gray-50/30 border-gray-100 opacity-70"
+                  leftIcon={<Mail size={16} className="text-gray-400" />}
+                  rightIcon={<span className="text-emerald-600" title="E-mail vérifié"><CheckCircle2 size={16} aria-label="E-mail vérifié" /></span>}
+                  readOnly
+                />
+                <Input
+                  label="Téléphone"
                   {...register('phone')}
                   error={errors.phone?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   leftIcon={<Smartphone size={16} className="text-gray-400" />}
                   placeholder="22 123 456"
                 />
                 <Input
-                  label="NUMÉRO WHATSAPP"
+                  label="Numéro WhatsApp"
                   {...register('whatsapp')}
                   error={errors.whatsapp?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   leftIcon={<WhatsAppIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="22 123 456 (optionnel)"
                 />
@@ -408,26 +404,26 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             <div className={S.SectionHeader}>
               <h2 className={S.SectionTitle}>
                 <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><MapPin size={18} /></div>
-                Adresse & Localisation
+                Adresse et localisation
               </h2>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <span className="text-[13px] text-gray-600">
                 Visible sur vos annonces
               </span>
             </div>
             <div className={`${S.ContentGrid} space-y-6`}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="VILLE / LOCALITÉ"
+                  label="Ville ou localité"
                   {...register('city')}
                   error={errors.city?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   placeholder="Ex: La Marsa"
                 />
                 <Input
-                  label="ADRESSE COMPLÈTE"
+                  label="Adresse complète"
                   {...register('address')}
                   error={errors.address?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   placeholder="Rue, immeuble, repère…"
                   leftIcon={<MapPin size={16} className="text-gray-400" />}
                 />
@@ -454,7 +450,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               />
 
               {(typeof lat === 'number' && typeof lng === 'number') && (
-                <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-2">
+                <p className="text-[13px] font-medium text-emerald-700 flex items-center gap-2">
                   <CheckCircle2 size={14} /> Position enregistrée
                 </p>
               )}
@@ -469,27 +465,27 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
               <div className={S.SectionHeader}>
                 <h2 className={S.SectionTitle}>
                   <div className="p-2 bg-primary-50 text-primary-600 rounded-lg"><Store size={18} /></div>
-                  Ma Boutique
+                  Ma boutique
                 </h2>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <span className="text-[13px] text-gray-600">
                   Visible sur toutes vos annonces
                 </span>
               </div>
               <div className={`${S.ContentGrid} space-y-6`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="NOM DE LA BOUTIQUE"
+                    label="Nom de la boutique"
                     {...register('shopName')}
                     error={errors.shopName?.message}
-                    className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                    className="bg-gray-50/50 border-gray-100"
                     placeholder="Ex: Tunis Moto Shop"
                     leftIcon={<Building2 size={16} className="text-gray-400" />}
                   />
                   <Input
-                    label="ADRESSE BOUTIQUE"
+                    label="Adresse de la boutique"
                     {...register('shopAddress')}
                     error={errors.shopAddress?.message}
-                    className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                    className="bg-gray-50/50 border-gray-100"
                     placeholder="Rue, ville…"
                     leftIcon={<MapPin size={16} className="text-gray-400" />}
                   />
@@ -497,7 +493,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
 
                 {/* Logo uploader */}
                 <div className="space-y-2">
-                  <label className="block text-[12px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                  <label className="block text-[14px] leading-[1.3] font-semibold text-gray-900 ml-1">
                     Logo de la boutique
                   </label>
                   <div className="flex items-center gap-4">
@@ -515,7 +511,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
                         onClick={() => logoInputRef.current?.click()}
                         isLoading={isUploadingLogo}
                         leftIcon={!isUploadingLogo ? <Upload size={14} /> : undefined}
-                        className="!h-10 !rounded-xl !text-[12px] !font-extrabold"
+                        className="!h-11 !rounded-xl !text-sm"
                       >
                         {shopLogoValue ? 'Changer le logo' : 'Téléverser un logo'}
                       </Button>
@@ -523,12 +519,12 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
                         <button
                           type="button"
                           onClick={() => setValue('shopLogo', '', { shouldDirty: true })}
-                          className="text-[11px] font-bold text-gray-400 hover:text-red-600 self-start"
+                          className="text-[13px] font-medium text-gray-600 hover:text-red-600 self-start"
                         >
                           Retirer le logo
                         </button>
                       )}
-                      <p className="text-[11px] font-medium text-gray-400">
+                      <p className="text-[13px] text-gray-600">
                         JPG, PNG ou WebP — visible sur la fiche annonce et les cartes.
                       </p>
                     </div>
@@ -558,27 +554,27 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             <div className={S.ContentGrid}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 <Input
-                  label="ANCIEN MOT DE PASSE"
+                  label="Ancien mot de passe"
                   type="password"
                   {...register('oldPassword')}
                   error={errors.oldPassword?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   leftIcon={<Lock size={16} className="text-gray-400" />}
                 />
                 <Input
-                  label="NOUVEAU MOT DE PASSE"
+                  label="Nouveau mot de passe"
                   type="password"
                   {...register('newPassword')}
                   error={errors.newPassword?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   leftIcon={<KeyRound size={16} className="text-gray-400" />}
                 />
                 <Input
-                  label="CONFIRMER LE MOT DE PASSE"
+                  label="Confirmer le mot de passe"
                   type="password"
                   {...register('confirmPassword')}
                   error={errors.confirmPassword?.message}
-                  className="bg-gray-50/50 border-gray-100 font-bold text-sm"
+                  className="bg-gray-50/50 border-gray-100"
                   leftIcon={<CheckCircle2 size={16} className="text-gray-400" />}
                 />
               </div>
@@ -599,7 +595,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             Enregistrer
           </Button>
           {!isDirty && (
-            <p className="text-[9px] font-bold text-gray-400 uppercase mt-4 ml-1">
+            <p className="text-[13px] text-gray-600 mt-3 ml-1">
               Aucune modification en attente
             </p>
           )}

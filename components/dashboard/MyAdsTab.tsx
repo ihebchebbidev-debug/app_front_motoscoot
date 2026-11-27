@@ -141,18 +141,18 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
   ];
 
   const statusBadge = (s: UiStatus): { variant: any; label: string } => {
-    if (s === 'Actif')      return { variant: 'success', label: 'EN LIGNE' };
-    if (s === 'Vendu')      return { variant: 'info',    label: 'VENDU' };
-    if (s === 'En attente') return { variant: 'warning', label: 'EN ATTENTE' };
-    return { variant: 'default', label: 'MASQUÉ' };
+    if (s === 'Actif')      return { variant: 'success', label: 'En ligne' };
+    if (s === 'Vendu')      return { variant: 'info',    label: 'Vendu' };
+    if (s === 'En attente') return { variant: 'warning', label: 'En attente' };
+    return { variant: 'default', label: 'Masquée' };
   };
 
   return (
-    <div className="space-y-6 md:space-y-8 font-['Inter'] relative animate-fade-in">
+    <div className="space-y-6 md:space-y-8 relative animate-fade-in">
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-extrabold text-foreground">Mes Annonces</h2>
-          <p className="text-sm text-gray-500 font-medium mt-1 truncate">Gérez vos publications et suivez leur impact sur le marché.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Mes annonces</h1>
+          <p className="text-sm text-gray-600 mt-1 text-pretty">Gérez vos publications et suivez leur impact sur le marché.</p>
         </div>
         <div className="hidden md:flex items-center gap-3 w-full max-w-[340px] relative" ref={dropdownRef}>
           <div className="flex-1">
@@ -161,10 +161,13 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               leftIcon={<Search size={18} className="text-gray-400" />}
-              className="bg-card border-gray-100 rounded-xl h-11 text-sm font-medium shadow-sm"
+              className="bg-card border-gray-100 rounded-xl h-11 text-sm shadow-sm"
             />
           </div>
           <button
+            type="button"
+            aria-label="Filtrer par statut"
+            aria-expanded={isStatusMenuOpen}
             onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
             className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all shadow-sm shrink-0 ${isStatusMenuOpen || statusFilter !== 'Tous' ? 'bg-orange-50 border-orange-500 text-orange-600' : 'bg-card border-gray-100 text-gray-400 hover:border-gray-300'}`}
           >
@@ -173,7 +176,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
           {isStatusMenuOpen && (
             <div className="absolute top-full right-0 mt-3 w-64 bg-card rounded-2xl shadow-2xl border border-gray-100 py-2 z-[200] animate-scale-in origin-top-right overflow-hidden">
               {statusOptions.map((opt) => (
-                <button key={opt.id} onClick={() => { setStatusFilter(opt.id); setCurrentPage(1); setIsStatusMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 text-xs font-bold ${statusFilter === opt.id ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                <button key={opt.id} onClick={() => { setStatusFilter(opt.id); setCurrentPage(1); setIsStatusMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium ${statusFilter === opt.id ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}>
                   <div className="flex items-center gap-3"><div className={`w-2 h-2 rounded-full ${opt.color}`}></div><span>{opt.label}</span></div>
                   {statusFilter === opt.id && <Check size={16} className="text-orange-600" />}
                 </button>
@@ -192,18 +195,18 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
             placeholder="Rechercher une annonce..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="w-full h-12 pl-12 pr-4 bg-card border border-gray-100 rounded-xl text-sm font-medium text-gray-700 shadow-sm outline-none focus:border-orange-300"
+            className="w-full h-12 pl-12 pr-4 bg-card border border-gray-100 rounded-xl text-base text-gray-900 shadow-sm outline-none focus:border-orange-300"
           />
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             <Search size={18}/>
           </div>
         </div>
         <div className="relative">
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="w-full h-12 pl-12 pr-10 bg-card border border-gray-100 rounded-xl text-sm font-bold text-gray-700 shadow-sm appearance-none outline-none">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="w-full h-12 pl-12 pr-10 bg-card border border-gray-100 rounded-xl text-base font-medium text-gray-900 shadow-sm appearance-none outline-none">
             <option value="Tous">Toutes les annonces</option>
-            <option value="Actif">Annonces En ligne</option>
+            <option value="Actif">Annonces en ligne</option>
             <option value="En attente">En attente de validation</option>
-            <option value="Inactif">Annonces Masquées</option>
+            <option value="Inactif">Annonces masquées</option>
             <option value="Vendu">Ventes terminées</option>
           </select>
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-600 pointer-events-none"><Filter size={18}/></div>
@@ -219,7 +222,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
         </div>
       ) : ads.length === 0 ? (
         <div className="bg-card rounded-2xl border border-gray-100 p-10 text-center">
-          <p className="text-gray-500 font-bold mb-4">Vous n'avez pas encore d'annonces.</p>
+          <p className="text-base text-gray-600 mb-4">Vous n'avez pas encore d'annonces.</p>
           <Button variant="primary" onClick={() => onNavigate?.('deposit')}>Publier ma première annonce</Button>
         </div>
       ) : (
@@ -244,29 +247,29 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="font-semibold text-[14px] text-foreground line-clamp-1">{ad.title}</span>
-                          <span className="text-[12px] font-bold text-orange-600 uppercase mt-1">{ad.price}</span>
+                          <span className="text-[13px] font-semibold text-gray-900 tabular-nums mt-1">{ad.price}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       {(() => { const b = statusBadge(ad.status); return (
-                        <Badge variant={b.variant} size="xs" className="font-bold px-3 py-1">{b.label}</Badge>
+                        <Badge variant={b.variant} size="xs" className="font-semibold px-3 py-1">{b.label}</Badge>
                       ); })()}
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center justify-center gap-1.5 text-foreground">
                         <Eye size={15} className="text-primary-600" />
-                        <span className="text-[14px] font-extrabold tabular-nums">{ad.views.toLocaleString('fr-FR')}</span>
+                        <span className="text-[14px] font-semibold tabular-nums">{ad.views.toLocaleString('fr-FR')}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center justify-center gap-2.5">
-                        <button onClick={() => handleEditClick(ad)} className="p-3 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Modifier l'annonce"><Pencil size={16}/></button>
-                        <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white disabled:opacity-20 transition-all" title="Visibilité">
+                        <button onClick={() => handleEditClick(ad)} className="p-3 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Modifier l'annonce" aria-label="Modifier l'annonce"><Pencil size={16}/></button>
+                        <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white disabled:opacity-20 transition-all" title={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'} aria-label={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'}>
                           {ad.status === 'Actif' ? <EyeOff size={16}/> : <Eye size={16}/>}
                         </button>
-                        <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-all" title="Vendu"><Handshake size={16}/></button>
-                        <button onClick={() => handleDelete(ad.id)} className="p-3 rounded-2xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Supprimer"><Trash2 size={16}/></button>
+                        <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-all" title="Marquer comme vendue" aria-label="Marquer comme vendue"><Handshake size={16}/></button>
+                        <button onClick={() => handleDelete(ad.id)} className="p-3 rounded-2xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Supprimer l'annonce" aria-label="Supprimer l'annonce"><Trash2 size={16}/></button>
                       </div>
                     </td>
                   </tr>
@@ -285,34 +288,34 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-bold text-gray-900 leading-tight line-clamp-2 text-sm flex-1">{ad.title}</h4>
-                        <Badge variant={statusBadge(ad.status).variant} size="xs" className="font-bold shrink-0 px-2 py-0.5 text-[9px]">
+                        <h2 className="font-semibold text-gray-900 leading-snug line-clamp-2 text-[15px] flex-1">{ad.title}</h2>
+                        <Badge variant={statusBadge(ad.status).variant} size="xs" className="font-semibold shrink-0 px-2 py-0.5">
                           {statusBadge(ad.status).label}
                         </Badge>
                       </div>
-                      <p className="text-orange-600 font-extrabold text-base mt-1">{ad.price}</p>
-                      <div className="mt-auto flex items-center gap-3 text-gray-400 text-[11px] font-bold uppercase">
+                      <p className="text-gray-900 font-bold text-base tabular-nums mt-1">{ad.price}</p>
+                      <div className="mt-auto flex items-center gap-3 text-gray-600 text-xs">
                         <span className="flex items-center gap-1.5"><Clock size={12}/> {ad.date}</span>
-                        <span className="flex items-center gap-1.5 text-primary-600"><Eye size={12}/> {ad.views.toLocaleString('fr-FR')} vues</span>
+                        <span className="flex items-center gap-1.5 tabular-nums"><Eye size={12}/> {ad.views.toLocaleString('fr-FR')} vues</span>
                       </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-px bg-gray-100 border-t border-gray-100">
-                    <button onClick={() => handleEditClick(ad)} className="flex flex-col items-center justify-center gap-1 py-2.5 bg-card text-blue-600 active:bg-blue-50 transition-colors">
+                    <button onClick={() => handleEditClick(ad)} className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2 bg-card text-blue-600 active:bg-blue-50 transition-colors">
                       <Pencil size={16}/>
-                      <span className="text-[9px] font-bold uppercase">Modifier</span>
+                      <span className="text-xs font-medium">Modifier</span>
                     </button>
-                    <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="flex flex-col items-center justify-center gap-1 py-2.5 bg-card text-orange-600 active:bg-orange-50 transition-colors disabled:opacity-30">
+                    <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2 bg-card text-orange-600 active:bg-orange-50 transition-colors disabled:opacity-30">
                       {ad.status === 'Actif' ? <EyeOff size={16}/> : <Eye size={16}/>}
-                      <span className="text-[9px] font-bold uppercase">{ad.status === 'Actif' ? 'Masquer' : 'Activer'}</span>
+                      <span className="text-xs font-medium">{ad.status === 'Actif' ? 'Masquer' : 'Activer'}</span>
                     </button>
-                    <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="flex flex-col items-center justify-center gap-1 py-2.5 bg-card text-emerald-600 active:bg-emerald-50 transition-colors disabled:opacity-30">
+                    <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2 bg-card text-emerald-600 active:bg-emerald-50 transition-colors disabled:opacity-30">
                       <Handshake size={16}/>
-                      <span className="text-[9px] font-bold uppercase">Vendu</span>
+                      <span className="text-xs font-medium">Vendu</span>
                     </button>
-                    <button onClick={() => handleDelete(ad.id)} className="flex flex-col items-center justify-center gap-1 py-2.5 bg-card text-red-600 active:bg-red-50 transition-colors">
+                    <button onClick={() => handleDelete(ad.id)} className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2 bg-card text-red-600 active:bg-red-50 transition-colors">
                       <Trash2 size={16}/>
-                      <span className="text-[9px] font-bold uppercase">Suppr.</span>
+                      <span className="text-xs font-medium">Supprimer</span>
                     </button>
                   </div>
                 </div>
@@ -322,7 +325,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 bg-card rounded-2xl border border-gray-100 shadow-sm">
-              <span className="text-[12px] font-bold text-gray-300 uppercase">Page {currentPage} / {totalPages}</span>
+              <span className="text-[13px] font-medium text-gray-600 tabular-nums">Page {currentPage} sur {totalPages}</span>
               <div className="flex gap-2">
                 <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-3 rounded-xl bg-gray-50 text-gray-500 disabled:opacity-30"><ChevronLeft size={18}/></button>
                 <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-3 rounded-xl bg-gray-50 text-gray-500 disabled:opacity-30"><ChevronRight size={18}/></button>

@@ -36,7 +36,7 @@ const StatCard = memo(({ label, value, image, alt, isLoading, sub, onClick }: an
         className="w-12 h-12 md:w-14 md:h-14 object-contain transition-transform group-hover:scale-110 group-hover:-rotate-6 duration-300 drop-shadow-sm"
       />
       {sub && !isLoading && (
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider tabular-nums text-right max-w-[55%] leading-tight">
+        <span className="text-xs font-medium text-gray-600 tabular-nums text-right max-w-[55%] leading-snug">
           {sub}
         </span>
       )}
@@ -45,9 +45,9 @@ const StatCard = memo(({ label, value, image, alt, isLoading, sub, onClick }: an
       {isLoading ? (
         <Skeleton className="h-9 md:h-10 w-24" />
       ) : (
-        <h4 className="text-[26px] md:text-[32px] font-black text-gray-900 leading-none tabular-nums">{value}</h4>
+        <p className="text-[28px] md:text-[32px] font-bold text-gray-900 leading-tight tracking-tight tabular-nums">{value}</p>
       )}
-      <p className="text-[11px] md:text-[12px] text-gray-500 font-bold uppercase tracking-tight">{label}</p>
+      <p className="text-[13px] md:text-sm text-gray-600 font-medium">{label}</p>
     </div>
   </Wrapper>
   );
@@ -76,12 +76,12 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
   const avgViewsPerAd = totalAds > 0 ? Math.round(totalViews / totalAds) : 0;
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in" style={{ letterSpacing: '0px' }}>
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       <div className="hidden md:block">
-        <h2 className="text-xl md:text-2xl font-extrabold text-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {user?.firstName ? `Bienvenue, ${user.firstName} 👋` : 'Tableau de bord'}
-        </h2>
-        <p className="text-xs md:text-sm text-gray-500 font-medium mt-1">
+        </h1>
+        <p className="text-sm text-gray-600 mt-1">
           Suivez la performance de vos annonces en temps réel.
         </p>
       </div>
@@ -139,8 +139,8 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-5 md:p-7">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-bold text-base text-foreground">Performance</h3>
-              <p className="text-[12px] text-gray-500 mt-0.5">Indicateurs clés de votre activité.</p>
+              <h2 className="font-semibold text-base md:text-lg text-foreground">Performance</h2>
+              <p className="text-[13px] text-gray-600 mt-0.5">Indicateurs clés de votre activité.</p>
             </div>
             <TrendingUp size={18} className="text-primary-600" />
           </div>
@@ -151,7 +151,6 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
                 label="Taux de conversion"
                 value={`${conversionRate}%`}
                 hint="contacts / vues"
-                tone="text-emerald-600"
                 loading={showSkeleton}
               />
             )}
@@ -159,14 +158,12 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
               label="Annonces vendues"
               value={fmt(soldListings)}
               hint={sellThroughRate > 0 ? `${sellThroughRate}% du total` : '—'}
-              tone="text-blue-600"
               loading={showSkeleton}
             />
             <PerfTile
               label="Vues moyennes"
               value={fmt(avgViewsPerAd)}
               hint="par annonce active"
-              tone="text-orange-600"
               loading={showSkeleton}
             />
           </div>
@@ -177,10 +174,10 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
                 <TrendingUp size={16} strokeWidth={2.25} />
               </div>
               <div className="flex-1">
-                <p className="text-[12px] font-bold uppercase text-foreground tracking-wide">Conseil performance</p>
-                <p className="text-[13px] text-muted-foreground font-medium leading-relaxed mt-1">
-                  Les annonces avec <strong className="text-foreground">5 photos HD</strong> reçoivent en moyenne{' '}
-                  <strong className="text-primary-600">2.5× plus de messages</strong>.
+                <p className="text-sm font-semibold text-foreground">Conseil performance</p>
+                <p className="text-sm text-gray-600 leading-relaxed mt-1">
+                  Les annonces avec <strong className="font-semibold text-foreground">5 photos HD</strong> reçoivent en moyenne{' '}
+                  <strong className="font-semibold text-foreground">2.5× plus de messages</strong>.
                 </p>
               </div>
             </div>
@@ -195,19 +192,18 @@ const PerfTile: React.FC<{
   label: string;
   value: string;
   hint: string;
-  tone: string;
   loading?: boolean;
-}> = ({ label, value, hint, tone, loading }) => (
+}> = ({ label, value, hint, loading }) => (
   <div className="rounded-xl bg-gray-50/60 p-3 md:p-4 border border-gray-100">
-    <p className="text-[10px] md:text-[11px] font-bold uppercase text-gray-500 tracking-wider mb-2 leading-tight">
+    <p className="text-[13px] font-medium text-gray-600 mb-1.5 leading-snug">
       {label}
     </p>
     {loading ? (
       <Skeleton className="h-7 w-16" />
     ) : (
-      <p className={`text-xl md:text-2xl font-black tabular-nums leading-none ${tone}`}>{value}</p>
+      <p className="text-2xl font-bold text-gray-900 tracking-tight tabular-nums leading-tight">{value}</p>
     )}
-    <p className="text-[10px] text-gray-400 font-medium mt-1.5">{hint}</p>
+    <p className="text-xs text-gray-600 mt-1">{hint}</p>
   </div>
 );
 
