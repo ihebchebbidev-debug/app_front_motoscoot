@@ -8,7 +8,8 @@ import { readFileSync } from 'node:fs';
 const modal = readFileSync(new URL('../components/auth/LoginModal.tsx', import.meta.url), 'utf8');
 
 test('the e-mail field is the login identifier', () => {
-  assert.match(modal, /type="email"[\s\S]{0,300}name="email"\s+autoComplete="username"/);
+  // The field is registered as « email » in the form (its name attribute).
+  assert.match(modal, /type="email"[\s\S]{0,300}\{\.\.\.field\('email'\)\}\s+autoComplete="username"/);
 });
 
 test('the password is the current one to sign in, a new one to sign up', () => {

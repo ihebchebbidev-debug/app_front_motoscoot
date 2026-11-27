@@ -21,6 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   // placeholder (« Ex: TMAX 560 ») instead of « Modèle ».
   const autoId = useId();
   const id = props.id ?? autoId;
+  const errorId = `${id}-error`;
   return (
     <div className="space-y-2 w-full group">
       {label && (
@@ -46,6 +47,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           `}
           {...props}
           id={id}
+          // The error under the field is read with it (screen readers).
+          aria-invalid={error ? true : props['aria-invalid']}
+          aria-describedby={error ? errorId : props['aria-describedby']}
         />
         {rightIcon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -53,7 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           </div>
         )}
       </div>
-      {error && <p className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
+      {error && <p id={errorId} className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
     </div>
   );
 });

@@ -40,6 +40,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "10.4.20",
+    "clsx": "^2.1.1",
     "cors": "^2.8.6",
     "dompurify": "latest",
     "dotenv": "^17.4.2",

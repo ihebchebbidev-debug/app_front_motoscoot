@@ -20,6 +20,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   // the inputs and the brand picker, so a filled field and an empty one differ.
   const autoId = useId();
   const id = props.id ?? autoId;
+  const errorId = `${id}-error`;
   const type = FIELD_TYPE[useTypeTone()];
   // Read from the element itself: the form library sets values without a
   // change event (defaults, a reset when the category changes). A CSS
@@ -56,6 +57,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
             ${className}
           `}
           {...props}
+          // The error under the field is read with it (screen readers).
+          aria-invalid={error ? true : props['aria-invalid']}
+          aria-describedby={error ? errorId : props['aria-describedby']}
           onChange={(e) => { setEmpty(!e.target.value); onChange?.(e); }}
         >
           {children}
@@ -64,7 +68,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           <ChevronDown size={20} />
         </div>
       </div>
-      {error && <p className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
+      {error && <p id={errorId} className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
     </div>
   );
 });
