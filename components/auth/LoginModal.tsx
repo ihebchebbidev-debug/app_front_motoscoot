@@ -563,6 +563,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
 
             <div className="space-y-4 pt-2">
               <Input
+                label="Adresse e-mail"
                 type="email"
                 // « username » ties the saved password to this e-mail in
                 // iCloud Keychain, Google and 1Password (web.dev guidance).
@@ -579,6 +580,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
               />
               <div className="space-y-2">
                 <Input
+                  label="Mot de passe"
                   type="password"
                   // Sign-up: the browser offers a strong password and saves it.
                   name="password"
