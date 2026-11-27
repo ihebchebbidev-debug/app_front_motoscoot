@@ -80,13 +80,15 @@ const AppleIcon = () => (
 
 /**
  * Left picture of the login window, tablet and desktop only (phones keep the
- * plain sheet). Temporary free photo — Unsplash licence, by Daniel
- * (unsplash.com/photos/OVXwS_oaoJE). To use the site's own picture, change
- * LOGIN_PHOTO and remove the credit line.
+ * plain sheet): the site's own photo, served from /images/connexion in two
+ * widths (450 px for standard screens, 898 px for Retina). The panel is at
+ * most about 450 × 780 px; the rider and the helmet sit in the middle third,
+ * clear of the headline at the top and the links at the bottom.
  */
-const LOGIN_PHOTO =
-  'https://images.unsplash.com/photo-1695014192162-e1d282ff5b40?auto=format&fit=crop&w=900&h=1300&q=70';
-const LOGIN_PHOTO_CREDIT = 'Photo : Daniel / Unsplash';
+const LOGIN_PHOTO = '/images/connexion/photo-connexion-898.webp';
+const LOGIN_PHOTO_SRCSET = '/images/connexion/photo-connexion-450.webp 450w, /images/connexion/photo-connexion-898.webp 898w';
+/** Credit line under the links; empty for the site's own photo. */
+const LOGIN_PHOTO_CREDIT = '';
 
 /**
  * The site's social accounts (set in the backoffice, same links as the
@@ -127,9 +129,11 @@ const LoginAside: React.FC<{ isSignUp: boolean }> = ({ isSignUp }) => (
   <div className="relative h-full overflow-hidden rounded-[20px] bg-[#0b0b0c]">
     <img
       src={LOGIN_PHOTO}
+      srcSet={LOGIN_PHOTO_SRCSET}
+      sizes="(min-width: 1024px) 450px, 300px"
       alt=""
       decoding="async"
-      className="absolute inset-0 h-full w-full object-cover"
+      className="absolute inset-0 h-full w-full object-cover object-[28%_50%]"
     />
     {/* Dark at the top for the headline, and at the bottom for the links. */}
     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/60" aria-hidden="true" />
