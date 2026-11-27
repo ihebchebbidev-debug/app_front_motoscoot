@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useForm, type FieldErrors } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import clsx from 'clsx';
 import {
   Mail,
   Lock,
@@ -26,12 +29,16 @@ import { useGovernorates } from '../../hooks/useReferenceData';
 import { useToast } from '../../context/ToastContext';
 import { authApi } from '../../services/authApi';
 import { compressImage } from '../../utils/imageCompression';
+import { cleanPhoneInput, formatTunisiaPhone } from '../../utils/phoneUtils';
 import {
-  cleanPhoneInput,
-  formatTunisiaPhone,
-  isValidTunisiaPhone,
-  TUNISIA_PHONE_ERROR,
-} from '../../utils/phoneUtils';
+  emailProblem,
+  EMAIL_EMPTY,
+  emptyLoginForm,
+  loginFormModeOf,
+  loginFormSchemas,
+  type LoginFormMode,
+  type LoginFormValues,
+} from '../../utils/loginFormSchema';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -48,7 +55,7 @@ type ErrorPlace = 'google' | 'forgot' | 'form';
 
 /** Error shown where it happened; role="alert" so screen readers read it. */
 const ErrorNote: React.FC<{ message: string; className?: string }> = ({ message, className = '' }) => (
-  <div role="alert" className={`p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-fade-in ${className}`}>
+  <div role="alert" className={clsx('p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-fade-in', className)}>
     <AlertCircle size={18} className="text-red-600 mt-0.5 shrink-0" aria-hidden="true" />
     <p className="text-[13px] font-bold text-red-800 leading-snug">{message}</p>
   </div>
@@ -99,30 +106,32 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   // request and never got persisted properly.
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  // Form fields
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [city, setCity] = useState(''); // For Particulier this is the governorate.
-  const [proGovernorate, setProGovernorate] = useState(''); // Pro-account governorate.
-  const [shopName, setShopName] = useState('');
-  // Pro accounts: split first/last name so the dashboard can pre-fill them.
-  // We compose `full_name` from these two at submit time.
-  const [proFirstName, setProFirstName] = useState('');
-  const [proLastName, setProLastName] = useState('');
-  const [shopAddress, setShopAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [phoneTouched, setPhoneTouched] = useState(false);
+  // Text fields: react-hook-form + the rules in utils/loginFormSchema.ts.
+  // Each field is checked when the visitor leaves it, then as they correct
+  // it; the error shows under the field. The rules follow the screen
+  // (sign in, « Particulier », « Professionnel »); values typed on one
+  // screen stay when switching.
+  const formMode: LoginFormMode = loginFormModeOf(isSignUp, userType);
+  const formModeRef = useRef(formMode);
+  formModeRef.current = formMode;
+  const form = useForm<LoginFormValues>({
+    mode: 'onTouched',
+    defaultValues: emptyLoginForm,
+    // The library focuses fields in the order they were first shown (e-mail
+    // before the sign-up fields); we focus the first one on screen instead.
+    shouldFocusError: false,
+    resolver: (values, context, options) =>
+      zodResolver(loginFormSchemas[formModeRef.current])(values, context, options),
+  });
+  const fieldErrors: FieldErrors<LoginFormValues> = form.formState.errors;
+  const field = form.register;
+  // Phone: keep only digits and a leading « + » as the visitor types.
+  const phoneField = field('phone');
+
   // Lightweight "I'm not a robot" check. Not a real CAPTCHA, but blocks
   // form submission until the user actively confirms the box.
   const [notRobot, setNotRobot] = useState(false);
   const [robotError, setRobotError] = useState(false);
-
-  const phoneError =
-    isSignUp && phoneTouched && phone && !isValidTunisiaPhone(phone)
-      ? TUNISIA_PHONE_ERROR
-      : undefined;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clerkGoogle = useClerkGoogleSignIn();
@@ -151,11 +160,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   // exit animation come from the shared ChoiceSheet, as in every other
   // window of the site (sort, filters, quote request).
 
-  // Reset error when switching modes
+  // Reset errors when switching screens (the new screen has other rules).
   useEffect(() => {
     setError(null);
     setNotRobot(false);
     setRobotError(false);
+    form.clearErrors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignUp, userType, setError]);
 
   useEffect(() => {
@@ -212,32 +223,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleWaiting, clerkGoogle.canStart, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorAt('form');
-    if (!notRobot) {
-      setRobotError(true);
-      setError('Veuillez confirmer que vous n\u2019\u00eates pas un robot.');
-      return;
-    }
-    setRobotError(false);
+  const submitValid = async (v: LoginFormValues) => {
     try {
       if (isSignUp) {
         // Tunisia phone is required for signup so buyers can reach the seller.
-        if (!isValidTunisiaPhone(phone)) {
-          setPhoneTouched(true);
-          setError(TUNISIA_PHONE_ERROR);
-          return;
-        }
-        const normalizedPhone = formatTunisiaPhone(phone);
+        const normalizedPhone = formatTunisiaPhone(v.phone);
 
         if (userType === 'individual') {
           await register({
-            email,
-            password,
-            first_name: firstName,
-            last_name: lastName,
-            city,
+            email: v.email,
+            password: v.password,
+            first_name: v.firstName,
+            last_name: v.lastName,
+            city: v.governorate,
             phone: normalizedPhone,
             account_type: 'individual',
           });
@@ -250,16 +248,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           // close+unmount this modal while the multipart upload is still in
           // flight, cancelling it. That's why Pro signups never had a logo.
           await register({
-            email,
-            password,
-            shop_name: shopName,
-            full_name: `${proFirstName} ${proLastName}`.trim(),
-            first_name: proFirstName,
-            last_name: proLastName,
-            shop_address: shopAddress,
+            email: v.email,
+            password: v.password,
+            shop_name: v.shopName,
+            full_name: `${v.firstName} ${v.lastName}`.trim(),
+            first_name: v.firstName,
+            last_name: v.lastName,
+            shop_address: v.shopAddress,
             phone: normalizedPhone,
-            governorate: proGovernorate || undefined,
-            city: proGovernorate || undefined,
+            governorate: v.governorate || undefined,
+            city: v.governorate || undefined,
             account_type: 'pro',
           });
 
@@ -296,7 +294,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           onLogin('user');
         }
       } else {
-        await login({ email, password });
+        await login({ email: v.email, password: v.password });
         onLogin('user');
       }
     } catch {
@@ -304,17 +302,39 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     }
   };
 
-  const handleForgotPassword = async () => {
-    setErrorAt('forgot');
-    const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      setError('Saisissez votre adresse e-mail puis cliquez à nouveau sur « Mot de passe oublié ».');
+  const focusFirstInvalid = () => {
+    requestAnimationFrame(() => {
+      const first = contentRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+      if (!first) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      first.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      first.focus({ preventScroll: true });
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorAt('form');
+    if (!notRobot) {
+      setRobotError(true);
+      setError('Veuillez confirmer que vous n\u2019\u00eates pas un robot.');
       return;
     }
-    // Basic email shape check — backend re-validates, but this avoids a
-    // wasted round-trip and gives instant feedback.
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setError('Adresse e-mail invalide.');
+    setRobotError(false);
+    // Invalid fields: each shows its error and the first one on screen gets
+    // the focus (and comes into view), so the visitor starts from the top.
+    void form.handleSubmit(submitValid, focusFirstInvalid)(e);
+  };
+
+  const handleForgotPassword = async () => {
+    setErrorAt('forgot');
+    const cleanEmail = form.getValues('email').trim();
+    // Same e-mail rule as the form; backend re-validates.
+    const problem = emailProblem(cleanEmail);
+    if (problem) {
+      setError(problem === EMAIL_EMPTY
+        ? 'Saisissez votre adresse e-mail puis cliquez à nouveau sur « Mot de passe oublié ».'
+        : problem);
       return;
     }
     setError(null);
@@ -378,6 +398,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   };
 
   const inputCompactClass = '!py-3 !rounded-xl';
+  const segmentClass = 'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all';
+  const segmentOn = 'bg-card text-primary-600 border border-gray-200 shadow-sm';
+  const segmentOff = 'text-gray-500 hover:text-gray-700';
 
   return (
     <ChoiceSheet
@@ -435,7 +458,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               <button
                 type="button"
                 onClick={() => setUserType('individual')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${userType === 'individual' ? 'bg-card text-primary-600 border border-gray-200 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={clsx(segmentClass, userType === 'individual' ? segmentOn : segmentOff)}
               >
                 <User size={16} />
                 Particulier
@@ -443,7 +466,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               <button
                 type="button"
                 onClick={() => setUserType('pro')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${userType === 'pro' ? 'bg-card text-primary-600 border border-gray-200 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={clsx(segmentClass, userType === 'pro' ? segmentOn : segmentOff)}
               >
                 <Briefcase size={16} />
                 Professionnel
@@ -451,40 +474,39 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* noValidate: the form's own French messages, under each field,
+              instead of the browser's bubbles. */}
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {isSignUp && (
               <div className="space-y-4 animate-scale-in">
                 {userType === 'individual' ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input
-                        label="Prénom"
-                        name="given-name"
-                        autoComplete="given-name"
-                        placeholder="Prénom"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                        className={inputCompactClass}
-                      />
-                      <Input
-                        label="Nom"
-                        name="family-name"
-                        autoComplete="family-name"
-                        placeholder="Nom"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                        className={inputCompactClass}
-                      />
+                        <Input
+                          label="Prénom"
+                          autoComplete="given-name"
+                          placeholder="Prénom"
+                          {...field('firstName')}
+                          required
+                          error={fieldErrors.firstName?.message}
+                          className={inputCompactClass}
+                        />
+                        <Input
+                          label="Nom"
+                          autoComplete="family-name"
+                          placeholder="Nom"
+                          {...field('lastName')}
+                          required
+                          error={fieldErrors.lastName?.message}
+                          className={inputCompactClass}
+                        />
                     </div>
                     <Select
                       label="Gouvernorat"
-                      name="governorate"
                       autoComplete="address-level1"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      {...field('governorate')}
                       required
+                      error={fieldErrors.governorate?.message}
                       className={inputCompactClass}
                     >
                       <option value="" disabled>Choisir mon gouvernorat</option>
@@ -495,18 +517,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                         label="Téléphone"
                         type="tel"
                         inputMode="tel"
-                        name="tel"
                         autoComplete="tel"
                         placeholder="22 123 456"
-                        value={phone}
-                        onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
-                        onBlur={() => setPhoneTouched(true)}
+                        {...phoneField}
+                        onChange={(e) => {
+                          e.target.value = cleanPhoneInput(e.target.value);
+                          void phoneField.onChange(e);
+                        }}
                         leftIcon={<Phone size={18} />}
                         required
-                        error={phoneError}
+                        error={fieldErrors.phone?.message}
                         className={inputCompactClass}
                       />
-                      {!phoneError && (
+                      {!fieldErrors.phone && (
                         <p className="text-[11px] text-gray-400 font-medium px-1">
                           Numéro tunisien — utilisé par les acheteurs pour vous contacter.
                         </p>
@@ -517,56 +540,51 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   <>
                     <Input
                       label="Nom de la boutique"
-                      name="organization"
                       autoComplete="organization"
                       placeholder="Ex: Tunis Moto Shop"
-                      value={shopName}
-                      onChange={(e) => setShopName(e.target.value)}
+                      {...field('shopName')}
                       leftIcon={<Building2 size={18} />}
                       required
+                      error={fieldErrors.shopName?.message}
                       className={inputCompactClass}
                     />
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        label="Prénom"
-                        name="given-name"
-                        autoComplete="given-name"
-                        placeholder="Prénom"
-                        value={proFirstName}
-                        onChange={(e) => setProFirstName(e.target.value)}
-                        leftIcon={<User size={18} />}
-                        required
-                        className={inputCompactClass}
-                      />
-                      <Input
-                        label="Nom"
-                        name="family-name"
-                        autoComplete="family-name"
-                        placeholder="Nom"
-                        value={proLastName}
-                        onChange={(e) => setProLastName(e.target.value)}
-                        required
-                        className={inputCompactClass}
-                      />
+                        <Input
+                          label="Prénom"
+                          autoComplete="given-name"
+                          placeholder="Prénom"
+                          {...field('firstName')}
+                          leftIcon={<User size={18} />}
+                          required
+                          error={fieldErrors.firstName?.message}
+                          className={inputCompactClass}
+                        />
+                        <Input
+                          label="Nom"
+                          autoComplete="family-name"
+                          placeholder="Nom"
+                          {...field('lastName')}
+                          required
+                          error={fieldErrors.lastName?.message}
+                          className={inputCompactClass}
+                        />
                     </div>
                     <Input
                       label="Adresse boutique"
-                      name="street-address"
                       autoComplete="street-address"
                       placeholder="Rue, Ville..."
-                      value={shopAddress}
-                      onChange={(e) => setShopAddress(e.target.value)}
+                      {...field('shopAddress')}
                       leftIcon={<MapPin size={18} />}
                       required
+                      error={fieldErrors.shopAddress?.message}
                       className={inputCompactClass}
                     />
                     <Select
                       label="Gouvernorat"
-                      name="governorate"
                       autoComplete="address-level1"
-                      value={proGovernorate}
-                      onChange={(e) => setProGovernorate(e.target.value)}
+                      {...field('governorate')}
                       required
+                      error={fieldErrors.governorate?.message}
                       className={inputCompactClass}
                     >
                       <option value="" disabled>Choisir mon gouvernorat</option>
@@ -577,18 +595,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                         label="Téléphone"
                         type="tel"
                         inputMode="tel"
-                        name="tel"
                         autoComplete="tel"
                         placeholder="22 123 456"
-                        value={phone}
-                        onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
-                        onBlur={() => setPhoneTouched(true)}
+                        {...phoneField}
+                        onChange={(e) => {
+                          e.target.value = cleanPhoneInput(e.target.value);
+                          void phoneField.onChange(e);
+                        }}
                         leftIcon={<Phone size={18} />}
                         required
-                        error={phoneError}
+                        error={fieldErrors.phone?.message}
                         className={inputCompactClass}
                       />
-                      {!phoneError && (
+                      {!fieldErrors.phone && (
                         <p className="text-[11px] text-gray-400 font-medium px-1">
                           Numéro tunisien — utilisé par les acheteurs pour vous contacter.
                         </p>
@@ -602,7 +621,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                         onDragLeave={() => setIsDragging(false)}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`relative h-28 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer group ${isDragging ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50 hover:bg-card hover:border-primary-300'}`}
+                        className={clsx(
+                          'relative h-28 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer group',
+                          isDragging ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50 hover:bg-card hover:border-primary-300',
+                        )}
                       >
                         {logoPreview ? (
                           <div className="flex items-center gap-3">
@@ -611,7 +633,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                           </div>
                         ) : (
                           <>
-                            <Upload className={`mb-1 ${isDragging ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500'}`} size={24} />
+                            <Upload className={clsx('mb-1', isDragging ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500')} size={24} />
                             <span className="text-[12px] font-bold text-gray-500">Logo (JPG, PNG)</span>
                           </>
                         )}
@@ -629,15 +651,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 type="email"
                 // « username » ties the saved password to this e-mail in
                 // iCloud Keychain, Google and 1Password (web.dev guidance).
-                name="email"
+                {...field('email')}
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="votre@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 leftIcon={<Mail size={18} />}
                 required
+                error={fieldErrors.email?.message}
                 className={inputCompactClass}
               />
               <div className="space-y-2">
@@ -645,14 +666,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   label="Mot de passe"
                   type="password"
                   // Sign-up: the browser offers a strong password and saves it.
-                  name="password"
+                  {...field('password')}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   placeholder="mot de passe"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   leftIcon={<Lock size={18} />}
                   required
-                  minLength={6}
+                  error={fieldErrors.password?.message}
                   className={inputCompactClass}
                 />
                 {!isSignUp && (

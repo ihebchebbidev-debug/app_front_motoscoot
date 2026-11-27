@@ -24,7 +24,7 @@ test('Google and forgotten-password errors sit under their own control', () => {
 });
 
 test('each action says where its error goes, and errors are announced', () => {
-  assert.match(modal, /const handleSubmit = async[\s\S]{0,80}setErrorAt\('form'\)/);
+  assert.match(modal, /const handleSubmit = \(e: React\.FormEvent\) => \{\s*e\.preventDefault\(\);\s*setErrorAt\('form'\)/);
   assert.match(modal, /const handleForgotPassword = async \(\) => \{\s*setErrorAt\('forgot'\)/);
   assert.match(modal, /const handleSocialLogin = async[\s\S]{0,80}setErrorAt\('google'\)/);
   assert.match(modal, /<div role="alert"/);
