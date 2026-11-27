@@ -12,6 +12,7 @@ test('filter panel: the new count is announced when a filter changes', () => {
 
 test('sheet: the panel is the dialog, named by its visible title', () => {
   assert.match(sheet, /ref=\{panelRef\}\s+role="dialog"\s+aria-modal="true"\s+aria-labelledby=\{titleId\}/);
-  assert.match(sheet, /<h2 id=\{titleId\} className="text-base font-bold text-gray-900">\{label\}<\/h2>/);
+  // Visible title (only the login window's split layout hides it from 768 px).
+  assert.match(sheet, /<h2 id=\{titleId\} className=\{`text-base font-bold text-gray-900 \$\{aside \? 'md:sr-only' : ''\}`\}>\{label\}<\/h2>/);
   assert.doesNotMatch(sheet, /onClick=\{onClose\}\s+role="dialog"/); // not the scrim any more
 });

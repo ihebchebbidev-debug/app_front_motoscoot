@@ -80,7 +80,8 @@ test('logos load lazily and are decorative (the name is the label)', () => {
 
 test('the brand sheet keeps its height while the search filters, measured on the visible screen', () => {
   assert.match(picker, /\n\s+tall\n/);
-  assert.match(sheet, /max-h-\[85dvh\] \$\{tall \? 'h-\[85dvh\] md:h-auto' : ''\}/);
+  assert.match(sheet, /max-h-\[85dvh\]/);
+  assert.match(sheet, /\$\{tall \? 'h-\[85dvh\] md:h-auto' : ''\}/);
   assert.doesNotMatch(sheet, /max-h-\[85vh\]/);
 });
 
