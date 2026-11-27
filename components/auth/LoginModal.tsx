@@ -346,6 +346,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     });
   };
 
+  // Phones: the keyboard covers the bottom half of the sheet. Once it is up
+  // (~300 ms), bring the touched field to the middle of what is left.
+  const keepFocusedFieldVisible = (e: React.FocusEvent<HTMLDivElement>) => {
+    const field = e.target as HTMLElement;
+    if (!/^(INPUT|SELECT|TEXTAREA)$/.test(field.tagName) || field.getAttribute('type') === 'checkbox') return;
+    if (!window.matchMedia?.('(max-width: 767px)').matches) return;
+    window.setTimeout(() => {
+      if (document.activeElement !== field) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      field.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    }, 300);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorAt('form');
@@ -428,6 +441,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
       onClose={onClose}
       listbox={false}
       tall
+      large
       aside={<LoginAside isSignUp={isSignUp} />}
     >
       {/* The deposit's calm scale (as on DepositAd and the dashboard):
@@ -435,7 +449,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           13 px help and errors, sentence-case buttons. */}
       <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
-        <div ref={contentRef} className="min-h-full flex flex-col px-6 pt-4 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
+        <div ref={contentRef} onFocus={keepFocusedFieldVisible} className="min-h-full flex flex-col px-6 pt-4 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
           <div className="hidden md:block md:mb-6 md:text-left md:pb-6 md:border-b md:border-gray-100">
             <div className="inline-flex items-center justify-center overflow-hidden mb-3 [@media(max-height:780px)]:hidden">
               <img
@@ -454,7 +468,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </p>
           </div>
 
-          <div className="flex items-center justify-center mb-4 md:mb-5">
+          <div className="flex items-center justify-center mb-4 [@media(max-height:700px)]:mb-3 md:mb-5">
             <button
               type="button"
               onClick={handleGoogleClick}
@@ -478,7 +492,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           {error && errorAt === 'google' && <ErrorNote message={error} className="-mt-2 mb-5" />}
 
-          <div className="relative flex items-center justify-center mb-4 md:mb-5">
+          <div className="relative flex items-center justify-center mb-4 [@media(max-height:700px)]:mb-3 md:mb-5">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
             <span className="relative px-4 bg-card text-[13px] font-medium text-gray-500">ou</span>
           </div>
@@ -506,7 +520,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           {/* noValidate: the form's own French messages, under each field,
               instead of the browser's bubbles. */}
-          <form onSubmit={handleSubmit} noValidate className="space-y-4 md:space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 [@media(max-height:700px)]:space-y-3 md:space-y-5">
             {isSignUp && (
               <div className="space-y-4 animate-scale-in">
                 {userType === 'individual' ? (
@@ -573,7 +587,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               </div>
             )}
 
-            <div className="space-y-4 md:space-y-5">
+            <div className="space-y-4 [@media(max-height:700px)]:space-y-3 md:space-y-5">
               <Input
                 label="Adresse e-mail"
                 type="email"
@@ -582,7 +596,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 {...field('email')}
                 autoComplete="username"
                 autoCapitalize="none"
+                autoCorrect="off"
                 spellCheck={false}
+                // Phone keyboard: « Suivant » goes to the password instead of
+                // sending a half-filled form.
+                enterKeyHint="next"
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return;
+                  e.preventDefault();
+                  form.setFocus('password');
+                }}
                 placeholder="votre@email.com"
                 leftIcon={<Mail size={18} />}
                 required
@@ -595,6 +618,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   // Sign-up: the browser offers a strong password and saves it.
                   {...field('password')}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  enterKeyHint={isSignUp ? 'done' : 'go'}
                   placeholder="mot de passe"
                   leftIcon={<Lock size={18} />}
                   required
@@ -663,7 +687,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           {/* Acceptance of the CGU. Shown in both modes: "Continuer avec Google"
               creates an account from the sign-in screen too. The link opens a
               new tab so a half-filled form is not lost. */}
-          <p className="mt-3 md:mt-4 text-center text-[13px] leading-relaxed text-gray-500 text-pretty">
+          <p className="mt-3 [@media(max-height:700px)]:mt-2 md:mt-4 text-center text-[13px] leading-relaxed text-gray-500 text-pretty">
             {isSignUp ? 'En créant votre compte' : 'En continuant'}, vous acceptez les{' '}
             <a
               href="/conditions"
@@ -676,7 +700,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             de Moto-Scoot.tn.
           </p>
 
-          <div className="mt-4 pt-4 md:mt-6 md:pt-5 border-t border-gray-100 text-center">
+          <div className="mt-4 pt-4 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:pt-3 md:mt-6 md:pt-5 border-t border-gray-100 text-center">
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
               <button
@@ -691,7 +715,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           {/* Phones (no picture): the social links at the bottom of the sheet.
               Tablet / desktop: at the bottom of the picture (LoginAside). */}
-          <LoginSocialLinks inline className="md:hidden mt-auto justify-center pt-3 pb-2" />
+          <LoginSocialLinks inline className="md:hidden mt-auto justify-center pt-6 pb-3 [@media(max-height:700px)]:pt-1 [@media(max-height:700px)]:pb-2" />
         </div>
       </TypeScaleProvider>
     </ChoiceSheet>

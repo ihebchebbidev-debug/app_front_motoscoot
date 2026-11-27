@@ -107,6 +107,10 @@ interface ChoiceSheetProps {
   /** Phones: a fixed 85 % height, so the sheet does not shrink while the
    *  search filters and the results stay under the field, above the keyboard. */
   tall?: boolean;
+  /** Phones: the sheet fits its content and may grow up to nearly the full
+   *  height (a strip of the page left visible above, as iOS sheets), for a
+   *  main task such as signing in. */
+  large?: boolean;
   /** Where focus goes back on close (a tap does not focus a button on iPhone,
    *  so the opener cannot always be read from document.activeElement). */
   returnFocus?: React.RefObject<HTMLElement | null>;
@@ -117,7 +121,7 @@ interface ChoiceSheetProps {
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false, returnFocus, aside }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false, large = false, returnFocus, aside }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -364,7 +368,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         className={`ms-sheet outline-none bg-card w-full rounded-t-2xl max-h-[85dvh] pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl ${
           aside
             // Split window: picture card inset on the left, form on the right.
-            ? `md:w-[calc(100%-48px)] md:max-w-[1000px] md:max-h-none md:h-[min(800px,calc(100dvh-48px))] md:rounded-[28px] md:flex-row md:p-3 ${tall ? 'h-[85dvh]' : ''}`
+            ? `md:w-[calc(100%-48px)] md:max-w-[1000px] md:max-h-none md:h-[min(800px,calc(100dvh-48px))] md:rounded-[28px] md:flex-row md:p-3 ${large ? 'max-md:!max-h-[calc(100dvh-12px)]' : tall ? 'h-[85dvh]' : ''}`
             : `md:max-w-md md:rounded-2xl ${tall ? 'h-[85dvh] md:h-auto' : ''}`
         }`}
         onClick={(e) => e.stopPropagation()}
