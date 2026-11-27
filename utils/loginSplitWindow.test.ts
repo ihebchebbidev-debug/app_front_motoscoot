@@ -13,7 +13,7 @@ test('the picture panel shows only from 768 px and is not read aloud', () => {
 });
 
 test('sheets without a picture keep their exact layout (wrapper takes no space)', () => {
-  assert.match(sheet, /className=\{aside \? 'flex flex-col flex-1 min-w-0 min-h-0' : 'contents'\}/);
+  assert.match(sheet, /className=\{aside \? 'relative flex flex-col flex-1 min-w-0 min-h-0' : 'contents'\}/);
   assert.match(sheet, /: `md:max-w-md md:rounded-2xl \$\{tall \? 'h-\[85dvh\] md:h-auto' : ''\}`/);
 });
 

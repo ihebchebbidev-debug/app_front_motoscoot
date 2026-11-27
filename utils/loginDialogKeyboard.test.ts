@@ -10,7 +10,7 @@ const modal = readFileSync(new URL('../components/auth/LoginModal.tsx', import.m
 const sheet = readFileSync(new URL('../components/search/ChoiceSheet.tsx', import.meta.url), 'utf8');
 
 test('the login window is the shared sheet, titled by its screen', () => {
-  assert.match(modal, /<ChoiceSheet\s+open=\{isOpen\}\s+label=\{isSignUp \? 'Créer un compte' : 'Bienvenue sur moto-scoot\.tn'\}\s+onClose=\{onClose\}\s+listbox=\{false\}/);
+  assert.match(modal, /<ChoiceSheet\s+open=\{isOpen\}\s+label=\{isSignUp \? 'Créer un compte' : 'Bienvenue'\}\s+onClose=\{onClose\}\s+listbox=\{false\}/);
   assert.doesNotMatch(modal, /role="dialog"/);
   assert.doesNotMatch(modal, /if \(!isOpen\) return null;/, 'unmounting at once would skip the exit animation');
 });
