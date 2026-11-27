@@ -399,8 +399,8 @@ const Header: React.FC<HeaderProps> = ({
                 </>
               ) : (
                 <div className="flex items-center gap-1">
-                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Connexion" aria-label="Connexion"><LogIn size={20} /></button>
-                  <button onClick={triggerLogin} className={headerIconButtonClasses} title="Inscription" aria-label="Inscription"><UserPlus size={20} /></button>
+                  <button onClick={() => triggerLogin('login')} className={headerIconButtonClasses} title="Connexion" aria-label="Connexion"><LogIn size={20} /></button>
+                  <button onClick={() => triggerLogin('signup')} className={headerIconButtonClasses} title="Inscription" aria-label="Inscription"><UserPlus size={20} /></button>
                 </div>
               )}
 
@@ -494,14 +494,14 @@ const Header: React.FC<HeaderProps> = ({
               ) : (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => { setIsMobileSheetOpen(false); triggerLogin(); }}
+                    onClick={() => { setIsMobileSheetOpen(false); triggerLogin('login'); }}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-3.5 rounded-2xl bg-orange-50 border border-orange-100 text-primary-700 font-black text-[14px] active:scale-[0.99] transition-transform"
                   >
                     <LogIn size={16} strokeWidth={2.5} />
                     Se connecter
                   </button>
                   <button
-                    onClick={() => { setIsMobileSheetOpen(false); triggerLogin(); }}
+                    onClick={() => { setIsMobileSheetOpen(false); triggerLogin('signup'); }}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-3.5 rounded-2xl bg-primary-600 text-white font-black text-[14px] active:scale-[0.99] transition-transform shadow-sm"
                   >
                     <UserPlus size={16} strokeWidth={2.5} />

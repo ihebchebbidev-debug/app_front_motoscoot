@@ -7,20 +7,22 @@
 import React from 'react';
 import { ClerkProvider } from '@clerk/clerk-react';
 import LoginModal from './LoginModal';
+import type { LoginMode } from '../../context/NavigationContext';
 import ClerkAuthBridge from './ClerkAuthBridge';
 import { getClerkPublishableKey } from '../../utils/clerkConfig';
 
 interface Props {
   isOpen: boolean;
+  initialMode?: LoginMode;
   onClose: () => void;
   onLogin: () => void;
 }
 
-const ClerkIsland: React.FC<Props> = ({ isOpen, onClose, onLogin }) => {
+const ClerkIsland: React.FC<Props> = ({ isOpen, initialMode, onClose, onLogin }) => {
   const key = getClerkPublishableKey();
   const inner = (
     <>
-      <LoginModal isOpen={isOpen} onClose={onClose} onLogin={onLogin} />
+      <LoginModal isOpen={isOpen} initialMode={initialMode} onClose={onClose} onLogin={onLogin} />
       <ClerkAuthBridge onLogin={onLogin} />
     </>
   );

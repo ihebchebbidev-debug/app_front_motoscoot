@@ -19,6 +19,7 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import CloudflareTurnstileMock from './CloudflareTurnstileMock';
+import type { LoginMode } from '../../context/NavigationContext';
 import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
 import { useGovernorates } from '../../hooks/useReferenceData';
@@ -34,6 +35,8 @@ import {
 
 interface LoginModalProps {
   isOpen: boolean;
+  /** Screen to open on: the menu's « S'inscrire » opens « Créer un compte ». */
+  initialMode?: LoginMode;
   onClose: () => void;
   onLogin: (role?: 'user' | 'admin') => void;
 }
@@ -60,8 +63,21 @@ const GoogleIcon = () => (
 );
 
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
-  const [isSignUp, setIsSignUp] = useState(false);
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', onClose, onLogin }) => {
+  const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Each opening starts on the screen its button named (« Se connecter » or
+  // « S'inscrire »), not on the one left open last time. Typed values stay.
+  useEffect(() => {
+    if (isOpen) setIsSignUp(initialMode === 'signup');
+  }, [isOpen, initialMode]);
+
+  // Switching between sign-in and sign-up starts at the top: the link is at
+  // the bottom, and the new screen opened half-scrolled, title hidden.
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [isSignUp, isOpen]);
   const [userType, setUserType] = useState<UserType>('individual');
   const [isDragging, setIsDragging] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -410,7 +426,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
           <X size={24} strokeWidth={2.5} />
         </button>
 
-        <div className="p-6 md:p-10 overflow-y-auto no-scrollbar flex-1 pt-16 md:pt-10">
+        <div ref={scrollRef} className="p-6 md:p-10 overflow-y-auto no-scrollbar flex-1 pt-16 md:pt-10">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-4 border border-primary-100 overflow-hidden">
               <img
