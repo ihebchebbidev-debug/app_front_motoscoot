@@ -110,10 +110,14 @@ interface ChoiceSheetProps {
   /** Where focus goes back on close (a tap does not focus a button on iPhone,
    *  so the opener cannot always be read from document.activeElement). */
   returnFocus?: React.RefObject<HTMLElement | null>;
+  /** From 768 px: a picture panel on the left and a wider window (the login
+   *  window). The title moves into the content, only the close button stays
+   *  in the header. Phones keep the plain sheet. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false, returnFocus }) => {
+export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, search, anchor, listbox = true, headerAction, footer, children, tall = false, returnFocus, aside }) => {
   // Stay mounted while the exit animation plays.
   const [mounted, setMounted] = useState(open);
   const [state, setState] = useState<'open' | 'closed'>(open ? 'open' : 'closed');
@@ -357,10 +361,22 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         data-state={draggedShut.current ? 'dragged' : state}
         // dvh: the visible height with the browser bars (85vh overflowed under the
         // URL bar). Bottom padding keeps the last row clear of the home indicator.
-        className={`ms-sheet outline-none bg-card w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85dvh] ${tall ? 'h-[85dvh] md:h-auto' : ''} pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl`}
+        className={`ms-sheet outline-none bg-card w-full rounded-t-2xl max-h-[85dvh] pb-[env(safe-area-inset-bottom,0px)] flex flex-col shadow-2xl ${
+          aside
+            // Split window: picture card inset on the left, form on the right.
+            ? `md:w-[calc(100%-48px)] md:max-w-[1000px] md:max-h-none md:h-[min(760px,calc(100dvh-48px))] md:rounded-[28px] md:flex-row md:p-3 ${tall ? 'h-[85dvh]' : ''}`
+            : `md:max-w-md md:rounded-2xl ${tall ? 'h-[85dvh] md:h-auto' : ''}`
+        }`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={onListKeyDown}
       >
+        {aside && (
+          <div className="hidden md:block w-[42%] lg:w-[46%] shrink-0" aria-hidden="true">
+            {aside}
+          </div>
+        )}
+        {/* Without an aside this wrapper takes no space (display: contents). */}
+        <div className={aside ? 'flex flex-col flex-1 min-w-0 min-h-0' : 'contents'}>
         {/* Grabber + title: the part a finger drags down to close (phones). */}
         <div
           className="touch-none md:touch-auto select-none"
@@ -372,8 +388,8 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           <div className="md:hidden flex justify-center pt-2.5 pb-1" aria-hidden="true">
             <span className="h-1.5 w-10 rounded-full bg-gray-300" />
           </div>
-          <div className="flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100">
-            <h2 id={titleId} className="text-base font-bold text-gray-900">{label}</h2>
+          <div className={`flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100 ${aside ? 'md:border-b-0 md:pb-0 md:pt-2 md:pr-4 md:justify-end' : ''}`}>
+            <h2 id={titleId} className={`text-base font-bold text-gray-900 ${aside ? 'md:sr-only' : ''}`}>{label}</h2>
             <div className="flex items-center gap-1 -my-2.5 -mr-2.5">
               {headerAction}
               <button
@@ -412,6 +428,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           {children}
         </div>
         {footer}
+        </div>
       </div>
     </div>,
     document.body,

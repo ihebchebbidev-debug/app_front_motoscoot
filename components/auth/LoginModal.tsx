@@ -72,6 +72,37 @@ const AppleIcon = () => (
   />
 );
 
+/**
+ * Left picture of the login window, tablet and desktop only (phones keep the
+ * plain sheet). Temporary free photo — Unsplash licence, by Daniel
+ * (unsplash.com/photos/OVXwS_oaoJE). To use the site's own picture, change
+ * LOGIN_PHOTO and remove the credit line.
+ */
+const LOGIN_PHOTO =
+  'https://images.unsplash.com/photo-1695014192162-e1d282ff5b40?auto=format&fit=crop&w=900&h=1300&q=70';
+const LOGIN_PHOTO_CREDIT = 'Photo : Daniel / Unsplash';
+
+const LoginAside: React.FC<{ isSignUp: boolean }> = ({ isSignUp }) => (
+  <div className="relative h-full overflow-hidden rounded-[20px] bg-[#0b0b0c]">
+    <img
+      src={LOGIN_PHOTO}
+      alt=""
+      decoding="async"
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+    {/* Dark at the top for the headline, and at the bottom for the credit. */}
+    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/50" />
+    <p className="relative px-8 pt-9 lg:px-10 lg:pt-11 text-white text-[28px] lg:text-[36px] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+      {isSignUp
+        ? 'Vendez votre moto ou votre scooter, gratuitement.'
+        : 'Retrouvez vos annonces, vos messages et vos favoris.'}
+    </p>
+    {LOGIN_PHOTO_CREDIT && (
+      <p className="absolute bottom-5 left-8 lg:left-10 text-[12px] font-medium text-white/80">{LOGIN_PHOTO_CREDIT}</p>
+    )}
+  </div>
+);
+
 const GoogleIcon = () => (
   <img
     src="https://www.moto-scoot.tn/site-logo/googleColored.svg"
@@ -409,28 +440,35 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
       onClose={onClose}
       listbox={false}
       tall
+      aside={<LoginAside isSignUp={isSignUp} />}
     >
-        <div ref={contentRef} className="px-6 md:px-8 pt-4">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-4 border border-primary-100 overflow-hidden">
+        {/* Tablet / desktop: one left-aligned column beside the picture. */}
+        <div ref={contentRef} className="px-6 pt-4 md:px-10 lg:px-14 md:pt-2 md:max-w-[480px] md:mx-auto">
+          <div className="text-center mb-8 md:text-left md:pb-7 md:border-b md:border-gray-100">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-4 border border-primary-100 overflow-hidden md:w-auto md:h-auto md:bg-transparent md:border-0 md:rounded-none md:mb-6">
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
-                className="w-8 h-8 object-contain"
+                className="w-8 h-8 object-contain md:w-10 md:h-10"
                 alt="Moto-Scoot.tn"
               />
             </div>
-            <p className="text-gray-500 text-sm font-medium">
+            {/* The window's name is the header title (hidden from 768 px);
+                this is the same words shown large, so not read twice. */}
+            <p aria-hidden="true" className="hidden md:block text-gray-900 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2.5 text-balance">
+              {isSignUp ? 'Créer un compte' : <>Bienvenue sur <span className="whitespace-nowrap">moto-scoot.tn</span></>}
+            </p>
+            <p className="text-gray-500 text-sm font-medium md:text-[15px]">
               {isSignUp ? 'Rejoignez la communauté moto-scoot.tn' : 'Connectez-vous pour gérer vos annonces.'}
             </p>
           </div>
 
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center justify-center mb-8 md:mb-7">
             <button
               type="button"
               onClick={handleGoogleClick}
               disabled={googleBusy}
               aria-busy={googleBusy}
-              className="flex items-center justify-center gap-2 w-full max-w-[320px] h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-bold text-[14px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 w-full max-w-[320px] md:max-w-none h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-bold text-[14px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {googleBusy ? (
                 <>
