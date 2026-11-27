@@ -19,6 +19,8 @@ import {
 import { Button } from '../ui/Button';
 import { ChoiceSheet } from '../search/ChoiceSheet';
 import { Input } from '../ui/Input';
+import { PasswordInput } from '../ui/PasswordInput';
+import { TypeScaleProvider } from '../ui/TypeScale';
 import { Select } from '../ui/Select';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import CloudflareTurnstileMock from './CloudflareTurnstileMock';
@@ -34,6 +36,7 @@ import {
   emailProblem,
   EMAIL_EMPTY,
   emptyLoginForm,
+  PASSWORD_MIN,
   loginFormModeOf,
   loginFormSchemas,
   type LoginFormMode,
@@ -442,6 +445,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
       tall
       aside={<LoginAside isSignUp={isSignUp} />}
     >
+      {/* The deposit's calm scale (as on DepositAd and the dashboard):
+          14 px sentence-case labels, 16 px medium values, light placeholders,
+          13 px help and errors, sentence-case buttons. */}
+      <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
         <div ref={contentRef} className="px-6 pt-4 md:px-10 lg:px-14 md:pt-2 md:max-w-[480px] md:mx-auto">
           <div className="text-center mb-8 md:text-left md:pb-7 md:border-b md:border-gray-100">
@@ -468,7 +475,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               onClick={handleGoogleClick}
               disabled={googleBusy}
               aria-busy={googleBusy}
-              className="flex items-center justify-center gap-2 w-full max-w-[320px] md:max-w-none h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-bold text-[14px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 w-full max-w-[320px] md:max-w-none h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-semibold text-[15px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {googleBusy ? (
                 <>
@@ -488,7 +495,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           <div className="relative flex items-center justify-center mb-8">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-            <span className="relative px-4 bg-card text-[12px] font-black text-gray-300 uppercase tracking-[0.2em]">OU EMAIL</span>
+            <span className="relative px-4 bg-card text-[13px] font-medium text-gray-500">ou</span>
           </div>
 
           {isSignUp && (
@@ -565,13 +572,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                         leftIcon={<Phone size={18} />}
                         required
                         error={fieldErrors.phone?.message}
+                        hint="Numéro tunisien — utilisé par les acheteurs pour vous contacter."
                         className={inputCompactClass}
                       />
-                      {!fieldErrors.phone && (
-                        <p className="text-[11px] text-gray-400 font-medium px-1">
-                          Numéro tunisien — utilisé par les acheteurs pour vous contacter.
-                        </p>
-                      )}
                     </div>
                   </>
                 ) : (
@@ -643,17 +646,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                         leftIcon={<Phone size={18} />}
                         required
                         error={fieldErrors.phone?.message}
+                        hint="Numéro tunisien — utilisé par les acheteurs pour vous contacter."
                         className={inputCompactClass}
                       />
-                      {!fieldErrors.phone && (
-                        <p className="text-[11px] text-gray-400 font-medium px-1">
-                          Numéro tunisien — utilisé par les acheteurs pour vous contacter.
-                        </p>
-                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-[12px] font-black text-gray-400 uppercase tracking-widest ml-1">Logo de la boutique</label>
+                      <p className="block text-[14px] leading-[1.3] font-semibold text-gray-900 ml-1">Logo de la boutique <span className="font-normal text-gray-500">(facultatif)</span></p>
                       <div
                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                         onDragLeave={() => setIsDragging(false)}
@@ -700,9 +699,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 className={inputCompactClass}
               />
               <div className="space-y-2">
-                <Input
+                <PasswordInput
                   label="Mot de passe"
-                  type="password"
                   // Sign-up: the browser offers a strong password and saves it.
                   {...field('password')}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
@@ -710,17 +708,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                   leftIcon={<Lock size={18} />}
                   required
                   error={fieldErrors.password?.message}
+                  // The rule is shown before typing, not only as an error.
+                  hint={isSignUp ? `${PASSWORD_MIN} caractères minimum.` : undefined}
                   className={inputCompactClass}
                 />
                 {!isSignUp && (
-                  <div className="flex justify-end px-1">
+                  <div className="flex justify-end -mt-1">
                     <button
                       type="button"
                       onClick={handleForgotPassword}
                       disabled={forgotLoading}
-                      className="text-[12px] font-bold text-primary-600 hover:underline focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      // 44 px tall: easy to hit with a thumb.
+                      className="min-h-[44px] px-1 inline-flex items-center text-[14px] font-semibold text-primary-700 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {forgotLoading ? 'Envoi en cours…' : 'Mot de passe oublié'}
+                      {forgotLoading ? 'Envoi en cours…' : 'Mot de passe oublié ?'}
                     </button>
                   </div>
                 )}
@@ -746,7 +747,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             <Button
               type="submit"
               fullWidth
-              className="py-5 mt-4 h-14"
+              className="mt-4 h-[52px] text-[16px]"
               disabled={loading || !notRobot}
             >
               {loading ? (
@@ -755,11 +756,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {isSignUp ? 'Création...' : 'Connexion...'}
+                  {isSignUp ? 'Création…' : 'Connexion…'}
                 </span>
               ) : (
                 <>
-                  {isSignUp ? 'Créer mon compte' : 'Me connecter'}
+                  {isSignUp ? 'Créer mon compte' : 'Se connecter'}
                   <ArrowRight size={18} className="ml-2" />
                 </>
               )}
@@ -800,6 +801,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
           </div>
         </div>
+      </TypeScaleProvider>
     </ChoiceSheet>
   );
 };

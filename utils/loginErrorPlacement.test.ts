@@ -20,7 +20,7 @@ test('sign-in and sign-up errors sit just above the button and are scrolled into
 
 test('Google and forgotten-password errors sit under their own control', () => {
   assert.match(modal, /Continuer avec Google<\/span>[\s\S]{0,200}errorAt === 'google' && <ErrorNote/);
-  assert.match(modal, /Mot de passe oublié'\}[\s\S]{0,200}errorAt === 'forgot' && \(\s*<ErrorNote/);
+  assert.match(modal, /Mot de passe oublié \?'\}[\s\S]{0,200}errorAt === 'forgot' && \(\s*<ErrorNote/);
 });
 
 test('each action says where its error goes, and errors are announced', () => {

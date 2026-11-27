@@ -9,7 +9,7 @@ const modal = readFileSync(new URL('../components/auth/LoginModal.tsx', import.m
 
 test('e-mail and password carry a visible label', () => {
   assert.match(modal, /<Input\s+label="Adresse e-mail"\s+type="email"/);
-  assert.match(modal, /<Input\s+label="Mot de passe"\s+type="password"/);
+  assert.match(modal, /<PasswordInput\s+label="Mot de passe"/);
 });
 
 test('no text field of the login window relies on its placeholder alone', () => {
