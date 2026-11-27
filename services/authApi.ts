@@ -132,10 +132,10 @@ export interface LoginPayload {
 export interface RegisterIndividualPayload {
   email: string;
   password: string;
-  first_name: string;
-  last_name: string;
-  city: string;
+  /** The name other members see (one field at sign-up). */
+  full_name: string;
   account_type: 'individual';
+  /** Optional: asked with the first ad instead (saved on the account then). */
   phone?: string;
 }
 
@@ -147,7 +147,8 @@ export interface RegisterProPayload {
   /** Optional split-name fields. When provided, persisted alongside full_name. */
   first_name?: string;
   last_name?: string;
-  shop_address: string;
+  /** Optional at sign-up: set afterwards in Réglages. */
+  shop_address?: string;
   shop_logo?: string;
   account_type: 'pro';
   phone?: string;
@@ -165,19 +166,12 @@ export type RegisterPayload = RegisterIndividualPayload | RegisterProPayload;
  */
 function toBackendRegisterPayload(p: RegisterPayload): Record<string, any> {
   if (p.account_type === 'individual') {
-    const full_name = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim();
-    // The signup form's "city" field is actually a governorate selector
-    // (see LoginModal — it's populated from useGovernorates()). So we map it
-    // to `governorate` and leave `city` empty until the user picks one when
-    // depositing an ad. This avoids storing the same value in both columns
-    // and lets `StepPublish` filter cities correctly.
+    // Governorate and city are chosen with the first ad (StepPublish).
     return {
       email: p.email,
       password: p.password,
-      full_name,
-      governorate: p.city || undefined,
-      city: undefined,
-      phone: p.phone,
+      full_name: p.full_name,
+      phone: p.phone || undefined,
       seller_type: 'Particulier',
     };
   }

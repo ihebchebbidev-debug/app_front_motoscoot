@@ -8,9 +8,6 @@ import {
   ArrowRight,
   User,
   Building2,
-  MapPin,
-  Upload,
-  CheckCircle2,
   Briefcase,
   AlertCircle,
   Phone,
@@ -21,16 +18,13 @@ import { ChoiceSheet } from '../search/ChoiceSheet';
 import { Input } from '../ui/Input';
 import { PasswordInput } from '../ui/PasswordInput';
 import { TypeScaleProvider } from '../ui/TypeScale';
-import { Select } from '../ui/Select';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import CloudflareTurnstileMock from './CloudflareTurnstileMock';
 import type { LoginMode } from '../../context/NavigationContext';
 import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
-import { useGovernorates } from '../../hooks/useReferenceData';
 import { useToast } from '../../context/ToastContext';
 import { authApi } from '../../services/authApi';
-import { compressImage } from '../../utils/imageCompression';
 import { cleanPhoneInput, formatTunisiaPhone } from '../../utils/phoneUtils';
 import {
   emailProblem,
@@ -133,12 +127,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     if (scroller) scroller.scrollTop = 0;
   }, [isSignUp, isOpen]);
   const [userType, setUserType] = useState<UserType>('individual');
-  const [isDragging, setIsDragging] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  // We keep the actual File so we can upload it (multipart) at submit time.
-  // The base64 preview was previously sent as `shop_logo`, which bloated the
-  // request and never got persisted properly.
-  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Text fields: react-hook-form + the rules in utils/loginFormSchema.ts.
   // Each field is checked when the visitor leaves it, then as they correct
@@ -167,9 +155,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const [notRobot, setNotRobot] = useState(false);
   const [robotError, setRobotError] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const clerkGoogle = useClerkGoogleSignIn();
-  const { data: governorates = [] } = useGovernorates();
   const { addToast } = useToast();
   const [forgotLoading, setForgotLoading] = useState(false);
   // A tap on Google before Clerk has finished loading (it loads with this
@@ -260,17 +246,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const submitValid = async (v: LoginFormValues) => {
     try {
       if (isSignUp) {
-        // Tunisia phone is required for signup so buyers can reach the seller.
-        const normalizedPhone = formatTunisiaPhone(v.phone);
 
         if (userType === 'individual') {
           await register({
             email: v.email,
             password: v.password,
-            first_name: v.firstName,
-            last_name: v.lastName,
-            city: v.governorate,
-            phone: normalizedPhone,
+            full_name: v.fullName.trim(),
             account_type: 'individual',
           });
           onLogin('user');
@@ -284,43 +265,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           await register({
             email: v.email,
             password: v.password,
-            shop_name: v.shopName,
-            full_name: `${v.firstName} ${v.lastName}`.trim(),
-            first_name: v.firstName,
-            last_name: v.lastName,
-            shop_address: v.shopAddress,
-            phone: normalizedPhone,
-            governorate: v.governorate || undefined,
-            city: v.governorate || undefined,
+            shop_name: v.shopName.trim(),
+            full_name: v.fullName.trim(),
+            // A Pro must be reachable: phone required for this account type.
+            phone: formatTunisiaPhone(v.phone),
             account_type: 'pro',
           });
-
-          if (logoFile) {
-            try {
-              const { uploadsApi } = await import('../../services/uploadsApi');
-              const compressed = await compressImage(logoFile);
-              const uploaded = await uploadsApi.single(compressed);
-              if (uploaded?.url) {
-                // Patch the profile with the new shop_logo URL and refresh
-                // the cached `me` so the dashboard renders it immediately.
-                const updated = await authApi.updateProfile({ shopLogo: uploaded.url });
-                addToast('Logo de la boutique téléversé.', 'success');
-                // Best-effort cache hint — UserContext refetches /auth/me on
-                // mount so this is mostly cosmetic, but it avoids a flash.
-                try {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (window as any).__lastSignupUser = updated;
-                } catch { /* noop */ }
-              }
-            } catch (uploadErr: any) {
-              console.error('[signup] logo upload failed:', uploadErr?.message || uploadErr);
-              addToast(
-                "Compte créé, mais le logo n'a pas pu être téléversé. Vous pourrez le réessayer dans Réglages.",
-                'error'
-              );
-              // Non-blocking — account is still useful without a logo.
-            }
-          }
 
           // Now that everything that depends on this component being mounted
           // has finished, hand control back to the parent (closes the modal,
@@ -412,23 +362,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
     setError(null);
     if (action === 'wait') setGoogleWaiting(true);
     else void handleSocialLogin('google');
-  };
-
-  const handleLogoUpload = (file: File) => {
-    if (file && file.type.startsWith('image/')) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setLogoPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleLogoUpload(e.dataTransfer.files[0]);
-    }
   };
 
   const inputCompactClass = '!py-3 !rounded-xl';
@@ -526,59 +459,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               <div className="space-y-4 animate-scale-in">
                 {userType === 'individual' ? (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Prénom"
-                          autoComplete="given-name"
-                          placeholder="Prénom"
-                          {...field('firstName')}
-                          required
-                          error={fieldErrors.firstName?.message}
-                          className={inputCompactClass}
-                        />
-                        <Input
-                          label="Nom"
-                          autoComplete="family-name"
-                          placeholder="Nom"
-                          {...field('lastName')}
-                          required
-                          error={fieldErrors.lastName?.message}
-                          className={inputCompactClass}
-                        />
-                    </div>
-                    <Select
-                      label="Gouvernorat"
-                      autoComplete="address-level1"
-                      {...field('governorate')}
+                    {/* « Particulier »: just a name here. Phone and governorate
+                        are asked with the first ad, where they are used. */}
+                    <Input
+                      label="Votre nom"
+                      autoComplete="name"
+                      placeholder="Prénom et nom"
+                      {...field('fullName')}
                       required
-                      error={fieldErrors.governorate?.message}
+                      error={fieldErrors.fullName?.message}
+                      hint="Le nom que verront les autres membres."
                       className={inputCompactClass}
-                    >
-                      <option value="" disabled>Choisir mon gouvernorat</option>
-                      {governorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
-                    </Select>
-                    <div className="space-y-1">
-                      <Input
-                        label="Téléphone"
-                        type="tel"
-                        inputMode="tel"
-                        autoComplete="tel"
-                        placeholder="22 123 456"
-                        {...phoneField}
-                        onChange={(e) => {
-                          e.target.value = cleanPhoneInput(e.target.value);
-                          void phoneField.onChange(e);
-                        }}
-                        leftIcon={<Phone size={18} />}
-                        required
-                        error={fieldErrors.phone?.message}
-                        hint="Numéro tunisien — utilisé par les acheteurs pour vous contacter."
-                        className={inputCompactClass}
-                      />
-                    </div>
+                    />
                   </>
                 ) : (
                   <>
+                    {/* « Professionnel »: what a shop needs to start. Address,
+                        governorate and logo are set afterwards in Réglages. */}
                     <Input
                       label="Nom de la boutique"
                       autoComplete="organization"
@@ -589,94 +486,36 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                       error={fieldErrors.shopName?.message}
                       className={inputCompactClass}
                     />
-                    <div className="grid grid-cols-2 gap-3">
-                        <Input
-                          label="Prénom"
-                          autoComplete="given-name"
-                          placeholder="Prénom"
-                          {...field('firstName')}
-                          leftIcon={<User size={18} />}
-                          required
-                          error={fieldErrors.firstName?.message}
-                          className={inputCompactClass}
-                        />
-                        <Input
-                          label="Nom"
-                          autoComplete="family-name"
-                          placeholder="Nom"
-                          {...field('lastName')}
-                          required
-                          error={fieldErrors.lastName?.message}
-                          className={inputCompactClass}
-                        />
-                    </div>
                     <Input
-                      label="Adresse boutique"
-                      autoComplete="street-address"
-                      placeholder="Rue, Ville..."
-                      {...field('shopAddress')}
-                      leftIcon={<MapPin size={18} />}
+                      label="Votre nom"
+                      autoComplete="name"
+                      placeholder="Prénom et nom"
+                      {...field('fullName')}
+                      leftIcon={<User size={18} />}
                       required
-                      error={fieldErrors.shopAddress?.message}
+                      error={fieldErrors.fullName?.message}
                       className={inputCompactClass}
                     />
-                    <Select
-                      label="Gouvernorat"
-                      autoComplete="address-level1"
-                      {...field('governorate')}
+                    <Input
+                      label="Téléphone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="22 123 456"
+                      {...phoneField}
+                      onChange={(e) => {
+                        e.target.value = cleanPhoneInput(e.target.value);
+                        void phoneField.onChange(e);
+                      }}
+                      leftIcon={<Phone size={18} />}
                       required
-                      error={fieldErrors.governorate?.message}
+                      error={fieldErrors.phone?.message}
+                      hint="Numéro tunisien — utilisé par les clients pour vous contacter."
                       className={inputCompactClass}
-                    >
-                      <option value="" disabled>Choisir mon gouvernorat</option>
-                      {governorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
-                    </Select>
-                    <div className="space-y-1">
-                      <Input
-                        label="Téléphone"
-                        type="tel"
-                        inputMode="tel"
-                        autoComplete="tel"
-                        placeholder="22 123 456"
-                        {...phoneField}
-                        onChange={(e) => {
-                          e.target.value = cleanPhoneInput(e.target.value);
-                          void phoneField.onChange(e);
-                        }}
-                        leftIcon={<Phone size={18} />}
-                        required
-                        error={fieldErrors.phone?.message}
-                        hint="Numéro tunisien — utilisé par les acheteurs pour vous contacter."
-                        className={inputCompactClass}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="block text-[14px] leading-[1.3] font-semibold text-gray-900 ml-1">Logo de la boutique <span className="font-normal text-gray-500">(facultatif)</span></p>
-                      <div
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
-                        className={clsx(
-                          'relative h-28 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer group',
-                          isDragging ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50 hover:bg-card hover:border-primary-300',
-                        )}
-                      >
-                        {logoPreview ? (
-                          <div className="flex items-center gap-3">
-                            <img src={logoPreview} alt="Preview" className="h-20 w-20 object-contain rounded-lg" />
-                            <span className="text-xs font-bold text-gray-400">Cliquez pour modifier</span>
-                          </div>
-                        ) : (
-                          <>
-                            <Upload className={clsx('mb-1', isDragging ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500')} size={24} />
-                            <span className="text-[12px] font-bold text-gray-500">Logo (JPG, PNG)</span>
-                          </>
-                        )}
-                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files && handleLogoUpload(e.target.files[0])} />
-                      </div>
-                    </div>
+                    />
+                    <p className="text-[13px] leading-snug text-gray-600 ml-1">
+                      Adresse, gouvernorat et logo de la boutique : à compléter ensuite dans Réglages.
+                    </p>
                   </>
                 )}
               </div>
@@ -794,11 +633,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 {isSignUp ? 'Se connecter' : "S'inscrire gratuitement"}
               </button>
             </p>
-
-            <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-gray-400 font-bold uppercase tracking-widest">
-              <CheckCircle2 size={14} className="text-success-600" />
-              Connexion sécurisée SSL
-            </div>
           </div>
         </div>
       </TypeScaleProvider>

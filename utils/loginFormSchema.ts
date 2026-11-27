@@ -27,9 +27,8 @@ const newPassword = z
   .string()
   .min(1, 'Choisissez un mot de passe.')
   .min(PASSWORD_MIN, `Au moins ${PASSWORD_MIN} caractères.`);
-const firstName = filled('Saisissez votre prénom.');
-const lastName = filled('Saisissez votre nom.');
-const governorate = filled('Choisissez votre gouvernorat.');
+// One name field, the name other members see.
+const fullName = filled('Saisissez votre nom.');
 
 export const loginFormSchemas = {
   // Sign in: the server decides whether the password is right.
@@ -37,13 +36,14 @@ export const loginFormSchemas = {
     email,
     password: z.string().min(1, 'Saisissez votre mot de passe.'),
   }),
-  individual: z.object({ firstName, lastName, governorate, phone, email, password: newPassword }),
+  // « Particulier »: the 3 fields a buyer needs. Phone and governorate come
+  // with the first ad (the deposit asks for them and saves the phone).
+  individual: z.object({ fullName, email, password: newPassword }),
+  // « Professionnel »: the 5 fields a shop needs to start. Address,
+  // governorate and logo are set afterwards in Réglages.
   pro: z.object({
     shopName: filled('Saisissez le nom de la boutique.'),
-    firstName,
-    lastName,
-    shopAddress: filled("Saisissez l'adresse de la boutique."),
-    governorate,
+    fullName,
     phone,
     email,
     password: newPassword,
@@ -52,24 +52,18 @@ export const loginFormSchemas = {
 
 export interface LoginFormValues {
   email: string;
+  fullName: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  governorate: string;
   phone: string;
   shopName: string;
-  shopAddress: string;
 }
 
 export const emptyLoginForm: LoginFormValues = {
   email: '',
+  fullName: '',
   password: '',
-  firstName: '',
-  lastName: '',
-  governorate: '',
   phone: '',
   shopName: '',
-  shopAddress: '',
 };
 
 export const loginFormModeOf = (isSignUp: boolean, userType: 'individual' | 'pro'): LoginFormMode =>

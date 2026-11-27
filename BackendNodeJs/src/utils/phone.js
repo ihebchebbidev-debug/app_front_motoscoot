@@ -30,7 +30,25 @@ function formatTunisiaPhone(raw) {
 const TUNISIA_PHONE_ERROR =
   'Numéro de téléphone tunisien invalide (ex: 22 123 456 ou +216 22 123 456).';
 
+/**
+ * Phone at sign-up. A « Particulier » may sign up without one (buyers do not
+ * need it; sellers give it with their first ad, which saves it on the
+ * account). A « Pro » must give one. A number that is given must be valid.
+ * Returns { phone } (formatted, or null) or { error }.
+ */
+const PRO_PHONE_REQUIRED = 'Le téléphone est requis pour un compte Professionnel.';
+function resolveSignupPhone(raw, sellerType) {
+  const given = raw != null && String(raw).trim() !== '';
+  if (!given) {
+    return sellerType === 'Pro' ? { error: PRO_PHONE_REQUIRED } : { phone: null };
+  }
+  if (!isValidTunisiaPhone(raw)) return { error: TUNISIA_PHONE_ERROR };
+  return { phone: formatTunisiaPhone(raw) };
+}
+
 module.exports = {
+  resolveSignupPhone,
+  PRO_PHONE_REQUIRED,
   isValidTunisiaPhone,
   formatTunisiaPhone,
   extractTunisiaLocal,
