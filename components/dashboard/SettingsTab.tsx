@@ -250,32 +250,37 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
   return (
     <div className="max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
 
+      {/* Phones: the header card below is hidden, the tab still needs its title. */}
+      <h1 className="sr-only md:hidden">Mon profil</h1>
+
       {/* SECTION 1: HEADER — hidden on mobile because Dashboard already shows a
           "Bonjour, FirstName" card above the Profil tab on small screens. */}
       <div className={`${S.FullCard} hidden md:block`}>
         <div className={S.HeaderWrapper}>
           <div className={S.PhotoContainer}>
             <div className="relative group">
-              <div
-                className="w-16 h-16 md:w-20 md:h-20 rounded-[6px] bg-card border border-gray-100 shadow-sm flex items-center justify-center text-primary-600 overflow-hidden cursor-pointer"
+              <button
+                type="button"
+                className="relative w-16 h-16 md:w-20 md:h-20 rounded-[6px] bg-card border border-gray-100 shadow-sm flex items-center justify-center text-primary-600 overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
                 onClick={handleAvatarClick}
+                aria-label="Changer la photo de profil"
                 title="Changer la photo de profil"
               >
                 {(isPro && shopLogoValue) ? (
-                  <img src={shopLogoValue} className="w-full h-full object-cover bg-white" alt="Logo boutique" />
+                  <img src={shopLogoValue} className="w-full h-full object-cover bg-white" alt="" />
                 ) : user?.avatar ? (
-                  <img src={user.avatar} className="w-full h-full object-cover" alt="Profile" />
+                  <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                 ) : (
                   <UserCircle size={40} strokeWidth={1.5} />
                 )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center">
                   {isUploadingAvatar ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Camera className="text-white" size={18} />
                   )}
                 </div>
-              </div>
+              </button>
               <input
                 ref={avatarInputRef}
                 type="file"

@@ -29,8 +29,7 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ listings, onToggleFavorite,
           {listings.map((listing) => (
             <article 
               key={listing.id} 
-              onClick={() => onNavigate('listing-details', { id: listing.id, title: listing.title })}
-              className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 cursor-pointer h-full flex flex-col"
+              className="group relative bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 cursor-pointer h-full flex flex-col focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2"
             >
               <div className="relative aspect-[4/3] bg-card overflow-hidden">
                 <img 
@@ -40,11 +39,12 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ listings, onToggleFavorite,
                   loading="lazy"
                 />
                 <button 
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleFavorite('listing', listing.id);
                   }} 
-                  className="absolute top-3 right-3 p-2.5 bg-card/90 backdrop-blur-sm rounded-full text-red-500 shadow-sm z-10 active:scale-90 transition-transform"
+                  className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center bg-card/90 backdrop-blur-sm rounded-full text-red-500 shadow-sm z-10 active:scale-90 transition-transform"
                   aria-label="Retirer des favoris"
                 >
                   <Heart size={18} fill="currentColor" />
@@ -57,7 +57,16 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ listings, onToggleFavorite,
                 </div>
                 
                 <h2 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary-600 transition-colors line-clamp-1 leading-tight">
-                  {listing.model || listing.title}
+                  {/* The title is the card's link: it stretches over the whole card
+                      (after:inset-0), so the card opens with a tap, a click
+                      or the keyboard; the heart stays on top (z-10). */}
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('listing-details', { id: listing.id, title: listing.title })}
+                    className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+                  >
+                    {listing.model || listing.title}
+                  </button>
                 </h2>
 
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">

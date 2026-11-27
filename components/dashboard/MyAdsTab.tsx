@@ -168,7 +168,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
             aria-label="Filtrer par statut"
             aria-expanded={isStatusMenuOpen}
             onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
-            className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all shadow-sm shrink-0 ${isStatusMenuOpen || statusFilter !== 'Tous' ? 'bg-orange-50 border-orange-500 text-orange-600' : 'bg-card border-gray-100 text-gray-400 hover:border-gray-300'}`}
+            className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all shadow-sm shrink-0 ${isStatusMenuOpen || statusFilter !== 'Tous' ? 'bg-orange-50 border-orange-500 text-orange-600' : 'bg-card border-gray-200 text-gray-600 hover:border-gray-300'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2`}
           >
             <Filter size={18} />
           </button>
@@ -201,7 +201,7 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
           </div>
         </div>
         <div className="relative">
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="w-full h-12 pl-12 pr-10 bg-card border border-gray-100 rounded-xl text-base font-medium text-gray-900 shadow-sm appearance-none outline-none">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="w-full h-12 pl-12 pr-10 bg-card border border-gray-100 rounded-xl text-base font-medium text-gray-900 shadow-sm appearance-none outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20" aria-label="Filtrer par statut">
             <option value="Tous">Toutes les annonces</option>
             <option value="Actif">Annonces en ligne</option>
             <option value="En attente">En attente de validation</option>
@@ -326,8 +326,8 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
             <div className="flex items-center justify-between px-6 py-4 bg-card rounded-2xl border border-gray-100 shadow-sm">
               <span className="text-[13px] font-medium text-gray-600 tabular-nums">Page {currentPage} sur {totalPages}</span>
               <div className="flex gap-2">
-                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-3 rounded-xl bg-gray-50 text-gray-500 disabled:opacity-30"><ChevronLeft size={18}/></button>
-                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-3 rounded-xl bg-gray-50 text-gray-500 disabled:opacity-30"><ChevronRight size={18}/></button>
+                <button type="button" aria-label="Page précédente" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"><ChevronLeft size={18} aria-hidden="true"/></button>
+                <button type="button" aria-label="Page suivante" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"><ChevronRight size={18} aria-hidden="true"/></button>
               </div>
             </div>
           )}

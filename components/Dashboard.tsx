@@ -63,10 +63,13 @@ const S = {
   Wrapper: "min-h-screen bg-muted font-sans selection:bg-orange-100 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0",
   MainContainer: "max-w-7xl mx-auto px-4 md:px-8 pt-3 md:pt-6 pb-6 md:pb-12 flex flex-col md:flex-row gap-4 md:gap-8 items-start",
   
-  Sidebar: "hidden md:flex w-[280px] h-[75vh] bg-card rounded-2xl border border-gray-100 flex-shrink-0 flex-col sticky top-28 z-40 shadow-sm overflow-hidden",
-  NavSection: "px-4 py-6",
+  // Height follows its content, capped to the screen under the header: on a
+  // 1280×720 laptop the fixed 75vh cut « Déconnexion » off. The tab list
+  // scrolls if needed; the account actions always stay visible.
+  Sidebar: "hidden md:flex w-[280px] max-h-[calc(100dvh-8rem)] bg-card rounded-2xl border border-gray-100 flex-shrink-0 flex-col sticky top-28 z-40 shadow-sm overflow-hidden",
+  NavSection: "px-4 py-5 flex-1 min-h-0 overflow-y-auto",
   NavBtn: (active: boolean) => `
-    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all group outline-none
+    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2
     ${active 
       ? 'bg-primary-600 text-white shadow-lg shadow-orange-600/20' 
       : 'text-muted-foreground hover:text-primary-600 hover:bg-orange-50/50'}
@@ -133,7 +136,7 @@ const UserProfileSidebar = memo(() => {
 
   if (isLoading || !user) {
     return (
-      <div className="p-8 border-b border-gray-50 flex flex-col gap-4">
+      <div className="shrink-0 p-8 border-b border-gray-50 flex flex-col gap-4">
         <Skeleton className="w-14 h-14 rounded-[6px]" />
         <Skeleton className="h-4 w-32" />
       </div>
@@ -141,7 +144,7 @@ const UserProfileSidebar = memo(() => {
   }
 
   return (
-    <div className="p-8 border-b border-gray-50 bg-gradient-to-br from-white to-gray-50/50">
+    <div className="shrink-0 p-8 border-b border-gray-50 bg-gradient-to-br from-white to-gray-50/50">
       <div className="flex items-center gap-4 mb-2">
         <div className="relative">
           <button
@@ -325,18 +328,18 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
             </div>
           </nav>
 
-          <div className="p-8 mt-auto border-t border-gray-50 bg-gray-50/20 space-y-4">
+          <div className="shrink-0 px-8 py-5 border-t border-gray-100 space-y-4">
             <button 
               onClick={handleDeleteAccountClick} 
               disabled={isDeleting}
-              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors group rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 size={16} className="group-hover:scale-110 transition-transform" /> 
               <span>{isDeleting ? 'Suppression…' : 'Supprimer le compte'}</span>
             </button>
             <button 
               onClick={handleLogoutClick} 
-              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
+              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
             >
               <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> 
               <span>Déconnexion</span>
