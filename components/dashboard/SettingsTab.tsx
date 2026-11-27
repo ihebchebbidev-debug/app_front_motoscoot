@@ -248,7 +248,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
+    <div className="max-w-6xl mx-auto flex flex-col gap-[21px]">
 
       {/* Phones: the header card below is hidden, the tab still needs its title. */}
       <h1 className="sr-only md:hidden">Mon profil</h1>
@@ -587,7 +587,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
         </div>
 
         {/* SUBMIT */}
-        <div className="pb-12 flex flex-col items-start px-2 md:px-0">
+        <div className="pt-1 flex flex-col items-start px-2 md:px-0">
           <Button
             variant="primary"
             type="submit"
@@ -604,6 +604,38 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
             </p>
           )}
         </div>
+
+        {/* Phones: as soon as a field changes, « Enregistrer » comes to the
+            thumb, just above the floating menu, instead of staying at the
+            bottom of a long form. « Annuler » brings back the saved values. */}
+        {isDirty && (
+          <>
+            <div className="md:hidden h-20" aria-hidden="true" />
+            <div
+              role="region"
+              aria-label="Modifications non enregistrées"
+              className="ms-save-in md:hidden fixed z-50 left-3 right-3 mx-auto max-w-md bottom-[calc(5.25rem+env(safe-area-inset-bottom))] rounded-2xl bg-card ring-1 ring-black/5 shadow-[0_2px_6px_rgba(15,18,24,0.08),0_14px_32px_-10px_rgba(15,18,24,0.35)] p-2 flex items-center gap-2"
+            >
+              <button
+                type="button"
+                onClick={() => reset()}
+                disabled={isUpdating}
+                className="h-12 px-4 rounded-xl text-[15px] font-semibold text-gray-700 bg-gray-100 active:scale-[0.97] transition-transform duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <Button
+                variant="primary"
+                type="submit"
+                isLoading={isUpdating}
+                className="flex-1 !h-12 rounded-xl"
+                leftIcon={<Save size={18} />}
+              >
+                Enregistrer
+              </Button>
+            </div>
+          </>
+        )}
       </form>
     </div>
   );

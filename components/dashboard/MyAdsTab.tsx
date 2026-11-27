@@ -263,12 +263,12 @@ const MyAdsTab: React.FC<any> = ({ onNavigate }) => {
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center justify-center gap-2.5">
-                        <button onClick={() => handleEditClick(ad)} className="p-3 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Modifier l'annonce" aria-label="Modifier l'annonce"><Pencil size={16}/></button>
-                        <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white disabled:opacity-20 transition-all" title={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'} aria-label={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'}>
+                        <button onClick={() => handleEditClick(ad)} className="p-3 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white active:scale-95 transition-[transform,background-color,color] duration-100 ease-out" title="Modifier l'annonce" aria-label="Modifier l'annonce"><Pencil size={16}/></button>
+                        <button onClick={() => handleToggleStatus(ad.id, ad.status)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white disabled:opacity-20 active:scale-95 transition-[transform,background-color,color] duration-100 ease-out" title={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'} aria-label={ad.status === 'Actif' ? 'Masquer l\'annonce' : 'Remettre en ligne'}>
                           {ad.status === 'Actif' ? <EyeOff size={16}/> : <Eye size={16}/>}
                         </button>
-                        <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-all" title="Marquer comme vendue" aria-label="Marquer comme vendue"><Handshake size={16}/></button>
-                        <button onClick={() => handleDelete(ad.id)} className="p-3 rounded-2xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Supprimer l'annonce" aria-label="Supprimer l'annonce"><Trash2 size={16}/></button>
+                        <button onClick={() => handleMarkAsSold(ad.id)} disabled={ad.status === 'Vendu'} className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white disabled:opacity-50 active:scale-95 transition-[transform,background-color,color] duration-100 ease-out" title="Marquer comme vendue" aria-label="Marquer comme vendue"><Handshake size={16}/></button>
+                        <button onClick={() => handleDelete(ad.id)} className="p-3 rounded-2xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white active:scale-95 transition-[transform,background-color,color] duration-100 ease-out" title="Supprimer l'annonce" aria-label="Supprimer l'annonce"><Trash2 size={16}/></button>
                       </div>
                     </td>
                   </tr>

@@ -69,7 +69,7 @@ const S = {
   Sidebar: "hidden md:flex w-[280px] max-h-[calc(100dvh-8rem)] bg-card rounded-2xl border border-gray-100 flex-shrink-0 flex-col sticky top-28 z-40 shadow-sm overflow-hidden",
   NavSection: "px-4 py-5 flex-1 min-h-0 overflow-y-auto",
   NavBtn: (active: boolean) => `
-    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2
+    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-[color,background-color,transform] duration-100 ease-out active:scale-[0.98] group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2
     ${active 
       ? 'bg-primary-600 text-white shadow-lg shadow-orange-600/20' 
       : 'text-muted-foreground hover:text-primary-600 hover:bg-orange-50/50'}
@@ -244,17 +244,12 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
     if (isLoggedIn === false) onNavigate?.('home');
   }, [isLoggedIn, onNavigate]);
 
+  // No confirmation: signing out is harmless and undone by signing back in.
+  // Confirmations stay for what cannot be undone (deleting the account).
   const handleLogoutClick = useCallback(async () => {
-    const ok = await confirm({
-      title: 'Se déconnecter ?',
-      message: 'Vous devrez vous reconnecter pour accéder à votre tableau de bord.',
-      confirmLabel: 'Se déconnecter',
-      variant: 'info',
-    });
-    if (!ok) return;
     monitoring.trackEvent('UserLogoutInitiated', { userId: user?.id });
     await onLogout?.();
-  }, [onLogout, user?.id, confirm]);
+  }, [onLogout, user?.id]);
 
   const handleDeleteAccountClick = useCallback(async () => {
     const ok = await confirm({
@@ -297,9 +292,9 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
       <SEO title="Mon compte" description="Tableau de bord Moto-Scoot.tn — gérez vos annonces, messages et favoris." noIndex url="/mon-compte" />
       <div className={S.MainContainer}>
         <aside className={S.Sidebar}>
-          {activeMenu !== 'my-ads' && activeMenu !== 'messages' && activeMenu !== 'favorites' && (
-            <UserProfileSidebar />
-          )}
+          {/* Always shown: hiding it on three tabs moved the tab list up
+              under the pointer right after a click. */}
+          <UserProfileSidebar />
 
           <nav className={S.NavSection} role="tablist">
             <div className="space-y-2">
@@ -328,15 +323,9 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
             </div>
           </nav>
 
-          <div className="shrink-0 px-8 py-5 border-t border-gray-100 space-y-4">
-            <button 
-              onClick={handleDeleteAccountClick} 
-              disabled={isDeleting}
-              className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors group rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={16} className="group-hover:scale-110 transition-transform" /> 
-              <span>{isDeleting ? 'Suppression…' : 'Supprimer le compte'}</span>
-            </button>
+          {/* « Supprimer le compte » moved to the Profil tab (« Zone sensible »,
+              as on phones): it sat one line from « Déconnexion », same look. */}
+          <div className="shrink-0 px-8 py-5 border-t border-gray-100">
             <button 
               onClick={handleLogoutClick} 
               className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
@@ -461,8 +450,7 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                 )}
                 {activeMenu === 'settings' && <SettingsTab onUpdate={() => {}} />}
 
-                {/* Mobile-only account actions — sidebar is hidden on mobile,
-                    so users need a way to delete their account from the Profil tab. */}
+                {/* Account deletion lives in the Profil tab on every screen size. */}
                 {activeMenu === 'settings' && isAdminUser && (
                   <button
                     type="button"
@@ -477,13 +465,13 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
                   </button>
                 )}
                 {activeMenu === 'settings' && (
-                  <div className="md:hidden mt-6 bg-card rounded-2xl border border-red-100 shadow-sm p-5">
+                  <div className="max-w-6xl mx-auto mt-6 bg-card rounded-2xl border border-red-100 shadow-sm p-5 md:p-8">
                     <h2 className="text-base font-semibold text-foreground mb-1">Zone sensible</h2>
                     <p className="text-[13px] text-gray-600 mb-4">La suppression du compte est définitive.</p>
                     <button
                       onClick={handleDeleteAccountClick}
                       disabled={isDeleting}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm border border-red-100 active:scale-[0.98] transition-all disabled:opacity-50"
+                      className="w-full md:w-auto md:px-6 flex items-center justify-center gap-2 min-h-11 py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm border border-red-100 hover:bg-red-100 active:scale-[0.98] transition-[transform,background-color] duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 disabled:opacity-50"
                     >
                       <Trash2 size={16} />
                       <span>{isDeleting ? 'Suppression…' : 'Supprimer mon compte'}</span>
