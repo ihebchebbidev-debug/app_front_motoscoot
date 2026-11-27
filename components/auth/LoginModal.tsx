@@ -8,7 +8,6 @@ import {
   ArrowRight,
   User,
   Building2,
-  CheckCircle2,
   Briefcase,
   AlertCircle,
   Phone,
@@ -634,11 +633,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
                 {isSignUp ? 'Se connecter' : "S'inscrire gratuitement"}
               </button>
             </p>
-
-            <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-gray-400 font-bold uppercase tracking-widest">
-              <CheckCircle2 size={14} className="text-success-600" />
-              Connexion sécurisée SSL
-            </div>
           </div>
         </div>
       </TypeScaleProvider>
