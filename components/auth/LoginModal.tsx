@@ -397,6 +397,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
                         label="Prénom"
+                        name="given-name"
+                        autoComplete="given-name"
                         placeholder="Prénom"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
@@ -405,6 +407,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                       />
                       <Input
                         label="Nom"
+                        name="family-name"
+                        autoComplete="family-name"
                         placeholder="Nom"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
@@ -414,6 +418,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     </div>
                     <Select
                       label="Gouvernorat"
+                      name="governorate"
+                      autoComplete="address-level1"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       required
@@ -427,6 +433,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                         label="Téléphone"
                         type="tel"
                         inputMode="tel"
+                        name="tel"
                         autoComplete="tel"
                         placeholder="22 123 456"
                         value={phone}
@@ -448,6 +455,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                   <>
                     <Input
                       label="Nom de la boutique"
+                      name="organization"
+                      autoComplete="organization"
                       placeholder="Ex: Tunis Moto Shop"
                       value={shopName}
                       onChange={(e) => setShopName(e.target.value)}
@@ -458,6 +467,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     <div className="grid grid-cols-2 gap-3">
                       <Input
                         label="Prénom"
+                        name="given-name"
+                        autoComplete="given-name"
                         placeholder="Prénom"
                         value={proFirstName}
                         onChange={(e) => setProFirstName(e.target.value)}
@@ -467,6 +478,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                       />
                       <Input
                         label="Nom"
+                        name="family-name"
+                        autoComplete="family-name"
                         placeholder="Nom"
                         value={proLastName}
                         onChange={(e) => setProLastName(e.target.value)}
@@ -476,6 +489,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     </div>
                     <Input
                       label="Adresse boutique"
+                      name="street-address"
+                      autoComplete="street-address"
                       placeholder="Rue, Ville..."
                       value={shopAddress}
                       onChange={(e) => setShopAddress(e.target.value)}
@@ -485,6 +500,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     />
                     <Select
                       label="Gouvernorat"
+                      name="governorate"
+                      autoComplete="address-level1"
                       value={proGovernorate}
                       onChange={(e) => setProGovernorate(e.target.value)}
                       required
@@ -498,6 +515,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                         label="Téléphone"
                         type="tel"
                         inputMode="tel"
+                        name="tel"
                         autoComplete="tel"
                         placeholder="22 123 456"
                         value={phone}
@@ -546,6 +564,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
             <div className="space-y-4 pt-2">
               <Input
                 type="email"
+                // « username » ties the saved password to this e-mail in
+                // iCloud Keychain, Google and 1Password (web.dev guidance).
+                name="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
                 placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -556,6 +580,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
               <div className="space-y-2">
                 <Input
                   type="password"
+                  // Sign-up: the browser offers a strong password and saves it.
+                  name="password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   placeholder="mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
