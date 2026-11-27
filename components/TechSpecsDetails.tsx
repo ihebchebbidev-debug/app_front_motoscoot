@@ -35,6 +35,7 @@ import { getUrlFromState } from '../utils/urlUtils';
 import { Link } from 'react-router-dom';
 import { parseSpecNumber, parseSpecPrice, techSpecTitle, techSpecDescription, techSpecSummary, formatPowerCh, techSpecPriceBlock, TECH_SPEC_PRICE_LABEL, type TechSpecPriceBlock, similarTechSpecs, SIMILAR_MODELS_HEADING, type SimilarModelSource, techSpecProperties, techSpecShareImage, techSpecGalleryTitle, techSpecFaq, TECH_SPEC_FAQ_HEADING, techSpecVersions, VERSION_COLUMN_LABELS, type TechSpecVersionSource, techSpecPhotos } from '../utils/techSpecSeo';
 import { PageBreadcrumb } from './ui/PageBreadcrumb';
+import { FloatingCapsule } from './ui/FloatingCapsule';
 
 /** Quick-stat cards (vitesse, puissance, poids, couple) with brand icons from public/icons/specs. */
 const quickStats = (spec: any) => {
@@ -155,8 +156,8 @@ const S = {
   Wrapper: "min-h-screen bg-page md:bg-muted font-sans pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-20",
   // Floating capsule: 64 px tall, 6 px inset, fully rounded; price, call (52 px) and « Comparer » (48 px).
   // Material, depth, entrance and accessibility: .ms-capsule in src/styles/globals.css.
-  FloatBar: "ms-capsule lg:hidden fixed z-50 left-3 right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mx-auto max-w-md h-16 p-1.5 flex items-center justify-between min-[360px]:justify-start gap-1 min-[400px]:gap-1.5 rounded-full",
-  FloatEdge: "ms-capsule-edge lg:hidden fixed inset-x-0 bottom-0 z-40 h-[calc(6rem+env(safe-area-inset-bottom))] pointer-events-none",
+  // Shape and position: components/ui/FloatingCapsule.tsx (shared with /mon-compte).
+  FloatBar: "justify-between min-[360px]:justify-start gap-1 min-[400px]:gap-1.5",
     FloatPrice: "flex-1 min-w-0 h-[3.25rem] pl-3 pr-1 min-[400px]:pl-4 flex-col justify-center",
   // Round actions (owner, 2026-11-19), shown while the importer is subscribed:
   // call (glass), WhatsApp (brand green), devis (orange, the main action),
@@ -873,8 +874,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
           floats 12 px above the content and the iPhone home indicator. Price,
           call the importer, compare. Price and call are 48 px; « Comparer » is a
           smaller 40 px pill (owner's choice) inside the 56 px capsule. */}
-      <div className={S.FloatEdge} aria-hidden="true" />
-      <div className={S.FloatBar} role="region" aria-label="Prix et actions">
+      <FloatingCapsule hideFrom="lg" role="region" aria-label="Prix et actions" className={S.FloatBar}>
         {/* Under 360 px, with the contact buttons, the four actions take the
             row; the price stays in the page above. */}
         <div className={`${S.FloatPrice} ${canQuote ? 'hidden min-[360px]:flex' : 'flex'}`} title={capsule.kind === 'text' ? capsule.main : undefined}>
@@ -937,7 +937,7 @@ const TechSpecsDetails: React.FC<BasePageProps> = ({ specId, onNavigate }) => {
             Comparer
           </button>
         )}
-      </div>
+      </FloatingCapsule>
 
       {canQuote && (
         <QuoteRequestSheet

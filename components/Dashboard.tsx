@@ -13,6 +13,7 @@ import {
   Trash2,
   MessageSquare,
   Camera,
+  ChevronRight,
 } from 'lucide-react';
 import { Skeleton } from './ui/Skeleton';
 import { BasePageProps } from '../types';
@@ -27,23 +28,10 @@ import { authApi } from '../services/authApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { uploadsApi } from '../services/uploadsApi';
 import { compressImage } from '../utils/imageCompression';
-import navOverview from '../src/assets/nav-overview.webp';
-import navAds from '../src/assets/nav-ads.webp';
-import navMessages from '../src/assets/nav-messages.webp';
-import navFavorites from '../src/assets/nav-favorites.webp';
-import navProfile from '../src/assets/nav-profile.webp';
-import navAdmin from '../src/assets/nav-admin.webp';
+import { FloatingCapsule, CAPSULE_FOCUS } from './ui/FloatingCapsule';
 import SEO from './common/SEO';
 import { TypeScaleProvider } from './ui/TypeScale';
 
-const MOBILE_NAV_ICONS: Record<string, string> = {
-  overview: navOverview,
-  'my-ads': navAds,
-  messages: navMessages,
-  favorites: navFavorites,
-  settings: navProfile,
-  admin: navAdmin,
-};
 
 // --- TABS LAZY LOADING ---
 const OverviewTab = lazy(() => import('./dashboard/OverviewTab'));
@@ -84,10 +72,14 @@ const S = {
       : 'text-muted-foreground hover:text-primary-600 hover:bg-orange-50/50'}
   `,
   
-  MobileNav: "fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-xl border-t border-gray-100 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden flex justify-around items-center shadow-[0_-10px_30px_rgba(0,0,0,0.08)]",
+  // Phones: the account tabs in the floating capsule of the spec sheet
+  // (components/ui/FloatingCapsule). Active tab on a light glass pill.
   MobileNavBtn: (active: boolean) => `
-    flex flex-col items-center gap-1 transition-all active:scale-95 flex-1 py-1.5 rounded-xl
-    ${active ? 'text-primary-600' : 'text-gray-600'}
+    relative flex-1 min-w-0 h-full flex flex-col items-center justify-center gap-0.5 rounded-full
+    transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.94] ${CAPSULE_FOCUS}
+    ${active
+      ? 'bg-white/[0.14] ring-1 ring-inset ring-white/[0.10] text-white'
+      : 'text-gray-300 [@media(hover:hover)]:hover:text-white'}
   `,
   
   Content: "flex-1 w-full min-w-0 transition-all duration-300",
@@ -347,8 +339,10 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
           </div>
         </aside>
 
-        <nav className={S.MobileNav}>
-          {navItems.map(item => {
+        {/* Administration stays in the desktop sidebar; on phones it is a
+            link in the Profil tab, so the capsule keeps 5 readable tabs. */}
+        <FloatingCapsule hideFrom="md" as="nav" aria-label="Mon compte" className="justify-between gap-0.5">
+          {NAV_ITEMS.map(item => {
             const isActive = activeMenu === item.id;
             const badge =
               item.id === 'messages' ? unreadCount :
@@ -357,33 +351,28 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
             return (
               <button
                 key={item.id}
+                type="button"
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={badge > 0 ? `${item.label} (${badge})` : undefined}
                 onClick={() => {
-                  if (item.id === 'admin') {
-                    onNavigate?.('admin');
-                    return;
-                  }
                   setActiveMenu(item.id);
                   onNavigate?.('dashboard', { tab: item.id });
                 }}
                 className={S.MobileNavBtn(isActive)}
               >
-                <div className="relative">
-                  {MOBILE_NAV_ICONS[item.id] ? (
-                    <img src={MOBILE_NAV_ICONS[item.id]} alt="" className={`w-7 h-7 object-contain transition-all ${isActive ? '' : 'opacity-60 grayscale'}`} />
-                  ) : (
-                    <item.icon size={22} strokeWidth={2} />
-                  )}
+                <span className="relative">
+                  <item.icon size={20} strokeWidth={isActive ? 2.25 : 2} aria-hidden="true" />
                   {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary-600 text-white text-[11px] font-bold flex items-center justify-center tabular-nums">
+                    <span aria-hidden="true" className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary-600 ring-2 ring-[#1B1F27] text-white text-[11px] font-bold flex items-center justify-center tabular-nums">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}
-                </div>
-                <span className="text-xs font-medium">{item.label}</span>
+                </span>
+                <span className="text-[11px] font-medium leading-none truncate max-w-full px-1">{item.label}</span>
               </button>
             );
           })}
-        </nav>
+        </FloatingCapsule>
 
         <main className={S.Content} key={activeMenu}>
           <ErrorBoundary>
@@ -463,6 +452,19 @@ const Dashboard: React.FC<BasePageProps> = ({ onNavigate, onLogout, isLoggedIn, 
 
                 {/* Mobile-only account actions — sidebar is hidden on mobile,
                     so users need a way to delete their account from the Profil tab. */}
+                {activeMenu === 'settings' && isAdminUser && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate?.('admin')}
+                    className="md:hidden mt-6 w-full flex items-center gap-3 bg-card rounded-2xl border border-gray-100 shadow-sm p-5 text-left active:scale-[0.99] transition-transform"
+                  >
+                    <span className="w-10 h-10 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center shrink-0">
+                      <Settings size={18} aria-hidden="true" />
+                    </span>
+                    <span className="flex-1 min-w-0 text-base font-semibold text-foreground">Administration</span>
+                    <ChevronRight size={18} className="text-gray-400 shrink-0" aria-hidden="true" />
+                  </button>
+                )}
                 {activeMenu === 'settings' && (
                   <div className="md:hidden mt-6 bg-card rounded-2xl border border-red-100 shadow-sm p-5">
                     <h2 className="text-base font-semibold text-foreground mb-1">Zone sensible</h2>
