@@ -35,7 +35,7 @@ const S = {
   
   // H1: Taille ajustée pour mobile à 32px (2rem), titre sur deux lignes
   // Desktop/Tablette : font-800 (extrabold) et 40px
-  MainTitle: "font-extrabold text-[2rem] md:text-[40px] tracking-tight leading-[1.05] drop-shadow-sm text-white",
+  MainTitle: "font-extrabold text-[2rem] md:text-[48px] tracking-tight leading-[1.05] drop-shadow-sm text-white text-balance",
   
   // Subtitle: Taille ajustée à 14px sur mobile (text-[14px])
   // Desktop/Tablette : font-500 (medium), 16px

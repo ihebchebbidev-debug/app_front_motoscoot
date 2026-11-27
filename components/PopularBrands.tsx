@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
 import { brandsApi, PopularBrand } from '../services/miscApi';
 import { Button } from './ui/Button';
+import { SectionHeader, SECTION_SPACING } from './home/SectionHeader';
 import { Link } from 'react-router-dom';
 import { getUrlFromState } from '../utils/urlUtils';
 
@@ -58,26 +59,22 @@ const PopularBrands: React.FC<PopularBrandsProps> = ({ onNavigate }) => {
   const visible = brands.slice(0, 6);
 
   return (
-    <section className="py-16 md:py-20 bg-gray-50 overflow-hidden">
+    <section className={`${SECTION_SPACING} bg-gray-50 overflow-hidden`}>
       <div className="max-w-7xl mx-auto px-6 md:px-20 lg:px-32">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-          <div>
-            <h2 className="text-[36px] font-extrabold text-gray-900 tracking-normal">
-              Marques populaires
-            </h2>
-            <p className="text-gray-500 mt-2 text-[17px] font-normal tracking-normal">
-              Les marques de motos et scooters neufs les plus recherchées en Tunisie.
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate?.('tech-specs-brands')}
-            className="hidden md:flex text-primary-600 hover:bg-primary-50"
-            rightIcon={<ArrowRight className="w-5 h-5 ml-1" />}
-          >
-            Voir tout
-          </Button>
-        </div>
+        <SectionHeader
+          title="Marques populaires"
+          subtitle="Les marques de motos et scooters neufs les plus recherchées en Tunisie."
+          action={
+            <Button
+              variant="ghost"
+              onClick={() => onNavigate?.('tech-specs-brands')}
+              className="hidden md:flex text-primary-600 hover:bg-primary-50"
+              rightIcon={<ArrowRight className="w-5 h-5 ml-1" />}
+            >
+              Voir tout
+            </Button>
+          }
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-6">
@@ -123,7 +120,7 @@ const PopularBrands: React.FC<PopularBrandsProps> = ({ onNavigate }) => {
         )}
 
         {!isLoading && brands.length > 0 && (
-          <div className="mt-10 flex justify-center md:hidden">
+          <div className="mt-8 flex justify-center md:hidden">
             <button
               type="button"
               onClick={() => onNavigate?.('tech-specs-brands')}
