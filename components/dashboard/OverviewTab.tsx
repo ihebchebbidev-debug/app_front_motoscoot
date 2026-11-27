@@ -18,7 +18,7 @@ const pct = (num: number, denom: number) =>
 
 interface NavProps { onNavigate?: (tab: string, params?: any) => void; }
 
-const StatCard = memo(({ label, value, image, alt, isLoading, sub, onClick }: any) => {
+const StatCard = memo(({ label, value, image, isLoading, sub, onClick }: any) => {
   const Wrapper: any = onClick ? 'button' : 'div';
   return (
   <Wrapper
@@ -28,10 +28,10 @@ const StatCard = memo(({ label, value, image, alt, isLoading, sub, onClick }: an
     <div className="flex justify-between items-start">
       <img
         src={image}
-        alt={alt}
+        alt=""
         loading="lazy"
-        width={512}
-        height={512}
+        width={112}
+        height={112}
         className="w-12 h-12 md:w-14 md:h-14 object-contain transition-transform group-hover:scale-110 group-hover:-rotate-6 duration-300 drop-shadow-sm"
       />
       {sub && !isLoading && (
@@ -76,7 +76,7 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <div className="hidden md:block">
+      <div className="sr-only md:not-sr-only">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {user?.firstName ? `Bienvenue, ${user.firstName} 👋` : 'Tableau de bord'}
         </h1>
@@ -93,7 +93,6 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             value={fmt(totalAds)}
             sub={totalListings > 0 ? `/ ${totalListings}` : undefined}
             image={iconListings}
-            alt="Annonces"
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'my-ads' })}
           />
@@ -104,7 +103,6 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             value={fmt(totalViews)}
             sub={avgViewsPerAd > 0 ? `~${fmt(avgViewsPerAd)}/annonce` : undefined}
             image={iconViews}
-            alt="Vues"
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'my-ads' })}
           />
@@ -115,7 +113,6 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             value={fmt(totalContacts)}
             sub={isPro && conversionRate > 0 ? `${conversionRate}% conv.` : undefined}
             image={iconContacts}
-            alt="Contacts"
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'messages' })}
           />
@@ -126,7 +123,6 @@ const OverviewTab: React.FC<NavProps> = ({ onNavigate }) => {
             value={fmt(adFavorites)}
             sub={totalFavorites > 0 ? `${fmt(totalFavorites)} sauvegardées` : undefined}
             image={iconFavorites}
-            alt="Favoris"
             isLoading={showSkeleton}
             onClick={() => onNavigate?.('dashboard', { tab: 'favorites' })}
           />

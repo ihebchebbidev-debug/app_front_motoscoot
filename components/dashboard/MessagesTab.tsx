@@ -313,7 +313,7 @@ const MessagesTab: React.FC = () => {
                     ))}
                   </div>
                 ) : messages.length === 0 ? (
-                  <p className="text-center text-xs text-gray-400 py-8">
+                  <p className="text-center text-[13px] text-gray-600 py-8">
                     Aucun message — soyez le premier à écrire.
                   </p>
                 ) : (
