@@ -147,7 +147,8 @@ export interface RegisterProPayload {
   /** Optional split-name fields. When provided, persisted alongside full_name. */
   first_name?: string;
   last_name?: string;
-  shop_address: string;
+  /** Optional at sign-up: set afterwards in Réglages. */
+  shop_address?: string;
   shop_logo?: string;
   account_type: 'pro';
   phone?: string;

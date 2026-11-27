@@ -17,7 +17,7 @@ test('the password is the current one to sign in, a new one to sign up', () => {
 });
 
 test('every sign-up field tells the browser what it holds', () => {
-  for (const token of ['given-name', 'family-name', 'tel', 'organization', 'street-address', 'address-level1']) {
+  for (const token of ['name', 'tel', 'organization']) {
     assert.match(modal, new RegExp(`autoComplete="${token}"`), token);
   }
   const inputs = modal.match(/<(Input|Select)\b[\s\S]*?\/?>/g) ?? [];

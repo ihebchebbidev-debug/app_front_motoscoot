@@ -135,12 +135,11 @@ async function register(req, res, next) {
     }
     const phone = signupPhone.phone;
 
-    // Pro accounts must have a shop name + address so listings carry a real
-    // identity. The frontend already enforces this; double-check server-side
-    // so direct API calls can't bypass it.
-    if (seller_type === 'Pro') {
-      if (!shop_name)    return res.status(400).json({ error: 'Le nom de la boutique est requis pour un compte Professionnel.' });
-      if (!shop_address) return res.status(400).json({ error: "L'adresse de la boutique est requise pour un compte Professionnel." });
+    // Pro accounts must have a shop name so listings carry a real identity
+    // (checked here too, so direct API calls can't bypass the form). The shop
+    // address, logo and governorate are set afterwards in Réglages.
+    if (seller_type === 'Pro' && !shop_name) {
+      return res.status(400).json({ error: 'Le nom de la boutique est requis pour un compte Professionnel.' });
     }
 
     // Check existing
