@@ -94,11 +94,11 @@ const LOGIN_PHOTO_CREDIT = 'Photo : Daniel / Unsplash';
  * new tab so a half-filled form is not lost. `onPhoto`: white discs so the
  * logos stand out on the dark picture.
  */
-const LoginSocialLinks: React.FC<{ onPhoto?: boolean; inline?: boolean; className?: string }> = ({ onPhoto = false, inline = false, className }) => {
+const LoginSocialLinks: React.FC<{ onPhoto?: boolean; className?: string }> = ({ onPhoto = false, className }) => {
   const socialLinks = useSocialLinks();
   if (socialLinks.length === 0) return null;
   return (
-    <div className={clsx('flex', inline ? 'flex-row items-center gap-3' : 'flex-col gap-2.5', className)}>
+    <div className={clsx('flex flex-col gap-2.5', className)}>
       <p className={clsx('text-[12px] font-medium', onPhoto ? 'text-white/85' : 'text-gray-500')}>Suivez Moto-Scoot</p>
       <ul className="flex items-center gap-3" aria-label="Moto-Scoot sur les réseaux sociaux">
         {socialLinks.map(({ key, label, href, Icon }) => (
@@ -449,9 +449,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           13 px help and errors, sentence-case buttons. */}
       <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
-        <div ref={contentRef} onFocus={keepFocusedFieldVisible} className="min-h-full flex flex-col px-6 pt-4 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
-          <div className="hidden md:block md:mb-6 md:text-left md:pb-6 md:border-b md:border-gray-100">
-            <div className="inline-flex items-center justify-center overflow-hidden mb-3 [@media(max-height:780px)]:hidden">
+        <div ref={contentRef} onFocus={keepFocusedFieldVisible} className="min-h-full flex flex-col px-6 pt-4 pb-6 [@media(max-height:700px)]:pb-4 md:pb-0 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
+          {/* Emblem, title and promise. Phones: centred under the grabber.
+              Tablet / desktop: left-aligned above a rule, beside the photo. */}
+          <div className="text-center mb-6 [@media(max-height:700px)]:mb-4 md:text-left md:mb-6 md:pb-6 md:border-b md:border-gray-100">
+            <div className="inline-flex items-center justify-center overflow-hidden mb-3 w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 [@media(max-height:700px)]:w-11 [@media(max-height:700px)]:h-11 md:w-auto md:h-auto md:rounded-none md:bg-transparent md:border-0 [@media(min-width:768px)_and_(max-height:780px)]:hidden">
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
                 className="w-8 h-8 object-contain"
@@ -460,10 +462,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
             {/* The window's name is the header title (hidden from 768 px);
                 this is the same words shown large, so not read twice. */}
-            <p aria-hidden="true" className="hidden md:block text-gray-900 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2 text-balance">
+            <p aria-hidden="true" className="text-gray-900 text-[28px] [@media(max-height:700px)]:text-[24px] md:text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2 text-balance">
               {isSignUp ? 'Créer un compte' : 'Bienvenue'}
             </p>
-            <p className="text-gray-500 text-sm font-medium md:text-[15px]">
+            <p className="text-gray-500 text-[15px] font-medium">
               {isSignUp ? 'Rejoignez la communauté moto-scoot.tn' : 'Connectez-vous pour gérer vos annonces.'}
             </p>
           </div>
@@ -700,7 +702,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             de Moto-Scoot.tn.
           </p>
 
-          <div className="mt-4 pt-4 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:pt-3 md:mt-6 md:pt-5 border-t border-gray-100 text-center">
+          <div className={clsx(
+            'mt-4 pt-4 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:pt-3 md:mt-6 md:pt-5 border-t border-gray-100 text-center',
+            // Phones, sign-in screen: no « Pas encore de compte ? » line (the
+            // menu has its own « S'inscrire » button). Kept on the sign-up
+            // screen so « Déjà membre ? Se connecter » still leads back.
+            !isSignUp && 'max-md:hidden',
+          )}>
             <p className="text-gray-500 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
               <button
@@ -713,9 +721,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
 
           </div>
 
-          {/* Phones (no picture): the social links at the bottom of the sheet.
-              Tablet / desktop: at the bottom of the picture (LoginAside). */}
-          <LoginSocialLinks inline className="md:hidden mt-auto justify-center pt-6 pb-3 [@media(max-height:700px)]:pt-1 [@media(max-height:700px)]:pb-2" />
+          {/* Social links: tablet / desktop only, at the bottom of the picture
+              (LoginAside). Phones keep the sheet for signing in. */}
         </div>
       </TypeScaleProvider>
     </ChoiceSheet>

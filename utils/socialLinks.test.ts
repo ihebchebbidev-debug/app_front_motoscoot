@@ -29,8 +29,11 @@ test('login window: real logos in their colours, 44 px, named, new tab', () => {
   assert.match(brand, /#25F4EE[\s\S]*#FE2C55/);
 });
 
-test('at the bottom: of the picture on tablet / desktop, of the sheet on phones', () => {
+test('social links: bottom of the picture on tablet / desktop, none on phones', () => {
   assert.match(modal, /<LoginSocialLinks onPhoto \/>/);
-  assert.match(modal, /<LoginSocialLinks inline className="md:hidden mt-auto/);
-  assert.match(modal, /className="min-h-full flex flex-col/);
+  assert.doesNotMatch(modal, /<LoginSocialLinks inline/);
+});
+
+test('phones, sign-in screen: no « Pas encore de compte ? » line', () => {
+  assert.match(modal, /!isSignUp && 'max-md:hidden'/);
 });

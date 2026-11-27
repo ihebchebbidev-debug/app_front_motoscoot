@@ -385,7 +385,7 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
         <div
           // Split window: the close button floats in the corner (the title is
           // in the content), so the form gets the whole height.
-          className={`touch-none md:touch-auto select-none ${aside ? 'md:absolute md:top-2 md:right-2 md:z-10' : ''}`}
+          className={`touch-none md:touch-auto select-none ${aside ? 'relative md:absolute md:top-2 md:right-2 md:z-10' : ''}`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -394,8 +394,14 @@ export const ChoiceSheet: React.FC<ChoiceSheetProps> = ({ open, label, onClose, 
           <div className="md:hidden flex justify-center pt-2.5 pb-1" aria-hidden="true">
             <span className="h-1.5 w-10 rounded-full bg-gray-300" />
           </div>
-          <div className={`flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100 ${aside ? 'md:border-b-0 md:p-0 md:justify-end' : ''}`}>
-            <h2 id={titleId} className={`text-base font-bold text-gray-900 ${aside ? 'md:sr-only' : ''}`}>{label}</h2>
+          {/* With an aside (the login window) the content shows the title
+              large, so the header keeps only the close button; the title
+              stays for screen readers (it names the dialog). */}
+          <div className={aside
+            // Close button floating in the top-right corner, over the content.
+            ? 'absolute top-1.5 right-5 z-10 flex items-center md:static md:p-0'
+            : 'flex items-center justify-between px-5 pt-2 pb-4 md:pt-4 border-b border-gray-100'}>
+            <h2 id={titleId} className={`text-base font-bold text-gray-900 ${aside ? 'sr-only' : ''}`}>{label}</h2>
             <div className="flex items-center gap-1 -my-2.5 -mr-2.5">
               {headerAction}
               <button

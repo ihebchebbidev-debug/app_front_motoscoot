@@ -21,7 +21,7 @@ test('sheets without a picture keep their exact layout (wrapper takes no space)'
 });
 
 test('with a picture, the window keeps its name for screen readers', () => {
-  assert.match(sheet, /<h2 id=\{titleId\} className=\{`text-base font-bold text-gray-900 \$\{aside \? 'md:sr-only' : ''\}`\}>/);
+  assert.match(sheet, /<h2 id=\{titleId\} className=\{`text-base font-bold text-gray-900 \$\{aside \? 'sr-only' : ''\}`\}>/);
 });
 
 test('the login window passes its picture, swappable in one place', () => {
