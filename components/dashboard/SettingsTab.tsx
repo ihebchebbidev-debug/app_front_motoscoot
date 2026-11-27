@@ -248,7 +248,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 flex flex-col gap-[21px]">
+    <div className="max-w-6xl mx-auto flex flex-col gap-[21px]">
 
       {/* Phones: the header card below is hidden, the tab still needs its title. */}
       <h1 className="sr-only md:hidden">Mon profil</h1>
@@ -587,7 +587,7 @@ const SettingsTab: React.FC<{ onUpdate: () => void }> = () => {
         </div>
 
         {/* SUBMIT */}
-        <div className="pb-12 flex flex-col items-start px-2 md:px-0">
+        <div className="pt-1 flex flex-col items-start px-2 md:px-0">
           <Button
             variant="primary"
             type="submit"
