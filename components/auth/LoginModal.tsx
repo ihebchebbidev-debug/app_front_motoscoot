@@ -19,6 +19,7 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { useClerkGoogleSignIn } from '../../hooks/useClerkGoogleSignIn';
 import CloudflareTurnstileMock from './CloudflareTurnstileMock';
+import { googleTapAction } from '../../utils/googleTap';
 import { useAuth } from '../../hooks/useAuth';
 import { useGovernorates } from '../../hooks/useReferenceData';
 import { useToast } from '../../context/ToastContext';
@@ -38,6 +39,9 @@ interface LoginModalProps {
 }
 
 type UserType = 'individual' | 'pro';
+
+/** How long a Google tap waits for Clerk to finish loading. */
+const GOOGLE_WAIT_MS = 15000;
 
 const AppleIcon = () => (
   <img
@@ -96,6 +100,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
   const { data: governorates = [] } = useGovernorates();
   const { addToast } = useToast();
   const [forgotLoading, setForgotLoading] = useState(false);
+  // A tap on Google before Clerk has finished loading (it loads with this
+  // window, ~250 KB): we wait for it instead of showing an error.
+  const [googleWaiting, setGoogleWaiting] = useState(false);
 
   // We deliberately do NOT pass `onSuccess` here. If we did, the parent would
   // close this modal as soon as `register()` resolves — unmounting us mid-way
@@ -146,6 +153,27 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
     // We only run on mount of modal opening
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, clerkGoogle.isReady]);
+
+  // Clerk ready → start the Google sign-in the visitor already asked for.
+  // Still not ready after 15 s (very slow or broken network) → say so.
+  useEffect(() => {
+    if (!googleWaiting) return;
+    if (!isOpen) {
+      setGoogleWaiting(false);
+      return;
+    }
+    if (clerkGoogle.canStart) {
+      setGoogleWaiting(false);
+      void handleSocialLogin('google');
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setGoogleWaiting(false);
+      setError('Google ne répond pas pour le moment. Vérifiez votre connexion internet puis réessayez.');
+    }, GOOGLE_WAIT_MS);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleWaiting, clerkGoogle.canStart, isOpen]);
 
   if (!isOpen) return null;
 
@@ -279,6 +307,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
     }
   };
 
+  const googleBusy = clerkGoogle.loading || googleWaiting;
+
+  const handleGoogleClick = () => {
+    const action = googleTapAction({
+      busy: googleBusy,
+      configured: clerkGoogle.configured,
+      canStart: clerkGoogle.canStart,
+    });
+    if (action === 'ignore') return;
+    setError(null);
+    if (action === 'wait') setGoogleWaiting(true);
+    else void handleSocialLogin('google');
+  };
+
   const handleLogoUpload = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setLogoFile(file);
@@ -337,12 +379,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
           <div className="flex items-center justify-center mb-8">
             <button
               type="button"
-              onClick={() => handleSocialLogin('google')}
-              disabled={clerkGoogle.loading}
-              aria-busy={clerkGoogle.loading}
+              onClick={handleGoogleClick}
+              disabled={googleBusy}
+              aria-busy={googleBusy}
               className="flex items-center justify-center gap-2 w-full max-w-[320px] h-[52px] min-h-[52px] border border-border rounded-[10px] text-foreground font-bold text-[14px] font-sans hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {clerkGoogle.loading ? (
+              {googleBusy ? (
                 <>
                   <Loader2 size={18} className="animate-spin text-primary-600" />
                   <span>Redirection vers Google…</span>

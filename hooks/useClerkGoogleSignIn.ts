@@ -109,5 +109,18 @@ export const useClerkGoogleSignIn = () => {
     return data;
   }, [user, getToken, queryClient]);
 
-  return { start, exchangeWithBackend, loading, error, isReady: clerkReady && (isLoaded || userLoaded) };
+  // True once a tap on « Continuer avec Google » can really start: Clerk
+  // (lazy-loaded with the login window) has finished loading. Before that,
+  // start() would fail with « pas encore prête ».
+  const canStart = clerkReady && (Boolean(user && getToken) || (isLoaded && Boolean(signIn)));
+
+  return {
+    start,
+    exchangeWithBackend,
+    loading,
+    error,
+    isReady: clerkReady && (isLoaded || userLoaded),
+    configured: clerkReady,
+    canStart,
+  };
 };
