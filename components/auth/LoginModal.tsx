@@ -449,11 +449,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
           13 px help and errors, sentence-case buttons. */}
       <TypeScaleProvider tone="calm">
         {/* Tablet / desktop: one left-aligned column beside the picture. */}
-        <div ref={contentRef} onFocus={keepFocusedFieldVisible} className="min-h-full flex flex-col px-6 pt-4 pb-6 [@media(max-height:700px)]:pb-4 md:pb-0 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
+        <div ref={contentRef} onFocus={keepFocusedFieldVisible} className="min-h-full flex flex-col px-6 pt-4 [@media(max-height:700px)]:pt-2 pb-6 [@media(max-height:700px)]:pb-1 md:pb-0 md:px-10 lg:px-14 md:pt-8 md:max-w-[480px] md:mx-auto">
           {/* Emblem, title and promise. Phones: centred under the grabber.
               Tablet / desktop: left-aligned above a rule, beside the photo. */}
-          <div className="text-center mb-6 [@media(max-height:700px)]:mb-4 md:text-left md:mb-6 md:pb-6 md:border-b md:border-gray-100">
-            <div className="inline-flex items-center justify-center overflow-hidden mb-3 w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 [@media(max-height:700px)]:w-11 [@media(max-height:700px)]:h-11 md:w-auto md:h-auto md:rounded-none md:bg-transparent md:border-0 [@media(min-width:768px)_and_(max-height:780px)]:hidden">
+          <div className="text-center mb-6 [@media(max-height:700px)]:mb-3 md:text-left md:mb-6 md:pb-6 md:border-b md:border-gray-100">
+            <div className="inline-flex items-center justify-center overflow-hidden mb-3 w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 [@media(max-height:700px)]:w-11 [@media(max-height:700px)]:h-11 [@media(max-height:700px)]:mb-2 md:w-auto md:h-auto md:rounded-none md:bg-transparent md:border-0 [@media(min-width:768px)_and_(max-height:780px)]:hidden">
               <img
                 src="https://www.moto-scoot.tn/site-logo/embleme_logo.svg"
                 className="w-8 h-8 object-contain"
@@ -462,7 +462,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             </div>
             {/* The window's name is the header title (hidden from 768 px);
                 this is the same words shown large, so not read twice. */}
-            <p aria-hidden="true" className="text-gray-900 text-[28px] [@media(max-height:700px)]:text-[24px] md:text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2 text-balance">
+            <p aria-hidden="true" className="text-gray-900 text-[28px] [@media(max-height:700px)]:text-[24px] md:text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-2 [@media(max-height:700px)]:mb-1 text-balance">
               {isSignUp ? 'Créer un compte' : 'Bienvenue'}
             </p>
             <p className="text-gray-500 text-[15px] font-medium">
@@ -702,23 +702,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             de Moto-Scoot.tn.
           </p>
 
-          <div className={clsx(
-            'mt-4 pt-4 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:pt-3 md:mt-6 md:pt-5 border-t border-gray-100 text-center',
-            // Phones, sign-in screen: no « Pas encore de compte ? » line (the
-            // menu has its own « S'inscrire » button). Kept on the sign-up
-            // screen so « Déjà membre ? Se connecter » still leads back.
-            !isSignUp && 'max-md:hidden',
-          )}>
-            <p className="text-gray-500 text-sm font-medium">
+          {/* « Pas encore de compte ? » — always offered, as Google, Apple,
+              Amazon or Instagram do: a secondary line under the form, the
+              link a 44 px touch target so it is easy to hit on a phone. */}
+          <div className="mt-3 pt-2 [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:pt-1 md:mt-6 md:pt-4 border-t border-gray-100 text-center">
+            <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-gray-600 text-sm font-medium">
               {isSignUp ? 'Déjà membre ?' : 'Pas encore de compte ?'}
               <button
+                type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="font-black text-primary-600 hover:text-primary-700 ml-2 focus:outline-none"
+                className="min-h-[44px] md:min-h-[24px] inline-flex items-center px-1 font-bold text-primary-700 hover:underline underline-offset-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
-                {isSignUp ? 'Se connecter' : "S'inscrire gratuitement"}
+                {isSignUp ? 'Se connecter' : <>S'inscrire<span className="hidden min-[420px]:inline">&nbsp;gratuitement</span></>}
               </button>
             </p>
-
           </div>
 
           {/* Social links: tablet / desktop only, at the bottom of the picture

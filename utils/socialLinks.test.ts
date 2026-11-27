@@ -34,6 +34,11 @@ test('social links: bottom of the picture on tablet / desktop, none on phones', 
   assert.doesNotMatch(modal, /<LoginSocialLinks inline/);
 });
 
-test('phones, sign-in screen: no « Pas encore de compte ? » line', () => {
-  assert.match(modal, /!isSignUp && 'max-md:hidden'/);
+test('« Pas encore de compte ? S\'inscrire » is offered on every screen size', () => {
+  assert.doesNotMatch(modal, /!isSignUp && 'max-md:hidden'/);
+  assert.match(modal, /'Pas encore de compte \?'/);
+  // 44 px touch target on phones, 24 px with a mouse (WCAG 2.5.8).
+  assert.match(modal, /className="min-h-\[44px\] md:min-h-\[24px\] inline-flex/);
+  // Narrow phones: « S'inscrire » on one line; « gratuitement » from 420 px.
+  assert.match(modal, /<span className="hidden min-\[420px\]:inline">&nbsp;gratuitement<\/span>/);
 });
