@@ -6,6 +6,7 @@ import { Listing } from '../types';
 import { monitoring } from '../utils/monitoring';
 import { useNativeShare } from './useNativeShare';
 import { apiClient } from '../services/apiClient';
+import { trackListingContact } from '../services/listingContactApi';
 import { tracker } from '../services/trackingService';
 
 interface UseListingActionsProps {
@@ -55,7 +56,7 @@ export const useListingActions = ({ listing }: UseListingActionsProps) => {
     // (listing, viewer, channel) in a 1h window). Previously this only
     // fired on first reveal, but `phoneRevealed` defaults to true, so
     // mobile taps never reached the backend → contacts_count was wrong.
-    apiClient.post(`/listings/${listing.id}/contact`, { channel: 'phone' }).catch(() => {});
+    trackListingContact(listing.id, 'phone');
     try { tracker.trackListingEvent(String(listing.id), phoneRevealed ? 'call' : 'phone_reveal'); } catch {}
     if (!phoneRevealed) {
       setPhoneRevealed(true);
@@ -72,7 +73,7 @@ export const useListingActions = ({ listing }: UseListingActionsProps) => {
       model: listing.model,
       context: 'action_handler'
     });
-    apiClient.post(`/listings/${listing.id}/contact`, { channel: 'whatsapp' }).catch(() => {});
+    trackListingContact(listing.id, 'whatsapp');
     try { tracker.trackListingEvent(String(listing.id), 'whatsapp_click'); } catch {}
   }, [listing]);
 
