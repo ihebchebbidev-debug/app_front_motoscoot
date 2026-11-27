@@ -269,6 +269,14 @@
      new tab gets one short fade and nothing else (no staggered cards). */
   .ms-tab-in { animation: ms-fade-in 150ms ease-out backwards; }
 
+  /* Profil save bar (phones): rises 8 px into place when a field changes.
+     Reduced motion: opacity only. */
+  .ms-save-in { transition: opacity 200ms ease-out, transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+  @starting-style { .ms-save-in { opacity: 0; transform: translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) {
+    @starting-style { .ms-save-in { transform: none; } }
+  }
+
   /* Unread badge (account phone menu): fades and grows in when it first
      appears (a message arrives); a count change (3 → 4) does not move.
      Reduced motion: opacity only. */
