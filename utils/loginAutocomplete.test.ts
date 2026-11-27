@@ -13,7 +13,7 @@ test('the e-mail field is the login identifier', () => {
 });
 
 test('the password is the current one to sign in, a new one to sign up', () => {
-  assert.match(modal, /type="password"[\s\S]{0,200}autoComplete=\{isSignUp \? 'new-password' : 'current-password'\}/);
+  assert.match(modal, /<PasswordInput[\s\S]{0,250}autoComplete=\{isSignUp \? 'new-password' : 'current-password'\}/);
 });
 
 test('every sign-up field tells the browser what it holds', () => {

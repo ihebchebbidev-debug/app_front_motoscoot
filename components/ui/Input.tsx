@@ -4,6 +4,8 @@ import { FIELD_TYPE, useTypeTone } from './TypeScale';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  /** Help under the field (« 6 caractères minimum »); the error replaces it. */
+  hint?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
@@ -11,6 +13,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
+  hint,
   leftIcon,
   rightIcon,
   className = '',
@@ -22,6 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   const autoId = useId();
   const id = props.id ?? autoId;
   const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
   return (
     <div className="space-y-2 w-full group">
       {label && (
@@ -49,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           id={id}
           // The error under the field is read with it (screen readers).
           aria-invalid={error ? true : props['aria-invalid']}
-          aria-describedby={error ? errorId : props['aria-describedby']}
+          aria-describedby={error ? errorId : hint ? hintId : props['aria-describedby']}
         />
         {rightIcon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -57,6 +61,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           </div>
         )}
       </div>
+      {!error && hint && <p id={hintId} className="text-[13px] leading-snug text-gray-600 ml-1">{hint}</p>}
       {error && <p id={errorId} className={`${type.error} text-red-600 ml-1 animate-scale-in`}>{error}</p>}
     </div>
   );
