@@ -11,7 +11,7 @@ import { getOptimizedImageUrl } from '../../utils/urlUtils';
 import { useStartConversation } from '../../hooks/useConversations';
 import { useUser } from '../../context/UserContext';
 import { useToast } from '../../context/ToastContext';
-import { apiClient } from '../../services/apiClient';
+import { trackListingContact } from '../../services/listingContactApi';
 import { tracker } from '../../services/trackingService';
 import AuthLockOverlay from '../common/AuthLockOverlay';
 import { MemberSinceSkeleton } from '../ui/Skeleton';
@@ -157,7 +157,7 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
       device_type: isLikelyMobile ? 'mobile' : 'desktop',
     });
     // Persist contact intent (server dedupes per viewer/channel/1h)
-    apiClient.post(`/listings/${listing.id}/contact`, { channel: 'phone' }).catch(() => {});
+    trackListingContact(listing.id, 'phone');
     try { tracker.trackListingEvent(String(listing.id), phoneRevealed ? 'call' : 'phone_reveal'); } catch {}
     if (!phoneRevealed) {
       setPhoneRevealed(true);
@@ -298,12 +298,25 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
         contact_channel: 'message',
         seller_type: listing.sellerType,
       });
-      apiClient.post(`/listings/${listing.id}/contact`, { channel: 'message' }).catch(() => {});
+      trackListingContact(listing.id, 'message');
       try { tracker.trackListingEvent(String(listing.id), 'message_seller'); } catch {}
       navigateTo('dashboard', { tab: 'messages' });
     } finally {
       setContacting(false);
     }
+  };
+
+  // The WhatsApp button was a plain link: its taps were never counted.
+  const handleWhatsAppClick = () => {
+    if (!listing.phone) return;
+    analytics.capture('seller_contact_started', {
+      contact_channel: 'whatsapp',
+      seller_type: listing.sellerType,
+      device_type: isLikelyMobile ? 'mobile' : 'desktop',
+    });
+    monitoring.trackEvent('ListingWhatsAppInitiated', { listingId: listing.id, sellerType: listing.sellerType });
+    trackListingContact(listing.id, 'whatsapp');
+    try { tracker.trackListingEvent(String(listing.id), 'whatsapp_click'); } catch {}
   };
 
   const whatsappLink = formatWhatsAppLink(listing.phone, `Bonjour, je suis intéressé par votre annonce ${listing.title} sur moto-scoot.tn`);
@@ -442,6 +455,7 @@ export const ListingSellerCard: React.FC<ListingSellerCardProps> = ({
                 target="_blank"
                 rel="noreferrer"
                 className="block"
+                onClick={handleWhatsAppClick}
               >
                 <Button 
                   variant="outline" 

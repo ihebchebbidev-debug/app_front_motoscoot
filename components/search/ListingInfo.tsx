@@ -25,6 +25,8 @@ interface ListingInfoProps {
    *              the listing pre-dates migration 023.
    */
   contactMethod?: 'phone' | 'callback';
+  /** Counts a tap on the card's Appeler / WhatsApp button (services/listingContactApi.ts). */
+  onContact?: (channel: 'phone' | 'whatsapp') => void;
   /**
    * Per-category metadata — used to surface accessory specifics
    * (helmet type, size, gender, …) on cards instead of a generic "Accessoire".
@@ -127,6 +129,7 @@ export const ListingInfo: React.FC<ListingInfoProps> = ({
   viewMode,
   isLoggedIn = false,
   onTriggerLogin,
+  onContact,
 }) => {
   const isGrid = viewMode === 'grid';
   const isAccessory = type === 'Accessoires';
@@ -241,6 +244,7 @@ export const ListingInfo: React.FC<ListingInfoProps> = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    onContact?.('whatsapp');
                     window.open(`https://wa.me/${cleanPhone}`, '_blank', 'noopener,noreferrer');
                   }}
                   aria-label={`Contacter ${seller} sur WhatsApp`}
@@ -253,6 +257,7 @@ export const ListingInfo: React.FC<ListingInfoProps> = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    onContact?.('phone');
                     window.location.href = `tel:${cleanPhone}`;
                   }}
                   aria-label={`Appeler ${seller}`}

@@ -1,5 +1,7 @@
 const { query } = require('../config/database');
 const { lazyExpireOne, expireBoosts } = require('../jobs/boostExpiry');
+const { isBotRequest } = require('../utils/botDetection');
+const logger = require('../utils/logger');
 
 /** GET /api/listings/popular?limit=8 */
 async function getPopular(req, res, next) {
@@ -85,32 +87,65 @@ async function getSuggestions(req, res, next) {
   } catch (e) { next(e); }
 }
 
-/** POST /api/listings/:id/contact { channel } */
+/**
+ * What the site sends → the value stored in listing_contacts.channel (the
+ * contact_channel type: call, sms, whatsapp, message, email). The site says
+ * 'phone' for the Appeler button; storing it as is failed, so calls were
+ * never counted.
+ */
+const CONTACT_CHANNELS = {
+  phone: 'call', call: 'call', whatsapp: 'whatsapp', message: 'message', sms: 'sms', email: 'email',
+};
+
+/** Tab-scoped id sent by the site (utils/ficheLeads.ts leadSessionId). */
+let contactSessionColumn = false;
+async function ensureContactSessionColumn() {
+  if (contactSessionColumn) return;
+  // Also in migrations/044_listing_contacts_session.sql; here for a server run without it.
+  try {
+    await query('ALTER TABLE listing_contacts ADD COLUMN IF NOT EXISTS session_id VARCHAR(64)');
+    contactSessionColumn = true;
+  } catch (e) {
+    logger.warn('[contact] session column not added:', e.message);
+  }
+}
+
+/** POST /api/listings/:id/contact { channel, session_id } */
 async function trackContact(req, res, next) {
   try {
-    const { channel = 'message' } = req.body;
-    // Dedupe per (listing, viewer-ip-or-uid) in a 1h window — same pattern as
-    // view counting in `getById`. Prevents anonymous spammers from inflating
-    // a seller's contacts_count by reloading the contact button.
-    const ip = (req.ip || req.headers['x-forwarded-for'] || '').toString().split(',')[0].trim() || null;
+    const channel = CONTACT_CHANNELS[String(req.body?.channel ?? 'message')];
+    if (!channel) return res.status(400).json({ error: 'channel must be phone, whatsapp or message' });
+    if (isBotRequest(req)) return res.status(202).json({ skipped: 'bot' });
+    await ensureContactSessionColumn();
     const uid = req.user?.id || null;
+    const session = String(req.body?.session_id ?? '').trim().slice(0, 64) || null;
+    // One person tapping several times within an hour counts once: same
+    // signed-in user, else same browser tab. Without either (old cached
+    // site), anonymous taps share one slot per hour, as before.
     const ins = await query(
-      `INSERT INTO listing_contacts (listing_id, user_id, channel)
-       SELECT $1, $2, $3
+      `INSERT INTO listing_contacts (listing_id, user_id, channel, session_id)
+       SELECT $1::uuid, $2::uuid, $3::contact_channel, $4::text
        WHERE NOT EXISTS (
          SELECT 1 FROM listing_contacts
-         WHERE listing_id = $1
-           AND ((user_id IS NOT NULL AND user_id = $2) OR (user_id IS NULL AND $2 IS NULL))
-           AND channel = $3
+         WHERE listing_id = $1::uuid
+           AND channel = $3::contact_channel
            AND created_at > NOW() - INTERVAL '1 hour'
+           AND CASE
+                 WHEN $2::uuid IS NOT NULL THEN user_id = $2::uuid
+                 WHEN $4::text IS NOT NULL THEN user_id IS NULL AND session_id = $4::text
+                 ELSE user_id IS NULL AND session_id IS NULL
+               END
        )
        RETURNING id`,
-      [req.params.id, uid, channel]
-    ).catch(() => ({ rows: [] }));
+      [req.params.id, uid, channel, session]
+    ).catch((e) => {
+      logger.warn('[contact] not counted:', e.message);
+      return { rows: [] };
+    });
     if (ins.rows.length) {
       await query('UPDATE listings SET contacts_count = contacts_count + 1 WHERE id = $1', [req.params.id]);
     }
-    res.json({ success: true });
+    res.json({ success: true, counted: ins.rows.length > 0 });
   } catch (e) { next(e); }
 }
 

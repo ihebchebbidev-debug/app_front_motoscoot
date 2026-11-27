@@ -7,6 +7,8 @@ interface ListingPriceActionsProps {
   sellerPhone?: string;
   /** When 'callback', phone/WhatsApp are hidden — see ListingInfo for details. */
   contactMethod?: 'phone' | 'callback';
+  /** Counts a tap on the card's Appeler / WhatsApp button (services/listingContactApi.ts). */
+  onContact?: (channel: 'phone' | 'whatsapp') => void;
   favorited: boolean;
   onFavoriteToggle: () => void;
 }
@@ -22,7 +24,8 @@ export const ListingPriceActions: React.FC<ListingPriceActionsProps> = ({
   sellerPhone,
   contactMethod = 'phone',
   favorited,
-  onFavoriteToggle
+  onFavoriteToggle,
+  onContact,
 }) => {
   const cleanPhone = sellerPhone?.replace(/\s/g, '') || '';
   const isCallback = contactMethod === 'callback';
@@ -65,6 +68,7 @@ export const ListingPriceActions: React.FC<ListingPriceActionsProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                onContact?.('phone');
                 window.location.href = `tel:${cleanPhone}`;
               }}
               className="w-full h-[44px] flex items-center justify-center gap-2 rounded-xl bg-primary-600 text-white font-[900] text-[12px] uppercase tracking-widest transition-all border border-transparent hover:bg-primary-50 hover:text-primary-600 hover:border-primary-600 active:scale-95 shadow-sm font-sans"
@@ -78,6 +82,7 @@ export const ListingPriceActions: React.FC<ListingPriceActionsProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                onContact?.('whatsapp');
                 window.open(`https://wa.me/${cleanPhone}`, '_blank', 'noopener,noreferrer');
               }}
               className="w-full h-[44px] flex items-center justify-center gap-2 rounded-xl bg-brand-whatsapp-bg border border-brand-whatsapp text-brand-whatsapp font-[900] text-[12px] uppercase tracking-widest transition-all hover:bg-brand-whatsapp-bg-hover active:scale-95 shadow-sm font-sans"

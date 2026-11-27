@@ -6,6 +6,7 @@ import { ListingThumbnail } from './ListingThumbnail';
 import { ListingInfo } from './ListingInfo';
 import { ListingPriceActions } from './ListingPriceActions';
 import { tracker } from '../../services/trackingService';
+import { trackListingContact } from '../../services/listingContactApi';
 import { getUrlFromState } from '../../utils/urlUtils';
 
 interface ListingCardProps {
@@ -70,6 +71,12 @@ export const ListingCard = memo(({
     onFavoriteToggle(listing.id);
   }, [onFavoriteToggle, listing.id]);
 
+  // Appeler / WhatsApp on the card: counted for the seller like on the listing page.
+  const handleContact = useCallback((channel: 'phone' | 'whatsapp') => {
+    trackListingContact(listing.id, channel);
+    try { tracker.trackListingEvent(String(listing.id), channel === 'phone' ? 'call' : 'whatsapp_click'); } catch {}
+  }, [listing.id]);
+
   return (
     <Reveal animation="fade-in-up" className={isGrid ? "h-full" : "w-full"}>
       <a
@@ -123,6 +130,7 @@ export const ListingCard = memo(({
             onFavoriteToggle={handleFavClick}
             isLoggedIn={isLoggedIn}
             onTriggerLogin={onTriggerLogin}
+            onContact={handleContact}
           />
           
           {!isGrid && (
@@ -132,6 +140,7 @@ export const ListingCard = memo(({
               contactMethod={listing.contactMethod}
               favorited={favorited}
               onFavoriteToggle={handleFavClick}
+              onContact={handleContact}
             />
           )}
         </div>
