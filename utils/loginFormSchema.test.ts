@@ -12,7 +12,9 @@ const errorsOf = (mode: keyof typeof loginFormSchemas, values: Record<string, st
   return out;
 };
 
-const individual = {
+// « Particulier »: name, e-mail, password — nothing else.
+const individual = { fullName: 'Sami Ben Ali', email: 'sami@gmail.com', password: 'secret1' };
+const pro = {
   firstName: 'Sami', lastName: 'Ben Ali', governorate: 'Tunis', phone: '22123456',
   email: 'sami@gmail.com', password: 'secret1',
 };
@@ -31,27 +33,34 @@ test('sign in asks only for an e-mail and a password, in French', () => {
   assert.deepEqual(errorsOf('login', { email: 'sami@gmail.com', password: 'x' }), {});
 });
 
-test('a complete « Particulier » sign-up passes; each missing field is named', () => {
+test('a « Particulier » sign-up asks only for a name, an e-mail and a password', () => {
   assert.deepEqual(errorsOf('individual', individual), {});
   const empty = errorsOf('individual', {});
-  assert.deepEqual(Object.keys(empty).sort(), ['email', 'firstName', 'governorate', 'lastName', 'password', 'phone']);
-  assert.equal(empty.governorate, 'Choisissez votre gouvernorat.');
+  assert.deepEqual(Object.keys(empty).sort(), ['email', 'fullName', 'password']);
+  assert.equal(empty.fullName, 'Saisissez votre nom.');
+  // Phone and governorate are not asked here (they come with the first ad).
+  assert.deepEqual(errorsOf('individual', { ...individual, phone: '', governorate: '' }), {});
 });
 
-test('the phone must be Tunisian and the new password long enough', () => {
-  assert.equal(errorsOf('individual', { ...individual, phone: '12' }).phone, TUNISIA_PHONE_ERROR);
-  assert.deepEqual(errorsOf('individual', { ...individual, phone: '+216 22 123 456' }), {});
+test('the new password must be long enough', () => {
   assert.equal(errorsOf('individual', { ...individual, password: 'abc' }).password, `Au moins ${PASSWORD_MIN} caractères.`);
 });
 
+test('a « Pro » phone must be Tunisian', () => {
+  const full = { ...pro, shopName: 'Tunis Moto', shopAddress: 'Rue de Marseille' };
+  assert.equal(errorsOf('pro', { ...full, phone: '12' }).phone, TUNISIA_PHONE_ERROR);
+  assert.deepEqual(errorsOf('pro', { ...full, phone: '+216 22 123 456' }), {});
+});
+
 test('« Professionnel » also needs the shop name and address', () => {
-  const errors = errorsOf('pro', individual);
+  const errors = errorsOf('pro', pro);
   assert.deepEqual(Object.keys(errors).sort(), ['shopAddress', 'shopName']);
-  assert.deepEqual(errorsOf('pro', { ...individual, shopName: 'Tunis Moto', shopAddress: 'Rue de Marseille' }), {});
+  assert.deepEqual(errorsOf('pro', { ...pro, shopName: 'Tunis Moto', shopAddress: 'Rue de Marseille' }), {});
 });
 
 test('blank spaces do not count as a value', () => {
-  assert.equal(errorsOf('individual', { ...individual, firstName: '   ' }).firstName, 'Saisissez votre prénom.');
+  assert.equal(errorsOf('individual', { ...individual, fullName: '   ' }).fullName, 'Saisissez votre nom.');
+  assert.equal(errorsOf('pro', { ...pro, firstName: '   ' }).firstName, 'Saisissez votre prénom.');
 });
 
 test('« Mot de passe oublié » checks the e-mail the same way', () => {

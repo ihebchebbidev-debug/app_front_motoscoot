@@ -30,6 +30,8 @@ const newPassword = z
 const firstName = filled('Saisissez votre prénom.');
 const lastName = filled('Saisissez votre nom.');
 const governorate = filled('Choisissez votre gouvernorat.');
+// « Particulier »: one name field, the name other members see.
+const fullName = filled('Saisissez votre nom.');
 
 export const loginFormSchemas = {
   // Sign in: the server decides whether the password is right.
@@ -37,7 +39,9 @@ export const loginFormSchemas = {
     email,
     password: z.string().min(1, 'Saisissez votre mot de passe.'),
   }),
-  individual: z.object({ firstName, lastName, governorate, phone, email, password: newPassword }),
+  // « Particulier »: the 3 fields a buyer needs. Phone and governorate come
+  // with the first ad (the deposit asks for them and saves the phone).
+  individual: z.object({ fullName, email, password: newPassword }),
   pro: z.object({
     shopName: filled('Saisissez le nom de la boutique.'),
     firstName,
@@ -52,6 +56,7 @@ export const loginFormSchemas = {
 
 export interface LoginFormValues {
   email: string;
+  fullName: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -63,6 +68,7 @@ export interface LoginFormValues {
 
 export const emptyLoginForm: LoginFormValues = {
   email: '',
+  fullName: '',
   password: '',
   firstName: '',
   lastName: '',

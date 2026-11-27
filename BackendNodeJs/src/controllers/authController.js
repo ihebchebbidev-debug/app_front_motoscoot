@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const { query, getClient } = require('../config/database');
 const { generateToken } = require('../middlewares/auth');
 const crypto = require('crypto');
-const { isValidTunisiaPhone, formatTunisiaPhone, TUNISIA_PHONE_ERROR } = require('../utils/phone');
+const { resolveSignupPhone } = require('../utils/phone');
 const { sendPasswordResetEmail } = require('../services/mailer');
 const { sendWelcomeEmail } = require('../services/welcomeEmail');
 const logger = require('../utils/logger');
@@ -126,12 +126,14 @@ async function register(req, res, next) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Phone is required at signup so buyers can contact the seller.
-    if (!rawPhone || !isValidTunisiaPhone(rawPhone)) {
-      return res.status(400).json({ error: TUNISIA_PHONE_ERROR });
+    // Phone: optional for a « Particulier » (buyers do not need one; sellers
+    // give it with their first ad, which saves it on the account, as for
+    // Google sign-ups), required for a « Pro ». A given number must be valid.
+    const signupPhone = resolveSignupPhone(rawPhone, seller_type);
+    if (signupPhone.error) {
+      return res.status(400).json({ error: signupPhone.error });
     }
-    // Phone is guaranteed non-empty by the validator above; no need for `|| null`.
-    const phone = formatTunisiaPhone(rawPhone);
+    const phone = signupPhone.phone;
 
     // Pro accounts must have a shop name + address so listings carry a real
     // identity. The frontend already enforces this; double-check server-side

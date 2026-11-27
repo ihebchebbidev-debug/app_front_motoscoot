@@ -260,17 +260,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
   const submitValid = async (v: LoginFormValues) => {
     try {
       if (isSignUp) {
-        // Tunisia phone is required for signup so buyers can reach the seller.
-        const normalizedPhone = formatTunisiaPhone(v.phone);
 
         if (userType === 'individual') {
           await register({
             email: v.email,
             password: v.password,
-            first_name: v.firstName,
-            last_name: v.lastName,
-            city: v.governorate,
-            phone: normalizedPhone,
+            full_name: v.fullName.trim(),
             account_type: 'individual',
           });
           onLogin('user');
@@ -289,7 +284,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
             first_name: v.firstName,
             last_name: v.lastName,
             shop_address: v.shopAddress,
-            phone: normalizedPhone,
+            // A Pro must be reachable: phone required for this account type.
+            phone: formatTunisiaPhone(v.phone),
             governorate: v.governorate || undefined,
             city: v.governorate || undefined,
             account_type: 'pro',
@@ -526,56 +522,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, initialMode = 'login', 
               <div className="space-y-4 animate-scale-in">
                 {userType === 'individual' ? (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          label="Prénom"
-                          autoComplete="given-name"
-                          placeholder="Prénom"
-                          {...field('firstName')}
-                          required
-                          error={fieldErrors.firstName?.message}
-                          className={inputCompactClass}
-                        />
-                        <Input
-                          label="Nom"
-                          autoComplete="family-name"
-                          placeholder="Nom"
-                          {...field('lastName')}
-                          required
-                          error={fieldErrors.lastName?.message}
-                          className={inputCompactClass}
-                        />
-                    </div>
-                    <Select
-                      label="Gouvernorat"
-                      autoComplete="address-level1"
-                      {...field('governorate')}
+                    {/* « Particulier »: just a name here. Phone and governorate
+                        are asked with the first ad, where they are used. */}
+                    <Input
+                      label="Votre nom"
+                      autoComplete="name"
+                      placeholder="Prénom et nom"
+                      {...field('fullName')}
                       required
-                      error={fieldErrors.governorate?.message}
+                      error={fieldErrors.fullName?.message}
+                      hint="Le nom que verront les autres membres."
                       className={inputCompactClass}
-                    >
-                      <option value="" disabled>Choisir mon gouvernorat</option>
-                      {governorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
-                    </Select>
-                    <div className="space-y-1">
-                      <Input
-                        label="Téléphone"
-                        type="tel"
-                        inputMode="tel"
-                        autoComplete="tel"
-                        placeholder="22 123 456"
-                        {...phoneField}
-                        onChange={(e) => {
-                          e.target.value = cleanPhoneInput(e.target.value);
-                          void phoneField.onChange(e);
-                        }}
-                        leftIcon={<Phone size={18} />}
-                        required
-                        error={fieldErrors.phone?.message}
-                        hint="Numéro tunisien — utilisé par les acheteurs pour vous contacter."
-                        className={inputCompactClass}
-                      />
-                    </div>
+                    />
                   </>
                 ) : (
                   <>

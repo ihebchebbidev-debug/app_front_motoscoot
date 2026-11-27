@@ -14,6 +14,6 @@ test('e-mail and password carry a visible label', () => {
 
 test('no text field of the login window relies on its placeholder alone', () => {
   const inputs = modal.match(/<Input\b[\s\S]*?className=\{inputCompactClass\}/g) ?? [];
-  assert.ok(inputs.length >= 9);
+  assert.ok(inputs.length >= 7);
   for (const field of inputs) assert.match(field, /\blabel="/, field.slice(0, 120));
 });
